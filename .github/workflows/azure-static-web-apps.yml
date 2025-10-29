@@ -3,25 +3,20 @@ name: Azure Static Web Apps CI/CD
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: {}
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches: [ main ]
 
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Deploy to Azure Static Web Apps
-        uses: Azure/static-web-apps-deploy@v1
+      - uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          action: "upload"
-          app_location: "frontend"
-          api_location: "api"
-          output_location: ""         # no build output folder (plain HTML/JS)
-          skip_app_build: true        # skip build since we don't have a framework build
-          skip_api_build: true        # our Functions code is JS already
+          action: upload
+          app_location: "/"
+          skip_app_build: true
           production_branch: "main"
-          deployment_environment: "Production"
