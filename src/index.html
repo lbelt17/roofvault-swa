@@ -42,7 +42,7 @@
         show(await call('/api/ping'));
       };
       document.getElementById('btnGen').onclick = async () => {
-        const r = await call('/api/generate-questions', { count: 5, onlyIIBEC: true });
+        const r = await call('/api/generate-questions', { count: 50, onlyIIBEC: true });
         if (r.ok && r.data && r.data.items) { window.lastItems = r.data.items; }
         show(r);
       };
