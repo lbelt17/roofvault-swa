@@ -4,7 +4,7 @@
   <body style="font-family: system-ui; padding: 24px;">
     <h1>RoofVault SWA — API test</h1>
     <button id="btnPing">Ping API (GET)</button>
-    <button id="btn1">Generate 50 questions</button>
+    <button id="btn1">Generate 5 questions</button>
     <button id="btn2">Summarize publication</button>
     <button id="btn3">Group questions</button>
     <pre id="out" style="white-space:pre-wrap; margin-top:16px; border:1px solid #ccc; padding:12px;"></pre>
@@ -35,7 +35,7 @@
       }
 
       document.getElementById('btnPing').onclick = () => ping('/api/generate-questions'); // GET ping
-      document.getElementById('btn1').onclick    = () => ping('/api/generate-questions', { count: 5 });
+      document.getElementById('btn1').onclick    = () => ping('/api/generate-questions', { count: 5, onlyIIBEC: true });
       document.getElementById('btn2').onclick    = () => ping('/api/summarize-publication', { publication:"TEST" });
       document.getElementById('btn3').onclick    = () => ping('/api/group-questions', { items:[{question:"Q1"}] });
     </script>

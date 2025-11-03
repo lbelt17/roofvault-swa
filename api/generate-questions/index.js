@@ -1,24 +1,17 @@
 ﻿/**
- * Lighter, retrying generator to avoid 429s:
- * - Search: top 20, use only 8 excerpts
- * - OpenAI: max_tokens 1200, temperature 0.4
- * - Retries on 429 with backoff (1.5s, 3s, 5s)
+ * Generator with IIBEC bias toggle:
+ * - If body.onlyIIBEC === true, we bias search terms to IIBEC.
+ * - Still field-agnostic and light to avoid 429s.
  */
 const fetch = global.fetch || require("node-fetch");
 
-async function fetchWithRetry(url, options, retries = [1500, 3000, 5000]) {
-  let lastErr;
-  for (let i = 0; i <= retries.length; i++) {
+async function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+async function fetchWithRetry(url, options, delays=[1500,3000,5000]) {
+  for (let i=0;i<=delays.length;i++){
     const res = await fetch(url, options);
     if (res.status !== 429) return res;
-    lastErr = await res.text();
-    if (i === retries.length) {
-      return new (class ResponseLike {
-        constructor(){ this.ok = false; this.status = 429; }
-        async text(){ return lastErr; }
-      })();
-    }
-    await new Promise(r => setTimeout(r, retries[i]));
+    if (i===delays.length) return res;
+    await sleep(delays[i]);
   }
 }
 
@@ -27,7 +20,15 @@ module.exports = async function (context, req) {
     const body = req.body || {};
     const count = Math.min(Math.max(parseInt(body.count || 5, 10), 1), 50);
     const topics = Array.isArray(body.topics) ? body.topics : [];
-    const broadQuery = (topics.join(" ") || "IIBEC sheet metal roofing building enclosure");
+    const onlyIIBEC = !!body.onlyIIBEC;
+
+    // Bias query if onlyIIBEC
+    const iibecBias = onlyIIBEC
+      ? 'IIBEC OR "Institute of Building Enclosure Consultants" OR "IIBEC Manual" OR "Sheet Metal Manual"'
+      : '';
+
+    const userTerms = (topics.join(" ") || "roofing sheet metal flashing details building enclosure");
+    const broadQuery = [iibecBias, userTerms].filter(Boolean).join(" ");
 
     // ---- 1) Azure AI Search (small + agnostic) ----
     const searchEndpoint = process.env.SEARCH_ENDPOINT;
@@ -38,10 +39,14 @@ module.exports = async function (context, req) {
     const sRes = await fetchWithRetry(searchUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json", "api-key": searchKey },
-      body: JSON.stringify({ search: broadQuery, queryType: "simple", top: 20 })
+      body: JSON.stringify({
+        search: broadQuery,
+        queryType: "simple",
+        searchMode: "any",
+        top: 20
+      })
     });
     if (!sRes.ok) throw new Error(`Search error ${sRes.status}: ${await sRes.text()}`);
-
     const sJson = await sRes.json();
     const docs = Array.isArray(sJson.value) ? sJson.value : [];
 
@@ -53,9 +58,25 @@ module.exports = async function (context, req) {
     };
     const pickTitle = (d) => d.title || d.document_title || d.metadata_storage_name || "Document";
 
-    const excerpts = docs
+    // Prefer entries that look IIBEC-ish if onlyIIBEC, otherwise keep order
+    const scored = docs.map((d,i) => {
+      const title = (d.title || d.document_title || d.metadata_storage_name || "").toString().toLowerCase();
+      const text  = (pickContentField(d) || "").toLowerCase();
+      let score = 0;
+      if (title.includes("iibec")) score += 2;
+      if (text.includes("iibec")) score += 2;
+      if (text.includes("sheet metal")) score += 1;
+      if (text.includes("flashing")) score += 1;
+      return { d, score, i };
+    });
+
+    const ranked = onlyIIBEC
+      ? scored.sort((a,b)=> b.score - a.score || a.i - b.i).map(x=>x.d)
+      : docs;
+
+    const excerpts = ranked
       .map((d, i) => {
-        const content = (pickContentField(d) || "").slice(0, 4000); // hard cap
+        const content = (pickContentField(d) || "").slice(0, 4000);
         const title = pickTitle(d);
         const ref = `${title} | item-${i+1}`;
         return { ref, title, content };
@@ -65,14 +86,12 @@ module.exports = async function (context, req) {
 
     if (excerpts.length === 0) {
       context.res = { status: 200, headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: [], note: "No text content found in index." }) };
+        body: JSON.stringify({ items: [], note: onlyIIBEC ? "No IIBEC-like content found. Try turning off IIBEC-only." : "No text content found in index." }) };
       return;
     }
 
-    // ---- 2) Prompt (small) ----
     const sys = `
-You write exam-style questions for roofing/building enclosure based on IIBEC-type materials.
-Use ONLY the provided excerpts.
+You write exam-style questions based strictly on the provided excerpts.
 Return STRICT JSON: {"items":[{ "question": "...", "choices": {"A":"...","B":"...","C":"...","D":"..."}, "answer":"A|B|C|D", "rationale":"...", "citations":[{"title":"..."}]}]}
 Rules:
 - Create ${count} items total.
@@ -83,7 +102,6 @@ Rules:
 
     const user = "Excerpts:\\n\\n" + excerpts.map((e,i)=>`[${i+1}] REF=${e.ref}\\n${e.content}`).join("\\n\\n");
 
-    // ---- 3) Azure OpenAI (limited tokens + retries) ----
     const modelName = (process.env.DEFAULT_MODEL === "gpt-4.1") ? process.env.OPENAI_GPT41 : process.env.OPENAI_GPT4O_MINI;
     const aoaiUrl = `${process.env.OPENAI_ENDPOINT}/openai/deployments/${modelName}/chat/completions?api-version=2024-10-01-preview`;
 
@@ -104,7 +122,6 @@ Rules:
 
     const aoaiJson = await aoaiRes.json();
     const content = aoaiJson?.choices?.[0]?.message?.content || '{"items":[]}';
-
     context.res = { status: 200, headers: { "Content-Type": "application/json" }, body: content };
   } catch (err) {
     context.log.error(err);
