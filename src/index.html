@@ -3,22 +3,41 @@
   <head><meta charset="utf-8"><title>RoofVault SWA</title></head>
   <body style="font-family: system-ui; padding: 24px;">
     <h1>RoofVault SWA — API test</h1>
+    <button id="btnPing">Ping API (GET)</button>
     <button id="btn1">Generate 50 questions</button>
     <button id="btn2">Summarize publication</button>
     <button id="btn3">Group questions</button>
-    <pre id="out" style="white-space:pre-wrap; margin-top:16px;"></pre>
+    <pre id="out" style="white-space:pre-wrap; margin-top:16px; border:1px solid #ccc; padding:12px;"></pre>
     <script>
       const out = document.getElementById('out');
-      async function ping(path, body) {
-        const res = await fetch(path, { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body||{}) });
-        const txt = await res.text();
-        try { out.textContent = JSON.stringify(JSON.parse(txt), null, 2); }
-        catch { out.textContent = txt; }
+
+      function show(obj) {
+        try { out.textContent = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2); }
+        catch { out.textContent = String(obj); }
       }
-      // No publication filter; lets the API query broadly
-      document.getElementById('btn1').onclick = () => ping('/api/generate-questions', { count: 50 });
-      document.getElementById('btn2').onclick = () => ping('/api/summarize-publication', { publication:"TEST" });
-      document.getElementById('btn3').onclick = () => ping('/api/group-questions', { items:[{question:"Q1"}] });
+
+      async function ping(path, body) {
+        try {
+          const opts = body ? {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(body)
+          } : { method: 'GET' };
+
+          const res = await fetch(path, opts);
+          const text = await res.text();
+          let data;
+          try { data = JSON.parse(text); } catch { data = text; }
+          show({ status: res.status, ok: res.ok, data });
+        } catch (err) {
+          show({ error: String(err) });
+        }
+      }
+
+      document.getElementById('btnPing').onclick = () => ping('/api/generate-questions'); // GET ping
+      document.getElementById('btn1').onclick    = () => ping('/api/generate-questions', { count: 50 });
+      document.getElementById('btn2').onclick    = () => ping('/api/summarize-publication', { publication:"TEST" });
+      document.getElementById('btn3').onclick    = () => ping('/api/group-questions', { items:[{question:"Q1"}] });
     </script>
   </body>
 </html>
