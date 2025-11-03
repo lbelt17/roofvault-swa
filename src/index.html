@@ -35,7 +35,7 @@
       }
 
       document.getElementById('btnPing').onclick = () => ping('/api/generate-questions'); // GET ping
-      document.getElementById('btn1').onclick    = () => ping('/api/generate-questions', { count: 50 });
+      document.getElementById('btn1').onclick    = () => ping('/api/generate-questions', { count: 5 });
       document.getElementById('btn2').onclick    = () => ping('/api/summarize-publication', { publication:"TEST" });
       document.getElementById('btn3').onclick    = () => ping('/api/group-questions', { items:[{question:"Q1"}] });
     </script>
