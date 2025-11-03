@@ -1,6 +1,7 @@
 ﻿/**
  * BATCHED generator (50–100 safe) using Search + Azure OpenAI.
  * Uses DEPLOYMENT names (OPENAI_GPT41 / OPENAI_GPT4O_MINI) instead of raw model names.
+ * Includes a dry-run shortcut: if req.body.debug === true, returns 2 sample items immediately.
  */
 const fetch = global.fetch || require("node-fetch");
 
@@ -16,6 +17,34 @@ async function fetchWithRetry(url, options, delays=[1500,3000,5000,8000]) {
 
 module.exports = async function (context, req) {
   try {
+    // --- DRY RUN: quick sanity check path ---
+    if (req.body && req.body.debug === true) {
+      context.res = {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: [
+            {
+              question: "What is the primary purpose of a drip edge?",
+              choices: { A: "Direct water off edges", B: "Provide structure", C: "Aesthetic trim", D: "Sealant backup" },
+              answer: "A",
+              rationale: "Edge metal directs water away from the fascia and underlying components.",
+              citations: [{ title: "IIBEC Sheet Metal Manual" }]
+            },
+            {
+              question: "Which delivery method consolidates design and construction under one contract?",
+              choices: { A: "Design-bid-build", B: "Design-build", C: "CM as Agent", D: "Multiple prime" },
+              answer: "B",
+              rationale: "Design-build reduces owner risk by unifying responsibility.",
+              citations: [{ title: "IIBEC Manual of Practice" }]
+            }
+          ],
+          note: "dry-run OK"
+        })
+      };
+      return;
+    }
+
     // --- Settings & inputs ---
     const count     = Math.min(Math.max(parseInt(req.body?.count ?? 50,10), 1), 100);
     const onlyIIBEC = !!req.body?.onlyIIBEC;
@@ -40,8 +69,8 @@ module.exports = async function (context, req) {
     const deploymentName = (DEFAULT_MODEL === "gpt-4.1") ? (DEPLOY_41 || DEPLOY_4O_MINI) : (DEPLOY_4O_MINI || DEPLOY_41);
     if (!deploymentName) throw new Error("No AOAI deployment name found (check OPENAI_GPT41 / OPENAI_GPT4O_MINI settings).");
 
-    // --- 1) Pull context from Azure AI Search (field-agnostic, works with your index) ---
-    const iibecBias = onlyIIBEC ? 'IIBEC OR "Institute of Building Enclosure Consultants" OR "IIBEC Manual" OR "Sheet Metal Manual"' : '';
+    // --- 1) Pull context from Azure AI Search ---
+    const iibecBias = onlyIIBEC ? 'IIBEC OR "Institute of Building Enclosure Consultants" OR "Sheet Metal Manual" OR "Manual of Practice"' : '';
     const seedTerms = 'roofing sheet metal flashing waterproofing building enclosure contract administration';
     const searchQuery = [iibecBias, seedTerms].filter(Boolean).join(" ");
 
@@ -104,9 +133,13 @@ STRICT JSON ONLY: {"items":[{"question":"...","choices":{"A":"...","B":"...","C"
         body: JSON.stringify(body)
       });
 
+      if (!r) {
+        context.res = { status: 500, headers: {"Content-Type":"application/json"}, body: JSON.stringify({ error: "AOAI request failed: no response object" }) };
+        return;
+      }
+
       if (!r.ok) {
         const txt = await r.text();
-        // Surface AOAI errors back to client instead of empty 500
         context.res = { status: 500, headers: {"Content-Type":"application/json"}, body: JSON.stringify({ error: `OpenAI error ${r.status}: ${txt}` }) };
         return;
       }
@@ -127,7 +160,6 @@ STRICT JSON ONLY: {"items":[{"question":"...","choices":{"A":"...","B":"...","C"
       body: JSON.stringify({ items: all, total: all.length, batches, modelDeployment: deploymentName })
     };
   } catch (err) {
-    // Clear error text back to client
     context.res = { status: 500, headers: {"Content-Type":"application/json"}, body: JSON.stringify({ error: err.message }) };
   }
 };
