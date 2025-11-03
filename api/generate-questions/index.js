@@ -1,10 +1,11 @@
 ﻿/**
- * Conservative, rate-safe generator.
- * - batchSize = 5
- * - context: 3 chunks x 1200 chars
- * - lower max_tokens, robust error messages
+ * Generator with stage tests:
+ *  - { "stage": "search" }  -> only run Search and return a tiny summary
+ *  - { "stage": "aoai" }    -> only run AOAI with a 1-question prompt
+ *  - { "debug": true }      -> dry-run sample items
+ *  - normal body -> full batched generation
  */
-const fetch = global.fetch || require("node-fetch");
+const fetch = globalThis.fetch;
 
 async function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 async function fetchWithRetry(url, options, delays=[1500,3000,5000,8000]) {
@@ -18,7 +19,7 @@ async function fetchWithRetry(url, options, delays=[1500,3000,5000,8000]) {
 
 module.exports = async function (context, req) {
   try {
-    // Debug dry-run (still available)
+    // --- DRY RUN ---
     if (req.body && req.body.debug === true) {
       context.res = {
         status: 200,
@@ -48,8 +49,8 @@ module.exports = async function (context, req) {
 
     const count     = Math.min(Math.max(parseInt(req.body?.count ?? 50,10), 1), 100);
     const onlyIIBEC = !!req.body?.onlyIIBEC;
-    const batchSize = 5;             // smaller batches
-    const delayMs   = 2500;          // gentler pacing
+    const batchSize = 5;
+    const delayMs   = 2500;
 
     const SEARCH_ENDPOINT = process.env.SEARCH_ENDPOINT;
     const SEARCH_INDEX    = process.env.SEARCH_INDEX;
@@ -61,16 +62,49 @@ module.exports = async function (context, req) {
     const DEPLOY_4O_MINI    = process.env.OPENAI_GPT4O_MINI; // e.g., "gpt-4o-mini"
     const OPENAI_API_KEY    = process.env.OPENAI_API_KEY;
 
-    if (!SEARCH_ENDPOINT || !SEARCH_INDEX || !SEARCH_API_KEY || !OPENAI_ENDPOINT || !OPENAI_API_KEY) {
-      return context.res = { status: 500, headers:{"Content-Type":"application/json"}, body: JSON.stringify({ error: "Missing required app settings (Search or OpenAI)." }) };
-    }
-
+    // Choose deployed name
     const deploymentName = (DEFAULT_MODEL === "gpt-4.1") ? (DEPLOY_41 || DEPLOY_4O_MINI) : (DEPLOY_4O_MINI || DEPLOY_41);
-    if (!deploymentName) {
-      return context.res = { status: 500, headers:{"Content-Type":"application/json"}, body: JSON.stringify({ error: "No AOAI deployment name found (OPENAI_GPT41 / OPENAI_GPT4O_MINI)." }) };
+
+    // ---------- Stage: SEARCH only ----------
+    if (req.body?.stage === "search") {
+      const iibecBias = onlyIIBEC ? 'IIBEC OR "Institute of Building Enclosure Consultants" OR "Sheet Metal Manual" OR "Manual of Practice"' : '';
+      const seedTerms = 'roofing sheet metal flashing waterproofing building enclosure contract administration';
+      const searchQuery = [iibecBias, seedTerms].filter(Boolean).join(" ");
+
+      const url = `${SEARCH_ENDPOINT}/indexes/${SEARCH_INDEX}/docs/search?api-version=2024-07-01`;
+      const res = await fetchWithRetry(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
+        body: JSON.stringify({ search: searchQuery, queryType: "simple", searchMode: "any", top: 6 })
+      });
+      const text = await res.text();
+      context.res = { status: 200, headers: {"Content-Type":"application/json"}, body: JSON.stringify({ ok: res.ok, status: res.status, bodyLen: text.length, bodyPreview: text.slice(0, 500) }) };
+      return;
     }
 
-    // 1) Pull a small context from Search
+    // ---------- Stage: AOAI only ----------
+    if (req.body?.stage === "aoai") {
+      const aoaiUrl = `${OPENAI_ENDPOINT}/openai/deployments/${deploymentName}/chat/completions?api-version=2024-10-01-preview`;
+      const body = {
+        messages: [
+          { role: "system", content: "Return STRICT JSON: {\"items\":[{\"question\":\"...\",\"choices\":{\"A\":\"...\",\"B\":\"...\",\"C\":\"...\",\"D\":\"...\"},\"answer\":\"A\",\"rationale\":\"...\",\"citations\":[{\"title\":\"...\"}]}]}" },
+          { role: "user", content: "Create 1 roofing MCQ with A–D options, short rationale, and a plausible IIBEC/NRCA citation title." }
+        ],
+        temperature: 0.3,
+        max_tokens: 300,
+        response_format: { type: "json_object" }
+      };
+      const r = await fetchWithRetry(aoaiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "api-key": OPENAI_API_KEY },
+        body: JSON.stringify(body)
+      });
+      const txt = await r.text();
+      context.res = { status: 200, headers: {"Content-Type":"application/json"}, body: JSON.stringify({ ok: r.ok, status: r.status, raw: txt.slice(0, 800) }) };
+      return;
+    }
+
+    // ---------- Full path (search + batched AOAI) ----------
     const iibecBias = onlyIIBEC ? 'IIBEC OR "Institute of Building Enclosure Consultants" OR "Sheet Metal Manual" OR "Manual of Practice"' : '';
     const seedTerms = 'roofing sheet metal flashing waterproofing building enclosure contract administration';
     const searchQuery = [iibecBias, seedTerms].filter(Boolean).join(" ");
@@ -95,16 +129,14 @@ module.exports = async function (context, req) {
     };
     const docs = Array.isArray(sJson.value) ? sJson.value : [];
     const contextChunks = docs
-      .map(d => (pickContentField(d) || "").slice(0, 1200))  // trim to 1200 chars
+      .map(d => (pickContentField(d) || "").slice(0, 1200))
       .filter(x => x && x.trim())
-      .slice(0, 3);  // only 3 chunks
-
+      .slice(0, 3);
     const contextBlob = contextChunks.join("\n\n---\n\n");
     if (!contextBlob) {
       return context.res = { status: 200, headers: {"Content-Type":"application/json"}, body: JSON.stringify({ items: [], total: 0, note: "No text content found in the index." }) };
     }
 
-    // 2) Batched generation via AOAI (lightweight)
     const aoaiUrl = `${OPENAI_ENDPOINT}/openai/deployments/${deploymentName}/chat/completions?api-version=2024-10-01-preview`;
     const systemPrompt = `
 You are an IIBEC/NRCA exam item writer. Produce multiple-choice questions (A–D), exactly one correct answer, clear rationale, and at least one citation title.
@@ -126,7 +158,7 @@ STRICT JSON ONLY: {"items":[{"question":"...","choices":{"A":"...","B":"...","C"
           { role: "user",   content: userPrompt }
         ],
         temperature: 0.3,
-        max_tokens: 800,                     // smaller completions
+        max_tokens: 800,
         response_format: { type: "json_object" }
       };
 
