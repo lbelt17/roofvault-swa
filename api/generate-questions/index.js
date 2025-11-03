@@ -7,10 +7,12 @@
  * POST body example:
  *  { "publication": "IIBEC Sheet Metal Manual", "count": 100, "topics": ["flashings"] }
  */
-export default async function (context, req) {
+const fetch = global.fetch || require("node-fetch");
+
+module.exports = async function (context, req) {
   try {
     const body = req.body || {};
-    const publication = body.publication || "";           // optional but recommended
+    const publication = body.publication || "";
     const count = Math.min(Math.max(parseInt(body.count || 100, 10), 1), 100);
     const topics = Array.isArray(body.topics) ? body.topics : [];
 
@@ -77,9 +79,9 @@ Rules:
 - No extra keys, no markdown, no trailing commas.
 `.trim();
 
-    const user = `Excerpts:\n\n${excerpts.map((e,i)=>`[${i+1}] REF=${e.ref}\n${e.content}`).join("\n\n")}`;
+    const user = "Excerpts:\\n\\n" + excerpts.map((e,i)=>`[${i+1}] REF=${e.ref}\\n${e.content}`).join("\\n\\n");
 
-    // ---- 3) Call Azure OpenAI (model selectable by DEFAULT_MODEL) ----
+    // ---- 3) Call Azure OpenAI ----
     const modelName =
       (process.env.DEFAULT_MODEL === "gpt-4.1") ? process.env.OPENAI_GPT41 : process.env.OPENAI_GPT4O_MINI;
 
@@ -107,8 +109,8 @@ Rules:
     }
 
     const aoaiJson = await aoaiRes.json();
-    const content = aoaiJson?.choices?.[0]?.message?.content || `{"items":[]}`;
-    // Return already-JSON string so the frontend can parse it directly
+    const content = (aoaiJson && aoaiJson.choices && aoaiJson.choices[0] && aoaiJson.choices[0].message && aoaiJson.choices[0].message.content) || '{"items":[]}';
+
     context.res = {
       status: 200,
       headers: { "Content-Type": "application/json" },
@@ -118,4 +120,4 @@ Rules:
     context.log.error(err);
     context.res = { status: 500, body: { error: err.message } };
   }
-}
+};
