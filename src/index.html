@@ -6,6 +6,7 @@
 
     <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
       <button id="btnPing">Ping API (GET)</button>
+      <button id="btnGenQuick">Generate 5 (quick test)</button>
       <button id="btnGen">Generate 50 questions (IIBEC-biased)</button>
       <button id="btnSum">Summarize publication</button>
       <button id="btnGroup">Group questions into sections/objectives</button>
@@ -16,10 +17,7 @@
 
     <script>
       const out = document.getElementById('out');
-      function show(obj){
-        try { out.textContent = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2); }
-        catch { out.textContent = String(obj); }
-      }
+      function show(obj){ try { out.textContent = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2); } catch { out.textContent = String(obj); } }
       async function call(path, body){
         const opts = body ? { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)} : { method:'GET' };
         const res = await fetch(path, opts);
@@ -28,32 +26,30 @@
         return { status: res.status, ok: res.ok, data };
       }
 
-      // State
-      window.lastItems = null;   // [{ question, choices, answer, rationale, citations }]
-      window.lastGroups = null;  // { groups: [...], unassigned: [...] }
+      // state
+      window.lastItems = null;
+      window.lastGroups = null;
 
-      // Buttons
-      document.getElementById('btnPing').onclick = async () => {
-        show(await call('/api/ping'));
+      // buttons
+      document.getElementById('btnPing').onclick = async () => show(await call('/api/ping'));
+      document.getElementById('btnGenQuick').onclick = async () => {
+        const r = await call('/api/generate-questions', { count: 5, onlyIIBEC: true });
+        if (r.ok && r.data && r.data.items) window.lastItems = r.data.items;
+        show(r);
       };
       document.getElementById('btnGen').onclick = async () => {
         const r = await call('/api/generate-questions', { count: 50, onlyIIBEC: true });
-        if (r.ok && r.data && r.data.items) { window.lastItems = r.data.items; }
+        if (r.ok && r.data && r.data.items) window.lastItems = r.data.items;
         show(r);
       };
-      document.getElementById('btnSum').onclick = async () => {
-        show(await call('/api/summarize-publication', { publication: "IIBEC", onlyIIBEC: true }));
-      };
+      document.getElementById('btnSum').onclick = async () => show(await call('/api/summarize-publication', { publication: "IIBEC", onlyIIBEC: true }));
       document.getElementById('btnGroup').onclick = async () => {
-        if (!window.lastItems) { show({ error: "No items to group yet. Click 'Generate 50 questions' first." }); return; }
+        if (!window.lastItems) { show({ error: "No items to group yet. Click 'Generate 5' or 'Generate 50' first." }); return; }
         const r = await call('/api/group-questions', { items: window.lastItems });
         if (r.ok) window.lastGroups = r.data;
         show(r);
       };
-      document.getElementById('btnDry').onclick = async () => {
-        const r = await call('/api/generate-questions', { debug: true });
-        show(r);
-      };
+      document.getElementById('btnDry').onclick = async () => show(await call('/api/generate-questions', { debug: true }));
     </script>
   </body>
 </html>
