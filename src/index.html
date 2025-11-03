@@ -7,6 +7,7 @@
     <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
       <button id="btnPing">Ping API (GET)</button>
       <button id="btnGenQuick">Generate 5 (quick test)</button>
+      <button id="btnGen50Client">Generate 50 (client-batched)</button>
       <button id="btnGen">Generate 50 questions (IIBEC-biased)</button>
       <button id="btnSum">Summarize publication</button>
       <button id="btnGroup">Group questions into sections/objectives</button>
@@ -25,6 +26,7 @@
         let data; try { data=JSON.parse(txt);} catch { data=txt; }
         return { status: res.status, ok: res.ok, data };
       }
+      const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
 
       // state
       window.lastItems = null;
@@ -37,6 +39,23 @@
         if (r.ok && r.data && r.data.items) window.lastItems = r.data.items;
         show(r);
       };
+      // NEW: client-batched 50 (10x5)
+      document.getElementById('btnGen50Client').onclick = async () => {
+        const totalBatches = 10, perBatch = 5;
+        const all = [];
+        for (let i=0;i<totalBatches;i++){
+          show({progress:`Batch ${i+1}/${totalBatches}…`});
+          const r = await call('/api/generate-questions', { count: perBatch, onlyIIBEC: true });
+          if (!r.ok) { show({ error:`Batch ${i+1} failed`, detail:r }); return; }
+          const items = r.data?.items || [];
+          all.push(...items);
+          await sleep(800); // light pacing
+        }
+        window.lastItems = all;
+        show({ ok:true, total: all.length, items: all });
+      };
+
+      // (kept) single-call 50 (may time out on long loads)
       document.getElementById('btnGen').onclick = async () => {
         const r = await call('/api/generate-questions', { count: 50, onlyIIBEC: true });
         if (r.ok && r.data && r.data.items) window.lastItems = r.data.items;
@@ -44,7 +63,7 @@
       };
       document.getElementById('btnSum').onclick = async () => show(await call('/api/summarize-publication', { publication: "IIBEC", onlyIIBEC: true }));
       document.getElementById('btnGroup').onclick = async () => {
-        if (!window.lastItems) { show({ error: "No items to group yet. Click 'Generate 5' or 'Generate 50' first." }); return; }
+        if (!window.lastItems) { show({ error: "No items to group yet. Click 'Generate 5' or 'Generate 50 (client-batched)' first." }); return; }
         const r = await call('/api/group-questions', { items: window.lastItems });
         if (r.ok) window.lastGroups = r.data;
         show(r);
