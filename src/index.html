@@ -4,18 +4,33 @@
   <body style="font-family: system-ui; padding: 24px;">
     <h1>RoofVault SWA — AI Training Tool</h1>
 
+    <!-- Filters -->
+    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:8px;">
+      <label>Keywords:
+        <input id="kw" type="text" placeholder="e.g., NRCA membrane roofs; ASCE wind; manufacturer name" style="width:420px; padding:6px;">
+      </label>
+      <label style="display:flex; gap:6px; align-items:center;">
+        <input id="bias" type="checkbox" checked>
+        <span>Bias to IIBEC</span>
+      </label>
+    </div>
+
+    <!-- Actions -->
     <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
       <button id="btnPing">Ping API</button>
       <button id="btnGen5">Generate 5 (QC test)</button>
       <button id="btnGen50">Generate 50 (Client-batched)</button>
       <button id="btnSummAll">Summarize All Publications</button>
       <button id="btnGroup">Group Questions by Objectives</button>
+      <button id="btnDry">Dry run (debug)</button>
     </div>
 
     <pre id="out" style="white-space:pre-wrap; border:1px solid #ccc; padding:12px;"></pre>
 
     <script>
-      const out = document.getElementById('out');
+      const out  = document.getElementById('out');
+      const kwEl = document.getElementById('kw');
+      const biasEl = document.getElementById('bias');
       const show = o => out.textContent = typeof o === 'string' ? o : JSON.stringify(o,null,2);
       const sleep = ms => new Promise(r=>setTimeout(r,ms));
 
@@ -25,35 +40,44 @@
         try { return {ok:r.ok,status:r.status,data:JSON.parse(t)}; } catch { return {ok:r.ok,status:r.status,data:t}; }
       }
 
-      window.lastItems = [];  window.lastSummaries = [];
+      // state
+      window.lastItems = [];
+      window.lastSummaries = [];
+
+      const basePayload = () => ({
+        keywords: (kwEl.value || '').trim(),
+        onlyIIBEC: !!biasEl.checked
+      });
 
       document.getElementById('btnPing').onclick = async ()=>show(await call('/api/ping'));
-      document.getElementById('btnGen5').onclick  = async ()=>{
-        const r=await call('/api/generate-questions',{count:5,onlyIIBEC:true});
+
+      document.getElementById('btnGen5').onclick = async ()=>{
+        const r=await call('/api/generate-questions',{...basePayload(), count:5});
         if(r.ok&&r.data?.items) window.lastItems=r.data.items; show(r);
       };
+
+      // client-batched 50 (10x5)
       document.getElementById('btnGen50').onclick = async ()=>{
         const all=[]; for(let i=0;i<10;i++){
           show({progress:`Batch ${i+1}/10 …`});
-          const r=await call('/api/generate-questions',{count:5,onlyIIBEC:true});
+          const r=await call('/api/generate-questions',{...basePayload(), count:5});
           if(!r.ok) return show(r);
           all.push(...(r.data?.items||[])); await sleep(800);
         }
         window.lastItems=all; show({ok:true,total:all.length,items:all});
       };
 
-      // 🔹 Summarize all publications (loop 10x to cover blobs)
       document.getElementById('btnSummAll').onclick = async ()=>{
+        // Try a few representative names; API will also consider keywords when we wire it next
         const names=["IIBEC","NRCA","ASTM","Manual of Practice","Contract Administration","Thermoplastic Roofing"];
         const all=[];
         for(let i=0;i<names.length;i++){
           show({progress:`Summarizing ${names[i]} (${i+1}/${names.length})…`});
-          const r=await call('/api/summarize-publication',{publication:names[i],onlyIIBEC:true});
+          const r=await call('/api/summarize-publication',{...basePayload(), publication:names[i]});
           if(r.ok&&r.data) all.push({name:names[i],...r.data});
           await sleep(1200);
         }
-        window.lastSummaries=all;
-        show({ok:true,count:all.length,summaries:all});
+        window.lastSummaries=all; show({ok:true,count:all.length,summaries:all});
       };
 
       document.getElementById('btnGroup').onclick = async ()=>{
@@ -61,6 +85,8 @@
         const r=await call('/api/group-questions',{items:window.lastItems});
         show(r);
       };
+
+      document.getElementById('btnDry').onclick = async ()=>show(await call('/api/generate-questions',{debug:true}));
     </script>
   </body>
 </html>
