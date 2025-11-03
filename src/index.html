@@ -3,13 +3,22 @@
   <head><meta charset="utf-8"><title>RoofVault SWA</title></head>
   <body style="font-family: system-ui; padding: 24px;">
     <h1>RoofVault SWA — API test</h1>
-    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
       <button id="btnPing">Ping API (GET)</button>
       <button id="btnGen">Generate 5 questions (IIBEC-biased)</button>
       <button id="btnSum">Summarize publication</button>
       <button id="btnGroup">Group questions into sections/objectives</button>
     </div>
-    <pre id="out" style="white-space:pre-wrap; margin-top:16px; border:1px solid #ccc; padding:12px;"></pre>
+
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+      <button id="btnDownloadJSON" title="Downloads the last generated questions">Download questions (JSON)</button>
+      <button id="btnDownloadGroupedCSV" title="Downloads the last grouped result as CSV">Download grouped (CSV)</button>
+      <button id="btnDownloadGroupedJSON" title="Downloads the last grouped result">Download grouped (JSON)</button>
+    </div>
+
+    <pre id="out" style="white-space:pre-wrap; margin-top:8px; border:1px solid #ccc; padding:12px;"></pre>
+
     <script>
       const out = document.getElementById('out');
       function show(obj){
@@ -24,8 +33,11 @@
         return { status: res.status, ok: res.ok, data };
       }
 
-      window.lastItems = null;
+      // State
+      window.lastItems = null;   // [{ question, choices, answer, rationale, citations }]
+      window.lastGroups = null;  // { groups: [...], unassigned: [...] }
 
+      // Buttons
       document.getElementById('btnPing').onclick = async () => {
         show(await call('/api/ping'));
       };
@@ -40,7 +52,84 @@
       document.getElementById('btnGroup').onclick = async () => {
         if (!window.lastItems) { show({ error: "No items to group yet. Click 'Generate 5 questions' first." }); return; }
         const r = await call('/api/group-questions', { items: window.lastItems });
+        if (r.ok) window.lastGroups = r.data;
         show(r);
+      };
+
+      // Download helpers
+      function downloadBlob(filename, mime, text){
+        const blob = new Blob([text], { type: mime });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+        setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 0);
+      }
+
+      function itemsToCSV(items){
+        const esc = (s) => {
+          const t = (s ?? '').toString().replace(/"/g, '""');
+          return `"${t}"`;
+        };
+        const rows = [];
+        rows.push(["question","choiceA","choiceB","choiceC","choiceD","answer","rationale","citations"].map(esc).join(","));
+        for (const it of (items||[])){
+          const A = it.choices?.A ?? "";
+          const B = it.choices?.B ?? "";
+          const C = it.choices?.C ?? "";
+          const D = it.choices?.D ?? "";
+          const cites = Array.isArray(it.citations) ? it.citations.map(c=>c.title||"").join("; ") : "";
+          rows.push([
+            esc(it.question||""),
+            esc(A), esc(B), esc(C), esc(D),
+            esc(it.answer||""),
+            esc(it.rationale||""),
+            esc(cites)
+          ].join(","));
+        }
+        return rows.join("\n");
+      }
+
+      // Download buttons
+      document.getElementById('btnDownloadJSON').onclick = () => {
+        if (!window.lastItems) { show({ error: "No questions yet. Click 'Generate 5 questions' first." }); return; }
+        downloadBlob("questions.json", "application/json", JSON.stringify({ items: window.lastItems }, null, 2));
+      };
+
+      document.getElementById('btnDownloadGroupedCSV').onclick = () => {
+        if (!window.lastGroups) { show({ error: "No grouped result yet. Click 'Group questions…' first." }); return; }
+        // Flatten groups for CSV
+        const flat = [];
+        for (const g of (window.lastGroups.groups||[])){
+          for (const it of g.items){
+            const row = Object.assign({ __section: g.section, __objective: g.objective }, it);
+            flat.push(row);
+          }
+        }
+        // Include unassigned too
+        for (const it of (window.lastGroups.unassigned||[])){
+          const row = Object.assign({ __section: "Unassigned", __objective: "" }, it);
+          flat.push(row);
+        }
+        // Convert while keeping section/objective as prefix columns
+        const esc = (s) => `"${(s??"").toString().replace(/"/g,'""')}"`;
+        const rows = [];
+        rows.push(["section","objective","question","choiceA","choiceB","choiceC","choiceD","answer","rationale","citations"].map(esc).join(","));
+        for (const it of flat){
+          const cites = Array.isArray(it.citations) ? it.citations.map(c=>c.title||"").join("; ") : "";
+          rows.push([
+            esc(it.__section||""), esc(it.__objective||""),
+            esc(it.question||""),
+            esc(it.choices?.A||""), esc(it.choices?.B||""), esc(it.choices?.C||""), esc(it.choices?.D||""),
+            esc(it.answer||""), esc(it.rationale||""),
+            esc(cites)
+          ].join(","));
+        }
+        downloadBlob("questions_grouped.csv", "text/csv", rows.join("\n"));
+      };
+
+      document.getElementById('btnDownloadGroupedJSON').onclick = () => {
+        if (!window.lastGroups) { show({ error: "No grouped result yet. Click 'Group questions…' first." }); return; }
+        downloadBlob("questions_grouped.json", "application/json", JSON.stringify(window.lastGroups, null, 2));
       };
     </script>
   </body>
