@@ -1,7 +1,8 @@
 ﻿/**
- * BATCHED generator (50–100 safe) using Search + Azure OpenAI.
- * Uses DEPLOYMENT names (OPENAI_GPT41 / OPENAI_GPT4O_MINI) instead of raw model names.
- * Includes a dry-run shortcut: if req.body.debug === true, returns 2 sample items immediately.
+ * Conservative, rate-safe generator.
+ * - batchSize = 5
+ * - context: 3 chunks x 1200 chars
+ * - lower max_tokens, robust error messages
  */
 const fetch = global.fetch || require("node-fetch");
 
@@ -17,7 +18,7 @@ async function fetchWithRetry(url, options, delays=[1500,3000,5000,8000]) {
 
 module.exports = async function (context, req) {
   try {
-    // --- DRY RUN: quick sanity check path ---
+    // Debug dry-run (still available)
     if (req.body && req.body.debug === true) {
       context.res = {
         status: 200,
@@ -45,11 +46,10 @@ module.exports = async function (context, req) {
       return;
     }
 
-    // --- Settings & inputs ---
     const count     = Math.min(Math.max(parseInt(req.body?.count ?? 50,10), 1), 100);
     const onlyIIBEC = !!req.body?.onlyIIBEC;
-    const batchSize = 10;            // 10 Qs per call
-    const delayMs   = 3000;          // 3s between calls
+    const batchSize = 5;             // smaller batches
+    const delayMs   = 2500;          // gentler pacing
 
     const SEARCH_ENDPOINT = process.env.SEARCH_ENDPOINT;
     const SEARCH_INDEX    = process.env.SEARCH_INDEX;
@@ -62,14 +62,15 @@ module.exports = async function (context, req) {
     const OPENAI_API_KEY    = process.env.OPENAI_API_KEY;
 
     if (!SEARCH_ENDPOINT || !SEARCH_INDEX || !SEARCH_API_KEY || !OPENAI_ENDPOINT || !OPENAI_API_KEY) {
-      throw new Error("Missing required app settings (Search or OpenAI).");
+      return context.res = { status: 500, headers:{"Content-Type":"application/json"}, body: JSON.stringify({ error: "Missing required app settings (Search or OpenAI)." }) };
     }
 
-    // Map DEFAULT_MODEL -> deployment name actually deployed in your AOAI account
     const deploymentName = (DEFAULT_MODEL === "gpt-4.1") ? (DEPLOY_41 || DEPLOY_4O_MINI) : (DEPLOY_4O_MINI || DEPLOY_41);
-    if (!deploymentName) throw new Error("No AOAI deployment name found (check OPENAI_GPT41 / OPENAI_GPT4O_MINI settings).");
+    if (!deploymentName) {
+      return context.res = { status: 500, headers:{"Content-Type":"application/json"}, body: JSON.stringify({ error: "No AOAI deployment name found (OPENAI_GPT41 / OPENAI_GPT4O_MINI)." }) };
+    }
 
-    // --- 1) Pull context from Azure AI Search ---
+    // 1) Pull a small context from Search
     const iibecBias = onlyIIBEC ? 'IIBEC OR "Institute of Building Enclosure Consultants" OR "Sheet Metal Manual" OR "Manual of Practice"' : '';
     const seedTerms = 'roofing sheet metal flashing waterproofing building enclosure contract administration';
     const searchQuery = [iibecBias, seedTerms].filter(Boolean).join(" ");
@@ -78,9 +79,12 @@ module.exports = async function (context, req) {
     const sRes = await fetchWithRetry(searchUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
-      body: JSON.stringify({ search: searchQuery, queryType: "simple", searchMode: "any", top: 12 })
+      body: JSON.stringify({ search: searchQuery, queryType: "simple", searchMode: "any", top: 6 })
     });
-    if (!sRes.ok) throw new Error(`Search error ${sRes.status}: ${await sRes.text()}`);
+    if (!sRes || !sRes.ok) {
+      const txt = sRes ? await sRes.text() : "(no response)";
+      return context.res = { status: 500, headers:{"Content-Type":"application/json"}, body: JSON.stringify({ error: `Search error ${sRes?.status||'??'}: ${txt}` }) };
+    }
     const sJson = await sRes.json();
 
     const pickContentField = (d) => {
@@ -91,24 +95,23 @@ module.exports = async function (context, req) {
     };
     const docs = Array.isArray(sJson.value) ? sJson.value : [];
     const contextChunks = docs
-      .map(d => (pickContentField(d) || "").slice(0, 3000))
+      .map(d => (pickContentField(d) || "").slice(0, 1200))  // trim to 1200 chars
       .filter(x => x && x.trim())
-      .slice(0, 8);
+      .slice(0, 3);  // only 3 chunks
 
     const contextBlob = contextChunks.join("\n\n---\n\n");
     if (!contextBlob) {
-      context.res = { status: 200, headers: {"Content-Type":"application/json"}, body: JSON.stringify({ items: [], total: 0, note: "No text content found in the index." }) };
-      return;
+      return context.res = { status: 200, headers: {"Content-Type":"application/json"}, body: JSON.stringify({ items: [], total: 0, note: "No text content found in the index." }) };
     }
 
-    // --- 2) Batched generation via AOAI Chat Completions (deployment name!) ---
+    // 2) Batched generation via AOAI (lightweight)
     const aoaiUrl = `${OPENAI_ENDPOINT}/openai/deployments/${deploymentName}/chat/completions?api-version=2024-10-01-preview`;
     const systemPrompt = `
-You are an IIBEC/NRCA exam item writer. Write high-quality multiple-choice questions (A–D), exactly one correct answer, clear rationale, and at least one citation title.
+You are an IIBEC/NRCA exam item writer. Produce multiple-choice questions (A–D), exactly one correct answer, clear rationale, and at least one citation title.
 STRICT JSON ONLY: {"items":[{"question":"...","choices":{"A":"...","B":"...","C":"...","D":"..."},"answer":"A|B|C|D","rationale":"...","citations":[{"title":"..."}]}]}
-- Use the provided excerpts ONLY.
-- Vary difficulty.
-- Avoid duplicates across batches.
+- Use only the provided excerpts.
+- Vary difficulty and topic.
+- No duplicates across batches.
 - No markdown, no extra keys.
 `.trim();
 
@@ -116,14 +119,14 @@ STRICT JSON ONLY: {"items":[{"question":"...","choices":{"A":"...","B":"...","C"
     const batches = Math.ceil(count / batchSize);
     for (let i = 0; i < batches; i++) {
       const n = Math.min(batchSize, count - i*batchSize);
-      const userPrompt = `Create ${n} distinct items using only these excerpts:\n\n${contextBlob}`;
+      const userPrompt = `From the following excerpts, write ${n} distinct items.\n\nExcerpts:\n${contextBlob}`;
       const body = {
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user",   content: userPrompt }
         ],
-        temperature: 0.4,
-        max_tokens: 1200,
+        temperature: 0.3,
+        max_tokens: 800,                     // smaller completions
         response_format: { type: "json_object" }
       };
 
@@ -134,14 +137,11 @@ STRICT JSON ONLY: {"items":[{"question":"...","choices":{"A":"...","B":"...","C"
       });
 
       if (!r) {
-        context.res = { status: 500, headers: {"Content-Type":"application/json"}, body: JSON.stringify({ error: "AOAI request failed: no response object" }) };
-        return;
+        return context.res = { status: 500, headers: {"Content-Type":"application/json"}, body: JSON.stringify({ error: "AOAI: no HTTP response object" }) };
       }
-
       if (!r.ok) {
         const txt = await r.text();
-        context.res = { status: 500, headers: {"Content-Type":"application/json"}, body: JSON.stringify({ error: `OpenAI error ${r.status}: ${txt}` }) };
-        return;
+        return context.res = { status: 500, headers: {"Content-Type":"application/json"}, body: JSON.stringify({ error: `OpenAI error ${r.status}: ${txt}` }) };
       }
 
       const j = await r.json();
@@ -160,6 +160,6 @@ STRICT JSON ONLY: {"items":[{"question":"...","choices":{"A":"...","B":"...","C"
       body: JSON.stringify({ items: all, total: all.length, batches, modelDeployment: deploymentName })
     };
   } catch (err) {
-    context.res = { status: 500, headers: {"Content-Type":"application/json"}, body: JSON.stringify({ error: err.message }) };
+    context.res = { status: 500, headers: {"Content-Type":"application/json"}, body: JSON.stringify({ error: err.message || String(err) }) };
   }
 };
