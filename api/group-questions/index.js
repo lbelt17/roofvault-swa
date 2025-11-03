@@ -1,9 +1,11 @@
 ﻿/**
  * Groups items (Q&A) by Section/Objectives using a simple keyword taxonomy.
  * Request body:
- *   { "items": [ {question, choices, rationale, citations[]} ], "taxonomyUrl": "<optional>" }
- * If taxonomyUrl is omitted, loads /data/objectives.json from this site.
+ *   { "items": [ {question, choices, rationale, citations[]} ], "taxonomyUrl": "<optional http(s)>" }
+ * If taxonomyUrl is omitted, loads ./../../data/objectives.json from the app package (local file).
  */
+const fs = require("fs");
+const path = require("path");
 const fetch = global.fetch || require("node-fetch");
 
 function normalize(s){ return (s||"").toString().toLowerCase(); }
@@ -22,11 +24,23 @@ function scoreText(text, keywords){
   return score;
 }
 
+async function loadTaxonomy(taxonomyUrl){
+  if (taxonomyUrl && /^https?:\/\//i.test(taxonomyUrl)) {
+    const res = await fetch(taxonomyUrl);
+    if (!res.ok) throw new Error(`Failed to load taxonomy URL: ${res.status}`);
+    return await res.json();
+  }
+  // Read from local file packaged with the app
+  const localPath = path.join(__dirname, "..", "..", "data", "objectives.json");
+  const buf = fs.readFileSync(localPath);
+  return JSON.parse(buf.toString("utf8"));
+}
+
 module.exports = async function (context, req) {
   try {
     const body = req.body || {};
     const items = Array.isArray(body.items) ? body.items : [];
-    const taxonomyUrl = body.taxonomyUrl; // optional override
+    const taxonomyUrl = body.taxonomyUrl; // optional
 
     if (items.length === 0){
       context.res = { status: 200, headers: {"Content-Type":"application/json"},
@@ -34,20 +48,7 @@ module.exports = async function (context, req) {
       return;
     }
 
-    // Load taxonomy
-    let taxonomy;
-    if (taxonomyUrl){
-      const tRes = await fetch(taxonomyUrl);
-      if (!tRes.ok) throw new Error(`Failed to load taxonomy: ${tRes.status}`);
-      taxonomy = await tRes.json();
-    } else {
-      // fetch from same origin
-      const origin = (process.env.WEBSITE_HOSTNAME ? `https://${process.env.WEBSITE_HOSTNAME}` : "");
-      const url = `${origin}/data/objectives.json`;
-      const tRes = await fetch(url);
-      if (!tRes.ok) throw new Error(`Failed to load default taxonomy: ${tRes.status}`);
-      taxonomy = await tRes.json();
-    }
+    const taxonomy = await loadTaxonomy(taxonomyUrl);
 
     const groupsIndex = []; // {section, objective, keywords, items:[]}
     for (const sec of taxonomy.sections || []){
@@ -86,7 +87,6 @@ module.exports = async function (context, req) {
       }
     }
 
-    // Collapse to output shape (only include groups that got items)
     const groups = groupsIndex
       .filter(g => g.items.length > 0)
       .map(g => ({ section: g.section, objective: g.objective, count: g.items.length, items: g.items }));
