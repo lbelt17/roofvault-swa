@@ -1,0 +1,44 @@
+﻿{
+  "sections": [
+    {
+      "section": "Contract Administration",
+      "objectives": [
+        { "objective": "Forms & Logs", "keywords": ["submittal log","rfi","change order","field report","daily report","contract administration","cca","project record","procedural form"] },
+        { "objective": "Delivery Methods", "keywords": ["design-build","design bid build","construction management","single prime","prime contracts","project delivery"] }
+      ]
+    },
+    {
+      "section": "Roofing Systems",
+      "objectives": [
+        { "objective": "Membranes & Insulation", "keywords": ["membrane","rigid board insulation","fasteners","surfacings","roof assembly","air barrier","vapor retarder"] },
+        { "objective": "Steep-Slope", "keywords": ["asphalt shingle","tile","slate","metal shingle","steep-slope"] }
+      ]
+    },
+    {
+      "section": "Sheet Metal & Flashings",
+      "objectives": [
+        { "objective": "Edges & Terminations", "keywords": ["drip edge","edge metal","termination bar","counterflashing","reglet","coping"] },
+        { "objective": "Penetrations & Details", "keywords": ["penetration","pipe boot","pitch pan","gooseneck","scupper","downspout","gutter"] }
+      ]
+    },
+    {
+      "section": "Waterproofing",
+      "objectives": [
+        { "objective": "Below-Grade & Plaza", "keywords": ["waterproof","protection course","planter","horizontal slab","expansion joint","sealant","tunnel","vault"] }
+      ]
+    },
+    {
+      "section": "Codes & Standards",
+      "objectives": [
+        { "objective": "Building Codes", "keywords": ["international building code","ibc","code enforcement","state building code","amendment"] },
+        { "objective": "Wind & Loads", "keywords": ["asce","basic wind speed","special wind region","wind design"] }
+      ]
+    },
+    {
+      "section": "Safety",
+      "objectives": [
+        { "objective": "OSHA Construction", "keywords": ["cfr 29","personal protective","fire protection","materials handling","osha","life-saving equipment"] }
+      ]
+    }
+  ]
+}
