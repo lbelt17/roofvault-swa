@@ -19,15 +19,13 @@
     try{
       const res = await fetch(url, { ...options, signal: ctrl.signal });
       return res;
-    } finally {
-      clearTimeout(id);
-    }
+    } finally { clearTimeout(id); }
   }
 
   // Fallback sample so UI always renders
   function renderFallback(bookLabel){
     const items = [
-      `1. MCQ: Sanity question for ${bookLabel||"Document"}. Choose B.
+`1. MCQ: Sanity question for ${bookLabel||"Document"}. Choose B.
 A. A
 B. B
 C. C
@@ -35,11 +33,11 @@ D. D
 Answer: B
 Why: Pipeline timeout fallback.
 Cites: Preview`,
-      `2. T/F: This should be True.
+`2. T/F: This should be True.
 Answer: True
 Why: Pipeline timeout fallback.
 Cites: Preview`,
-      `3. Short Answer: Type TEST.
+`3. Short Answer: Type TEST.
 Answer: TEST
 Why: Pipeline timeout fallback.
 Cites: Preview`
@@ -66,11 +64,11 @@ Cites: Preview`
       setStatus("Generating exam…");
       showDiag("Calling /api/exam …");
 
-      // 10s timeout + robust parsing
+      // 10s timeout; DO NOT send filterField
       const res = await fetchWithTimeout("/api/exam", {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ book: pick.value })   // no filterField
+        body: JSON.stringify({ book: pick.value })
       }, 10000);
 
       const text = await res.text();
@@ -84,7 +82,6 @@ Cites: Preview`
         return;
       }
 
-      // Accept {items:[...]} or pass-through any Docs for bridge to handle
       const payload = (Array.isArray(data?.items) || Array.isArray(data?.docs)) ? data : (data?.body || data);
       if (Array.isArray(payload?.items) && payload.items.length){
         if (summary) summary.innerHTML = '<span class="muted">Answer key hidden. Click "Show Answer Key" in the Questions panel.</span>';
@@ -92,12 +89,10 @@ Cites: Preview`
         if (modelEl && payload.modelDeployment) modelEl.textContent = payload.modelDeployment;
         setStatus(`HTTP ${res.status}`);
       } else if (Array.isArray(payload?.docs) && payload.docs.length){
-        // Let the bridge convert docs -> sample exam
-        window.renderQuiz?.({ docs: payload.docs });
+        window.renderQuiz?.({ docs: payload.docs }); // bridge makes sample
         if (modelEl && payload.modelDeployment) modelEl.textContent = payload.modelDeployment;
         setStatus(`HTTP ${res.status}`);
       } else {
-        // No items returned — render fallback
         renderFallback(pick.value);
         showDiag({status:res.status, body:payload});
         setStatus("Error");
@@ -105,7 +100,6 @@ Cites: Preview`
     }catch(e){
       console.error(e);
       showDiag(e?.message || String(e));
-      // If request failed (abort/timeout/network), still show questions
       const pick = window.getSelectedBook && window.getSelectedBook();
       renderFallback(pick && pick.value);
       setStatus("Error");
