@@ -1,63 +1,52 @@
 ﻿(function(){
-  function makeEl(tag, attrs={}, children=[]) {
-    const el = document.createElement(tag);
-    Object.entries(attrs).forEach(([k,v])=>{
-      if (k === "class") el.className = v; else el.setAttribute(k, v);
-    });
-    children.forEach(c => el.appendChild(typeof c === "string" ? document.createTextNode(c) : c));
-    return el;
-  }
+  async function loadBooks(){
+    const mount = document.getElementById("bookMount");
+    if (!mount) return;
 
-  async function fetchBooks() {
-    const res = await fetch("/api/books", { method: "POST" });
+    // clear any previous UI
+    mount.innerHTML = "";
+
+    const res = await fetch("/api/books");
     const data = await res.json(); // { field, values }
-    return data;
-  }
+    const field = data.field || null;
+    const values = Array.isArray(data.values) ? data.values : [];
 
-  async function insertBookPicker() {
-    const toolbar = document.querySelector(".toolbar");
-    if (!toolbar) return;
+    const label = document.createElement("label");
+    label.textContent = "Book";
+    label.style.display = "flex";
+    label.style.flexDirection = "column";
+    label.style.gap = "6px";
 
-    const label = makeEl("label", {}, [
-      document.createTextNode("Book "),
-      makeEl("select", { id: "bookSelect", style: "min-width:240px;max-width:100%;" })
-    ]);
+    const sel = document.createElement("select");
+    sel.id = "bookSelect";
+    sel.style.minWidth = "260px";
+    const optAll = document.createElement("option");
+    optAll.value = "";
+    optAll.textContent = "(All Books)";
+    sel.appendChild(optAll);
+    values.forEach(v=>{
+      const o = document.createElement("option");
+      o.value = v;
+      o.textContent = v;
+      sel.appendChild(o);
+    });
 
-    const badge = makeEl("span", { class: "pill", id: "facetBadge", title: "Facet/field used to group books" }, ["field: ?"]);
+    const meta = document.createElement("div");
+    meta.className = "muted";
+    meta.style.fontSize = "12px";
+    meta.textContent = field ? `field: ${field}` : "field: ?";
 
-    const btnbar = toolbar.querySelector(".btnbar");
-    if (btnbar) {
-      toolbar.insertBefore(label, btnbar);
-      toolbar.insertBefore(badge, btnbar);
-    } else {
-      toolbar.appendChild(label);
-      toolbar.appendChild(badge);
-    }
+    label.appendChild(sel);
+    label.appendChild(meta);
+    mount.appendChild(label);
 
-    const sel = label.querySelector("#bookSelect");
-    sel.innerHTML = "";
-    const first = makeEl("option", { value: "" }, ["(All books)"]);
-    sel.appendChild(first);
-
-    let field = null;
-    try {
-      const result = await fetchBooks(); // { field, values }
-      field = result.field || null;
-      const badgeEl = document.getElementById("facetBadge");
-      if (badgeEl) badgeEl.textContent = "field: " + (field || "?");
-
-      const books = Array.isArray(result.values) ? result.values : [];
-      books.forEach(b => sel.appendChild(makeEl("option", { value: b }, [b])));
-    } catch (e) {
-      console.warn("books facet error:", e);
-    }
-
-    window.getSelectedBook = () => ({ value: sel.value || "", field });
+    // expose a single selector for other scripts
+    window.getSelectedBook = () => ({ value: sel.value, field });
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", insertBookPicker);
+    document.addEventListener("DOMContentLoaded", loadBooks);
   } else {
-    insertBookPicker();
+    loadBooks();
   }
 })();

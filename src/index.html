@@ -5,62 +5,67 @@
   <title>RoofVault AI — Training Tool</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root {
-      --bg:#0b0d12; --card:#111520; --ink:#e6ecff; --muted:#9fb0d0; --accent:#7cc4ff; --ring:#224466;
-      --ok:#2ecc71; --warn:#f1c40f; --err:#ff6b6b; --chip:#192131;
+    :root{
+      /* Light theme */
+      --bg:#f5f7fb; --card:#ffffff; --ink:#0b0d12; --muted:#5b6b82; --accent:#1d6cff; --ring:#d7e2ff;
+      --ok:#1f9d55; --warn:#b7791f; --err:#e5534b; --chip:#eef2f7; --border:#e6ebf3;
     }
     *{box-sizing:border-box}
-    body{margin:0;background:linear-gradient(180deg,#0b0d12,#0e1220);color:var(--ink);font:15px system-ui,Segoe UI,Inter,Roboto,Arial,sans-serif}
+    body{margin:0;background:var(--bg);color:var(--ink);font:15px system-ui,Segoe UI,Inter,Roboto,Arial,sans-serif}
     .wrap{max-width:1100px;margin:32px auto;padding:0 16px}
-    h1{margin:0 0 12px;font-size:24px;letter-spacing:.3px}
+    h1{margin:0 0 8px;font-size:24px;letter-spacing:.2px}
     .sub{color:var(--muted);margin-bottom:18px}
-    .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:var(--card);border:1px solid #20283a;border-radius:16px;padding:14px}
-    .toolbar input[type="text"]{width:420px;max-width:100%;background:#0d1220;border:1px solid #1f2a3f;border-radius:10px;padding:10px;color:var(--ink)}
-    .toolbar .chk{display:flex;gap:8px;align-items:center;color:var(--muted)}
-    .btnbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-    button{background:#152038;border:1px solid #263354;color:var(--ink);padding:9px 12px;border-radius:10px;cursor:pointer}
-    button:hover{border-color:#33507a}
+
+    .toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px}
+    .toolbar input[type="text"]{width:360px;max-width:100%;background:#fff;border:1px solid var(--border);border-radius:10px;padding:10px;color:var(--ink)}
+
+    .btnbar{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+    button{background:#fff;border:1px solid var(--border);color:var(--ink);padding:9px 12px;border-radius:10px;cursor:pointer}
+    button:hover{border-color:#cfd8e6}
+    .copy{background:#f7faff}
+
     .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;margin-top:16px}
     .col-8{grid-column:span 8}
     .col-4{grid-column:span 4}
-    .card{background:var(--card);border:1px solid #1b2436;border-radius:16px;padding:14px}
+
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px}
     .card h3{margin:0 0 8px;font-size:16px}
-    .chip{display:inline-flex;gap:6px;align-items:center;background:var(--chip);border:1px solid #263354;border-radius:999px;padding:6px 10px;color:var(--muted);font-size:12px}
-    .q{border-top:1px dashed #223049;margin-top:10px;padding-top:10px}
-    .q .stem{font-weight:600;margin-bottom:6px}
+    .chip{display:inline-flex;gap:6px;align-items:center;background:var(--chip);border:1px solid var(--border);border-radius:999px;padding:6px 10px;color:var(--muted);font-size:12px}
+
+    .q{border-top:1px dashed #e2e8f3;margin-top:10px;padding-top:10px}
+    .stem{font-weight:600;margin-bottom:6px}
     .choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:8px 0}
-    .choice{background:#0e1424;border:1px solid #22304a;border-radius:10px;padding:8px}
-    .answer{color:var(--ok);font-weight:600}
-    .bad{color:var(--err)}
+    .choice{background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px;text-align:left}
+    .answer{color:var(--ok);font-weight:700;border-color:#b9e4c8;background:#f2fbf6}
+    .bad{color:var(--err);border-color:#f5c2bf;background:#fff6f5}
     .muted{color:var(--muted)}
     .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .mono{font-family:ui-monospace,Consolas,Menlo,monospace;font-size:12px}
-    .hidden{display:none}
     .right{margin-left:auto}
-    .copy{background:#0f1830}
-    .pill{padding:4px 8px;border-radius:999px;background:#0d1529;border:1px solid #1f2a3f}
-    .kbd{font:12px ui-monospace,Consolas,monospace;background:#0b1222;border:1px solid #1c2942;border-radius:6px;padding:2px 6px;color:var(--muted)}
+    .pill{padding:4px 8px;border-radius:999px;background:#f4f7ff;border:1px solid var(--ring)}
+    .hidden{display:none}
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1>RoofVault AI — Training Tool</h1>
-    <div class="sub">Generate exam questions, summaries, and objective groupings from anything you’ve uploaded.</div>
+    <div class="sub">Generate interactive practice exams from your uploaded manuals.</div>
 
     <div class="toolbar">
       <label>Keywords
-        <input id="kw" type="text" placeholder="e.g., NRCA membrane roofs; ASTM waterproofing; IBC fire ratings">
+        <input id="kw" type="text" placeholder="e.g., membrane roofs; waterproofing; fire ratings">
       </label>
-      <span class="pill">Book filter active (no IIBEC bias)</span>
+
+      <!-- Single mount point for the Book dropdown -->
+      <div id="bookMount"></div>
+
       <span class="chip">Model: <span id="model">auto</span></span>
-      <span id="status" class="right muted">Ready</span>
+      <span id="status" class="muted">Ready</span>
+
       <div class="btnbar">
         <button id="btnPing">Ping</button>
         <button id="btnGen5">Generate 5</button>
-        <button id="btnGen50">Generate 50 (batched)</button>
-        <button id="btnSummKw">Summarize by Keywords</button>
-        <button id="btnGroup">Group by Objectives</button>
-        <button id="btnRawToggle" class="copy">Toggle Raw JSON</button>
+        <button id="btnGenExam50ByBook">Generate Exam (50 by Book)</button>
       </div>
     </div>
 
@@ -92,113 +97,40 @@
         </div>
       </div>
     </div>
-
-    <pre id="raw" class="card mono hidden" style="margin-top:12px;white-space:pre-wrap;"></pre>
   </div>
 
+  <!-- Load scripts -->
+  <script src="books.js"></script>
+  <script src="exam.js"></script>
+
   <script>
-    const kwEl = document.getElementById('kw');
-    const biasEl = document.getElementById('bias');
+    // Minimal stubs used by existing buttons
     const statusEl = document.getElementById('status');
-    const modelEl = document.getElementById('model');
-    const qList = document.getElementById('qList');
+    const modelEl  = document.getElementById('model');
+    const qList    = document.getElementById('qList');
     const summaryBlock = document.getElementById('summaryBlock');
-    const sourcesEl = document.getElementById('sources');
-    const diagEl = document.getElementById('diag');
-    const rawEl = document.getElementById('raw');
-
-    let lastItems = [];
-    let lastSummary = null;
-    let lastRaw = null;
-
-    const basePayload = () => ({
-      keywords: (kwEl.value || '').trim(),
-      onlyIIBEC: false
-    });
+    const diagEl   = document.getElementById('diag');
+    const kwEl     = document.getElementById('kw');
 
     const setStatus = (t) => statusEl.textContent = t || 'Ready';
     const showDiag = (o) => { try { diagEl.textContent = typeof o==='string'?o:JSON.stringify(o,null,2);} catch{diagEl.textContent=String(o);} };
-    const showRaw = (o) => { try { rawEl.textContent = typeof o==='string'?o:JSON.stringify(o,null,2);} catch{rawEl.textContent=String(o);} lastRaw=o; };
 
-    function renderQuestions(items) {
-      if (!items?.length) { qList.innerHTML = '<span class="muted">No questions yet.</span>'; return; }
-      qList.innerHTML = items.map((it,idx)=>{
-        const ch = it.choices||{};
-        const cite = (it.citations && it.citations[0]?.title) ? `<span class="pill">${it.citations[0].title}</span>` : '';
-        return `
-          <div class="q">
-            <div class="row">
-              <div class="stem">Q${idx+1}. ${escapeHtml(it.question||'')}</div>
-              <button class="copy right" onclick='copyText(${JSON.stringify(JSON.stringify(it))})'>Copy</button>
-            </div>
-            <div class="choices">
-              ${['A','B','C','D'].map(k=>{
-                const val = ch[k]||'';
-                const cls = (it.answer===k)?'answer':'';
-                return `<div class="choice ${cls}"><b>${k}.</b> ${escapeHtml(val)}</div>`;
-              }).join('')}
-            </div>
-            <div class="muted">Rationale: ${escapeHtml(it.rationale||'')}</div>
-            <div class="row" style="margin-top:6px">${cite}</div>
-          </div>`;
-      }).join('');
-    }
+    const basePayload = () => ({ keywords:(kwEl.value||'').trim() });
 
-    function renderSummary(sum) {
-      if (!sum) { summaryBlock.innerHTML = '<span class="muted">No summary yet.</span>'; sourcesEl.textContent='None'; return; }
-      const outline = (sum.outline||[]).map(s=>{
-        return `<div style="margin:8px 0"><b>${escapeHtml(s.section||'')}</b><div class="muted">${(s.bullets||[]).map(b=>`• ${escapeHtml(b)}`).join('<br>')}</div></div>`;
-      }).join('');
-      const where = (sum.where_to_find||[]).map(w=>{
-        return `<div class="pill" title="${(w.titles||[]).join(', ')}">${escapeHtml(w.topic||'Topic')}</div>`;
-      }).join(' ');
-      summaryBlock.innerHTML = `
-        <div style="margin-bottom:8px">${outline||'<span class="muted">No outline.</span>'}</div>
-        <div style="margin:8px 0"><b>Summary:</b> ${escapeHtml(sum.summary||'')}</div>
-        <div style="margin:8px 0"><b>Where to find:</b> <div class="row" style="gap:6px;margin-top:6px">${where||'<span class="muted">No mapping.</span>'}</div></div>
-      `;
-      const sources = (sum.sources||[]).map(s=>s.title).filter(Boolean);
-      sourcesEl.textContent = sources.length ? sources.join(' • ') : 'None';
-      if (sum.modelDeployment) modelEl.textContent = sum.modelDeployment;
-    }
-
-    function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m]))}
     async function call(path, body){
       const opt = body ? { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)} : {};
       const res = await fetch(path,opt); const txt = await res.text();
       try { return { ok:res.ok, status:res.status, data:JSON.parse(txt) }; }
       catch { return { ok:res.ok, status:res.status, data:txt }; }
     }
-    async function doPing(){ setStatus('Pinging…'); const r=await call('/api/ping'); setStatus(`HTTP ${r.status}`); showDiag(r); showRaw(r); }
-    async function doGen(n){ setStatus(`Generating ${n}…`); const r = await call('/api/generate-questions',{...basePayload(), count:n}); setStatus(`HTTP ${r.status}`); showDiag(r); showRaw(r);
-      if (r.ok && r.data?.items){ lastItems = r.data.items; renderQuestions(lastItems); if (r.data.modelDeployment) modelEl.textContent=r.data.modelDeployment; } }
-    async function doGen50Batched(){
-      setStatus('Generating 50 (batched)…');
-      const all=[]; for (let i=0;i<10;i++){ const r=await call('/api/generate-questions',{...basePayload(), count:5}); if(!r.ok){ setStatus('Error'); showDiag(r); showRaw(r); return;}
-        all.push(...(r.data?.items||[])); renderQuestions(all); await new Promise(r=>setTimeout(r,700)); }
-      lastItems=all; setStatus('Done (50)');
-    }
-    async function doSummKw(){ setStatus('Summarizing…'); const r=await call('/api/summarize-publication',{...basePayload(), publication:""}); setStatus(`HTTP ${r.status}`); showDiag(r); showRaw(r);
-      if (r.ok){ lastSummary=r.data||r; renderSummary(r.data||r); } }
-    async function doGroup(){ if(!lastItems?.length){ setStatus('Generate questions first'); return;} setStatus('Grouping…'); const r=await call('/api/group-questions',{ items:lastItems }); setStatus(`HTTP ${r.status}`); showDiag(r); showRaw(r); }
 
-    function copyText(t){ const s = typeof t==='string'?t:JSON.stringify(t,null,2); navigator.clipboard.writeText(s); setStatus('Copied'); setTimeout(()=>setStatus('Ready'),600); }
+    async function doPing(){ setStatus('Pinging…'); const r=await call('/api/ping'); setStatus(\`HTTP \${r.status}\`); showDiag(r); }
+    async function doGen(n){ setStatus(\`Generating \${n}…\`); const r=await call('/api/generate-questions',{...basePayload(), count:n}); setStatus(\`HTTP \${r.status}\`); showDiag(r);
+      if (r.ok && r.data?.items){ window.renderQuestions?.(r.data.items); if (r.data.modelDeployment) modelEl.textContent=r.data.modelDeployment; } }
 
     document.getElementById('btnPing').onclick = doPing;
     document.getElementById('btnGen5').onclick = ()=>doGen(5);
-    document.getElementById('btnGen50').onclick = doGen50Batched;
-    document.getElementById('btnSummKw').onclick = doSummKw;
-    document.getElementById('btnGroup').onclick = doGroup;
-    document.getElementById('btnCopyQs').onclick = ()=>copyText(lastItems);
-    document.getElementById('btnCopySum').onclick = ()=>copyText(lastSummary||{});
-    document.getElementById('btnRawToggle').onclick = ()=> rawEl.classList.toggle('hidden');
+    // exam.js will wire #btnGenExam50ByBook
   </script>
-  <script src="books.js"></script>`n  <script src="exam.js"></script>`n</body>
+</body>
 </html>
-
-<script src="books.js"></script>
-
-<script src="exam.js"></script>
-
-
-
