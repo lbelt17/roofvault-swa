@@ -7,7 +7,7 @@ module.exports = async function (context, req) {
       indexName = process.env.SEARCH_INDEX,
       endpoint  = process.env.SEARCH_ENDPOINT,
       key       = process.env.SEARCH_API_KEY,
-      top       = 100
+      top       = 1000
     } = req.body || {};
 
     if (!fileName) throw new Error("fileName required");
@@ -15,10 +15,9 @@ module.exports = async function (context, req) {
     const url = `${endpoint}/indexes/${indexName}/docs/search?api-version=2023-07-01-Preview`;
 
     const body = {
-      search: `"${fileName}"`,
-      searchFields: "metadata_storage_name,content",
+      search: "*",
       queryType: "simple",
-      searchMode: "all",
+      searchMode: "any",
       top,
       select: "metadata_storage_name,content"
     };
@@ -30,14 +29,15 @@ module.exports = async function (context, req) {
     });
 
     if (!res.ok) {
-      const err = await res.text().catch(() => "");
+      const err = await res.text().catch(()=>"");
       throw new Error(`Search error: ${res.status} ${err}`);
     }
 
     const data = await res.json();
-    const hits = (data.value || []).filter(d => (d.metadata_storage_name || "").toLowerCase() === fileName.toLowerCase());
+    const hits = (data.value || []).filter(
+      d => (d.metadata_storage_name || "").toLowerCase() === String(fileName).toLowerCase()
+    );
 
-    // ---- Your summarization logic here ----
     context.res = { status: 200, body: { ok: true, hits } };
   } catch (e) {
     context.res = { status: 500, body: { error: "Search error", details: String(e.message || e) } };
