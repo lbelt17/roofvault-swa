@@ -42,6 +42,37 @@ function toChunks(text, max=3500){
 function timeout(ms){ return new Promise((_,rej)=>setTimeout(()=>rej(new Error("Timeout")), ms)); }
 async function withTimeout(p, ms){ return Promise.race([p, timeout(ms)]); }
 
+// Grab long string-ish fields from a search doc
+function extractTextFromDoc(doc){
+  if (!doc || typeof doc !== "object") return "";
+  const candidates = [];
+
+  // common field names first (strong bias)
+  const preferred = [
+    "content","pages_content","merged_content","merged_text","text","pageText","chunk","chunks","body","body_text","rawText"
+  ];
+  for (const k of preferred){
+    if (typeof doc[k] === "string" && doc[k].trim().length > 200) candidates.push(doc[k]);
+    if (Array.isArray(doc[k])) {
+      const joined = doc[k].filter(v=>typeof v==="string").join("\n");
+      if (joined.trim().length > 200) candidates.push(joined);
+    }
+  }
+
+  // fallback: any long string fields
+  for (const [k,v] of Object.entries(doc)){
+    if (typeof v === "string" && v.trim().length > 300 && !preferred.includes(k)) candidates.push(v);
+    if (Array.isArray(v)) {
+      const joined = v.filter(x=>typeof x==="string").join("\n");
+      if (joined.trim().length > 300 && !preferred.includes(k)) candidates.push(joined);
+    }
+  }
+
+  // de-dupe and join
+  const uniq = Array.from(new Set(candidates.map(s=>s.trim()))).filter(Boolean);
+  return uniq.join("\n\n");
+}
+
 module.exports = async function (context, req) {
   try {
     const method = (req.method || "GET").toUpperCase();
@@ -50,20 +81,19 @@ module.exports = async function (context, req) {
         ? (req.body && (req.body.book || req.body.fileName))
         : (req.query && (req.query.book || req.query.fileName))) || "Unknown.pdf";
 
-    // If config missing, return sample (and tell you what)
     if (!SEARCH_ENDPOINT || !SEARCH_INDEX || !SEARCH_API_KEY) {
       context.res = { status: 200, body: sampleExam(book, "(no-search-config)") }; return;
     }
 
-    // 1) Search by filename (quoted) -> then filter exact match in memory (no $filter)
+    // 1) Search by filename (quoted); select '*' so we can inspect available fields
     const q = `"${book.replace(/"/g,'\\"')}"`;
     const url = `${SEARCH_ENDPOINT}/indexes/${encodeURIComponent(SEARCH_INDEX)}/docs/search?api-version=2024-07-01`;
     const body = {
       search: q,
       searchMode: "all",
       queryType: "simple",
-      select: "content,metadata_storage_name",
-      top: 50
+      top: 50,             // pull a decent set
+      select: "*"          // we want to see all retrievable fields
     };
 
     const sres = await withTimeout(fetch(url, {
@@ -78,25 +108,26 @@ module.exports = async function (context, req) {
 
     const sjson = await sres.json().catch(()=>({}));
     const candidates = Array.isArray(sjson.value) ? sjson.value : [];
-    const hits = candidates.filter(d =>
+
+    // Prefer exact filename match if present (case-insensitive)
+    const exact = candidates.filter(d =>
       (d.metadata_storage_name||"").toLowerCase() === (book||"").toLowerCase()
     );
-    const docsText = (hits.length ? hits : candidates)
-      .map(d=>d.content||"")
-      .filter(Boolean)
-      .join("\n\n");
+    const used = exact.length ? exact : candidates;
+
+    // Extract text from docs (auto-detect fields)
+    const docsText = used.map(extractTextFromDoc).filter(Boolean).join("\n\n");
 
     if (!docsText) {
-      context.res = { status: 200, body: sampleExam(book, "(no-docs)") }; return;
+      context.res = { status: 200, body: sampleExam(book, "(no-docs/unknown-fields)") }; return;
     }
 
-    const chunks = toChunks(docsText, 3500);
-
-    // 2) If AOAI missing, still return sample
+    // 2) Call AOAI if configured; else return sample
     if (!AOAI_ENDPOINT || !AOAI_KEY || !AOAI_DEPLOYMENT) {
       context.res = { status: 200, body: sampleExam(book, "(no-aoai-config)") }; return;
     }
 
+    const chunks = toChunks(docsText, 3500);
     const system = `You are a strict roofing exam generator. Produce 50 questions from the provided content:
 - Mix: MCQ, T/F, Short Answer
 - EXACT format:
