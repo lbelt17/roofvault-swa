@@ -5,22 +5,20 @@
   async function genExam(){
     try{
       setStatus("Generating exam…");
-      const book = (window.getSelectedBook && window.getSelectedBook()) || "";
+      const pick = (window.getSelectedBook && window.getSelectedBook()) || { value:"", field:null };
       const res = await fetch("/api/exam", {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ book })
+        body: JSON.stringify({ book: pick.value, filterField: pick.field })
       });
       const data = await res.json();
 
-      // Show the exam text in the Questions panel as monospace text
       const qList = $("qList");
       if (qList){
         qList.textContent = (data && data.content) ? data.content : "(no content)";
         qList.classList.add("mono");
       }
 
-      // Show which model answered, if returned
       const model = $("model");
       if (model && data && data.modelDeployment) model.textContent = data.modelDeployment;
 
