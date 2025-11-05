@@ -1,262 +1,154 @@
 ﻿/**
- * Azure Static Web Apps Function - /api/exam
- * Uses global fetch (Node 18+). No node-fetch import.
+ * /api/exam — generate 50 Qs from a selected "book".
+ * Robust book scoping: try $filter first; if 0 hits, fallback to a text search on the same field,
+ * then (last resort) a general search. Uses global fetch (Node 18+).
  */
-
- // --- AOAI config (auto detect) ---
-const ENDPOINT =
-  process.env.AZURE_OPENAI_ENDPOINT ||
-  process.env.OPENAI_ENDPOINT ||
-  process.env.AOAI_ENDPOINT;
-
-const DEPLOYMENT =
-  process.env.AZURE_OPENAI_DEPLOYMENT ||
-  process.env.OPENAI_GPT4O_MINI ||
-  process.env.AOAI_DEPLOYMENT ||
-  process.env.OPENAI_GPT41;
-
-const AOAI_KEY =
-  process.env.AZURE_OPENAI_API_KEY ||
-  process.env.AOAI_API_KEY ||
-  process.env.OPENAI_API_KEY;
-
-// Azure Search
-const SEARCH_ENDPOINT = process.env.SEARCH_ENDPOINT;
-const SEARCH_INDEX    = process.env.SEARCH_INDEX;
-const SEARCH_API_KEY  = process.env.SEARCH_API_KEY;
-
-// ---------------- helpers ----------------
-function makeFilter(field, value) {
-  if (!field || !value) return undefined;
-  const safe = String(value).replace(/'/g, "''");
-  return `${field} eq '${safe}'`;
-}
-
-async function doSearch(body) {
-  const url = `${SEARCH_ENDPOINT}/indexes/${encodeURIComponent(SEARCH_INDEX)}/docs/search?api-version=2023-07-01-Preview`;
-  const r = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
-    body: JSON.stringify(body)
-  });
-  return r;
-}
-
-function normalize(doc) {
-  return {
-    title: doc.title,
-    page: doc.page,
-    book: doc.book,
-    url: doc.url,
-    content: doc.content,
-    file: doc.file || doc.filename || doc.name || doc.metadata_storage_name
-  };
-}
-
-function uniqBy(arr, keyFn) {
-  const seen = new Set();
-  const out = [];
-  for (const x of arr) {
-    const k = keyFn(x);
-    if (!seen.has(k)) { seen.add(k); out.push(x); }
-  }
-  return out;
-}
-function mergeLimit(passagesList, n = 30) {
-  const merged = uniqBy([].concat(...passagesList), p => (p.title||"")+"|"+(p.page||"")+"|"+(p.file||""));
-  return merged.slice(0, n);
-}
-
-async function retrievePassages(filterField, filterValue, query) {
-  if (!SEARCH_ENDPOINT || !SEARCH_INDEX || !SEARCH_API_KEY) {
-    throw new Error("Missing SEARCH_ENDPOINT/SEARCH_INDEX/SEARCH_API_KEY app settings.");
-  }
-
-  const attempts = [];
-
-  // A) Server-side filter
-  if (filterField && filterValue) {
-    for (const mode of ["semantic","simple"]) {
-      const body = {
-        queryType: mode,
-        search: (query && query.trim()) ? query : "*",
-        top: 30,
-        ...(mode === "semantic" ? { semanticConfiguration:"default", captions:"extractive", answers:"extractive" } : {}),
-        filter: makeFilter(filterField, filterValue)
-      };
-      try {
-        const r = await doSearch(body);
-        if (r.ok) {
-          const data = await r.json();
-          attempts.push((data.value || []).map(normalize));
-        }
-      } catch {}
-    }
-  }
-
-  // B) Exact phrase of the selected value (often filename)
-  if (filterValue) {
-    for (const mode of ["semantic","simple"]) {
-      const body = {
-        queryType: mode,
-        search: `"${filterValue}"`,
-        top: 30,
-        ...(mode === "semantic" ? { semanticConfiguration:"default", captions:"extractive", answers:"extractive" } : {})
-      };
-      try {
-        const r = await doSearch(body);
-        if (r.ok) {
-          const data = await r.json();
-          attempts.push((data.value || []).map(normalize));
-        }
-      } catch {}
-    }
-  }
-
-  // C) Fuzzy keywords
-  if (filterValue) {
-    for (const mode of ["semantic","simple"]) {
-      const body = {
-        queryType: mode,
-        search: String(filterValue).replace(/[_\-]/g, " "),
-        top: 30,
-        ...(mode === "semantic" ? { semanticConfiguration:"default", captions:"extractive", answers:"extractive" } : {})
-      };
-      try {
-        const r = await doSearch(body);
-        if (r.ok) {
-          const data = await r.json();
-          attempts.push((data.value || []).map(normalize));
-        }
-      } catch {}
-    }
-  }
-
-  return mergeLimit(attempts, 30);
-}
-
-function makeGrounding(passages) {
-  return passages.map((p,i) => ({
-    id: i + 1,
-    title: p.title || p.file || "Untitled",
-    page: p.page || null,
-    url: p.url || null,
-    excerpt: (p.content || "").slice(0, 2000)
-  }));
-}
-
-function systemPrompt() {
-  return {
-    role: "system",
-    content:
-`You are an exam generator for roofing and waterproofing professional practice.
-
-Return STRICT JSON with this shape:
-{
-  "items":[
-    {
-      "question": string,
-      "choices": {"A":string,"B":string,"C":string,"D":string},
-      "answer": "A"|"B"|"C"|"D",
-      "rationale": string,
-      "citations": [{"title":string,"page":string|null,"url":string|null}]
-    }
-  ]
-}
-Rules:
-- Generate EXACTLY 50 items.
-- Base EVERY item ONLY on the provided source passages.
-- Rationale must be one or two sentences max.
-- Citations should reference the most relevant passage(s) by title and page when available.
-- Output ONLY JSON, no extra text.`
-  };
-}
-
-// Find the first {...} JSON object in a string
-function extractJsonObject(text) {
-  if (!text) return null;
-  const start = text.indexOf("{");
-  if (start < 0) return null;
-  let depth = 0;
-  for (let i = start; i < text.length; i++) {
-    const ch = text[i];
-    if (ch === "{") depth++;
-    if (ch === "}") {
-      depth--;
-      if (depth === 0) {
-        const candidate = text.slice(start, i + 1);
-        try { return JSON.parse(candidate); } catch {}
-      }
-    }
-  }
-  return null;
-}
-
-async function callAOAI(messages, maxTokens=6000) {
-  const url = `${ENDPOINT}/openai/deployments/${DEPLOYMENT}/chat/completions?api-version=2024-08-01-preview`;
-  const payload = {
-    messages,
-    temperature: 0.4,
-    max_tokens: maxTokens
-  };
-  const r = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "api-key": AOAI_KEY },
-    body: JSON.stringify(payload)
-  });
-  const raw = await r.text();
-  if (!r.ok) {
-    throw new Error(`AOAI error: ${r.status} ${raw}`);
-  }
-  let content = "";
-  try {
-    const data = JSON.parse(raw);
-    content = data?.choices?.[0]?.message?.content || "";
-  } catch {
-    content = raw;
-  }
-  try { return JSON.parse(content); } catch { return extractJsonObject(content) || {}; }
-}
-
 module.exports = async function (context, req) {
-  try {
-    const { book, filterField, query } = req.body || {};
+  const AZURE_OPENAI_ENDPOINT   = process.env.AZURE_OPENAI_ENDPOINT || process.env.OPENAI_ENDPOINT || process.env.AOAI_ENDPOINT;
+  const AZURE_OPENAI_DEPLOYMENT = process.env.AZURE_OPENAI_DEPLOYMENT || process.env.OPENAI_GPT4O_MINI || process.env.AOAI_DEPLOYMENT || process.env.OPENAI_GPT41;
+  const AZURE_OPENAI_API_KEY    = process.env.AZURE_OPENAI_API_KEY || process.env.AOAI_API_KEY || process.env.OPENAI_API_KEY;
 
-    if (!ENDPOINT)  throw new Error("Missing Azure OpenAI endpoint.");
-    if (!DEPLOYMENT) throw new Error("Missing Azure OpenAI deployment.");
-    if (!AOAI_KEY)   throw new Error("Missing Azure OpenAI key.");
+  const SEARCH_ENDPOINT = process.env.SEARCH_ENDPOINT;
+  const SEARCH_INDEX    = process.env.SEARCH_INDEX;
+  const SEARCH_API_KEY  = process.env.SEARCH_API_KEY;
 
-    const passages = await retrievePassages(filterField, book, query);
-    const grounding = makeGrounding(passages);
+  const body = req.body || {};
+  const book = (body.book || "").trim();
+  const filterField = (body.filterField || "").trim() || "metadata_storage_name";
 
-    const user = {
-      role: "user",
-      content: JSON.stringify({ selection:{ field:filterField||"(none)", value:book||"(all)" }, sources:grounding })
-    };
-
-    let parsed = await callAOAI([systemPrompt(), user]);
-
-    if (!parsed || !Array.isArray(parsed.items) || parsed.items.length === 0) {
-      const retryUser = {
-        role: "user",
-        content: JSON.stringify({
-          selection: { field: filterField || "(none)", value: book || "(all)" },
-          sources: grounding,
-          note: "Previous attempt returned 0. You MUST output exactly 50 items strictly based on the provided sources."
-        })
-      };
-      parsed = await callAOAI([systemPrompt(), retryUser]);
-    }
-
-    const items = Array.isArray(parsed.items) ? parsed.items.slice(0, 50) : [];
-    if (items.length === 0) {
-      context.res = { status: 200, headers:{ "Content-Type":"application/json" },
-        body: { items: [], modelDeployment: DEPLOYMENT, error: "No items generated. Try another book or re-index to ensure passages exist." } };
-      return;
-    }
-
-    context.res = { status: 200, headers:{ "Content-Type":"application/json" }, body: { items, modelDeployment: DEPLOYMENT } };
-  } catch (e) {
-    context.res = { status: 500, headers:{ "Content-Type":"application/json" }, body: { error: e.message, hint: "Verify AOAI endpoint/deployment/key and that selected book returns passages." } };
+  if (!SEARCH_ENDPOINT || !SEARCH_INDEX || !SEARCH_API_KEY) {
+    context.res = { status: 500, jsonBody: { error: "Search not configured." } };
+    return;
   }
+  if (!AZURE_OPENAI_ENDPOINT || !AZURE_OPENAI_DEPLOYMENT || !AZURE_OPENAI_API_KEY) {
+    context.res = { status: 500, jsonBody: { error: "AOAI not configured." } };
+    return;
+  }
+
+  const searchUrl = `${SEARCH_ENDPOINT}/indexes/${encodeURIComponent(SEARCH_INDEX)}/docs/search?api-version=2023-07-01-Preview`;
+
+  const doSearch = async (payload) => {
+    const r = await fetch(searchUrl, {
+      method: "POST",
+      headers: { "Content-Type":"application/json", "api-key": SEARCH_API_KEY },
+      body: JSON.stringify(payload)
+    });
+    const t = await r.text();
+    let j = null; try { j = JSON.parse(t); } catch { /* keep raw */ }
+    return { ok: r.ok, status: r.status, json: j || t };
+  };
+
+  // sanitize for OData literal
+  const odataLit = (s) => "'" + String(s).replace(/'/g, "''") + "'";
+
+  // 1) Try strict filter on the chosen field (requires field to be filterable in the index)
+  let hits = [];
+  if (book) {
+    const filterPayload = {
+      search: "*",
+      queryType: "simple",
+      top: 60,
+      select: "content,metadata_storage_name,metadata_storage_path,chunk,id,sourcepage,pageno,book,section",
+      filter: `${filterField} eq ${odataLit(book)}`
+    };
+    const res1 = await doSearch(filterPayload);
+    if (res1.ok && res1.json && Array.isArray(res1.json.value)) {
+      hits = res1.json.value;
+    }
+  }
+
+  // 2) If no hits, try a text search on that field name (works if the field is searchable)
+  if (hits.length === 0 && book) {
+    const res2 = await doSearch({
+      search: `"${book}"`,
+      queryType: "simple",
+      searchMode: "all",
+      top: 60,
+      select: "content,metadata_storage_name,metadata_storage_path,chunk,id,sourcepage,pageno,book,section",
+      searchFields: filterField // harmless if field isn’t searchable; service ignores it
+    });
+    if (res2.ok && res2.json && Array.isArray(res2.json.value)) {
+      hits = res2.json.value;
+    }
+  }
+
+  // 3) Last resort: pull any top docs so the user at least gets questions
+  if (hits.length === 0) {
+    const res3 = await doSearch({
+      search: "*",
+      queryType: "simple",
+      top: 60,
+      select: "content,metadata_storage_name,metadata_storage_path,chunk,id,sourcepage,pageno,book,section"
+    });
+    if (res3.ok && res3.json && Array.isArray(res3.json.value)) {
+      hits = res3.json.value;
+    }
+  }
+
+  if (!hits || hits.length === 0) {
+    context.res = {
+      status: 200,
+      jsonBody: {
+        items: [],
+        modelDeployment: AZURE_OPENAI_DEPLOYMENT,
+        error: "No passages found. Make sure the file name matches exactly, or re-index with the field set as filterable/searchable."
+      }
+    };
+    return;
+  }
+
+  // Build a compact context for the model (trim long chunks)
+  const take = Math.min(hits.length, 50);
+  const ctx = hits.slice(0, take).map(h => {
+    const name = h.metadata_storage_name || h.book || h.id || "";
+    const page = h.sourcepage || h.pageno || "";
+    let txt = (h.content || h.chunk || "").toString();
+    if (txt.length > 1200) txt = txt.slice(0, 1200) + " …";
+    return `【${name}${page ? ` p.${page}` : ""}】 ${txt}`;
+  }).join("\n\n");
+
+  const prompt = [
+    {
+      role: "system",
+      content:
+        "You are a certification exam writer for roofing/waterproofing. Write 50 study questions (mix MCQ, T/F, Short). " +
+        "Each question must include: (1) the question, (2) the correct answer, (3) a one-sentence explanation, (4) a source tag like 【filename p.X】 " +
+        "Only cite from the provided context. Keep language concise and unambiguous."
+    },
+    {
+      role: "user",
+      content:
+        `Target file: ${book || "(not specified)"}\n\nContext passages:\n${ctx}\n\nReturn JSON: {"items":[{"q":"...","a":"...","why":"...","cite":"..."}]}\nEnsure exactly 50 items if enough context exists.`
+    }
+  ];
+
+  // AOAI call
+  const aoaiUrl = `${AZURE_OPENAI_ENDPOINT}/openai/deployments/${AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version=2024-08-01-preview`;
+  let items = [];
+  try {
+    const r = await fetch(aoaiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": AZURE_OPENAI_API_KEY
+      },
+      body: JSON.stringify({
+        messages: prompt,
+        temperature: 0.2,
+        max_tokens: 3500,
+        response_format: { type: "json_object" }
+      })
+    });
+    const t = await r.text();
+    let j = null; try { j = JSON.parse(t); } catch {}
+    const text = j?.choices?.[0]?.message?.content || t;
+    let parsed = null; try { parsed = JSON.parse(text); } catch {}
+    items = parsed?.items || [];
+    if (!Array.isArray(items)) items = [];
+  } catch (e) {
+    context.log("AOAI error", e?.message);
+    return (context.res = { status: 500, jsonBody: { error: `AOAI error: ${e?.message || e}` } });
+  }
+
+  context.res = { status: 200, jsonBody: { items, modelDeployment: AZURE_OPENAI_DEPLOYMENT } };
 };
