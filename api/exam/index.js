@@ -1,9 +1,10 @@
 ﻿const fetch = require("node-fetch");
-const AZURE_OPENAI_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT;
+const AZURE_OPENAI_ENDPOINT   = process.env.AZURE_OPENAI_ENDPOINT;
 const AZURE_OPENAI_DEPLOYMENT = process.env.AZURE_OPENAI_DEPLOYMENT;
+const AZURE_OPENAI_API_KEY    = process.env.AZURE_OPENAI_API_KEY;   // <-- NEW
 const SEARCH_ENDPOINT = process.env.SEARCH_ENDPOINT;
-const SEARCH_INDEX = process.env.SEARCH_INDEX;
-const SEARCH_API_KEY = process.env.SEARCH_API_KEY;
+const SEARCH_INDEX    = process.env.SEARCH_INDEX;
+const SEARCH_API_KEY  = process.env.SEARCH_API_KEY;
 
 function makeFilter(field, value) {
   if (!field || !value) return undefined;
@@ -46,7 +47,7 @@ async function searchPassages(filterField, filterValue, query) {
     throw new Error("Missing SEARCH_ENDPOINT/SEARCH_INDEX/SEARCH_API_KEY app settings.");
   }
 
-  // Try semantic first (many indexes don’t have a semanticConfiguration; we’ll fall back)
+  // Try semantic first; fall back to simple; then client-side filtering if needed.
   let body = {
     queryType: "semantic",
     search: (query && query.trim()) ? query : "*",
@@ -54,27 +55,17 @@ async function searchPassages(filterField, filterValue, query) {
     semanticConfiguration: "default",
     captions: "extractive",
     answers: "extractive",
-    // no select → return only retrievable fields to avoid 400s
     filter: makeFilter(filterField, filterValue)
   };
 
   let r = await doSearch(body);
   if (!r.ok) {
-    // Fall back to simple query mode (broadest compatibility)
-    body = {
-      queryType: "simple",
-      search: (query && query.trim()) ? query : "*",
-      top: 20,
-      filter: makeFilter(filterField, filterValue)
-    };
+    body = { queryType: "simple", search: (query && query.trim()) ? query : "*", top: 20, filter: makeFilter(filterField, filterValue) };
     r = await doSearch(body);
     if (!r.ok) {
-      // Remove filter and do client-side filtering
       delete body.filter;
       r = await doSearch(body);
-      if (!r.ok) {
-        throw new Error(`Search error: ${r.status} ${await r.text()}`);
-      }
+      if (!r.ok) throw new Error(`Search error: ${r.status} ${await r.text()}`);
       const data = await r.json();
       const docs = (data.value || []).map(normalize);
       return clientFilter(docs, filterField, filterValue);
@@ -108,6 +99,9 @@ module.exports = async function (context, req) {
     if (!AZURE_OPENAI_ENDPOINT || !AZURE_OPENAI_DEPLOYMENT) {
       throw new Error("Missing AZURE_OPENAI_ENDPOINT/AZURE_OPENAI_DEPLOYMENT app settings.");
     }
+    if (!AZURE_OPENAI_API_KEY) {
+      throw new Error("Missing AZURE_OPENAI_API_KEY app setting.");
+    }
 
     const passages = await searchPassages(filterField, book, query);
 
@@ -130,22 +124,23 @@ Rules:
       content: `Selected filter: ${filterField || "(none)"} = ${book || "(all)"}\nGenerate the 50-question exam now.${groundingBlock(passages)}`
     };
 
-    const payload = {
-      messages: [system, user],
-      temperature: 0.4,
-      max_tokens: 4000
-    };
+    const payload = { messages: [system, user], temperature: 0.4, max_tokens: 4000 };
 
     const url = `${AZURE_OPENAI_ENDPOINT}/openai/deployments/${AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version=2024-08-01-preview`;
     const r = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": AZURE_OPENAI_API_KEY        // <-- NEW (fixes 401)
+      },
       body: JSON.stringify(payload)
     });
+
     if (!r.ok) {
       const t = await r.text();
       throw new Error(`AOAI error: ${r.status} ${t}`);
     }
+
     const data = await r.json();
     const content = data?.choices?.[0]?.message?.content || "(no content)";
     const modelDeployment = AZURE_OPENAI_DEPLOYMENT;
