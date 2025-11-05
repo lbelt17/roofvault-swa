@@ -1,7 +1,22 @@
 ﻿const fetch = require("node-fetch");
-const AZURE_OPENAI_ENDPOINT   = process.env.AZURE_OPENAI_ENDPOINT;
-const AZURE_OPENAI_DEPLOYMENT = process.env.AZURE_OPENAI_DEPLOYMENT;
-const AZURE_OPENAI_API_KEY    = process.env.AZURE_OPENAI_API_KEY;   // <-- NEW
+
+// --- Prefer whichever envs you actually have set ---
+const ENDPOINT =
+  process.env.AZURE_OPENAI_ENDPOINT ||
+  process.env.OPENAI_ENDPOINT ||
+  process.env.AOAI_ENDPOINT;
+
+const DEPLOYMENT =
+  process.env.AZURE_OPENAI_DEPLOYMENT ||
+  process.env.OPENAI_GPT4O_MINI ||   // e.g. "gpt-4o-mini"
+  process.env.AOAI_DEPLOYMENT ||     // e.g. "gpt-4o-mini"
+  process.env.OPENAI_GPT41;          // e.g. "roofvault-turbo"
+
+const AOAI_KEY =
+  process.env.AZURE_OPENAI_API_KEY ||
+  process.env.AOAI_API_KEY ||
+  process.env.OPENAI_API_KEY;
+
 const SEARCH_ENDPOINT = process.env.SEARCH_ENDPOINT;
 const SEARCH_INDEX    = process.env.SEARCH_INDEX;
 const SEARCH_API_KEY  = process.env.SEARCH_API_KEY;
@@ -47,7 +62,7 @@ async function searchPassages(filterField, filterValue, query) {
     throw new Error("Missing SEARCH_ENDPOINT/SEARCH_INDEX/SEARCH_API_KEY app settings.");
   }
 
-  // Try semantic first; fall back to simple; then client-side filtering if needed.
+  // Try semantic; fall back to simple; then client-side filter
   let body = {
     queryType: "semantic",
     search: (query && query.trim()) ? query : "*",
@@ -73,8 +88,7 @@ async function searchPassages(filterField, filterValue, query) {
   }
 
   const data = await r.json();
-  const docs = (data.value || []).map(normalize);
-  return docs;
+  return (data.value || []).map(normalize);
 }
 
 function groundingBlock(passages) {
@@ -96,12 +110,9 @@ module.exports = async function (context, req) {
   try {
     const { book, filterField, query } = req.body || {};
 
-    if (!AZURE_OPENAI_ENDPOINT || !AZURE_OPENAI_DEPLOYMENT) {
-      throw new Error("Missing AZURE_OPENAI_ENDPOINT/AZURE_OPENAI_DEPLOYMENT app settings.");
-    }
-    if (!AZURE_OPENAI_API_KEY) {
-      throw new Error("Missing AZURE_OPENAI_API_KEY app setting.");
-    }
+    if (!ENDPOINT)  throw new Error("Missing Azure OpenAI endpoint (ENDPOINT).");
+    if (!DEPLOYMENT) throw new Error("Missing deployment name (DEPLOYMENT).");
+    if (!AOAI_KEY)   throw new Error("Missing Azure OpenAI key (AOAI_KEY).");
 
     const passages = await searchPassages(filterField, book, query);
 
@@ -126,12 +137,12 @@ Rules:
 
     const payload = { messages: [system, user], temperature: 0.4, max_tokens: 4000 };
 
-    const url = `${AZURE_OPENAI_ENDPOINT}/openai/deployments/${AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version=2024-08-01-preview`;
+    const url = `${ENDPOINT}/openai/deployments/${DEPLOYMENT}/chat/completions?api-version=2024-08-01-preview`;
     const r = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "api-key": AZURE_OPENAI_API_KEY        // <-- NEW (fixes 401)
+        "api-key": AOAI_KEY
       },
       body: JSON.stringify(payload)
     });
@@ -143,9 +154,12 @@ Rules:
 
     const data = await r.json();
     const content = data?.choices?.[0]?.message?.content || "(no content)";
-    const modelDeployment = AZURE_OPENAI_DEPLOYMENT;
 
-    context.res = { status: 200, headers: { "Content-Type": "application/json" }, body: { content, modelDeployment } };
+    context.res = {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+      body: { content, modelDeployment: DEPLOYMENT }
+    };
   } catch (e) {
     context.log.error(e);
     context.res = { status: 500, body: { error: e.message } };
