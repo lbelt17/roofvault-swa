@@ -5,45 +5,78 @@ const SEARCH_ENDPOINT = process.env.SEARCH_ENDPOINT;
 const SEARCH_INDEX = process.env.SEARCH_INDEX;
 const SEARCH_API_KEY = process.env.SEARCH_API_KEY;
 
-function makeFilter(field, value){
+function makeFilter(field, value) {
   if (!field || !value) return undefined;
   const safe = String(value).replace(/'/g, "''");
   return `${field} eq '${safe}'`;
+}
+
+async function searchRaw(options) {
+  const url = `${SEARCH_ENDPOINT}/indexes/${encodeURIComponent(SEARCH_INDEX)}/docs/search?api-version=2023-07-01-Preview`;
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
+    body: JSON.stringify(options)
+  });
+  return r;
+}
+
+function normalize(doc) {
+  return {
+    title: doc.title,
+    page: doc.page,
+    book: doc.book,
+    url: doc.url,
+    content: doc.content,
+    file: doc.metadata_storage_name
+  };
+}
+
+function inMemoryFilter(docs, field, value) {
+  if (!field || !value) return docs;
+  const needle = String(value).toLowerCase();
+  return docs.filter(d => {
+    const raw = d[field] || d.title || d.metadata_storage_name || "";
+    return String(raw).toLowerCase().includes(needle);
+  });
 }
 
 async function searchPassages(filterField, filterValue, query) {
   if (!SEARCH_ENDPOINT || !SEARCH_INDEX || !SEARCH_API_KEY) {
     throw new Error("Missing SEARCH_ENDPOINT/SEARCH_INDEX/SEARCH_API_KEY app settings.");
   }
-  const url = `${SEARCH_ENDPOINT}/indexes/${encodeURIComponent(SEARCH_INDEX)}/docs/search?api-version=2023-07-01-Preview`;
-  const body = {
+
+  const base = {
     queryType: "semantic",
     search: (query && query.trim()) ? query : "*",
-    top: 12,
+    top: 20,
     semanticConfiguration: "default",
     captions: "extractive",
     answers: "extractive",
     select: "content, title, page, book, url, metadata_storage_name",
     filter: makeFilter(filterField, filterValue)
   };
-  const r = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
-    body: JSON.stringify(body)
-  });
-  if (!r.ok) {
-    const t = await r.text();
-    throw new Error(`Search error: ${r.status} ${t}`);
+
+  // First attempt: with server-side filter
+  let r = await searchRaw(base);
+  let ok = r.ok;
+  let data;
+
+  if (!ok) {
+    // Try without filter (field may not be filterable), then filter client-side
+    const alt = { ...base };
+    delete alt.filter;
+    r = await searchRaw(alt);
+    if (!r.ok) {
+      throw new Error(`Search error: ${r.status} ${await r.text()}`);
+    }
+    data = await r.json();
+    const docs = (data.value || []).map(normalize);
+    return inMemoryFilter(docs, filterField, filterValue);
+  } else {
+    data = await r.json();
+    return (data.value || []).map(normalize);
   }
-  const data = await r.json();
-  return (data.value || []).map(x => ({
-    title: x.title,
-    page: x.page,
-    book: x.book,
-    url: x.url,
-    content: x.content,
-    file: x.metadata_storage_name
-  }));
 }
 
 function groundingBlock(passages) {
@@ -70,7 +103,6 @@ module.exports = async function (context, req) {
       throw new Error("Missing AZURE_OPENAI_ENDPOINT/AZURE_OPENAI_DEPLOYMENT app settings.");
     }
 
-    // Pull seed passages using the chosen field/value
     const passages = await searchPassages(filterField, book, query);
 
     const system = {

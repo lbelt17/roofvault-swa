@@ -10,8 +10,8 @@
 
   async function fetchBooks() {
     const res = await fetch("/api/books", { method: "POST" });
-    const data = await res.json();
-    return data; // { field, values }
+    const data = await res.json(); // { field, values }
+    return data;
   }
 
   async function insertBookPicker() {
@@ -23,8 +23,16 @@
       makeEl("select", { id: "bookSelect", style: "min-width:240px;max-width:100%;" })
     ]);
 
+    const badge = makeEl("span", { class: "pill", id: "facetBadge", title: "Facet/field used to group books" }, ["field: ?"]);
+
     const btnbar = toolbar.querySelector(".btnbar");
-    if (btnbar) toolbar.insertBefore(label, btnbar); else toolbar.appendChild(label);
+    if (btnbar) {
+      toolbar.insertBefore(label, btnbar);
+      toolbar.insertBefore(badge, btnbar);
+    } else {
+      toolbar.appendChild(label);
+      toolbar.appendChild(badge);
+    }
 
     const sel = label.querySelector("#bookSelect");
     sel.innerHTML = "";
@@ -35,13 +43,15 @@
     try {
       const result = await fetchBooks(); // { field, values }
       field = result.field || null;
+      const badgeEl = document.getElementById("facetBadge");
+      if (badgeEl) badgeEl.textContent = "field: " + (field || "?");
+
       const books = Array.isArray(result.values) ? result.values : [];
       books.forEach(b => sel.appendChild(makeEl("option", { value: b }, [b])));
     } catch (e) {
       console.warn("books facet error:", e);
     }
 
-    // Expose helper so the exam API knows which field to filter on
     window.getSelectedBook = () => ({ value: sel.value || "", field });
   }
 

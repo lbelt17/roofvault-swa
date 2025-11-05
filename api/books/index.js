@@ -3,7 +3,7 @@ const SEARCH_ENDPOINT = process.env.SEARCH_ENDPOINT;
 const SEARCH_INDEX = process.env.SEARCH_INDEX;
 const SEARCH_API_KEY = process.env.SEARCH_API_KEY;
 
-// Try these fields in order until we get non-empty facet results
+// Candidate fields we’ll try for grouping
 const CANDIDATE_FIELDS = [
   "book",
   "title",
@@ -16,51 +16,77 @@ const CANDIDATE_FIELDS = [
   "metadata_storage_name"
 ];
 
-async function facetOn(field) {
-  const url = `${SEARCH_ENDPOINT}/indexes/${encodeURIComponent(SEARCH_INDEX)}/docs/search?api-version=2023-07-01-Preview`;
-  const body = { search: "*", top: 0, facets: [`${field},count:200`] };
+async function httpPost(url, body) {
   const r = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
     body: JSON.stringify(body)
   });
-  if (!r.ok) {
-    const t = await r.text();
-    throw new Error(`Search facet error: ${r.status} ${t}`);
-  }
+  return r;
+}
+
+async function facetOn(field) {
+  const url = `${SEARCH_ENDPOINT}/indexes/${encodeURIComponent(SEARCH_INDEX)}/docs/search?api-version=2023-07-01-Preview`;
+  const body = { search: "*", top: 0, facets: [`${field},count:200`] };
+  const r = await httpPost(url, body);
+  if (!r.ok) throw new Error(`facet ${field}: ${r.status} ${await r.text()}`);
   const data = await r.json();
-  const arr = (data?.facets?.[field] || [])
-    .map(x => x.value)
-    .filter(Boolean);
+  const arr = (data?.facets?.[field] || []).map(x => x.value).filter(Boolean);
   return arr;
 }
 
-module.exports = async function (context, req) {
+async function sampleTop() {
+  const url = `${SEARCH_ENDPOINT}/indexes/${encodeURIComponent(SEARCH_INDEX)}/docs/search?api-version=2023-07-01-Preview`;
+  const body = {
+    search: "*",
+    top: 200,
+    select: "book,title,metadata_storage_name,source,document,doc,collection,folder,container"
+  };
+  const r = await httpPost(url, body);
+  if (!r.ok) throw new Error(`sampleTop: ${r.status} ${await r.text()}`);
+  const data = await r.json();
+  return data?.value || [];
+}
+
+module.exports = async function (context) {
   try {
     if (!SEARCH_ENDPOINT || !SEARCH_INDEX || !SEARCH_API_KEY) {
       throw new Error("Missing SEARCH_ENDPOINT/SEARCH_INDEX/SEARCH_API_KEY app settings.");
     }
 
-    let fieldFound = null;
-    let values = [];
-
+    // Try facets first
     for (const f of CANDIDATE_FIELDS) {
       try {
-        const v = await facetOn(f);
-        if (v.length) {
-          fieldFound = f;
-          values = v.sort((a,b)=>String(a).localeCompare(String(b)));
-          break;
+        const vals = await facetOn(f);
+        if (vals.length > 1) {
+          return (context.res = {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+            body: { field: f, values: vals.sort((a,b)=>String(a).localeCompare(String(b))) }
+          });
         }
-      } catch (_ignored) {
-        // ignore and try next field
-      }
+      } catch (_e) { /* try next */ }
     }
 
+    // Fallback: sample docs and pick the field with the most distinct values
+    const docs = await sampleTop();
+    let bestField = null;
+    let bestSet = new Set();
+
+    for (const f of CANDIDATE_FIELDS) {
+      const set = new Set();
+      for (const d of docs) {
+        const v = d?.[f];
+        if (v && typeof v === "string") set.add(v);
+      }
+      if (set.size > bestSet.size) { bestSet = set; bestField = f; }
+    }
+
+    const values = Array.from(bestSet).sort((a,b)=>String(a).localeCompare(String(b))).slice(0,200);
     context.res = {
       status: 200,
       headers: { "Content-Type": "application/json" },
-      body: { field: fieldFound, values }
+      body: { field: bestField, values }
     };
   } catch (e) {
     context.log.error(e);
