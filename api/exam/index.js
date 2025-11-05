@@ -11,12 +11,12 @@ function makeFilter(field, value) {
   return `${field} eq '${safe}'`;
 }
 
-async function searchRaw(options) {
+async function doSearch(body) {
   const url = `${SEARCH_ENDPOINT}/indexes/${encodeURIComponent(SEARCH_INDEX)}/docs/search?api-version=2023-07-01-Preview`;
   const r = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
-    body: JSON.stringify(options)
+    body: JSON.stringify(body)
   });
   return r;
 }
@@ -28,15 +28,15 @@ function normalize(doc) {
     book: doc.book,
     url: doc.url,
     content: doc.content,
-    file: doc.metadata_storage_name
+    file: doc.file || doc.filename || doc.name || doc.metadata_storage_name
   };
 }
 
-function inMemoryFilter(docs, field, value) {
+function clientFilter(docs, field, value) {
   if (!field || !value) return docs;
   const needle = String(value).toLowerCase();
   return docs.filter(d => {
-    const raw = d[field] || d.title || d.metadata_storage_name || "";
+    const raw = d[field] || d.title || d.file || d.url || "";
     return String(raw).toLowerCase().includes(needle);
   });
 }
@@ -46,44 +46,50 @@ async function searchPassages(filterField, filterValue, query) {
     throw new Error("Missing SEARCH_ENDPOINT/SEARCH_INDEX/SEARCH_API_KEY app settings.");
   }
 
-  const base = {
+  // Try semantic first (many indexes don’t have a semanticConfiguration; we’ll fall back)
+  let body = {
     queryType: "semantic",
     search: (query && query.trim()) ? query : "*",
     top: 20,
     semanticConfiguration: "default",
     captions: "extractive",
     answers: "extractive",
-    select: "content, title, page, book, url, metadata_storage_name",
+    // no select → return only retrievable fields to avoid 400s
     filter: makeFilter(filterField, filterValue)
   };
 
-  // First attempt: with server-side filter
-  let r = await searchRaw(base);
-  let ok = r.ok;
-  let data;
-
-  if (!ok) {
-    // Try without filter (field may not be filterable), then filter client-side
-    const alt = { ...base };
-    delete alt.filter;
-    r = await searchRaw(alt);
+  let r = await doSearch(body);
+  if (!r.ok) {
+    // Fall back to simple query mode (broadest compatibility)
+    body = {
+      queryType: "simple",
+      search: (query && query.trim()) ? query : "*",
+      top: 20,
+      filter: makeFilter(filterField, filterValue)
+    };
+    r = await doSearch(body);
     if (!r.ok) {
-      throw new Error(`Search error: ${r.status} ${await r.text()}`);
+      // Remove filter and do client-side filtering
+      delete body.filter;
+      r = await doSearch(body);
+      if (!r.ok) {
+        throw new Error(`Search error: ${r.status} ${await r.text()}`);
+      }
+      const data = await r.json();
+      const docs = (data.value || []).map(normalize);
+      return clientFilter(docs, filterField, filterValue);
     }
-    data = await r.json();
-    const docs = (data.value || []).map(normalize);
-    return inMemoryFilter(docs, filterField, filterValue);
-  } else {
-    data = await r.json();
-    return (data.value || []).map(normalize);
   }
+
+  const data = await r.json();
+  const docs = (data.value || []).map(normalize);
+  return docs;
 }
 
 function groundingBlock(passages) {
   if (!passages || passages.length === 0) return "";
   const items = passages.map((p, i) => {
-    const where = [p.book, p.title, p.page || "", p.file || ""]
-      .filter(Boolean).join(" · ");
+    const where = [p.book, p.title, p.page || "", p.file || ""].filter(Boolean).join(" · ");
     return `(${i + 1}) ${where}\n${p.content}`;
   }).join("\n\n---\n\n");
   return `
@@ -144,11 +150,7 @@ Rules:
     const content = data?.choices?.[0]?.message?.content || "(no content)";
     const modelDeployment = AZURE_OPENAI_DEPLOYMENT;
 
-    context.res = {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-      body: { content, modelDeployment }
-    };
+    context.res = { status: 200, headers: { "Content-Type": "application/json" }, body: { content, modelDeployment } };
   } catch (e) {
     context.log.error(e);
     context.res = { status: 500, body: { error: e.message } };
