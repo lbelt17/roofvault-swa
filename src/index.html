@@ -257,11 +257,11 @@ Cites: Preview`;
     var d = $("diag"); if (d) d.textContent = "JS inline handlers loaded";
   })();
   </script>
-</body>'
+'
 @"
 
 if ($h -notmatch 'JS inline handlers loaded') {
-  $h = $h -replace '</body>', $inline
+  $h = $h -replace '', $inline
 }
 
 Set-Content -Encoding UTF8 .\src\index.html $h
@@ -281,13 +281,13 @@ $src = $src -replace '<script[^>]+/frontend/[^>]+></script>', ''
 
 # 3) Ensure a mount for the widget exists
 if ($src -notmatch 'id="interactive-exam"') {
-  $src = $src -replace '</body>', @"
+  $src = $src -replace '', @"
   <div id="interactive-exam"></div>
-</body>
+
 "@
 }
 
-# 4) Inject self-contained inline JS pack right before </body>
+# 4) Inject self-contained inline JS pack right before 
 $inline = @'
   <!-- ===== RoofVault Inline JS Pack (no external files) ===== -->
   <script>
@@ -548,7 +548,7 @@ Cites: Preview`;
   })();
   </script>
   <!-- ===== /Inline JS Pack ===== -->
-</body>
+
 </html>
 
 
