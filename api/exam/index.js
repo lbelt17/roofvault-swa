@@ -1,6 +1,9 @@
-﻿const fetch = require("node-fetch");
+﻿/**
+ * Azure Static Web Apps Function - /api/exam
+ * Uses global fetch (Node 18+). No node-fetch import.
+ */
 
-// --- AOAI config (auto detect) ---
+ // --- AOAI config (auto detect) ---
 const ENDPOINT =
   process.env.AZURE_OPENAI_ENDPOINT ||
   process.env.OPENAI_ENDPOINT ||
@@ -174,7 +177,6 @@ function extractJsonObject(text) {
   if (!text) return null;
   const start = text.indexOf("{");
   if (start < 0) return null;
-  // crude bracket matching
   let depth = 0;
   for (let i = start; i < text.length; i++) {
     const ch = text[i];
@@ -196,7 +198,6 @@ async function callAOAI(messages, maxTokens=6000) {
     messages,
     temperature: 0.4,
     max_tokens: maxTokens
-    // NOTE: No response_format to avoid 400/500s on some AOAI configs.
   };
   const r = await fetch(url, {
     method: "POST",
@@ -207,22 +208,14 @@ async function callAOAI(messages, maxTokens=6000) {
   if (!r.ok) {
     throw new Error(`AOAI error: ${r.status} ${raw}`);
   }
-  // Parse the chat response
-  let content = null;
+  let content = "";
   try {
     const data = JSON.parse(raw);
     content = data?.choices?.[0]?.message?.content || "";
   } catch {
-    // If AOAI returned non-JSON (shouldn't happen), just propagate
     content = raw;
   }
-  // Try direct JSON first, then fallback to extract
-  try {
-    return JSON.parse(content);
-  } catch {
-    const extracted = extractJsonObject(content);
-    return extracted || {};
-  }
+  try { return JSON.parse(content); } catch { return extractJsonObject(content) || {}; }
 }
 
 module.exports = async function (context, req) {
@@ -236,16 +229,12 @@ module.exports = async function (context, req) {
     const passages = await retrievePassages(filterField, book, query);
     const grounding = makeGrounding(passages);
 
-    const baseUser = {
+    const user = {
       role: "user",
-      content: JSON.stringify({
-        selection: { field: filterField || "(none)", value: book || "(all)" },
-        sources: grounding
-      })
+      content: JSON.stringify({ selection:{ field:filterField||"(none)", value:book||"(all)" }, sources:grounding })
     };
 
-    // Call once; if empty, retry with a stronger hint
-    let parsed = await callAOAI([systemPrompt(), baseUser]);
+    let parsed = await callAOAI([systemPrompt(), user]);
 
     if (!parsed || !Array.isArray(parsed.items) || parsed.items.length === 0) {
       const retryUser = {
@@ -260,34 +249,14 @@ module.exports = async function (context, req) {
     }
 
     const items = Array.isArray(parsed.items) ? parsed.items.slice(0, 50) : [];
-
     if (items.length === 0) {
-      context.res = {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-        body: {
-          items: [],
-          modelDeployment: DEPLOYMENT,
-          error: "No items generated. Try another book or re-index to ensure passages exist."
-        }
-      };
+      context.res = { status: 200, headers:{ "Content-Type":"application/json" },
+        body: { items: [], modelDeployment: DEPLOYMENT, error: "No items generated. Try another book or re-index to ensure passages exist." } };
       return;
     }
 
-    context.res = {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-      body: { items, modelDeployment: DEPLOYMENT }
-    };
+    context.res = { status: 200, headers:{ "Content-Type":"application/json" }, body: { items, modelDeployment: DEPLOYMENT } };
   } catch (e) {
-    // Return a detailed error body so the browser shows it
-    context.res = {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-      body: {
-        error: e.message,
-        hint: "Check AOAI endpoint/deployment/key, and ensure your selected book returns passages from Azure Search."
-      }
-    };
+    context.res = { status: 500, headers:{ "Content-Type":"application/json" }, body: { error: e.message, hint: "Verify AOAI endpoint/deployment/key and that selected book returns passages." } };
   }
 };
