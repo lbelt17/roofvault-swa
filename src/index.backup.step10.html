@@ -51,7 +51,7 @@
       <label>Keywords
         <input id="kw" type="text" placeholder="e.g., NRCA membrane roofs; ASTM waterproofing; IBC fire ratings">
       </label>
-      <span class="pill">Book filter active (no IIBEC bias)</span>
+      <label class="chk"><input id="bias" type="checkbox"> Bias to IIBEC</label>
       <span class="chip">Model: <span id="model">auto</span></span>
       <span id="status" class="right muted">Ready</span>
       <div class="btnbar">
@@ -113,7 +113,7 @@
 
     const basePayload = () => ({
       keywords: (kwEl.value || '').trim(),
-      onlyIIBEC: false
+      onlyIIBEC: !!biasEl.checked
     });
 
     const setStatus = (t) => statusEl.textContent = t || 'Ready';
@@ -199,4 +199,3 @@
 <script src="src/books.js"></script>
 
 <script src="src/exam.js"></script>
-
