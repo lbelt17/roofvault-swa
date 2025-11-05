@@ -1,6 +1,6 @@
 ﻿const fetch = require("node-fetch");
 
-// --- Auto-detect AOAI config from your env ---
+// --- AOAI config (auto detect) ---
 const ENDPOINT =
   process.env.AZURE_OPENAI_ENDPOINT ||
   process.env.OPENAI_ENDPOINT ||
@@ -59,8 +59,6 @@ function uniqBy(arr, keyFn) {
   }
   return out;
 }
-
-// Merge passages from multiple attempts, limit N
 function mergeLimit(passagesList, n = 30) {
   const merged = uniqBy([].concat(...passagesList), p => (p.title||"")+"|"+(p.page||"")+"|"+(p.file||""));
   return merged.slice(0, n);
@@ -73,7 +71,7 @@ async function retrievePassages(filterField, filterValue, query) {
 
   const attempts = [];
 
-  // A) Server-side filter (if field is filterable)
+  // A) Server-side filter
   if (filterField && filterValue) {
     for (const mode of ["semantic","simple"]) {
       const body = {
@@ -93,7 +91,7 @@ async function retrievePassages(filterField, filterValue, query) {
     }
   }
 
-  // B) Exact-phrase search with the selected value (usually file name)
+  // B) Exact phrase of the selected value (often filename)
   if (filterValue) {
     for (const mode of ["semantic","simple"]) {
       const body = {
@@ -112,7 +110,7 @@ async function retrievePassages(filterField, filterValue, query) {
     }
   }
 
-  // C) Fuzzy keyword search (last resort)
+  // C) Fuzzy keywords
   if (filterValue) {
     for (const mode of ["semantic","simple"]) {
       const body = {
@@ -131,8 +129,7 @@ async function retrievePassages(filterField, filterValue, query) {
     }
   }
 
-  const merged = mergeLimit(attempts, 30);
-  return merged;
+  return mergeLimit(attempts, 30);
 }
 
 function makeGrounding(passages) {
@@ -145,40 +142,13 @@ function makeGrounding(passages) {
   }));
 }
 
-async function callAOAI(messages, maxTokens=6000) {
-  const url = `${ENDPOINT}/openai/deployments/${DEPLOYMENT}/chat/completions?api-version=2024-08-01-preview`;
-  const payload = {
-    messages,
-    temperature: 0.4,
-    max_tokens: maxTokens,
-    response_format: { type: "json_object" }
-  };
-  const r = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "api-key": AOAI_KEY },
-    body: JSON.stringify(payload)
-  });
-  if (!r.ok) {
-    const t = await r.text();
-    throw new Error(`AOAI error: ${r.status} ${t}`);
-  }
-  const data = await r.json();
-  let parsed = {};
-  try {
-    parsed = JSON.parse(data?.choices?.[0]?.message?.content || "{}");
-  } catch {
-    parsed = {};
-  }
-  return parsed;
-}
-
 function systemPrompt() {
   return {
     role: "system",
     content:
 `You are an exam generator for roofing and waterproofing professional practice.
 
-Return STRICT JSON with this schema:
+Return STRICT JSON with this shape:
 {
   "items":[
     {
@@ -190,15 +160,69 @@ Return STRICT JSON with this schema:
     }
   ]
 }
-
 Rules:
 - Generate EXACTLY 50 items.
 - Base EVERY item ONLY on the provided source passages.
-- Vary difficulty; keep questions precise and unambiguous.
 - Rationale must be one or two sentences max.
 - Citations should reference the most relevant passage(s) by title and page when available.
-- NO prose outside the JSON.`
+- Output ONLY JSON, no extra text.`
   };
+}
+
+// Find the first {...} JSON object in a string
+function extractJsonObject(text) {
+  if (!text) return null;
+  const start = text.indexOf("{");
+  if (start < 0) return null;
+  // crude bracket matching
+  let depth = 0;
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === "{") depth++;
+    if (ch === "}") {
+      depth--;
+      if (depth === 0) {
+        const candidate = text.slice(start, i + 1);
+        try { return JSON.parse(candidate); } catch {}
+      }
+    }
+  }
+  return null;
+}
+
+async function callAOAI(messages, maxTokens=6000) {
+  const url = `${ENDPOINT}/openai/deployments/${DEPLOYMENT}/chat/completions?api-version=2024-08-01-preview`;
+  const payload = {
+    messages,
+    temperature: 0.4,
+    max_tokens: maxTokens
+    // NOTE: No response_format to avoid 400/500s on some AOAI configs.
+  };
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "api-key": AOAI_KEY },
+    body: JSON.stringify(payload)
+  });
+  const raw = await r.text();
+  if (!r.ok) {
+    throw new Error(`AOAI error: ${r.status} ${raw}`);
+  }
+  // Parse the chat response
+  let content = null;
+  try {
+    const data = JSON.parse(raw);
+    content = data?.choices?.[0]?.message?.content || "";
+  } catch {
+    // If AOAI returned non-JSON (shouldn't happen), just propagate
+    content = raw;
+  }
+  // Try direct JSON first, then fallback to extract
+  try {
+    return JSON.parse(content);
+  } catch {
+    const extracted = extractJsonObject(content);
+    return extracted || {};
+  }
 }
 
 module.exports = async function (context, req) {
@@ -209,11 +233,9 @@ module.exports = async function (context, req) {
     if (!DEPLOYMENT) throw new Error("Missing Azure OpenAI deployment.");
     if (!AOAI_KEY)   throw new Error("Missing Azure OpenAI key.");
 
-    // 1) Retrieve aggressively for the selected file
     const passages = await retrievePassages(filterField, book, query);
     const grounding = makeGrounding(passages);
 
-    // 2) First attempt
     const baseUser = {
       role: "user",
       content: JSON.stringify({
@@ -221,9 +243,10 @@ module.exports = async function (context, req) {
         sources: grounding
       })
     };
+
+    // Call once; if empty, retry with a stronger hint
     let parsed = await callAOAI([systemPrompt(), baseUser]);
 
-    // 3) If the model returned nothing or not 50, retry once with a stronger hint
     if (!parsed || !Array.isArray(parsed.items) || parsed.items.length === 0) {
       const retryUser = {
         role: "user",
@@ -236,13 +259,17 @@ module.exports = async function (context, req) {
       parsed = await callAOAI([systemPrompt(), retryUser]);
     }
 
-    // 4) Coerce shape
     const items = Array.isArray(parsed.items) ? parsed.items.slice(0, 50) : [];
+
     if (items.length === 0) {
       context.res = {
         status: 200,
         headers: { "Content-Type": "application/json" },
-        body: { items: [], modelDeployment: DEPLOYMENT, error: "No items generated. Try a different book or re-index to ensure content is retrievable." }
+        body: {
+          items: [],
+          modelDeployment: DEPLOYMENT,
+          error: "No items generated. Try another book or re-index to ensure passages exist."
+        }
       };
       return;
     }
@@ -253,7 +280,14 @@ module.exports = async function (context, req) {
       body: { items, modelDeployment: DEPLOYMENT }
     };
   } catch (e) {
-    context.log.error(e);
-    context.res = { status: 500, body: { error: e.message } };
+    // Return a detailed error body so the browser shows it
+    context.res = {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+      body: {
+        error: e.message,
+        hint: "Check AOAI endpoint/deployment/key, and ensure your selected book returns passages from Azure Search."
+      }
+    };
   }
 };
