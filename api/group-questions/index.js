@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿/**
  * Groups items by Section/Objectives using a keyword taxonomy.
  * Tries multiple locations for data/objectives.json; if none found, uses an embedded fallback.
@@ -150,3 +151,12 @@ module.exports = async function (context, req) {
     context.res = { status: 500, body: { error: err.message } };
   }
 };
+=======
+﻿export default async function (context, req) {
+  context.res = {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ok: true, endpoint: "group-questions" })
+  };
+}
+>>>>>>> 53ab868 (SWA skeleton with three API endpoints)

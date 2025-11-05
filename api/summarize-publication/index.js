@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿/**
  * Summarize selected publications with keyword-aware search and optional IIBEC bias.
  * Request body:
@@ -159,3 +160,12 @@ ${contextBlob}
     context.res = { status: 500, headers:{"Content-Type":"application/json"}, body: JSON.stringify({ error: err.message || String(err) }) };
   }
 };
+=======
+﻿export default async function (context, req) {
+  context.res = {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ok: true, endpoint: "summarize-publication" })
+  };
+}
+>>>>>>> 53ab868 (SWA skeleton with three API endpoints)
