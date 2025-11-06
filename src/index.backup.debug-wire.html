@@ -1,0 +1,152 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>RoofVault AI — Training Tool</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      /* Light theme */
+      --bg:#f5f7fb; --card:#ffffff; --ink:#0b0d12; --muted:#5b6b82; --accent:#1d6cff; --ring:#d7e2ff;
+      --ok:#1f9d55; --warn:#b7791f; --err:#e5534b; --chip:#eef2f7; --border:#dfe6f2;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font:15px system-ui,Segoe UI,Inter,Roboto,Arial,sans-serif}
+    .wrap{max-width:1100px;margin:32px auto;padding:0 16px}
+    h1{margin:0 0 8px;font-size:24px;letter-spacing:.2px}
+    .sub{color:var(--muted);margin-bottom:18px}
+
+    .toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px}
+    .toolbar input[type="text"]{width:360px;max-width:100%;background:#fff;border:1px solid var(--border);border-radius:10px;padding:10px;color:var(--ink)}
+
+    .btnbar{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+    button{background:#fff;border:1px solid var(--border);color:var(--ink);padding:9px 12px;border-radius:10px;cursor:pointer}
+    button:hover{border-color:#cfd8e6}
+    .copy{background:#f7faff}
+
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;margin-top:16px}
+    .col-8{grid-column:span 8}
+    .col-4{grid-column:span 4}
+
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px}
+    .card h3{margin:0 0 8px;font-size:16px}
+    .chip{display:inline-flex;gap:6px;align-items:center;background:var(--chip);border:1px solid var(--border);border-radius:999px;padding:6px 10px;color:var(--muted);font-size:12px}
+
+    .q{border-top:1px dashed #e2e8f3;margin-top:10px;padding-top:10px}
+    .stem{font-weight:600;margin-bottom:6px}
+    .choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:8px 0}
+    .choice{background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px;text-align:left}
+    .answer{color:var(--ok);font-weight:700;border-color:#b9e4c8;background:#f2fbf6}
+    .bad{color:var(--err);border-color:#f5c2bf;background:#fff6f5}
+    .muted{color:var(--muted)}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .mono{font-family:ui-monospace,Consolas,Menlo,monospace;font-size:12px}
+    .right{margin-left:auto}
+    .pill{padding:4px 8px;border-radius:999px;background:#f4f7ff;border:1px solid var(--ring)}
+    .hidden{display:none}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>RoofVault AI — Training Tool</h1>
+    <div class="sub">Generate interactive practice exams from your uploaded manuals.</div>
+
+    <div class="toolbar">
+      <label>Keywords
+        <input id="kw" type="text" placeholder="e.g., membrane roofs; waterproofing; fire ratings">
+      </label>
+
+      <!-- Single mount point for the Book dropdown -->
+      <div id="bookMount"></div>
+
+      <span class="chip">Model: <span id="model">auto</span></span>
+      <span id="status" class="muted">Ready</span>
+
+      <div class="btnbar">
+        <button id="btnPing">Ping</button>
+        <button id="btnGen5">Generate 5</button>
+        <button id="btnGenExam50ByBook">Generate Exam (50 by Book)</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="col-8">
+        <div class="card">
+          <h3>Questions</h3>
+          <div id="qList" class="muted">No questions yet.</div>
+        </div>
+
+        <div class="card" style="margin-top:12px;">
+          <h3>Summary</h3>
+          <div id="summaryBlock" class="muted">No summary yet.</div>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="card">
+          <h3>Sources & Controls</h3>
+          <div id="sources" class="muted">None</div>
+          <div class="row" style="margin-top:10px">
+            <button id="btnCopyQs" class="copy">Copy Questions</button>
+            <button id="btnCopySum" class="copy">Copy Summary</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px;">
+          <h3>Diagnostics</h3>
+          <div id="diag" class="mono muted">Idle</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load scripts -->
+  <script src="books.js"></script>
+  <script src="exam.js"></script>
+
+  <script>
+    // Minimal stubs used by existing buttons
+    const statusEl = document.getElementById('status');
+    const modelEl  = document.getElementById('model');
+    const qList    = document.getElementById('qList');
+    const summaryBlock = document.getElementById('summaryBlock');
+    const diagEl   = document.getElementById('diag');
+    const kwEl     = document.getElementById('kw');
+
+    const setStatus = (t) => statusEl.textContent = t || 'Ready';
+    const showDiag = (o) => { try { diagEl.textContent = typeof o==='string'?o:JSON.stringify(o,null,2);} catch{diagEl.textContent=String(o);} };
+
+    const basePayload = () => ({ keywords:(kwEl.value||'').trim() });
+
+    async function call(path, body){
+      const opt = body ? { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)} : {};
+      const res = await fetch(path,opt); const txt = await res.text();
+      try { return { ok:res.ok, status:res.status, data:JSON.parse(txt) }; }
+      catch { return { ok:res.ok, status:res.status, data:txt }; }
+    }
+
+    async function doPing(){ setStatus('Pinging…'); const r=await call('/api/ping'); setStatus(\`HTTP \${r.status}\`); showDiag(r); }
+    async function doGen(n){ setStatus(\`Generating \${n}…\`); const r=await call('/api/generate-questions',{...basePayload(), count:n}); setStatus(\`HTTP \${r.status}\`); showDiag(r);
+      if (r.ok && r.data?.items){ window.renderQuestions?.(r.data.items); if (r.data.modelDeployment) modelEl.textContent=r.data.modelDeployment; } }
+
+    document.getElementById('btnPing').onclick = doPing;
+    document.getElementById('btnGen5').onclick = ()=>doGen(5);
+    // exam.js will wire #btnGenExam50ByBook
+  </script>
+  <div id="interactive-exam"></div>
+  <script src="/frontend/render-bridge.js"></script>
+  <script src="/frontend/interactive-exam.js"></script>
+  <script src="/frontend/exam-sample.js"></script>
+  <script src="/frontend/app.js"></script>
+  <script src="/frontend/ping.js"></script>
+  <script>
+    // Visual confirmation that our JS is actually loaded on THIS page
+    try {
+      var d = document.getElementById('diag');
+      if (d) d.textContent = 'JS loaded';
+    } catch (e) {}
+  </script>
+</body>
+</html>
+
+
+
