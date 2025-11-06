@@ -1,117 +1,97 @@
-﻿(function(){
+﻿// gen-exam.js — resilient client for /api/exam
+(function(){
   function $(id){ return document.getElementById(id); }
   const statusEl = $("status");
-  const modelEl  = $("model");
-  const qList    = $("qList");
-  const diagEl   = $("diag");
-  const summary  = $("summaryBlock");
+  const diagEl = $("diag");
+  const qList = $("qList");
+  const btn = $("btnGenExam50ByBook");
 
   function setStatus(t){ if(statusEl) statusEl.textContent = t || "Ready"; }
   function showDiag(o){
+    if (!diagEl) return;
     try { diagEl.textContent = typeof o === "string" ? o : JSON.stringify(o,null,2); }
     catch { diagEl.textContent = String(o); }
   }
 
-  const renderQuiz = window.renderQuiz || (items=>{
-    if (qList){ qList.classList.add("mono"); qList.textContent = JSON.stringify(items,null,2); }
-  });
-
-  async function safeFetch(url, opts, timeoutMs){
+  async function safeFetch(url, opts={}, timeoutMs=45000, retries=1){
     const ctrl = new AbortController();
-    const to = setTimeout(()=>ctrl.abort("timeout"), timeoutMs || 25000);
+    const t = setTimeout(()=>ctrl.abort(), timeoutMs);
     try{
-      const res = await fetch(url, {...opts, signal: ctrl.signal});
-      clearTimeout(to);
+      const res = await fetch(url, { ...opts, signal: ctrl.signal });
+      clearTimeout(t);
       return res;
     }catch(e){
-      clearTimeout(to);
-      // Common opaque errors -> surface likely cause
-      const msg = (e && e.name === "AbortError")
-        ? "Request timed out. Likely the API is unreachable or long-running."
-        : (String(e).includes("TypeError") ? "Network error (CORS, DNS, or mixed-content)."
-        : (e && e.message) ? e.message : String(e));
-      throw new Error(msg);
-    }
-  }
-
-  async function preflight(){
-    // Quick probe to tell if /api is even reachable
-    try{
-      const r = await safeFetch("/api/peek", { method:"POST", headers:{ "Content-Type":"application/json" }, body: "{}" }, 8000);
-      const t = await r.text();
-      let j; try{ j = JSON.parse(t); }catch{ j = { raw:t } }
-      return { ok: r.ok, status: r.status, body: j };
-    }catch(e){
-      return { ok: false, status: 0, error: e.message || String(e) };
+      clearTimeout(t);
+      if (retries > 0){
+        console.warn("safeFetch retrying after error:", e?.message || e);
+        await new Promise(r=>setTimeout(r, 800)); // brief backoff
+        return safeFetch(url, opts, timeoutMs, retries-1);
+      }
+      throw e;
     }
   }
 
   async function genExam(){
-    const btn = $("btnGenExam50ByBook");
-    try{
-      if(!window.getSelectedBook){
-        showDiag("Book selector not ready."); setStatus("Error"); return;
-      }
-      const pick = window.getSelectedBook();
-      if (!pick) { showDiag("No book selected"); setStatus("Error"); return; }
+    if (!window.getSelectedBook){
+      showDiag("Book selector not ready."); setStatus("Error"); return;
+    }
+    const pick = window.getSelectedBook();
+    if (!pick){ showDiag("No book selected"); setStatus("Error"); return; }
 
+    try{
       if (btn){ btn.disabled = true; btn.classList.add("busy"); }
       setStatus("Generating exam…");
-      showDiag({ step: "preflight", note: "Probing /api/peek to verify API reachability…" });
+      if (qList){ qList.classList.add("mono"); qList.textContent = "⏳ contacting /api/exam …"; }
 
-      const probe = await preflight();
-      if (!probe.ok){
-        showDiag({ probe, hint: "If status=0 with 'Network error', it is almost certainly CORS / wrong API base / SWA proxy misconfig." });
-        setStatus("Error");
-        return;
-      }else{
-        showDiag({ probe, next: "Calling /api/exam…" });
-      }
-
-      const payload = { book: pick.value, filterField: pick.field, count: 50 };
       const res = await safeFetch("/api/exam", {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify(payload)
-      }, 30000);
+        body: JSON.stringify({ book: pick.value, filterField: pick.field, count: 50 })
+      }, 45000, 1);
 
-      const text = await res.text();
-      let data;
-      try { data = JSON.parse(text); } catch { data = { error:text }; }
+      const txt = await res.text();
+      let data; try { data = JSON.parse(txt); } catch { data = { error: txt }; }
 
-      if(!res.ok){
-        showDiag({ status: res.status, body: data, hint: "Non-200 from /api/exam" });
-        if(qList){ qList.classList.add("mono"); qList.textContent = data?.error || ("HTTP " + res.status); }
+      if (!res.ok){
+        showDiag({ status: res.status, body: data });
+        if (qList){ qList.textContent = data?.error || `HTTP ${res.status}`; }
         setStatus("Error");
         return;
       }
 
-      if (Array.isArray(data.items) && data.items.length){
-        if (summary) summary.innerHTML = '<span class="muted">Answer key hidden. Click "Show Answer Key" in the Questions panel.</span>';
-        window.renderQuiz?.(data.items);
-        if (modelEl && data.modelDeployment) modelEl.textContent = data.modelDeployment;
-        setStatus("Done");
-        showDiag({ ok:true, count: data.items.length, model: data.modelDeployment || "unknown" });
-      } else {
-        if(qList){ qList.classList.add("mono"); qList.textContent = data?.error || "(No items returned)"; }
+      const items = Array.isArray(data.items) ? data.items : [];
+      if (items.length === 0){
         showDiag({ status: res.status, body: data, hint: "API responded but no items[] returned" });
+        if (qList){ qList.textContent = "(No items returned)"; }
         setStatus("Error");
+        return;
       }
+
+      // Render interactively if available
+      if (typeof window.renderQuiz === "function"){
+        if (qList){ qList.classList.remove("mono"); qList.textContent = ""; }
+        window.renderQuiz(items);
+      } else {
+        // fallback: show JSON
+        if (qList){ qList.classList.add("mono"); qList.textContent = JSON.stringify(items, null, 2); }
+      }
+      setStatus(`HTTP ${res.status}`);
     }catch(e){
       console.error(e);
-      showDiag({ error: e && e.message ? e.message : String(e), hint: "See hint text above for likely cause." });
+      const msg = (e && e.name === "AbortError") ? "timeout" : (e?.message || String(e));
+      showDiag({ error: msg, hint: "Request aborted or network error" });
+      if (qList){ qList.textContent = `{ "error": "${msg}" }`; }
       setStatus("Error");
     }finally{
-      const btn = $("btnGenExam50ByBook");
       if (btn){ btn.disabled = false; btn.classList.remove("busy"); }
-      setTimeout(()=>setStatus("Ready"), 1200);
+      setTimeout(()=>setStatus("Ready"), 900);
     }
   }
 
   function wire(){
-    const btn = $("btnGenExam50ByBook");
-    if (!btn) return;
-    btn.onclick = genExam;
+    const b = $("btnGenExam50ByBook");
+    if (!b) return;
+    b.onclick = genExam;
   }
 
   if (document.readyState === "loading"){
