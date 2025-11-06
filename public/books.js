@@ -2,16 +2,16 @@
   async function loadBooks(){
     const mount = document.getElementById("bookMount");
     if (!mount) return;
+    mount.innerHTML = "<div class='muted'>Loading books…</div>";
 
-    // clear any previous UI
-    mount.innerHTML = "";
-
-    try{
+    try {
       const res = await fetch("/api/books");
-      const data = await res.json(); // { field, values }
-      const field = data.field || null;
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      const field = data.field || "docName";
       const values = Array.isArray(data.values) ? data.values : [];
 
+      // build label + dropdown
       const label = document.createElement("label");
       label.textContent = "Book";
       label.style.display = "flex";
@@ -21,39 +21,40 @@
       const sel = document.createElement("select");
       sel.id = "bookSelect";
       sel.style.minWidth = "260px";
+
       const optAll = document.createElement("option");
       optAll.value = "";
       optAll.textContent = "(All Books)";
       sel.appendChild(optAll);
-      values.forEach(v=>{
+
+      values.forEach(v => {
         const o = document.createElement("option");
         o.value = v;
         o.textContent = v;
         sel.appendChild(o);
       });
 
+      label.appendChild(sel);
       const meta = document.createElement("div");
       meta.className = "muted";
       meta.style.fontSize = "12px";
-      meta.textContent = field ? "field: " + field : "field: ?";
-
-      label.appendChild(sel);
+      meta.textContent = "field: " + field;
       label.appendChild(meta);
+
+      mount.innerHTML = "";
       mount.appendChild(label);
 
-      // expose a single selector for other scripts
+      // expose selector globally
       window.getSelectedBook = () => ({ value: sel.value, field });
-    }catch(e){
-      console.error(e);
-      if (mount){
-        mount.innerHTML = '<div class="muted">Failed to load books.</div>';
-      }
+      console.log("✅ Book dropdown rendered with", values.length, "items");
+    } catch (err) {
+      console.error("books.js error:", err);
+      mount.innerHTML = "<div class='muted'>Failed to load books (" + err.message + ")</div>";
     }
   }
 
-  if (document.readyState === "loading") {
+  if (document.readyState === "loading")
     document.addEventListener("DOMContentLoaded", loadBooks);
-  } else {
+  else
     loadBooks();
-  }
 })();
