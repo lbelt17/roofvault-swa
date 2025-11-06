@@ -1,21 +1,23 @@
 ﻿/**
  * /api/exam
  * POST { book: string, filterField: string, count?: number }
- * Returns: { items:[...], modelDeployment, _diag }
  */
 module.exports = async function (context, req) {
+  function fail(status, obj){
+    context.res = { status, jsonBody: obj };
+    return;
+  }
   try {
     const body = (req && req.body) || {};
     const book = (body.book || "").trim();
     const filterField = (body.filterField || "metadata_storage_name").trim();
     const count = Math.min(Math.max(parseInt(body.count || 50, 10) || 50, 1), 50);
 
-    // --- env
     const SEARCH_ENDPOINT = process.env.SEARCH_ENDPOINT;
     const SEARCH_API_KEY  = process.env.SEARCH_API_KEY;
     const SEARCH_INDEX    = process.env.SEARCH_INDEX;
 
-    // Prefer Azure OpenAI, fallback to OpenAI
+    // Prefer Azure OpenAI
     const AOAI_ENDPOINT   = process.env.AZURE_OPENAI_ENDPOINT || process.env.OPENAI_ENDPOINT || process.env.AOAI_ENDPOINT;
     const AOAI_KEY        = process.env.AZURE_OPENAI_API_KEY   || process.env.OPENAI_API_KEY   || process.env.AOAI_API_KEY;
     const DEPLOYMENT      = process.env.AZURE_OPENAI_DEPLOYMENT
@@ -24,11 +26,19 @@ module.exports = async function (context, req) {
                          || process.env.DEFAULT_MODEL
                          || process.env.OPENAI_GPT4O_MINI;
 
+    // quick env diag (masked)
+    const envDiag = {
+      searchEndpoint: (SEARCH_ENDPOINT||"").replace(/https?:\/\//,"").split("/")[0],
+      searchIndex: SEARCH_INDEX,
+      aoaiEndpointHost: (AOAI_ENDPOINT||"").replace(/https?:\/\//,"").split("/")[0],
+      deployment: DEPLOYMENT ? (DEPLOYMENT.length>18 ? DEPLOYMENT.slice(0,3)+"…"+DEPLOYMENT.slice(-3) : DEPLOYMENT) : "(none)"
+    };
+
     if (!SEARCH_ENDPOINT || !SEARCH_API_KEY || !SEARCH_INDEX) {
-      return context.res = { status: 500, jsonBody: { error: "Missing SEARCH_* env vars" } };
+      return fail(500, { error: "Missing SEARCH_* env vars", _env: envDiag });
     }
     if (!AOAI_ENDPOINT || !AOAI_KEY || !DEPLOYMENT) {
-      return context.res = { status: 500, jsonBody: { error: "Missing OpenAI/Azure OpenAI env (endpoint/key/deployment)" } };
+      return fail(500, { error: "Missing OpenAI/Azure OpenAI env (endpoint/key/deployment)", _env: envDiag });
     }
 
     // --- search
@@ -43,29 +53,29 @@ module.exports = async function (context, req) {
       ...(filter ? { filter } : {})
     };
 
+    let sTxt = "";
     const sRes = await fetch(searchUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "api-key": SEARCH_API_KEY
-      },
+      headers: { "Content-Type":"application/json", "api-key": SEARCH_API_KEY },
       body: JSON.stringify(searchPayload)
-    });
+    }).catch(e => { throw new Error("FETCH_SEARCH_FAILED: "+(e?.message||e)); });
 
+    sTxt = await sRes.text().catch(()=> "");
     if (!sRes.ok) {
-      const raw = await sRes.text().catch(()=> "");
-      return context.res = { status: 500, jsonBody: { error: `Search HTTP ${sRes.status}`, raw } };
+      return fail(500, { error: `Search HTTP ${sRes.status}`, raw: sTxt, _env: envDiag });
     }
-
-    const sJson = await sRes.json();
+    let sJson;
+    try { sJson = JSON.parse(sTxt); } catch {
+      return fail(500, { error: "Search returned non-JSON", raw: sTxt.slice(0,2000), _env: envDiag });
+    }
     const hits = Array.isArray(sJson.value) ? sJson.value : [];
     const texts = hits.map(h => (h.content || "")).filter(Boolean);
     const citeName = book || (hits[0]?.metadata_storage_name) || "<mixed sources>";
-
-    const combined = texts.join("\n\n").slice(0, 120000); // keep payload sane
+    const combined = texts.join("\n\n").slice(0, 120000);
     const combinedLen = combined.length;
 
     const _diag = {
+      _env: envDiag,
       searchHits: hits.length,
       firstDocKeys: hits[0] ? Object.keys(hits[0]).slice(0, 5) : [],
       combinedLen,
@@ -73,29 +83,24 @@ module.exports = async function (context, req) {
     };
 
     if (combinedLen < 1000) {
-      // not enough source → hard fail (no stubs)
-      return context.res = {
-        status: 500,
-        jsonBody: { error: "Not enough source text to generate questions.", _diag }
-      };
+      return fail(500, { error: "Not enough source text to generate questions.", _diag });
     }
 
-    // --- OpenAI Chat (Azure or OpenAI)
-    // Try Azure-style first; if endpoint contains '/openai/' we assume Azure route.
-    const isAzure = /azure|openai\/deployments/i.test(AOAI_ENDPOINT);
+    // --- OpenAI (Azure vs non-Azure)
+    const isAzure = /azure\.com/i.test(AOAI_ENDPOINT);
     let chatUrl;
     if (isAzure) {
-      const base = AOAI_ENDPOINT.replace(/\/+$/,"");
-      chatUrl = `${base}/openai/deployments/${encodeURIComponent(DEPLOYMENT)}/chat/completions?api-version=2024-02-15-preview`;
+      // Use current stable preview that supports response_format
+      const apiVersion = process.env.AZURE_OPENAI_API_VERSION || "2024-08-01-preview";
+      chatUrl = `${AOAI_ENDPOINT.replace(/\/+$/,"")}/openai/deployments/${encodeURIComponent(DEPLOYMENT)}/chat/completions?api-version=${apiVersion}`;
     } else {
-      // raw OpenAI style (Organizations/Projects not handled here)
       chatUrl = `${AOAI_ENDPOINT.replace(/\/+$/,"")}/v1/chat/completions`;
     }
 
     const sys = [
       "You are an expert item-writer for roofing/structures exams.",
       "Write strictly factual, unambiguous multiple-choice questions from the provided source text.",
-      "Each question must be answerable from the source alone; do not invent facts.",
+      "Each question must be answerable from the source; do not invent facts.",
       "Return exactly the requested count of questions.",
       "Output ONLY valid JSON matching the schema provided."
     ].join(" ");
@@ -136,12 +141,12 @@ module.exports = async function (context, req) {
 
     const user = [
       `Create ${count} exam-quality MCQs strictly from the SOURCE below.`,
-      `- Use clear, specific stems; avoid “Which option is most correct.”`,
+      `- Use clear, specific stems; do NOT use “Which option is most correct.”`,
       `- Provide exactly 4 options labeled A–D.`,
       `- The correct answer must be derivable from the source.`,
       `- Cite: use "${citeName}" for each item.`,
       ``,
-      `SOURCE (verbatim, noisy OCR may exist):`,
+      `SOURCE (verbatim, may include OCR noise):`,
       combined
     ].join("\n");
 
@@ -154,66 +159,41 @@ module.exports = async function (context, req) {
       response_format: { type: "json_schema", json_schema: { name: "mcq_list", schema } }
     };
 
-    const oaiHeaders = {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${AOAI_KEY}`
-    };
-    // Azure sometimes needs api-key header instead of Bearer; include both
-    if (/azure/i.test(AOAI_ENDPOINT)) oaiHeaders["api-key"] = AOAI_KEY;
+    const headers = { "Content-Type": "application/json" };
+    if (isAzure) headers["api-key"] = AOAI_KEY; else headers["Authorization"] = `Bearer ${AOAI_KEY}`;
 
+    let mTxt = "";
     const mRes = await fetch(chatUrl, {
       method: "POST",
-      headers: oaiHeaders,
+      headers,
       body: JSON.stringify(payload)
-    });
+    }).catch(e => { throw new Error("FETCH_OPENAI_FAILED: "+(e?.message||e)); });
 
-    const mTxt = await mRes.text();
+    mTxt = await mRes.text().catch(()=> "");
     if (!mRes.ok) {
-      return context.res = {
-        status: 500,
-        jsonBody: { error: `OpenAI HTTP ${mRes.status}`, raw: mTxt, _diag }
-      };
+      return fail(500, { error: `OpenAI HTTP ${mRes.status}`, raw: mTxt.slice(0,4000), _diag });
     }
-
     let mJson;
     try { mJson = JSON.parse(mTxt); } catch {
-      return context.res = {
-        status: 500,
-        jsonBody: { error: "Model returned non-JSON", raw: mTxt.slice(0, 4000), _diag }
-      };
+      return fail(500, { error: "Model returned non-JSON", raw: mTxt.slice(0, 4000), _diag });
     }
-
     const content = mJson?.choices?.[0]?.message?.content;
     if (!content) {
-      return context.res = {
-        status: 500,
-        jsonBody: { error: "No content from model", raw: mJson, _diag }
-      };
+      return fail(500, { error: "No content from model", raw: mJson, _diag });
     }
 
     let parsed;
     try { parsed = JSON.parse(content); } catch {
-      return context.res = {
-        status: 500,
-        jsonBody: { error: "Content not valid JSON", content: content.slice(0, 4000), _diag }
-      };
+      return fail(500, { error: "Content not valid JSON", content: content.slice(0, 4000), _diag });
     }
 
-    // Validate shape quickly
     const items = Array.isArray(parsed.items) ? parsed.items : [];
     if (items.length !== count) {
-      return context.res = {
-        status: 500,
-        jsonBody: { error: `Model returned ${items.length} items; expected ${count}`, _diag }
-      };
+      return fail(500, { error: `Model returned ${items.length} items; expected ${count}`, _diag });
     }
 
-    // Success
-    return context.res = {
-      status: 200,
-      jsonBody: { items, modelDeployment: DEPLOYMENT, _diag }
-    };
+    context.res = { status: 200, jsonBody: { items, modelDeployment: DEPLOYMENT, _diag } };
   } catch (e) {
-    return context.res = { status: 500, jsonBody: { error: String(e && e.message || e) } };
+    context.res = { status: 500, jsonBody: { error: String(e?.message||e), stack: String(e?.stack||"") } };
   }
 };
