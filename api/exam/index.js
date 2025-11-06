@@ -230,3 +230,4 @@ module.exports = async function (context, req){
     context.res = { status:500, headers:{ "Content-Type":"application/json" }, body:{ error:String(e && e.message || e) } };
   }
 };
+
