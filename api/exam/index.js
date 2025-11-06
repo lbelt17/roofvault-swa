@@ -166,3 +166,4 @@ module.exports = async function (context, req) {
     return send(500, { error: String(e?.message||e), stack: String(e?.stack||"") });
   }
 };
+
