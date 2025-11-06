@@ -1,0 +1,29 @@
+﻿{
+  "sections": [
+    {
+      "id": "SEC-1",
+      "title": "Safety & OSHA",
+      "objectives": [
+        {"id": "OBJ-1", "title": "Fall protection basics"},
+        {"id": "OBJ-2", "title": "Hazard recognition & PPE"}
+      ]
+    },
+    {
+      "id": "SEC-2",
+      "title": "Roof Systems & Components",
+      "objectives": [
+        {"id": "OBJ-3", "title": "Low-slope systems"},
+        {"id": "OBJ-4", "title": "Steep-slope systems"},
+        {"id": "OBJ-5", "title": "Membranes, decks, and flashings"}
+      ]
+    },
+    {
+      "id": "SEC-3",
+      "title": "Materials & Properties",
+      "objectives": [
+        {"id": "OBJ-6", "title": "Bitumen & modified bitumen"},
+        {"id": "OBJ-7", "title": "Insulation & vapor control"}
+      ]
+    }
+  ]
+}
