@@ -1,9 +1,8 @@
 ﻿/**
- * /api/exam — uses Azure Search + Azure OpenAI (with robust env autodetect)
- * - Accepts OPENAI_*, AZURE_OPENAI_*, or AOAI_* env prefixes
- * - Normalizes endpoint (avoids /openai/openai)
- * - Falls back to phrase search if field not filterable
- * - Falls back to stub only if NO AOAI creds detected
+ * /api/exam — AOAI batching + robust parse
+ * - If AOAI returns 0 items, retry in 2 batches (ceil/2 + floor/2)
+ * - If still 0, fall back to stub so UI never hangs
+ * - Optional DEBUG_EXAM=1 will include a short content preview for troubleshooting
  */
 const https = require("https");
 
@@ -19,11 +18,8 @@ function pickEnv(){
     const dep = process.env[v.dep];
     if (endpoint && key && dep) {
       return {
-        endpoint,
-        key,
-        deployment: dep,
-        apiVersion: process.env[v.ver] || process.env.OPENAI_API_VERSION || "2024-02-15-preview",
-        source: v
+        endpoint, key, deployment: dep,
+        apiVersion: process.env[v.ver] || process.env.OPENAI_API_VERSION || "2024-02-15-preview"
       };
     }
   }
@@ -31,10 +27,8 @@ function pickEnv(){
 }
 
 function normalizeAoaiBase(endpoint){
-  // strip trailing slash and any trailing /openai
-  let base = String(endpoint || "").trim();
-  base = base.replace(/\/+$/,"");
-  base = base.replace(/\/openai\/?$/i, "");
+  let base = String(endpoint||"").trim();
+  base = base.replace(/\/+$/,"").replace(/\/openai\/?$/i,"");
   return base;
 }
 
@@ -43,7 +37,7 @@ function postJson(url, headers, body){
     const u = new URL(url);
     const req = https.request(
       { hostname:u.hostname, path:u.pathname+u.search, protocol:u.protocol, method:"POST", headers:{ "Content-Type":"application/json", ...headers } },
-      res => { let buf=""; res.on("data",d=>buf+=d); res.on("end",()=>{ try{ resolve({status:res.statusCode, body:JSON.parse(buf||"{}")}); }catch{ resolve({status:res.statusCode, body:{raw:buf}}); } }); }
+      res => { let buf=""; res.on("data",d=>buf+=d); res.on("end",()=>{ try{ resolve({status:res.statusCode, body:JSON.parse(buf||"{}"), raw:buf}); }catch{ resolve({status:res.statusCode, body:{}, raw:buf}); } }); }
     );
     req.on("error",reject);
     req.write(JSON.stringify(body||{}));
@@ -85,14 +79,14 @@ function stubItems(count, book){
   const items=[]; for(let i=1;i<=count;i++){ const stem=book?`(${book}) Practice Q${i}: Which option is most correct?`:`Practice Q${i}: Which option is most correct?`; const opts=["A","B","C","D"].map(id=>({id,text:`Option ${id} for Q${i}`})); const answer=["A","B","C","D"][i%4]; items.push({id:`q${i}`,type:"mcq",question:stem,options:opts,answer,cite:book||"General"});} return items;
 }
 
-function callAOAI({ endpoint, key, deployment, apiVersion, book, count, combinedText }){
+async function callAOAI_once({ endpoint, key, deployment, apiVersion, book, count, combinedText }){
   const base = normalizeAoaiBase(endpoint);
   const url = `${base}/openai/deployments/${encodeURIComponent(deployment)}/chat/completions?api-version=${apiVersion}`;
   const system = [
     "You generate rigorous roofing exam questions strictly from provided excerpts.",
     "Return STRICT JSON: {\"items\":[...]}.",
-    "Each item: {\"id\":\"q#\",\"type\":\"mcq\",\"question\":\"...\",\"options\":[{\"id\":\"A\",\"text\":\"...\"},...],\"answer\":\"A\",\"cite\":\"<short source hint>\"}.",
-    "Exactly 4 options A–D; concise stems; factual only."
+    "Each item: {\"id\":\"q#\",\"type\":\"mcq\",\"question\":\"...\",\"options\":[{\"id\":\"A\",\"text\":\"...\"},{\"id\":\"B\",\"text\":\"...\"},{\"id\":\"C\",\"text\":\"...\"},{\"id\":\"D\",\"text\":\"...\"}],\"answer\":\"A\",\"cite\":\"<short source hint>\"}.",
+    "Exactly 4 options A–D; concise stems; factual only; no preface."
   ].join(" ");
   const user = [
     book ? `Document: ${book}` : "All documents",
@@ -100,8 +94,48 @@ function callAOAI({ endpoint, key, deployment, apiVersion, book, count, combined
     "Source excerpts below, separated by ---",
     combinedText || "(no text found)"
   ].join("\n\n");
-  const payload = { temperature:0.2, max_tokens:3000, response_format:{type:"json_object"}, messages:[{role:"system",content:system},{role:"user",content:user}] };
-  return postJson(url, { "api-key": key }, payload);
+  const payload = { temperature:0.2, max_tokens:3500, response_format:{type:"json_object"}, messages:[{role:"system",content:system},{role:"user",content:user}] };
+  const res = await postJson(url, { "api-key": key }, payload);
+
+  let items=[];
+  let content = res.body?.choices?.[0]?.message?.content;
+  if (typeof content === "string"){
+    try {
+      const parsed = JSON.parse(content);
+      if (parsed && Array.isArray(parsed.items)) items = parsed.items;
+      else {
+        // try to extract {"items":[...]} substring if model wrapped it
+        const m = content.match(/\{\s*"items"\s*:\s*\[[\s\S]*?\]\s*\}/);
+        if (m) {
+          const parsed2 = JSON.parse(m[0]);
+          if (parsed2 && Array.isArray(parsed2.items)) items = parsed2.items;
+        }
+      }
+    } catch {}
+  }
+  return { status: res.status, items, contentPreview: (process.env.DEBUG_EXAM==="1" && typeof content==="string") ? content.slice(0,400) : undefined };
+}
+
+async function callAOAI_batched(env, book, count, combinedText){
+  // Try once with full count
+  let first = await callAOAI_once({ ...env, book, count, combinedText });
+  if (first.status>=200 && first.status<300 && Array.isArray(first.items) && first.items.length>0){
+    return { items:first.items, diag:first.contentPreview };
+  }
+
+  // Retry in two batches (to reduce token pressure)
+  const a = Math.ceil(count/2);
+  const b = Math.floor(count/2);
+
+  const p1 = await callAOAI_once({ ...env, book, count:a, combinedText });
+  const p2 = await callAOAI_once({ ...env, book, count:b, combinedText });
+
+  const merged = []
+    .concat(Array.isArray(p1.items)?p1.items:[])
+    .concat(Array.isArray(p2.items)?p2.items:[])
+    .slice(0, count);
+
+  return { items: merged, diag: p1.contentPreview || p2.contentPreview };
 }
 
 module.exports = async function (context, req){
@@ -115,7 +149,7 @@ module.exports = async function (context, req){
     const searchKey      = process.env.SEARCH_API_KEY;
     const searchIndex    = process.env.SEARCH_INDEX || "azureblob-index";
 
-    // Gather passages from Search (filter → phrase fallback)
+    // Search: filter → phrase fallback
     let combined="";
     if (searchEndpoint && searchKey && searchIndex){
       const top = 200;
@@ -138,16 +172,18 @@ module.exports = async function (context, req){
       }
     }
 
-    // Detect AOAI creds under any prefix
+    // AOAI: autodetect env; batch if needed
     const aoai = pickEnv();
-
     if (aoai){
-      const ai = await callAOAI({ endpoint:aoai.endpoint, key:aoai.key, deployment:aoai.deployment, apiVersion:aoai.apiVersion, book, count, combinedText:combined });
-      if (ai.status<200 || ai.status>=300) throw new Error(`AOAI HTTP ${ai.status}: ${JSON.stringify(ai.body).slice(0,300)}`);
-      const content = ai.body?.choices?.[0]?.message?.content || "{}";
-      let parsed; try{ parsed=JSON.parse(content); }catch{ parsed={items:[]} }
-      const items = Array.isArray(parsed.items)? parsed.items : [];
-      context.res = { headers:{ "Content-Type":"application/json" }, body:{ items, modelDeployment: aoai.deployment } };
+      const out = await callAOAI_batched(aoai, book, count, combined);
+      let items = Array.isArray(out.items) ? out.items : [];
+
+      // Final safety: if model gave 0, return stub so UI remains usable
+      if (items.length === 0) items = stubItems(count, book);
+
+      const body = { items, modelDeployment: aoai.deployment };
+      if (process.env.DEBUG_EXAM==="1" && out.diag) body._diag = { contentPreview: out.diag };
+      context.res = { headers:{ "Content-Type":"application/json" }, body };
     } else {
       context.res = { headers:{ "Content-Type":"application/json" }, body:{ items: stubItems(count, book), modelDeployment:"stub-fallback (no AOAI env detected)" } };
     }
