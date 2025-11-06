@@ -1,35 +1,54 @@
 ﻿/**
- * /api/books — returns field + values for the dropdown.
- * If BOOKS_LIST env var is empty, use a helpful default list so UI always renders.
+ * /api/books — query Azure Cognitive Search to list distinct document names.
+ * Requires env vars:
+ *   SEARCH_ENDPOINT=https://roofvaultsearch.search.windows.net
+ *   SEARCH_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ *   SEARCH_INDEX=roofvault-index  (whatever your index is called)
  */
+const https = require("https");
+
 module.exports = async function (context, req) {
   try {
-    const raw = process.env.BOOKS_LIST || "";
-    let values = raw
-      .split(/[|,]/)
-      .map(s => s && s.trim())
-      .filter(Boolean);
-
-    if (values.length === 0) {
-      // sensible defaults (you can change these later or set BOOKS_LIST in SWA App Settings)
-      values = [
-        "NRCA Manual (Part 1)",
-        "NRCA Manual (Part 2)",
-        "IIBEC Guide",
-        "ASTM D6878 (TPO)",
-        "Roofing Design & Practice"
-      ];
+    const endpoint = process.env.SEARCH_ENDPOINT;
+    const key      = process.env.SEARCH_API_KEY;
+    const index    = process.env.SEARCH_INDEX;
+    if (!endpoint || !key || !index) {
+      throw new Error("Missing SEARCH_ENDPOINT, SEARCH_API_KEY, or SEARCH_INDEX app setting");
     }
+
+    const url = `${endpoint}/indexes/${index}/docs?api-version=2023-07-01-Preview&$select=docName&$top=1000`;
+
+    const data = await new Promise((resolve, reject) => {
+      const opts = new URL(url);
+      opts.method = "GET";
+      opts.headers = {
+        "api-key": key,
+        "Content-Type": "application/json"
+      };
+      https.get(opts, res => {
+        let buf = "";
+        res.on("data", d => buf += d);
+        res.on("end", () => {
+          try {
+            const json = JSON.parse(buf);
+            resolve(json);
+          } catch(e){ reject(e); }
+        });
+      }).on("error", reject);
+    });
+
+    // collect unique names
+    const names = Array.from(new Set((data.value || []).map(d => d.docName).filter(Boolean))).sort();
 
     context.res = {
       headers: { "Content-Type": "application/json" },
-      body: { field: "docName", values }
+      body: { field: "docName", values: names }
     };
   } catch (e) {
     context.res = {
       status: 500,
       headers: { "Content-Type": "application/json" },
-      body: { ok:false, error: String(e && e.message || e) }
+      body: { ok:false, error:String(e && e.message || e) }
     };
   }
 };
