@@ -12,10 +12,39 @@
     catch { diagEl.textContent = String(o); }
   }
 
-  // Render function exposed by interactive-exam.js (fallback to text)
   const renderQuiz = window.renderQuiz || (items=>{
     if (qList){ qList.classList.add("mono"); qList.textContent = JSON.stringify(items,null,2); }
   });
+
+  async function safeFetch(url, opts, timeoutMs){
+    const ctrl = new AbortController();
+    const to = setTimeout(()=>ctrl.abort("timeout"), timeoutMs || 25000);
+    try{
+      const res = await fetch(url, {...opts, signal: ctrl.signal});
+      clearTimeout(to);
+      return res;
+    }catch(e){
+      clearTimeout(to);
+      // Common opaque errors -> surface likely cause
+      const msg = (e && e.name === "AbortError")
+        ? "Request timed out. Likely the API is unreachable or long-running."
+        : (String(e).includes("TypeError") ? "Network error (CORS, DNS, or mixed-content)."
+        : (e && e.message) ? e.message : String(e));
+      throw new Error(msg);
+    }
+  }
+
+  async function preflight(){
+    // Quick probe to tell if /api is even reachable
+    try{
+      const r = await safeFetch("/api/peek", { method:"POST", headers:{ "Content-Type":"application/json" }, body: "{}" }, 8000);
+      const t = await r.text();
+      let j; try{ j = JSON.parse(t); }catch{ j = { raw:t } }
+      return { ok: r.ok, status: r.status, body: j };
+    }catch(e){
+      return { ok: false, status: 0, error: e.message || String(e) };
+    }
+  }
 
   async function genExam(){
     const btn = $("btnGenExam50ByBook");
@@ -28,20 +57,31 @@
 
       if (btn){ btn.disabled = true; btn.classList.add("busy"); }
       setStatus("Generating exam…");
-      showDiag("Calling /api/exam …");
+      showDiag({ step: "preflight", note: "Probing /api/peek to verify API reachability…" });
 
-      const res = await fetch("/api/exam", {
+      const probe = await preflight();
+      if (!probe.ok){
+        showDiag({ probe, hint: "If status=0 with 'Network error', it is almost certainly CORS / wrong API base / SWA proxy misconfig." });
+        setStatus("Error");
+        return;
+      }else{
+        showDiag({ probe, next: "Calling /api/exam…" });
+      }
+
+      const payload = { book: pick.value, filterField: pick.field, count: 50 };
+      const res = await safeFetch("/api/exam", {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ book: pick.value, filterField: pick.field })
-      });
+        body: JSON.stringify(payload)
+      }, 30000);
+
       const text = await res.text();
       let data;
       try { data = JSON.parse(text); } catch { data = { error:text }; }
 
       if(!res.ok){
-        showDiag({status:res.status, body:data});
-        if(qList){ qList.classList.add("mono"); qList.textContent = (data && data.error) ? data.error : ("HTTP " + res.status); }
+        showDiag({ status: res.status, body: data, hint: "Non-200 from /api/exam" });
+        if(qList){ qList.classList.add("mono"); qList.textContent = data?.error || ("HTTP " + res.status); }
         setStatus("Error");
         return;
       }
@@ -51,18 +91,20 @@
         window.renderQuiz?.(data.items);
         if (modelEl && data.modelDeployment) modelEl.textContent = data.modelDeployment;
         setStatus("Done");
+        showDiag({ ok:true, count: data.items.length, model: data.modelDeployment || "unknown" });
       } else {
-        if(qList){ qList.classList.add("mono"); qList.textContent = (data && data.error) ? data.error : "(No items returned)"; }
-        showDiag({status:res.status, body:data});
+        if(qList){ qList.classList.add("mono"); qList.textContent = data?.error || "(No items returned)"; }
+        showDiag({ status: res.status, body: data, hint: "API responded but no items[] returned" });
         setStatus("Error");
       }
     }catch(e){
       console.error(e);
-      showDiag(e && e.message ? e.message : e);
+      showDiag({ error: e && e.message ? e.message : String(e), hint: "See hint text above for likely cause." });
       setStatus("Error");
     }finally{
+      const btn = $("btnGenExam50ByBook");
       if (btn){ btn.disabled = false; btn.classList.remove("busy"); }
-      setTimeout(()=>setStatus("Ready"), 900);
+      setTimeout(()=>setStatus("Ready"), 1200);
     }
   }
 
