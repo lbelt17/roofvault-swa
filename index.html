@@ -5,35 +5,15 @@
   <title>RoofVault Chat</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root{
-      --bg:#0f1115; --panel:#151922; --muted:#2a2f3a; --text:#e6e9ef; --sub:#a7b0c0;
-      --accent:#2aa9ff; --accent-2:#20e3b2;
-    }
+    :root{ --bg:#0f1115; --panel:#151922; --muted:#2a2f3a; --text:#e6e9ef; --sub:#a7b0c0; --accent:#2aa9ff; }
     *{box-sizing:border-box}
-    body{
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      background:linear-gradient(180deg,#0e1014, #0b0d12 40%, #0f1115);
-      color:var(--text); margin:0; padding:0; min-height:100vh;
-      display:flex; align-items:center; justify-content:center;
-    }
+    body{ font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; background:linear-gradient(180deg,#0e1014,#0b0d12 40%,#0f1115); color:var(--text); margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; }
     .wrap{ width:min(900px,92vw); padding:28px; }
-    .card{
-      background:radial-gradient(1200px 600px at -10% -20%, rgba(42,169,255,0.07), transparent 40%),
-                 radial-gradient(1000px 500px at 110% -10%, rgba(32,227,178,0.06), transparent 42%),
-                 var(--panel);
-      border:1px solid var(--muted); border-radius:16px;
-      box-shadow:0 10px 30px rgba(0,0,0,0.35); padding:20px;
-    }
-    h1{ margin:0 0 14px 0; font-size:26px; letter-spacing:.5px; color:var(--text); display:flex; align-items:center; gap:10px; }
-    h1::after{ content:""; flex:1; height:1px; background:linear-gradient(90deg, var(--muted), transparent); margin-left:10px; }
-    .bar{ display:flex; gap:10px; margin:12px 0 16px 0; }
-    input{ flex:1; padding:12px 14px; background:#0f131a; color:var(--text); border:1px solid var(--muted); border-radius:10px; outline:none; }
-    input::placeholder{ color:#7c8698; }
-    button{ padding:12px 16px; border:none; border-radius:10px; color:#071018; font-weight:600; background:linear-gradient(180deg, var(--accent), #0ec0ff); cursor:pointer; }
-    button:hover{ filter:brightness(1.06); }
-    .footer{ margin-top:10px; color:var(--sub); font-size:12px; text-align:right; }
-    .muted{ color:var(--sub); }
-    .mono{ white-space:pre; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+    .card{ background:radial-gradient(1200px 600px at -10% -20%, rgba(42,169,255,0.07), transparent 40%), radial-gradient(1000px 500px at 110% -10%, rgba(32,227,178,0.06), transparent 42%), var(--panel); border:1px solid var(--muted); border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.35); padding:20px; }
+    h1{ margin:0 0 14px; font-size:26px; letter-spacing:.5px; display:flex; align-items:center; gap:10px; }
+    h1::after{ content:""; flex:1; height:1px; background:linear-gradient(90deg,var(--muted),transparent); margin-left:10px; }
+    .muted{ color:var(--sub); } .mono{ white-space:pre; font-family:ui-monospace,Menlo,Consolas,monospace; }
+    button{ padding:10px 14px; border:none; border-radius:10px; color:#071018; font-weight:600; background:linear-gradient(180deg,var(--accent),#0ec0ff); cursor:pointer; }
   </style>
 </head>
 <body>
@@ -41,49 +21,36 @@
     <div class="card">
       <h1>RoofVault Chat</h1>
 
-      <!-- status + model -->
       <div style="display:flex; gap:12px; align-items:center; margin:8px 0 12px 0;">
         <div id="status" class="muted" style="font-size:12px;">Ready</div>
         <div style="flex:1"></div>
         <div class="muted" style="font-size:12px;">Model: <span id="model">—</span></div>
       </div>
 
-      <!-- book dropdown mounts here -->
       <div id="bookMount" style="margin:10px 0 12px 0;"></div>
 
-      <!-- generate button -->
       <div style="margin:6px 0 16px 0;">
-        <button id="btnGenExam50ByBook" style="padding:10px 14px;">Generate 50</button>
+        <button id="btnGenExam50ByBook">Generate 50</button>
       </div>
 
-      <!-- questions list -->
       <div id="qList" style="background:#0c0f14;border:1px solid var(--muted);border-radius:12px;padding:14px;min-height:220px;max-height:55vh;overflow:auto;"></div>
 
-      <!-- summary / answer key note -->
       <div id="summaryBlock" class="muted" style="font-size:12px;margin-top:8px;">
         <span class="muted">Answer key hidden. Click "Show Answer Key" in the Questions panel.</span>
       </div>
 
-      <!-- diagnostics -->
       <div style="margin-top:12px;">
         <div class="muted" style="font-size:12px;margin-bottom:6px;">Diagnostics</div>
         <pre id="diag" style="background:#0c0f14;border:1px solid var(--muted);border-radius:12px;padding:12px;max-height:30vh;overflow:auto;margin:0;"></pre>
       </div>
 
-      <!-- (optional) chat UI -->
-      <div id="log" style="margin-top:14px;"></div>
-      <form id="f" class="bar">
-        <input id="q" placeholder="Ask about NRCA / roofing details…" />
-        <button>Send</button>
-      </form>
-
-      <div class="footer">Powered by Azure OpenAI + RoofVault Search</div>
+      <div class="footer" style="margin-top:10px; color:var(--sub); font-size:12px; text-align:right;">Powered by Azure OpenAI + RoofVault Search</div>
     </div>
   </div>
 
-  <!-- script order: renderer -> books -> generator -->
-  <script src="/interactive-exam.js"></script>
-  <script src="/books.js"></script>
-  <script src="/gen-exam.js"></script>
+  <!-- IMPORTANT: ONLY these three -->
+  <script src="/interactive-exam.js?v=2"></script>
+  <script src="/books.js?v=2"></script>
+  <script src="/gen-exam.js?v=2"></script>
 </body>
 </html>
