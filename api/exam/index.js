@@ -1,233 +1,219 @@
 ﻿/**
- * /api/exam — stronger retrieval + debug
- * - filter -> phrase search -> filename-term search fallback
- * - lower text-length threshold (80 -> 10 chars)
- * - debug returns: hit count, first doc keys, combined length + sample (when DEBUG_EXAM=1)
+ * /api/exam
+ * POST { book: string, filterField: string, count?: number }
+ * Returns: { items:[...], modelDeployment, _diag }
  */
-const https = require("https");
+module.exports = async function (context, req) {
+  try {
+    const body = (req && req.body) || {};
+    const book = (body.book || "").trim();
+    const filterField = (body.filterField || "metadata_storage_name").trim();
+    const count = Math.min(Math.max(parseInt(body.count || 50, 10) || 50, 1), 50);
 
-function pickEnv(){
-  const variants = [
-    { ep: "OPENAI_ENDPOINT", key: "OPENAI_API_KEY", dep: "OPENAI_DEPLOYMENT", ver: "OPENAI_API_VERSION" },
-    { ep: "AZURE_OPENAI_ENDPOINT", key: "AZURE_OPENAI_API_KEY", dep: "AZURE_OPENAI_DEPLOYMENT", ver: "AZURE_OPENAI_API_VERSION" },
-    { ep: "AOAI_ENDPOINT", key: "AOAI_API_KEY", dep: "AOAI_DEPLOYMENT", ver: "AOAI_API_VERSION" },
-  ];
-  for (const v of variants){
-    const endpoint = process.env[v.ep];
-    const key = process.env[v.key];
-    const dep = process.env[v.dep];
-    if (endpoint && key && dep) {
-      return {
-        endpoint, key, deployment: dep,
-        apiVersion: process.env[v.ver] || process.env.OPENAI_API_VERSION || "2024-02-15-preview"
+    // --- env
+    const SEARCH_ENDPOINT = process.env.SEARCH_ENDPOINT;
+    const SEARCH_API_KEY  = process.env.SEARCH_API_KEY;
+    const SEARCH_INDEX    = process.env.SEARCH_INDEX;
+
+    // Prefer Azure OpenAI, fallback to OpenAI
+    const AOAI_ENDPOINT   = process.env.AZURE_OPENAI_ENDPOINT || process.env.OPENAI_ENDPOINT || process.env.AOAI_ENDPOINT;
+    const AOAI_KEY        = process.env.AZURE_OPENAI_API_KEY   || process.env.OPENAI_API_KEY   || process.env.AOAI_API_KEY;
+    const DEPLOYMENT      = process.env.AZURE_OPENAI_DEPLOYMENT
+                         || process.env.OPENAI_DEPLOYMENT
+                         || process.env.AOAI_DEPLOYMENT_TURBO
+                         || process.env.DEFAULT_MODEL
+                         || process.env.OPENAI_GPT4O_MINI;
+
+    if (!SEARCH_ENDPOINT || !SEARCH_API_KEY || !SEARCH_INDEX) {
+      return context.res = { status: 500, jsonBody: { error: "Missing SEARCH_* env vars" } };
+    }
+    if (!AOAI_ENDPOINT || !AOAI_KEY || !DEPLOYMENT) {
+      return context.res = { status: 500, jsonBody: { error: "Missing OpenAI/Azure OpenAI env (endpoint/key/deployment)" } };
+    }
+
+    // --- search
+    const searchUrl = `${SEARCH_ENDPOINT.replace(/\/+$/,"")}/indexes/${encodeURIComponent(SEARCH_INDEX)}/docs/search?api-version=2023-11-01`;
+    const filter = book ? `${filterField} eq '${book.replace(/'/g, "''")}'` : null;
+
+    const searchPayload = {
+      search: "*",
+      queryType: "simple",
+      select: "id,metadata_storage_name,metadata_storage_path,content",
+      top: 5,
+      ...(filter ? { filter } : {})
+    };
+
+    const sRes = await fetch(searchUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": SEARCH_API_KEY
+      },
+      body: JSON.stringify(searchPayload)
+    });
+
+    if (!sRes.ok) {
+      const raw = await sRes.text().catch(()=> "");
+      return context.res = { status: 500, jsonBody: { error: `Search HTTP ${sRes.status}`, raw } };
+    }
+
+    const sJson = await sRes.json();
+    const hits = Array.isArray(sJson.value) ? sJson.value : [];
+    const texts = hits.map(h => (h.content || "")).filter(Boolean);
+    const citeName = book || (hits[0]?.metadata_storage_name) || "<mixed sources>";
+
+    const combined = texts.join("\n\n").slice(0, 120000); // keep payload sane
+    const combinedLen = combined.length;
+
+    const _diag = {
+      searchHits: hits.length,
+      firstDocKeys: hits[0] ? Object.keys(hits[0]).slice(0, 5) : [],
+      combinedLen,
+      combinedSample: combined.slice(0, 800)
+    };
+
+    if (combinedLen < 1000) {
+      // not enough source → hard fail (no stubs)
+      return context.res = {
+        status: 500,
+        jsonBody: { error: "Not enough source text to generate questions.", _diag }
       };
     }
-  }
-  return null;
-}
 
-function normalizeAoaiBase(endpoint){
-  let base = String(endpoint||"").trim();
-  base = base.replace(/\/+$/,"").replace(/\/openai\/?$/i,"");
-  return base;
-}
-
-function postJson(url, headers, body){
-  return new Promise((resolve,reject)=>{
-    const u = new URL(url);
-    const req = https.request(
-      { hostname:u.hostname, path:u.pathname+u.search, protocol:u.protocol, method:"POST", headers:{ "Content-Type":"application/json", ...headers } },
-      res => { let buf=""; res.on("data",d=>buf+=d); res.on("end",()=>{ try{ resolve({status:res.statusCode, body:JSON.parse(buf||"{}")}); }catch{ resolve({status:res.statusCode, body:{raw:buf}}); } }); }
-    );
-    req.on("error",reject);
-    req.write(JSON.stringify(body||{}));
-    req.end();
-  });
-}
-
-function escapeODataLiteral(s){ return String(s||"").replace(/'/g,"''"); }
-
-async function searchDocsWithFilter({ endpoint, key, index, filterField, book, top }){
-  const apiVersion="2023-11-01";
-  const url=`${endpoint}/indexes/${encodeURIComponent(index)}/docs/search?api-version=${apiVersion}`;
-  const filter = `${filterField} eq '${escapeODataLiteral(book)}'`;
-  return postJson(url, { "api-key": key }, { search:"*", searchMode:"any", filter, top });
-}
-
-async function searchDocsWithPhrase({ endpoint, key, index, book, top }){
-  const apiVersion="2023-11-01";
-  const url=`${endpoint}/indexes/${encodeURIComponent(index)}/docs/search?api-version=${apiVersion}`;
-  return postJson(url, { "api-key": key }, { search: book ? `"${book}"` : "*", searchMode:"any", top });
-}
-
-async function searchDocsWithFilenameTerms({ endpoint, key, index, book, top }){
-  // Convert filename into separate tokens (strip extension; underscores/dashes -> spaces)
-  const base = String(book||"").replace(/\.[^.]+$/,"").replace(/[_\-]+/g," ").trim();
-  const query = base || "*";
-  const apiVersion="2023-11-01";
-  const url=`${endpoint}/indexes/${encodeURIComponent(index)}/docs/search?api-version=${apiVersion}`;
-  return postJson(url, { "api-key": key }, { search: query, searchMode:"any", top });
-}
-
-function collectText(docs){
-  const texts=[];
-  for (const d of docs||[]){
-    if (!d || typeof d!=="object") continue;
-    for (const [k,v] of Object.entries(d)){
-      // keep metadata names out; but allow any real content field
-      if (/^(?:@search\.|_ts$|id$|url$|contenttype$|metadata_storage_name$|metadata_storage_path$)/i.test(k)) continue;
-      if (typeof v==="string"){
-        const s=v.trim(); if (s.length>=10) texts.push(s); // lowered threshold to 10 chars
-      } else if (Array.isArray(v)){
-        const s=v.filter(x=>typeof x==="string").join("\n").trim();
-        if (s.length>=10) texts.push(s);
-      }
-    }
-  }
-  const uniq = Array.from(new Set(texts)).slice(0, 400); // allow more chunks
-  let combined=""; for (const t of uniq){ if (combined.length>90000) break; combined += (combined? "\n\n---\n\n":"")+t; }
-  return { combined, hitTexts: uniq };
-}
-
-function stubItems(count, book){
-  const items=[]; for(let i=1;i<=count;i++){ const stem=book?`(${book}) Practice Q${i}: Which option is most correct?`:`Practice Q${i}: Which option is most correct?`; const opts=["A","B","C","D"].map(id=>({id,text:`Option ${id} for Q${i}`})); const answer=["A","B","C","D"][i%4]; items.push({id:`q${i}`,type:"mcq",question:stem,options:opts,answer,cite:book||"General"});} return items;
-}
-
-async function callAOAI_once({ endpoint, key, deployment, apiVersion, book, count, combinedText }){
-  const base = normalizeAoaiBase(endpoint);
-  const url = `${base}/openai/deployments/${encodeURIComponent(deployment)}/chat/completions?api-version=${apiVersion}`;
-  const system = [
-    "You generate rigorous roofing exam questions strictly from provided excerpts.",
-    "Return STRICT JSON: {\"items\":[...]}.",
-    "Each item: {\"id\":\"q#\",\"type\":\"mcq\",\"question\":\"...\",\"options\":[{\"id\":\"A\",\"text\":\"...\"},{\"id\":\"B\",\"text\":\"...\"},{\"id\":\"C\",\"text\":\"...\"},{\"id\":\"D\",\"text\":\"...\"}],\"answer\":\"A\",\"cite\":\"<short source hint>\"}.",
-    "Exactly 4 options A–D; concise stems; factual only; no preface."
-  ].join(" ");
-  const user = [
-    book ? `Document: ${book}` : "All documents",
-    `Make ${count} multiple-choice questions (A–D).`,
-    "Source excerpts below, separated by ---",
-    combinedText || "(no text found)"
-  ].join("\n\n");
-  const payload = { temperature:0.2, max_tokens:3500, response_format:{type:"json_object"}, messages:[{role:"system",content:system},{role:"user",content:user}] };
-  const res = await postJson(url, { "api-key": key }, payload);
-
-  let items=[];
-  let content = res.body?.choices?.[0]?.message?.content;
-  if (typeof content === "string"){
-    try {
-      const parsed = JSON.parse(content);
-      if (parsed && Array.isArray(parsed.items)) items = parsed.items;
-      else {
-        const m = content.match(/\{\s*"items"\s*:\s*\[[\s\S]*?\]\s*\}/);
-        if (m) {
-          const parsed2 = JSON.parse(m[0]);
-          if (parsed2 && Array.isArray(parsed2.items)) items = parsed2.items;
-        }
-      }
-    } catch {}
-  }
-  return { status: res.status, items, contentPreview: (process.env.DEBUG_EXAM==="1" && typeof content==="string") ? content.slice(0,400) : undefined };
-}
-
-async function callAOAI_batched(env, book, count, combinedText){
-  let first = await callAOAI_once({ ...env, book, count, combinedText });
-  if (first.status>=200 && first.status<300 && Array.isArray(first.items) && first.items.length>0){
-    return { items:first.items, diag:first.contentPreview };
-  }
-  const a = Math.ceil(count/2);
-  const b = Math.floor(count/2);
-  const p1 = await callAOAI_once({ ...env, book, count:a, combinedText });
-  const p2 = await callAOAI_once({ ...env, book, count:b, combinedText });
-  const merged = []
-    .concat(Array.isArray(p1.items)?p1.items:[])
-    .concat(Array.isArray(p2.items)?p2.items:[])
-    .slice(0, count);
-  return { items: merged, diag: p1.contentPreview || p2.contentPreview };
-}
-
-module.exports = async function (context, req){
-  try{
-    const body = req?.body || {};
-    const book = (body.book||"").trim();
-    const filterField = (body.filterField||"").trim();
-    const count = Math.max(1, Math.min(100, Number(body.count)||50));
-
-    const searchEndpoint = process.env.SEARCH_ENDPOINT;
-    const searchKey      = process.env.SEARCH_API_KEY;
-    const searchIndex    = process.env.SEARCH_INDEX || "azureblob-index";
-
-    // 1) RETRIEVAL: filter -> phrase -> filename-term fallback
-    let combined="", hitCount=0, firstKeys=[];
-    if (searchEndpoint && searchKey && searchIndex){
-      const top = 200;
-      let res = null, usedFallback=false;
-
-      if (book && filterField){
-        res = await searchDocsWithFilter({ endpoint:searchEndpoint, key:searchKey, index:searchIndex, filterField, book, top });
-        if (res.status===400 && /not a filterable field/i.test(JSON.stringify(res.body||{}))){
-          usedFallback = true;
-          res = await searchDocsWithPhrase({ endpoint:searchEndpoint, key:searchKey, index:searchIndex, book, top });
-        }
-      } else {
-        usedFallback = true;
-        res = await searchDocsWithPhrase({ endpoint:searchEndpoint, key:searchKey, index:searchIndex, book:book||"*", top });
-      }
-
-      // If still no hits or no text, try filename-term search
-      let docs = (res && Array.isArray(res.body?.value)) ? res.body.value : [];
-      if ((!docs || docs.length===0) && book){
-        const res2 = await searchDocsWithFilenameTerms({ endpoint:searchEndpoint, key:searchKey, index:searchIndex, book, top });
-        if (res2.status>=200 && res2.status<300) {
-          docs = Array.isArray(res2.body?.value) ? res2.body.value : [];
-        }
-      }
-
-      hitCount = Array.isArray(docs) ? docs.length : 0;
-      if (hitCount>0 && docs[0] && typeof docs[0]==="object") {
-        firstKeys = Object.keys(docs[0]).slice(0,15);
-      }
-
-      const collected = collectText(docs);
-      combined = collected.combined;
-      // If the text is still empty, last ditch: allow even tiny strings (<= 10 already lowered)
-      if (!combined && docs && docs.length){
-        const tiny = [];
-        for (const d of docs){
-          for (const [k,v] of Object.entries(d)){
-            if (typeof v==="string" && v.trim()) tiny.push(v.trim());
-          }
-        }
-        combined = tiny.slice(0,50).join("\n\n---\n\n");
-      }
-    }
-
-    // 2) AOAI
-    const aoai = pickEnv();
-    let items, diag;
-    if (aoai){
-      const out = await callAOAI_batched(aoai, book, count, combined);
-      items = Array.isArray(out.items) ? out.items : [];
-      diag = out.diag;
-      if (items.length === 0) items = stubItems(count, book);
+    // --- OpenAI Chat (Azure or OpenAI)
+    // Try Azure-style first; if endpoint contains '/openai/' we assume Azure route.
+    const isAzure = /azure|openai\/deployments/i.test(AOAI_ENDPOINT);
+    let chatUrl;
+    if (isAzure) {
+      const base = AOAI_ENDPOINT.replace(/\/+$/,"");
+      chatUrl = `${base}/openai/deployments/${encodeURIComponent(DEPLOYMENT)}/chat/completions?api-version=2024-02-15-preview`;
     } else {
-      items = stubItems(count, book);
+      // raw OpenAI style (Organizations/Projects not handled here)
+      chatUrl = `${AOAI_ENDPOINT.replace(/\/+$/,"")}/v1/chat/completions`;
     }
 
-    // 3) Response (+debug)
-    const resp = { items, modelDeployment: (aoai ? aoai.deployment : "stub-fallback") };
-    if (process.env.DEBUG_EXAM==="1") {
-      resp._diag = {
-        searchHits: hitCount,
-        firstDocKeys: firstKeys,
-        combinedLen: (combined||"").length,
-        combinedSample: (combined||"").slice(0,600),
-        modelPreview: diag
+    const sys = [
+      "You are an expert item-writer for roofing/structures exams.",
+      "Write strictly factual, unambiguous multiple-choice questions from the provided source text.",
+      "Each question must be answerable from the source alone; do not invent facts.",
+      "Return exactly the requested count of questions.",
+      "Output ONLY valid JSON matching the schema provided."
+    ].join(" ");
+
+    const schema = {
+      type: "object",
+      properties: {
+        items: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              type: { const: "mcq" },
+              question: { type: "string" },
+              options: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: { id: { type:"string" }, text: { type:"string" } },
+                  required: ["id","text"],
+                  additionalProperties: false
+                },
+                minItems: 4, maxItems: 4
+              },
+              answer: { type:"string" },
+              cite: { type:"string" }
+            },
+            required: ["id","type","question","options","answer","cite"],
+            additionalProperties: false
+          },
+          minItems: count, maxItems: count
+        }
+      },
+      required: ["items"],
+      additionalProperties: false
+    };
+
+    const user = [
+      `Create ${count} exam-quality MCQs strictly from the SOURCE below.`,
+      `- Use clear, specific stems; avoid “Which option is most correct.”`,
+      `- Provide exactly 4 options labeled A–D.`,
+      `- The correct answer must be derivable from the source.`,
+      `- Cite: use "${citeName}" for each item.`,
+      ``,
+      `SOURCE (verbatim, noisy OCR may exist):`,
+      combined
+    ].join("\n");
+
+    const payload = {
+      messages: [
+        { role: "system", content: sys },
+        { role: "user", content: user }
+      ],
+      temperature: 0.3,
+      response_format: { type: "json_schema", json_schema: { name: "mcq_list", schema } }
+    };
+
+    const oaiHeaders = {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${AOAI_KEY}`
+    };
+    // Azure sometimes needs api-key header instead of Bearer; include both
+    if (/azure/i.test(AOAI_ENDPOINT)) oaiHeaders["api-key"] = AOAI_KEY;
+
+    const mRes = await fetch(chatUrl, {
+      method: "POST",
+      headers: oaiHeaders,
+      body: JSON.stringify(payload)
+    });
+
+    const mTxt = await mRes.text();
+    if (!mRes.ok) {
+      return context.res = {
+        status: 500,
+        jsonBody: { error: `OpenAI HTTP ${mRes.status}`, raw: mTxt, _diag }
       };
     }
-    context.res = { headers:{ "Content-Type":"application/json" }, body: resp };
-  }catch(e){
-    context.log.error("exam error", e);
-    context.res = { status:500, headers:{ "Content-Type":"application/json" }, body:{ error:String(e && e.message || e) } };
+
+    let mJson;
+    try { mJson = JSON.parse(mTxt); } catch {
+      return context.res = {
+        status: 500,
+        jsonBody: { error: "Model returned non-JSON", raw: mTxt.slice(0, 4000), _diag }
+      };
+    }
+
+    const content = mJson?.choices?.[0]?.message?.content;
+    if (!content) {
+      return context.res = {
+        status: 500,
+        jsonBody: { error: "No content from model", raw: mJson, _diag }
+      };
+    }
+
+    let parsed;
+    try { parsed = JSON.parse(content); } catch {
+      return context.res = {
+        status: 500,
+        jsonBody: { error: "Content not valid JSON", content: content.slice(0, 4000), _diag }
+      };
+    }
+
+    // Validate shape quickly
+    const items = Array.isArray(parsed.items) ? parsed.items : [];
+    if (items.length !== count) {
+      return context.res = {
+        status: 500,
+        jsonBody: { error: `Model returned ${items.length} items; expected ${count}`, _diag }
+      };
+    }
+
+    // Success
+    return context.res = {
+      status: 200,
+      jsonBody: { items, modelDeployment: DEPLOYMENT, _diag }
+    };
+  } catch (e) {
+    return context.res = { status: 500, jsonBody: { error: String(e && e.message || e) } };
   }
 };
-
