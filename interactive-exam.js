@@ -1,19 +1,18 @@
-﻿/* interactive-exam.js
-   Renders AOAI items[] interactively inside #qList
-   Uses existing DOM IDs: #qList, #summaryBlock (optional)
+﻿/* interactive-exam.js (null-safe, delegated events)
+   Renders AOAI items[] interactively inside #qList and never touches null elements.
 */
 (function(){
   function $(id){ return document.getElementById(id); }
   const mount = $("qList");
 
-  // Tiny CSS so it looks decent without touching your HTML/CSS files
+  // minimal styles
   const style = document.createElement("style");
   style.textContent = `
   .rvx-card{background:#0c0f14;border:1px solid #2a2f3a;border-radius:12px;padding:16px}
   .rvx-h{margin:0 0 10px 0;font-size:16px}
   .rvx-opt{display:flex;flex-direction:column;gap:8px;margin:12px 0}
-  .rvx-opt button{background:#0f131a;border:1px solid #2a2f3a;color:#e6e9ef;border-radius:8px;padding:10px;text-align:left;cursor:pointer}
-  .rvx-opt button:hover{filter:brightness(1.08)}
+  .rvx-btn{background:#0f131a;border:1px solid #2a2f3a;color:#e6e9ef;border-radius:8px;padding:10px;text-align:left;cursor:pointer}
+  .rvx-btn:hover{filter:brightness(1.08)}
   .rvx-row{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
   .rvx-pill{border:1px solid #2a2f3a;border-radius:999px;padding:6px 10px;font-size:12px;color:#a7b0c0}
   .rvx-good{border-color:#20e3b2;color:#20e3b2}
@@ -45,41 +44,61 @@
     mount.classList.remove("mono");
     mount.appendChild(host);
 
-    function renderSummary(){
-      const correctCount = Object.keys(answers).filter(qid=>{
-        const q = items.find(x=>x.id===qid);
-        return q && answers[qid]===q.answer;
-      }).length;
+    // single delegated click handler (no direct getElementById)
+    host.addEventListener("click", (e)=>{
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      const act = btn.getAttribute("data-act");
+      if (act === "opt"){
+        const q = items[idx];
+        if (!q) return;
+        if (answers[q.id]) return; // already answered
+        const pick = btn.getAttribute("data-id");
+        answers[q.id] = pick;
+        if (pick === q.answer) score++;
+        drawQuestion(); // re-render to show correctness colors
+      } else if (act === "prev"){
+        if (idx > 0){ idx--; drawQuestion(); }
+      } else if (act === "next"){
+        if (idx < total-1){ idx++; drawQuestion(); }
+        else { drawSummary(); }
+      } else if (act === "restart"){
+        idx = 0; score = 0;
+        for (const k in answers) delete answers[k];
+        drawQuestion();
+      } else if (act === "toggle-key"){
+        const key = host.querySelector("#rvxKey");
+        if (!key) return;
+        const showing = key.style.display !== "none";
+        key.style.display = showing ? "none" : "block";
+        btn.textContent = showing ? "Show Answer Key" : "Hide Answer Key";
+        if (!showing && !key.textContent){
+          const lines = items.map((q,i)=>`Q${i+1}: ${q.answer}  —  ${q.cite||"N/A"}`);
+          key.textContent = lines.join("\n");
+        }
+      }
+    });
 
+    function drawSummary(){
       host.innerHTML = `
         <h3 class="rvx-h">🎯 Exam complete</h3>
         <div class="rvx-row">
-          <span class="rvx-pill rvx-good">Score: ${correctCount}/${total}</span>
-          <button id="rvxRestart" class="rvx-cta">Restart</button>
-          <button id="rvxShowKey" class="rvx-ghost">Show Answer Key</button>
+          <span class="rvx-pill rvx-good">Score: ${Object.keys(answers).filter(qid=>{
+            const q = items.find(x=>x.id===qid);
+            return q && answers[qid]===q.answer;
+          }).length}/${total}</span>
+          <button class="rvx-cta" data-act="restart">Restart</button>
+          <button class="rvx-ghost" data-act="toggle-key">Show Answer Key</button>
         </div>
-        <div id="rvxKey" class="rvx-key" style="display:none;margin-top:12px"></div>
+        <pre id="rvxKey" class="rvx-key" style="display:none;margin-top:12px"></pre>
       `;
-      $("#rvxRestart").onclick = ()=> render(items);
-      $("#rvxShowKey").onclick = ()=>{
-        const k = $("#rvxKey");
-        if(!k) return;
-        if (k.style.display==="none"){
-          const lines = items.map((q,i)=>`Q${i+1}: ${q.answer}  —  ${q.cite||"N/A"}`);
-          k.textContent = lines.join("\n");
-          k.style.display="block";
-          $("#rvxShowKey").textContent = "Hide Answer Key";
-        } else {
-          k.style.display="none";
-          $("#rvxShowKey").textContent = "Show Answer Key";
-        }
-      };
     }
 
-    function renderQ(){
+    function drawQuestion(){
       const q = items[idx];
-      if(!q){ renderSummary(); return; }
+      if(!q){ drawSummary(); return; }
 
+      const chosen = answers[q.id];
       host.innerHTML = `
         <div>
           <div class="rvx-row" style="justify-content:space-between">
@@ -89,49 +108,29 @@
           <h3 class="rvx-h">${q.question}</h3>
           <div class="rvx-opt">
             ${q.options.map(o=>{
-              const chosen = answers[q.id];
               const isCorrect = o.id===q.answer;
               const picked = chosen===o.id;
-              let cls = "";
+              let cls = "rvx-btn";
               if (chosen){
-                if (picked && isCorrect) cls = "rvx-good";
-                else if (picked) cls = "rvx-bad";
-                else if (isCorrect) cls = "rvx-good";
+                if (picked && isCorrect) cls += " rvx-good";
+                else if (picked) cls += " rvx-bad";
+                else if (isCorrect) cls += " rvx-good";
               }
-              return `<button class="${cls}" data-id="${o.id}">${o.id}. ${o.text}</button>`;
+              return `<button class="${cls}" data-act="opt" data-id="${o.id}">${o.id}. ${o.text}</button>`;
             }).join("")}
           </div>
           <div class="rvx-row">
-            <button id="rvxPrev" class="rvx-ghost">Back</button>
-            <button id="rvxNext" class="rvx-cta">${idx===total-1 ? "Finish" : "Next"}</button>
+            <button class="rvx-ghost" data-act="prev">Back</button>
+            <button class="rvx-cta" data-act="next">${idx===total-1 ? "Finish" : "Next"}</button>
           </div>
           <div class="rvx-meta">📘 Source: ${q.cite || "N/A"}</div>
         </div>
       `;
-
-      // wire options
-      host.querySelectorAll(".rvx-opt button").forEach(btn=>{
-        btn.onclick = ()=>{
-          if (answers[q.id]) return; // lock after first pick
-          const pick = btn.getAttribute("data-id");
-          answers[q.id] = pick;
-          if (pick===q.answer) score++;
-          renderQ(); // re-render to show colors
-        };
-      });
-
-      $("#rvxPrev").onclick = ()=>{
-        if (idx>0){ idx--; renderQ(); }
-      };
-      $("#rvxNext").onclick = ()=>{
-        if (idx<total-1){ idx++; renderQ(); }
-        else { renderSummary(); }
-      };
     }
 
-    renderQ();
+    drawQuestion();
   }
 
-  // Expose to existing generate code
+  // expose
   window.renderQuiz = render;
 })();
