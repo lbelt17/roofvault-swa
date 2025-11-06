@@ -1,25 +1,29 @@
 ﻿/**
- * Minimal books endpoint.
- * Returns a facet field name and a list of book titles.
- * To customize, set an App Setting BOOKS_LIST with comma- or pipe-separated values.
- * Example:  BOOKS_LIST="NRCA Manual, IIBEC Guide, ASTM D6878"
+ * /api/books — returns field + values for the dropdown.
+ * If BOOKS_LIST env var is empty, use a helpful default list so UI always renders.
  */
 module.exports = async function (context, req) {
   try {
     const raw = process.env.BOOKS_LIST || "";
-    const values = raw
+    let values = raw
       .split(/[|,]/)
       .map(s => s && s.trim())
       .filter(Boolean);
 
-    const body = {
-      field: "docName",   // your exam API can ignore or use this; "(All Books)" still works
-      values              // [] by default; customize via BOOKS_LIST later
-    };
+    if (values.length === 0) {
+      // sensible defaults (you can change these later or set BOOKS_LIST in SWA App Settings)
+      values = [
+        "NRCA Manual (Part 1)",
+        "NRCA Manual (Part 2)",
+        "IIBEC Guide",
+        "ASTM D6878 (TPO)",
+        "Roofing Design & Practice"
+      ];
+    }
 
     context.res = {
       headers: { "Content-Type": "application/json" },
-      body
+      body: { field: "docName", values }
     };
   } catch (e) {
     context.res = {
