@@ -1,45 +1,38 @@
-﻿const fetch = require("node-fetch");
+﻿function send(context, code, body) {
+  context.res = {
+    status: code,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*"
+    },
+    body
+  };
+}
 
 module.exports = async function (context, req) {
-  try {
-    const {
-      fileName,
-      indexName = process.env.SEARCH_INDEX,
-      endpoint  = process.env.SEARCH_ENDPOINT,
-      key       = process.env.SEARCH_API_KEY,
-      top       = 1000
-    } = req.body || {};
-
-    if (!fileName) throw new Error("fileName required");
-
-    const url = `${endpoint}/indexes/${indexName}/docs/search?api-version=2023-07-01-Preview`;
-
-    const body = {
-      search: "*",
-      queryType: "simple",
-      searchMode: "any",
-      top,
-      select: "metadata_storage_name,content"
+  // CORS preflight
+  if (req.method === "OPTIONS") {
+    context.res = {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+      }
     };
-
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "api-key": key },
-      body: JSON.stringify(body)
-    });
-
-    if (!res.ok) {
-      const err = await res.text().catch(()=>"");
-      throw new Error(`Search error: ${res.status} ${err}`);
-    }
-
-    const data = await res.json();
-    const hits = (data.value || []).filter(
-      d => (d.metadata_storage_name || "").toLowerCase() === String(fileName).toLowerCase()
-    );
-
-    context.res = { status: 200, body: { ok: true, hits } };
-  } catch (e) {
-    context.res = { status: 500, body: { error: "Search error", details: String(e.message || e) } };
+    return;
   }
+
+  const body = (req.body && typeof req.body === "object") ? req.body : {};
+  const objectives = Array.isArray(body.objectives) ? body.objectives : [];
+  const books = Array.isArray(body.books) ? body.books : [];
+  const countPerBook = Math.max(1, Math.min(50, Number(body.countPerBook || 10)));
+
+  // Just echo a shape we’ll fill later
+  return send(context, 200, {
+    ok: true,
+    received: { objectivesCount: objectives.length, books, countPerBook },
+    groups: [],   // <- will be [{ objectiveId, objectiveTitle, items:[{book,id,question,answer,explanation,cite}], count }]
+    _diag: { note: "scaffold only — no AI yet" }
+  });
 };
