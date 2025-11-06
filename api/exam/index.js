@@ -1,4 +1,8 @@
-﻿// Ensures every response is JSON with a body string (no empty body issues)
+﻿/**
+ * /api/exam
+ * POST { book: string, filterField: string, count?: number }
+ * Returns: { items:[...], modelDeployment, _diag }
+ */
 module.exports = async function (context, req) {
   const send = (status, obj) => {
     context.res = {
@@ -7,13 +11,14 @@ module.exports = async function (context, req) {
       body: JSON.stringify(obj ?? {})
     };
   };
+
   try {
-    // --- BEGIN existing logic (kept) ---
     const body = (req && req.body) || {};
     const book = (body.book || "").trim();
     const filterField = (body.filterField || "metadata_storage_name").trim();
     const count = Math.min(Math.max(parseInt(body.count || 50, 10) || 50, 1), 50);
 
+    // --- env
     const SEARCH_ENDPOINT = process.env.SEARCH_ENDPOINT;
     const SEARCH_API_KEY  = process.env.SEARCH_API_KEY;
     const SEARCH_INDEX    = process.env.SEARCH_INDEX;
@@ -30,7 +35,7 @@ module.exports = async function (context, req) {
       searchEndpoint: (SEARCH_ENDPOINT||"").replace(/https?:\/\//,"").split("/")[0],
       searchIndex: SEARCH_INDEX,
       aoaiEndpointHost: (AOAI_ENDPOINT||"").replace(/https?:\/\//,"").split("/")[0],
-      deployment: DEPLOYMENT ? (DEPLOYMENT.length>18 ? DEPLOYMENT.slice(0,3)+"…"+DEPLOYMENT.slice(-3) : DEPLOYMENT) : "(none)"
+      deployment: DEPLOYMENT || "(none)"
     };
 
     if (!SEARCH_ENDPOINT || !SEARCH_API_KEY || !SEARCH_INDEX) {
@@ -40,10 +45,17 @@ module.exports = async function (context, req) {
       return send(500, { error: "Missing OpenAI/Azure OpenAI env (endpoint/key/deployment)", _env: envDiag });
     }
 
+    // --- search
     const searchUrl = `${SEARCH_ENDPOINT.replace(/\/+$/,"")}/indexes/${encodeURIComponent(SEARCH_INDEX)}/docs/search?api-version=2023-11-01`;
     const filter = book ? `${filterField} eq '${book.replace(/'/g, "''")}'` : null;
 
-    const searchPayload = { search: "*", queryType: "simple", select: "id,metadata_storage_name,metadata_storage_path,content", top: 5, ...(filter ? { filter } : {}) };
+    const searchPayload = {
+      search: "*",
+      queryType: "simple",
+      select: "id,metadata_storage_name,metadata_storage_path,content",
+      top: 5,
+      ...(filter ? { filter } : {})
+    };
 
     let sTxt = "";
     const sRes = await fetch(searchUrl, {
@@ -66,6 +78,7 @@ module.exports = async function (context, req) {
 
     if (combinedLen < 1000) return send(500, { error: "Not enough source text to generate questions.", _diag });
 
+    // --- OpenAI (Azure vs non-Azure)
     const isAzure = /azure\.com/i.test(AOAI_ENDPOINT);
     let chatUrl;
     if (isAzure) {
@@ -75,8 +88,14 @@ module.exports = async function (context, req) {
       chatUrl = `${AOAI_ENDPOINT.replace(/\/+$/,"")}/v1/chat/completions`;
     }
 
-    const sys = "You are an expert item-writer for roofing/structures exams. Write strictly factual, unambiguous multiple-choice questions from the provided source text. Each question must be answerable from the source; do not invent facts. Return exactly the requested count of questions. Output ONLY valid JSON matching the schema provided.";
+    const sys =
+      "You are an expert item-writer for roofing/structures exams. " +
+      "Write strictly factual, unambiguous multiple-choice questions from the provided source text. " +
+      "Each question must be answerable from the source; do not invent facts. " +
+      "Return exactly the requested count of questions. " +
+      "Output ONLY valid JSON matching the schema provided.";
 
+    // include 'explanation' field in schema
     const schema = {
       type: "object",
       properties: {
@@ -94,9 +113,10 @@ module.exports = async function (context, req) {
                 minItems: 4, maxItems: 4
               },
               answer: { type:"string" },
-              cite: { type:"string" }
+              cite: { type:"string" },
+              explanation: { type:"string" }
             },
-            required: ["id","type","question","options","answer","cite"],
+            required: ["id","type","question","options","answer","cite","explanation"],
             additionalProperties: false
           },
           minItems: count, maxItems: count
@@ -112,12 +132,18 @@ module.exports = async function (context, req) {
       `- Provide exactly 4 options labeled A–D.`,
       `- The correct answer must be derivable from the source.`,
       `- Cite: use "${citeName}" for each item.`,
+      `- For EACH question, also include a concise 'explanation' (1–2 sentences) that justifies WHY the correct option is correct based on the source.`,
+      `- Explanations must refer only to facts available in the source (no outside knowledge).`,
       ``,
       `SOURCE (verbatim, may include OCR noise):`,
       combined
     ].join("\n");
 
-    const payload = { messages: [{ role:"system", content: sys }, { role:"user", content: user }], temperature: 0.3, response_format: { type:"json_schema", json_schema:{ name:"mcq_list", schema } } };
+    const payload = {
+      messages: [{ role:"system", content: sys }, { role:"user", content: user }],
+      temperature: 0.3,
+      response_format: { type: "json_schema", json_schema: { name: "mcq_list", schema } }
+    };
 
     const headers = { "Content-Type": "application/json" };
     if (isAzure) headers["api-key"] = AOAI_KEY; else headers["Authorization"] = `Bearer ${AOAI_KEY}`;
@@ -136,7 +162,6 @@ module.exports = async function (context, req) {
     if (items.length !== count) return send(500, { error:`Model returned ${items.length} items; expected ${count}`, _diag });
 
     return send(200, { items, modelDeployment: DEPLOYMENT, _diag });
-    // --- END existing logic ---
   } catch (e) {
     return send(500, { error: String(e?.message||e), stack: String(e?.stack||"") });
   }
