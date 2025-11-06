@@ -1,6 +1,4 @@
-﻿const { default: fetch } = await import("node-fetch");
-
-// --- ENV ---
+﻿// --- ENV ---
 const SEARCH_ENDPOINT   = process.env.SEARCH_ENDPOINT;   // e.g., https://roofvaultsearch.search.windows.net
 const SEARCH_API_KEY    = process.env.SEARCH_API_KEY;
 const SEARCH_INDEX      = process.env.SEARCH_INDEX || "azureblob-index";
@@ -199,3 +197,4 @@ export default async function (req, res) {
     return send(res, 500, { error: String(e?.message||e) });
   }
 }
+
