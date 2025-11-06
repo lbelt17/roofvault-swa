@@ -1,0 +1,32 @@
+﻿{
+  "version": 1,
+  "sections": [
+    {
+      "id": "SEC-1",
+      "title": "Safety & OSHA",
+      "objectives": [
+        { "id": "OBJ-1.1", "title": "Fall protection fundamentals" },
+        { "id": "OBJ-1.2", "title": "Hazard recognition & PPE" },
+        { "id": "OBJ-1.3", "title": "OSHA subpart M basics" }
+      ]
+    },
+    {
+      "id": "SEC-2",
+      "title": "Roof Systems & Components",
+      "objectives": [
+        { "id": "OBJ-2.1", "title": "Steep-slope systems (shingle, tile, metal)" },
+        { "id": "OBJ-2.2", "title": "Low-slope systems (BUR, mod-bit, single-ply)" },
+        { "id": "OBJ-2.3", "title": "Flashings, penetrations, drainage" }
+      ]
+    },
+    {
+      "id": "SEC-3",
+      "title": "Materials & Properties",
+      "objectives": [
+        { "id": "OBJ-3.1", "title": "Bitumen & asphalt properties" },
+        { "id": "OBJ-3.2", "title": "Insulation types & R-values" },
+        { "id": "OBJ-3.3", "title": "Sheet/metal/tile properties" }
+      ]
+    }
+  ]
+}
