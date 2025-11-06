@@ -1,8 +1,7 @@
 ﻿{
-  "name": "roofvault-api",
-  "version": "1.0.0",
+  "name": "roofvault-swa-api",
   "private": true,
-  "dependencies": {
-    "node-fetch": "^2.7.0"
-  }
+  "version": "1.0.0",
+  "description": "API for RoofVault SWA",
+  "license": "MIT"
 }
