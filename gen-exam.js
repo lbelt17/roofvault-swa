@@ -1,4 +1,4 @@
-﻿// gen-exam.js — resilient client for /api/exam (auto-creates button + qList)
+﻿// gen-exam.js — safe wiring, auto-create UI, global trigger (__genExam)
 (function(){
   function $(id){ return document.getElementById(id); }
   const statusEl = $("status");
@@ -11,7 +11,7 @@
     catch { diagEl.textContent = String(o); }
   }
 
-  // ensure required UI exists
+  // ensure required UI exists (never returns nulls)
   function ensureUI(){
     let qList = $("qList");
     if (!qList){
@@ -22,7 +22,6 @@
       qList.style.borderRadius = "12px";
       qList.style.padding = "14px";
       qList.style.background = "#0c0f14";
-      // try to place near book selector
       const bm = $("bookMount");
       if (bm && bm.parentNode) bm.parentNode.appendChild(qList);
       else document.body.appendChild(qList);
@@ -43,7 +42,7 @@
       btn.style.fontWeight = "700";
       holder.appendChild(btn);
       const bm = $("bookMount");
-      if (bm && bm.parentNode) bm.parentNode.insertBefore(holder, (qList && qList.nextSibling) || bm.nextSibling);
+      if (bm && bm.parentNode) bm.parentNode.insertBefore(holder, qList.nextSibling);
       else document.body.insertBefore(holder, document.body.firstChild);
     }
     return { qList, btn };
@@ -59,7 +58,6 @@
     }catch(e){
       clearTimeout(t);
       if (retries > 0){
-        console.warn("safeFetch retrying after error:", e?.message || e);
         await new Promise(r=>setTimeout(r, 800));
         return safeFetch(url, opts, timeoutMs, retries-1);
       }
@@ -79,7 +77,8 @@
       const btn = $("btnGenExam50ByBook");
       if (btn){ btn.disabled = true; btn.classList.add("busy"); }
       setStatus("Generating exam…");
-      if (qList){ qList.classList.add("mono"); qList.textContent = "⏳ contacting /api/exam …"; }
+      qList.classList.add("mono");
+      qList.textContent = "⏳ contacting /api/exam …";
 
       const res = await safeFetch("/api/exam", {
         method:"POST",
@@ -92,7 +91,7 @@
 
       if (!res.ok){
         showDiag({ status: res.status, body: data });
-        if (qList){ qList.textContent = data?.error || `HTTP ${res.status}`; }
+        qList.textContent = data?.error || `HTTP ${res.status}`;
         setStatus("Error");
         return;
       }
@@ -100,7 +99,7 @@
       const items = Array.isArray(data.items) ? data.items : [];
       if (items.length === 0){
         showDiag({ status: res.status, body: data, hint: "API responded but no items[] returned" });
-        if (qList){ qList.textContent = "(No items returned)"; }
+        qList.textContent = "(No items returned)";
         setStatus("Error");
         return;
       }
@@ -114,11 +113,10 @@
       }
       setStatus(`HTTP ${res.status}`);
     }catch(e){
-      console.error(e);
       const msg = (e && e.name === "AbortError") ? "timeout" : (e?.message || String(e));
       showDiag({ error: msg, hint: "Request aborted or network error" });
       const { qList } = ensureUI();
-      if (qList){ qList.textContent = `{ "error": "${msg}" }`; }
+      qList.textContent = `{ "error": "${msg}" }`;
       setStatus("Error");
     }finally{
       const btn = $("btnGenExam50ByBook");
@@ -127,13 +125,26 @@
     }
   }
 
-  function wire(){
+  // expose a manual trigger so Console can call it if wiring is delayed
+  window.__genExam = genExam;
+
+  // safe wiring: wait until DOM + ensureUI yields a button, else retry
+  function wire(attempt=0){
+    const maxAttempts = 25; // ~5s with 200ms backoff
     const { btn } = ensureUI();
-    btn.onclick = genExam; // btn is guaranteed to exist now
+    if (btn){
+      try{
+        btn.onclick = genExam;
+      }catch{}
+      return;
+    }
+    if (attempt < maxAttempts){
+      setTimeout(()=>wire(attempt+1), 200);
+    }
   }
 
   if (document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", wire);
+    document.addEventListener("DOMContentLoaded", ()=>wire());
   } else {
     wire();
   }
