@@ -1,8 +1,8 @@
 ﻿/**
- * /api/exam — AOAI batching + robust parse
- * - If AOAI returns 0 items, retry in 2 batches (ceil/2 + floor/2)
- * - If still 0, fall back to stub so UI never hangs
- * - Optional DEBUG_EXAM=1 will include a short content preview for troubleshooting
+ * /api/exam — stronger retrieval + debug
+ * - filter -> phrase search -> filename-term search fallback
+ * - lower text-length threshold (80 -> 10 chars)
+ * - debug returns: hit count, first doc keys, combined length + sample (when DEBUG_EXAM=1)
  */
 const https = require("https");
 
@@ -37,7 +37,7 @@ function postJson(url, headers, body){
     const u = new URL(url);
     const req = https.request(
       { hostname:u.hostname, path:u.pathname+u.search, protocol:u.protocol, method:"POST", headers:{ "Content-Type":"application/json", ...headers } },
-      res => { let buf=""; res.on("data",d=>buf+=d); res.on("end",()=>{ try{ resolve({status:res.statusCode, body:JSON.parse(buf||"{}"), raw:buf}); }catch{ resolve({status:res.statusCode, body:{}, raw:buf}); } }); }
+      res => { let buf=""; res.on("data",d=>buf+=d); res.on("end",()=>{ try{ resolve({status:res.statusCode, body:JSON.parse(buf||"{}")}); }catch{ resolve({status:res.statusCode, body:{raw:buf}}); } }); }
     );
     req.on("error",reject);
     req.write(JSON.stringify(body||{}));
@@ -60,19 +60,33 @@ async function searchDocsWithPhrase({ endpoint, key, index, book, top }){
   return postJson(url, { "api-key": key }, { search: book ? `"${book}"` : "*", searchMode:"any", top });
 }
 
+async function searchDocsWithFilenameTerms({ endpoint, key, index, book, top }){
+  // Convert filename into separate tokens (strip extension; underscores/dashes -> spaces)
+  const base = String(book||"").replace(/\.[^.]+$/,"").replace(/[_\-]+/g," ").trim();
+  const query = base || "*";
+  const apiVersion="2023-11-01";
+  const url=`${endpoint}/indexes/${encodeURIComponent(index)}/docs/search?api-version=${apiVersion}`;
+  return postJson(url, { "api-key": key }, { search: query, searchMode:"any", top });
+}
+
 function collectText(docs){
   const texts=[];
   for (const d of docs||[]){
     if (!d || typeof d!=="object") continue;
     for (const [k,v] of Object.entries(d)){
-      if (/^(?:@search\.|_ts$|id$|url$|contenttype$)/i.test(k)) continue;
-      if (typeof v==="string"){ const s=v.trim(); if (s.length>=80) texts.push(s); }
-      else if (Array.isArray(v)){ const s=v.filter(x=>typeof x==="string").join("\n").trim(); if (s.length>=80) texts.push(s); }
+      // keep metadata names out; but allow any real content field
+      if (/^(?:@search\.|_ts$|id$|url$|contenttype$|metadata_storage_name$|metadata_storage_path$)/i.test(k)) continue;
+      if (typeof v==="string"){
+        const s=v.trim(); if (s.length>=10) texts.push(s); // lowered threshold to 10 chars
+      } else if (Array.isArray(v)){
+        const s=v.filter(x=>typeof x==="string").join("\n").trim();
+        if (s.length>=10) texts.push(s);
+      }
     }
   }
-  const uniq = Array.from(new Set(texts)).slice(0, 250);
-  let combined=""; for (const t of uniq){ if (combined.length>50000) break; combined += (combined? "\n\n---\n\n":"")+t; }
-  return combined;
+  const uniq = Array.from(new Set(texts)).slice(0, 400); // allow more chunks
+  let combined=""; for (const t of uniq){ if (combined.length>90000) break; combined += (combined? "\n\n---\n\n":"")+t; }
+  return { combined, hitTexts: uniq };
 }
 
 function stubItems(count, book){
@@ -104,7 +118,6 @@ async function callAOAI_once({ endpoint, key, deployment, apiVersion, book, coun
       const parsed = JSON.parse(content);
       if (parsed && Array.isArray(parsed.items)) items = parsed.items;
       else {
-        // try to extract {"items":[...]} substring if model wrapped it
         const m = content.match(/\{\s*"items"\s*:\s*\[[\s\S]*?\]\s*\}/);
         if (m) {
           const parsed2 = JSON.parse(m[0]);
@@ -117,24 +130,18 @@ async function callAOAI_once({ endpoint, key, deployment, apiVersion, book, coun
 }
 
 async function callAOAI_batched(env, book, count, combinedText){
-  // Try once with full count
   let first = await callAOAI_once({ ...env, book, count, combinedText });
   if (first.status>=200 && first.status<300 && Array.isArray(first.items) && first.items.length>0){
     return { items:first.items, diag:first.contentPreview };
   }
-
-  // Retry in two batches (to reduce token pressure)
   const a = Math.ceil(count/2);
   const b = Math.floor(count/2);
-
   const p1 = await callAOAI_once({ ...env, book, count:a, combinedText });
   const p2 = await callAOAI_once({ ...env, book, count:b, combinedText });
-
   const merged = []
     .concat(Array.isArray(p1.items)?p1.items:[])
     .concat(Array.isArray(p2.items)?p2.items:[])
     .slice(0, count);
-
   return { items: merged, diag: p1.contentPreview || p2.contentPreview };
 }
 
@@ -149,11 +156,12 @@ module.exports = async function (context, req){
     const searchKey      = process.env.SEARCH_API_KEY;
     const searchIndex    = process.env.SEARCH_INDEX || "azureblob-index";
 
-    // Search: filter → phrase fallback
-    let combined="";
+    // 1) RETRIEVAL: filter -> phrase -> filename-term fallback
+    let combined="", hitCount=0, firstKeys=[];
     if (searchEndpoint && searchKey && searchIndex){
       const top = 200;
       let res = null, usedFallback=false;
+
       if (book && filterField){
         res = await searchDocsWithFilter({ endpoint:searchEndpoint, key:searchKey, index:searchIndex, filterField, book, top });
         if (res.status===400 && /not a filterable field/i.test(JSON.stringify(res.body||{}))){
@@ -164,29 +172,59 @@ module.exports = async function (context, req){
         usedFallback = true;
         res = await searchDocsWithPhrase({ endpoint:searchEndpoint, key:searchKey, index:searchIndex, book:book||"*", top });
       }
-      if (res.status<200 || res.status>=300) throw new Error(`Search HTTP ${res.status}: ${JSON.stringify(res.body).slice(0,300)}`);
-      combined = collectText(res.body?.value);
-      if (!combined && !usedFallback && book){
-        const r2 = await searchDocsWithPhrase({ endpoint:searchEndpoint, key:searchKey, index:searchIndex, book, top });
-        if (r2.status>=200 && r2.status<300) combined = collectText(r2.body?.value);
+
+      // If still no hits or no text, try filename-term search
+      let docs = (res && Array.isArray(res.body?.value)) ? res.body.value : [];
+      if ((!docs || docs.length===0) && book){
+        const res2 = await searchDocsWithFilenameTerms({ endpoint:searchEndpoint, key:searchKey, index:searchIndex, book, top });
+        if (res2.status>=200 && res2.status<300) {
+          docs = Array.isArray(res2.body?.value) ? res2.body.value : [];
+        }
+      }
+
+      hitCount = Array.isArray(docs) ? docs.length : 0;
+      if (hitCount>0 && docs[0] && typeof docs[0]==="object") {
+        firstKeys = Object.keys(docs[0]).slice(0,15);
+      }
+
+      const collected = collectText(docs);
+      combined = collected.combined;
+      // If the text is still empty, last ditch: allow even tiny strings (<= 10 already lowered)
+      if (!combined && docs && docs.length){
+        const tiny = [];
+        for (const d of docs){
+          for (const [k,v] of Object.entries(d)){
+            if (typeof v==="string" && v.trim()) tiny.push(v.trim());
+          }
+        }
+        combined = tiny.slice(0,50).join("\n\n---\n\n");
       }
     }
 
-    // AOAI: autodetect env; batch if needed
+    // 2) AOAI
     const aoai = pickEnv();
+    let items, diag;
     if (aoai){
       const out = await callAOAI_batched(aoai, book, count, combined);
-      let items = Array.isArray(out.items) ? out.items : [];
-
-      // Final safety: if model gave 0, return stub so UI remains usable
+      items = Array.isArray(out.items) ? out.items : [];
+      diag = out.diag;
       if (items.length === 0) items = stubItems(count, book);
-
-      const body = { items, modelDeployment: aoai.deployment };
-      if (process.env.DEBUG_EXAM==="1" && out.diag) body._diag = { contentPreview: out.diag };
-      context.res = { headers:{ "Content-Type":"application/json" }, body };
     } else {
-      context.res = { headers:{ "Content-Type":"application/json" }, body:{ items: stubItems(count, book), modelDeployment:"stub-fallback (no AOAI env detected)" } };
+      items = stubItems(count, book);
     }
+
+    // 3) Response (+debug)
+    const resp = { items, modelDeployment: (aoai ? aoai.deployment : "stub-fallback") };
+    if (process.env.DEBUG_EXAM==="1") {
+      resp._diag = {
+        searchHits: hitCount,
+        firstDocKeys: firstKeys,
+        combinedLen: (combined||"").length,
+        combinedSample: (combined||"").slice(0,600),
+        modelPreview: diag
+      };
+    }
+    context.res = { headers:{ "Content-Type":"application/json" }, body: resp };
   }catch(e){
     context.log.error("exam error", e);
     context.res = { status:500, headers:{ "Content-Type":"application/json" }, body:{ error:String(e && e.message || e) } };
