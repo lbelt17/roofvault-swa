@@ -264,7 +264,9 @@ module.exports = async function (context, req) {
     const agg = new Map(); // objectiveId -> {objectiveId, objectiveTitle, items:[]}
     for (const book of books) {
       const { combined } = await fetchSourceForBook(book);
-      if (!combined || combined.trim().length === 0) continue;
+if ((req.query && req.query.mode === 'search-only') || (body && body.mode === 'search-only')) {
+  return send(res, 200, { ok: true, stage: 'after-search', book, bytes: (combined || '').length });
+}if (!combined || combined.trim().length === 0) continue;
       const groups = await genAndGroup(book, combined);
       for (const g of groups) {
         const key = g.objectiveId || g.objectiveTitle || "UNMAPPED";
@@ -430,6 +432,7 @@ $m.Value + @"
 
   return allGroups;
 }
+
 
 
 
