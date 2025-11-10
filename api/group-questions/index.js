@@ -46,7 +46,7 @@
       top: topK,
       queryType: "simple"
     };
-    const r = await fetch(url, {
+    const r = await fetchFn(url, {
       method: "POST",
       headers: { "Content-Type":"application/json", "api-key": SEARCH_API_KEY },
       body: JSON.stringify(payload)
@@ -148,7 +148,7 @@
     };
 
     const headers = { "Content-Type":"application/json", "api-key": OPENAI_API_KEY };
-    const r = await fetch(url, { method:"POST", headers, body: JSON.stringify(payload) });
+    const r = await fetchFn(url, { method:"POST", headers, body: JSON.stringify(payload) });
     const t = await r.text();
     if (!r.ok) throw new Error(`OpenAI HTTP ${r.status}: ${t.slice(0,1500)}`);
     let j = {};
@@ -277,7 +277,14 @@
 
 
 
-async function genAndGroup(bookName, combinedText) {
+const fetchFn = (global && global.fetch) ? global.fetch : null;
+param($m)
+$m.Value + @"
+  if (!fetchFn) {
+    throw new Error("global.fetch not available in Functions runtime");
+  }
+"@
+
   // --- Config knobs ---
   const CHUNK_SIZE = 35000;         // ~35k chars per chunk
   const MAX_CHUNKS = 3;             // try up to 3 chunks per book
@@ -341,7 +348,7 @@ async function genAndGroup(bookName, combinedText) {
       response_format: { type: "json_object" }
     };
 
-    const r = await fetch(url, { method: "POST", headers, body: JSON.stringify(payload) });
+    const r = await fetchFn(url, { method: "POST", headers, body: JSON.stringify(payload) });
     const t = await r.text();
     if (!r.ok) throw new Error(`OpenAI HTTP ${r.status}: ${t.slice(0, 1200)}`);
     let j = {};
@@ -414,3 +421,4 @@ async function genAndGroup(bookName, combinedText) {
 
   return allGroups;
 }
+
