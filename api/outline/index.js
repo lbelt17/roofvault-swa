@@ -131,7 +131,7 @@ module.exports = async function (context, req) {
         { role:"system", content: system },
         { role:"user", content: user }
       ],
-      response_format: { type:"json_schema", json_schema:{ name:"outline_pack", schema } }
+      response_format: { type:"json_object" } }
     };
 
     const mRes = await fetch(chatUrl, {
@@ -162,6 +162,7 @@ module.exports = async function (context, req) {
     return send(context, 500, { error: String(e?.message||e), stack: String(e?.stack||"") });
   }
 };
+
 
 
 
