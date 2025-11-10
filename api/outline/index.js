@@ -1,4 +1,4 @@
-﻿const fetch = global.fetch || require("node-fetch");
+﻿const fetchFn = (global && global.fetch) ? global.fetch : null;
 
 // send helper for Azure Functions
 function send(context, code, body){
@@ -10,6 +10,9 @@ function send(context, code, body){
 }
 
 module.exports = async function (context, req) {
+  if (!((global && global.fetch))) {
+    return { status: 500, body: { error: 'global.fetch not available in Functions runtime' } };
+  }
   // CORS preflight
   if (req.method === "OPTIONS") {
     context.res = {
@@ -54,7 +57,7 @@ module.exports = async function (context, req) {
       top: topK
     };
 
-    const sRes = await fetch(searchUrl, {
+    const sRes = await fetchFn(searchUrl, {
       method: "POST",
       headers: { "Content-Type":"application/json", "api-key": SEARCH_API_KEY },
       body: JSON.stringify(sPayload)
@@ -134,7 +137,7 @@ module.exports = async function (context, req) {
       response_format: { type:"json_object" } }
     };
 
-    const mRes = await fetch(chatUrl, {
+    const mRes = await fetchFn(chatUrl, {
       method:"POST",
       headers:{ "Content-Type":"application/json", "api-key": OPENAI_API_KEY },
       body: JSON.stringify(payload)
@@ -162,6 +165,7 @@ module.exports = async function (context, req) {
     return send(context, 500, { error: String(e?.message||e), stack: String(e?.stack||"") });
   }
 };
+
 
 
 

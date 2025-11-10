@@ -1,6 +1,9 @@
-﻿const fetch = global.fetch || require("node-fetch");
+﻿const fetchFn = (global && global.fetch) ? global.fetch : null;
 
 module.exports = async function (context, req) {
+  if (!((global && global.fetch))) {
+    return context.res = { status: 500, body: { error: 'global.fetch not available in Functions runtime' } };
+  }
   try {
     const body = (req.body && typeof req.body === "object") ? req.body : {};
     const fileName = String(body.fileName || "").trim();
@@ -33,7 +36,7 @@ module.exports = async function (context, req) {
       select: "metadata_storage_name,content"
     };
 
-    const res = await fetch(url, {
+    const res = await fetchFn(url, {
       method: "POST",
       headers: { "Content-Type": "application/json", "api-key": apiKey },
       body: JSON.stringify(payload)
@@ -60,3 +63,4 @@ module.exports = async function (context, req) {
     return context.res = { status: 500, body: { error: "Search error", details: String(e && e.message || e) } };
   }
 };
+
