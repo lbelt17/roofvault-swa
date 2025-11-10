@@ -160,6 +160,48 @@
     try { parsed = JSON.parse(content); } catch { throw new Error("OpenAI content not JSON"); }
     const groups = Array.isArray(parsed.groups) ? parsed.groups : [];
 
+// --- Normalize items so downstream is happy ---
+(function normalizeAll() {
+  let counter = 0;
+  function newId() { counter += 1; return `q${counter}`; }
+
+  function toOptionObjects(arr) {
+    if (!Array.isArray(arr)) return [];
+    if (arr.length && typeof arr[0] === "object") return arr;
+    const labels = ["A","B","C","D","E","F","G"];
+    return arr.map((txt, i) => ({ id: labels[i] || String(i+1), text: String(txt ?? "") }));
+  }
+
+  for (const g of groups) {
+    if (!g || !Array.isArray(g.items)) continue;
+    g.items = g.items.map((it) => {
+      const question = it.question || it.stem || it.prompt || "";
+      const optionsRaw = it.options || it.choices || [];
+      const options = toOptionObjects(optionsRaw);
+      let answer = it.answer_id || it.answer || it.correct || "";
+      // If answer looks like a number and options have ids A/B/C..., map index->id
+      if (/^\d+$/.test(String(answer)) && options.length) {
+        const idx = Math.max(0, Math.min(options.length-1, Number(answer) - 1));
+        answer = options[idx]?.id ?? answer;
+      }
+      // If answer looks like the full text, map to matching option id
+      if (answer && options.length && !options.some(o => o.id === answer)) {
+        const hit = options.find(o => String(o.text).trim().toLowerCase() === String(answer).trim().toLowerCase());
+        if (hit) answer = hit.id;
+      }
+      return {
+        id: it.id || newId(),
+        type: "mcq",
+        question,
+        options,
+        answer,
+        explanation: it.explanation || it.rationale || "",
+        cite: it.cite || g.source || ""
+      };
+    });
+  }
+})();
+
     // ensure cite
     for (const g of groups) for (const it of (g.items||[])) if (!it.cite) it.cite = bookName;
     return groups;
@@ -187,4 +229,5 @@
     return send(500, { error: String(e && e.message || e) });
   }
 };
+
 
