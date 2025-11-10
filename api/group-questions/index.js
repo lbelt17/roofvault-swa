@@ -60,7 +60,7 @@
     return { docs, combined };
   }
 
-  async function genAndGroup(bookName, combinedText) {
+  async function genAndGroup_old(bookName, combinedText) {
     const schema = {
       type: "object",
       properties: {
@@ -276,3 +276,141 @@
 
 
 
+
+async function genAndGroup(bookName, combinedText) {
+  // --- Config knobs ---
+  const CHUNK_SIZE = 35000;         // ~35k chars per chunk
+  const MAX_CHUNKS = 3;             // try up to 3 chunks per book
+  const ITEMS_PER_CHUNK = 1;        // 1 MCQ per chunk
+  const PRIMARY_DEPLOYMENT = OPENAI_DEPLOYMENT;             // e.g., roofvault-turbo
+  const FALLBACK_DEPLOYMENT = process.env.AOAI_DEPLOYMENT || "gpt-4o-mini";
+
+  const src = String(combinedText || "").trim();
+  if (!src) return [];
+
+  // Build chunks
+  const chunks = [];
+  for (let i = 0; i < Math.min(src.length, CHUNK_SIZE * MAX_CHUNKS); i += CHUNK_SIZE) {
+    chunks.push(src.slice(i, i + CHUNK_SIZE));
+  }
+
+  // Common prompt
+  const sys = [
+    "You are a meticulous exam-item writer and classifier for roofing publications.",
+    "Return ONLY JSON (no markdown).",
+    "Output must be a JSON object with: { groups: [ { objectiveId, objectiveTitle, items: [ ... ] } ] }."
+  ].join("\n");
+
+  const objLines = objectives.map(o => `- ${o.id}: ${o.title}`).join("\n");
+
+  async function callModel(deployment, chunkText) {
+    const url = `${OPENAI_ENDPOINT}/openai/deployments/${encodeURIComponent(deployment)}/chat/completions?api-version=${encodeURIComponent(OPENAI_API_VERSION)}`;
+    const messages = [
+      { role: "system", content: sys },
+      {
+        role: "user",
+        content: [
+          `SOURCE: ${bookName}`,
+          "",
+          `OBJECTIVES (choose exactly one objective per question):`,
+          objLines,
+          "",
+          `TASK:`,
+          `1) From the SOURCE EXCERPT below, create ${ITEMS_PER_CHUNK} high-quality MCQ(s) (A–D) with one correct answer.`,
+          `2) For EACH MCQ, include a 1–2 sentence 'explanation' justifying the correct answer.`,
+          `3) Immediately GROUP the new MCQs under the most relevant objective (by id and title).`,
+          `4) Use "${bookName}" as the cite for each MCQ.`,
+          "",
+          `IMPORTANT: Only use information in the SOURCE EXCERPT (no outside knowledge).`,
+          "",
+          `RETURN: a JSON object with a 'groups' array. Each element has { objectiveId, objectiveTitle, items:[{ id, type:"mcq", question, options:[{id,text} x4], answer, explanation, cite }] }.`,
+          "",
+          "SOURCE EXCERPT (verbatim, may include OCR noise):",
+          chunkText
+        ].join("\n")
+      }
+    ];
+
+    const headers = { "Content-Type": "application/json" };
+    if (/azure/i.test(OPENAI_ENDPOINT)) headers["api-key"] = OPENAI_API_KEY; else headers["Authorization"] = `Bearer ${OPENAI_API_KEY}`;
+
+    const payload = {
+      model: deployment,
+      messages,
+      temperature: 0.3,
+      response_format: { type: "json_object" }
+    };
+
+    const r = await fetch(url, { method: "POST", headers, body: JSON.stringify(payload) });
+    const t = await r.text();
+    if (!r.ok) throw new Error(`OpenAI HTTP ${r.status}: ${t.slice(0, 1200)}`);
+    let j = {};
+    try { j = JSON.parse(t) } catch { throw new Error("OpenAI non-JSON"); }
+    const content = j?.choices?.[0]?.message?.content || "";
+    return content;
+  }
+
+  function normalizeGroups(parsed) {
+    const groups = Array.isArray(parsed.groups) ? parsed.groups : [];
+    let counter = 0; const newId = () => `q${++counter}`;
+    const toOptionObjects = (arr) => {
+      if (!Array.isArray(arr)) return [];
+      if (arr.length && typeof arr[0] === "object") return arr;
+      const labels = ["A","B","C","D","E","F","G"];
+      return arr.map((txt, i) => ({ id: labels[i] || String(i+1), text: String(txt ?? "") }));
+    };
+    for (const g of groups) {
+      if (!g || !Array.isArray(g.items)) continue;
+      g.items = g.items.map((it) => {
+        const question = it.question || it.stem || it.prompt || "";
+        const options = toOptionObjects(it.options || it.choices || []);
+        let answer = it.answer_id || it.answer || it.correct || "";
+
+        if (/^\d+$/.test(String(answer)) && options.length) {
+          const idx = Math.max(0, Math.min(options.length - 1, Number(answer) - 1));
+          answer = options[idx]?.id ?? answer;
+        }
+        if (answer && options.length && !options.some(o => o.id === answer)) {
+          const hit = options.find(o => String(o.text).trim().toLowerCase() === String(answer).trim().toLowerCase());
+          if (hit) answer = hit.id;
+        }
+
+        return {
+          id: it.id || newId(),
+          type: "mcq",
+          question,
+          options,
+          answer,
+          explanation: it.explanation || it.rationale || "",
+          cite: it.cite || bookName
+        };
+      });
+    }
+    return groups;
+  }
+
+  const allGroups = [];
+  async function tryPass(modelName) {
+    for (const chunk of chunks) {
+      try {
+        const content = await callModel(modelName, chunk);
+        let parsed = {};
+        try { parsed = JSON.parse(content) } catch { continue; }
+        const groups = normalizeGroups(parsed);
+        for (const g of groups) {
+          if (Array.isArray(g.items) && g.items.length > 0) allGroups.push(g);
+        }
+        await new Promise(r => setTimeout(r, 400));
+      } catch {
+        // ignore per-chunk failure
+      }
+    }
+  }
+
+  await tryPass(PRIMARY_DEPLOYMENT);
+  if (allGroups.length === 0 && FALLBACK_DEPLOYMENT) {
+    await tryPass(FALLBACK_DEPLOYMENT);
+  }
+
+  return allGroups;
+}
