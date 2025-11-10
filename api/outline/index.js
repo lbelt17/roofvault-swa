@@ -28,9 +28,9 @@ module.exports = async function (context, req) {
   const SEARCH_INDEX    = env.SEARCH_INDEX;
   const SEARCH_API_KEY  = env.SEARCH_API_KEY;
 
-  const OPENAI_ENDPOINT    = (env.OPENAI_ENDPOINT || env.AZURE_OPENAI_ENDPOINT || env.AOAI_ENDPOINT || "").replace(/\/+$/,"");
-  const OPENAI_API_KEY     = (env.OPENAI_API_KEY  || env.AZURE_OPENAI_API_KEY || env.AOAI_API_KEY);
-  const OPENAI_DEPLOYMENT  = (env.OPENAI_DEPLOYMENT || env.AZURE_OPENAI_DEPLOYMENT || env.AOAI_DEPLOYMENT_TURBO || env.AOAI_DEPLOYMENT);
+  const OPENAI_ENDPOINT    = (env.AZURE_OPENAI_ENDPOINT || env.AOAI_ENDPOINT || env.OPENAI_ENDPOINT || "").replace(/\/+$/,"");
+  const OPENAI_API_KEY     = (env.AZURE_OPENAI_API_KEY || env.AOAI_API_KEY || env.OPENAI_API_KEY);
+  const OPENAI_DEPLOYMENT  = (env.AZURE_OPENAI_DEPLOYMENT || env.AOAI_DEPLOYMENT_TURBO || env.AOAI_DEPLOYMENT || env.OPENAI_DEPLOYMENT);
   const OPENAI_API_VERSION = (env.OPENAI_API_VERSION || "2024-08-01-preview");
 
   const body = (req.body && typeof req.body === "object") ? req.body : {};
@@ -162,5 +162,6 @@ module.exports = async function (context, req) {
     return send(context, 500, { error: String(e?.message||e), stack: String(e?.stack||"") });
   }
 };
+
 
 
