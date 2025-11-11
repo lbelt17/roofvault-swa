@@ -1,18 +1,18 @@
 ﻿const { OpenAIClient, AzureKeyCredential: AOAICred } = require("@azure/openai");
 const { SearchClient, AzureKeyCredential: SearchCred } = require("@azure/search-documents");
 
-// ENV VARS (set these in SWA config or GitHub secrets; see notes below)
+// ENV VARS
 const {
-  AOAI_ENDPOINT,          // e.g. https://<your-aoai>.openai.azure.com/
+  AOAI_ENDPOINT,          // e.g. https://theroofvaultopenai1.openai.azure.com/
   AOAI_KEY,
   AOAI_DEPLOYMENT,        // e.g. roofvault-turbo
-  SEARCH_ENDPOINT,        // e.g. https://<your-search>.search.windows.net
+  SEARCH_ENDPOINT,        // e.g. https://roofvaultsearch.search.windows.net
   SEARCH_KEY,
-  SEARCH_INDEX            // e.g. roofvault-index
+  SEARCH_INDEX            // e.g. azureblob-index
 } = process.env;
 
 // Small CORS helper
-function cors(res, body, status = 200) {
+function cors(body, status = 200) {
   return {
     status,
     headers: {
@@ -25,9 +25,39 @@ function cors(res, body, status = 200) {
   };
 }
 
+// Validate env (without leaking secrets)
+function validateEnv(context) {
+  const all = {
+    AOAI_ENDPOINT, AOAI_KEY, AOAI_DEPLOYMENT,
+    SEARCH_ENDPOINT, SEARCH_KEY, SEARCH_INDEX
+  };
+  const missing = Object.entries(all)
+    .filter(([k, v]) => !v || !String(v).trim())
+    .map(([k]) => k);
+
+  // Log what we see (booleans only)
+  const seen = Object.fromEntries(
+    Object.entries(all).map(([k, v]) => [k, !!(v && String(v).trim())])
+  );
+  context.log("[rvchat] env seen:", seen);
+
+  return { missing, seen };
+}
+
 module.exports = async function (context, req) {
   if (req.method === "OPTIONS") {
-    context.res = cors({}, { ok: true });
+    context.res = cors({ ok: true });
+    return;
+  }
+
+  const { missing, seen } = validateEnv(context);
+  if (missing.length) {
+    context.res = cors({
+      ok: false,
+      error: "Missing required environment variables.",
+      missing,
+      seen
+    }, 500);
     return;
   }
 
@@ -40,7 +70,7 @@ module.exports = async function (context, req) {
       (messages.length ? (messages[messages.length - 1].content || "") : "");
 
     if (!question) {
-      context.res = cors({}, { ok: false, error: "No question provided." }, 400);
+      context.res = cors({ ok: false, error: "No question provided." }, 400);
       return;
     }
 
@@ -51,7 +81,6 @@ module.exports = async function (context, req) {
       new SearchCred(SEARCH_KEY)
     );
 
-    // Simple keyword search; you can swap to semantic or vector later
     const results = searchClient.search(question, {
       top: 6,
       includeTotalCount: false,
@@ -60,13 +89,10 @@ module.exports = async function (context, req) {
 
     const snippets = [];
     for await (const r of results) {
-      // Adjust field names if your index differs
       const text = (r.document.content || "").toString().slice(0, 1200);
       const src = r.document.source || r.document.file || r.document.book || "unknown";
       const page = r.document.page || r.document.pageno || r.document.pageNumber || null;
-      if (text.trim()) {
-        snippets.push({ text, source: src, page });
-      }
+      if (text.trim()) snippets.push({ text, source: src, page });
     }
 
     const sourcesBlock = snippets
@@ -92,30 +118,22 @@ module.exports = async function (context, req) {
     const completion = await aoai.getChatCompletions(AOAI_DEPLOYMENT, [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt }
-    ], {
-      temperature: 0.2,
-      maxTokens: 900
-    });
+    ], { temperature: 0.2, maxTokens: 900 });
 
     const answer =
       completion?.choices?.[0]?.message?.content?.trim() ||
       "No answer generated.";
 
     // 4) Return structured payload
-    context.res = cors({}, {
+    context.res = cors({
       ok: true,
       question,
       answer,
-      sources: snippets.map((s, i) => ({
-        id: i + 1,
-        source: s.source,
-        page: s.page
-      }))
+      sources: snippets.map((s, i) => ({ id: i + 1, source: s.source, page: s.page })),
+      envSeen: seen  // booleans only; safe for debugging
     });
   } catch (e) {
-    context.res = cors({}, {
-      ok: false,
-      error: String(e?.message || e)
-    }, 500);
+    context.log.error("[rvchat] Error:", e);
+    context.res = cors({ ok: false, error: String(e?.message || e) }, 500);
   }
 };
