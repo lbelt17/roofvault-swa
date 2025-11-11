@@ -107,8 +107,81 @@
     }
   })();
 </script>
+<style id="rv-polish-style">
+  /* Toolbar look */
+  .rv-toolbar, .rv-btn-row {          /* support both our previous class and new one */
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  /* Controls sizing */
+  .rv-toolbar select, .rv-btn-row select,
+  .rv-toolbar input[type="text"], .rv-btn-row input[type="text"] {
+    min-width: 260px;           /* avoid skinny dropdowns/inputs */
+    flex: 1 1 300px;            /* grow nicely but allow wrapping */
+    height: 36px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+  }
+  /* Buttons uniform */
+  .rv-toolbar .btn, .rv-btn-row .btn,
+  .rv-toolbar button, .rv-btn-row button {
+    height: 36px;
+    line-height: 36px;
+    padding: 0 14px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  /* Small labels spacing */
+  .rv-toolbar label, .rv-btn-row label {
+    margin-right: 4px;
+    font-weight: 500;
+  }
+</style>
+<script id="rv-polish-script">
+  (function(){
+    function tidy(){
+      // Find the "Generate 50" button by visible text, like before
+      var btns = document.querySelectorAll("button");
+      var gen = null;
+      for(var i=0;i<btns.length;i++){
+        if((btns[i].textContent||"").trim() === "Generate 50"){ gen = btns[i]; break; }
+      }
+      if(!gen) return;
+
+      // Ensure parent is a neat toolbar
+      var parent = gen.parentElement;
+      if(parent){
+        parent.classList.add("rv-toolbar");  // our tidy class
+      }
+
+      // Make sure "Chat" is right after Generate 50 (keep existing behavior)
+      var chat = document.getElementById("rvchat");
+      if(chat && gen.nextSibling !== chat){
+        parent.insertBefore(chat, gen.nextSibling);
+      }
+
+      // If there's a select or input nearby, it will auto-size via CSS
+      // but we can nudge min widths if they are extremely narrow at start
+      var controls = parent.querySelectorAll("select, input[type='text']");
+      controls.forEach(function(el){
+        if (el.offsetWidth < 200) {
+          el.style.minWidth = "260px";
+        }
+      });
+    }
+    if(document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", tidy);
+    } else {
+      tidy();
+    }
+  })();
+</script>
 </body>
 </html>
+
 
 
 
