@@ -33,8 +33,11 @@ function validateEnv() {
 
 function enrichQuery(q) {
   const base = (q || "").trim();
+  // If the boss’s wording includes "existing", do NOT alter the query.
+  if (/\\bexisting\\b/i.test(base)) return base;
   const boost = "(MOD K OR MOD L OR SH L OR SH M OR roof-to-roof transition OR slope change OR tie-in OR transition OR flashing OR modified bitumen OR asphalt shingle)";
   return base ? `${base} ${boost}` : boost;
+} ${boost}` : boost;
 }
 
 async function searchDocs(query, topN = 8) {
@@ -181,4 +184,5 @@ answer = answer
     context.res = cors({ ok:false, error:String(e?.message || e) }, 500);
   }
 };
+
 
