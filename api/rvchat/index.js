@@ -36,13 +36,15 @@ function validateEnv() {
 
 // --- Azure Search (REST) ---
 async function searchDocs(query, topN = 8) {
+  const enriched = `${query} (MOD K OR MOD L OR SH L OR SH M OR roof-to-roof transition OR slope change OR tie-in OR transition OR flashing)`;
+
   const base = SEARCH_ENDPOINT.replace(/\/+$/, "");
   const url = `${base}/indexes('${encodeURIComponent(SEARCH_INDEX)}')/docs/search?api-version=2023-11-01`;
 
   const body = {
-    search: query || "*",
+    search: enriched || "*",
     top: topN,
-    select: "content,metadata_storage_name,metadata_storage_path,id",
+    searchFields: "content", select: "content,metadata_storage_name,metadata_storage_path,id",
     queryType: "simple"
   };
 
@@ -140,4 +142,5 @@ ${sourcesBlock || "(no sources found)"}`;
     context.res = cors({ ok:false, error:String(e?.message || e) }, 500);
   }
 };
+
 
