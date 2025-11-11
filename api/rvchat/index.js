@@ -169,6 +169,25 @@ async function aoaiChat(systemPrompt, userPrompt) {
 
 module.exports = async function (context, req) {
   try {
+    const q = (req.query && (req.query.q || req.query.question)) || null;
+    const diag = (req.query && (req.query.diag === "1" || req.query.diag === "true")) || false;
+
+    // Allow GET /api/rvchat?diag=1&q=...
+    if (req.method === "GET" && diag) {
+      const question = q || "diag";
+      const snippets = await searchDocs(question, 10);
+      return context.res = {
+        status: 200,
+        headers: { "Content-Type":"application/json", "Access-Control-Allow-Origin":"*" },
+        body: JSON.stringify({
+          ok: true,
+          mode: "diag",
+          question,
+          finalSearch: (globalThis.__rv_last_query || null),
+          sources: snippets.map(s => ({ id: s.id, source: s.source, text: s.text }))
+        })
+      };
+    }
     if (req.method === "OPTIONS") { context.res = cors({ ok: true }); return; }
 
     const { missing, seen } = validateEnv();
@@ -221,3 +240,4 @@ ${sourcesBlock || "(no sources found)"}`;
 
 
 // redeploy trigger 2025-11-11 16:41:33
+
