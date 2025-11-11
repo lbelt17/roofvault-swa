@@ -160,7 +160,15 @@ Sources:
 ${sourcesBlock || "(no sources found)"}`;
 
     // 2) Answer
-    const answer = await aoaiChat(systemPrompt, userPrompt);
+    let answer = await aoaiChat(systemPrompt, userPrompt);
+
+// Clean formatting for readability
+answer = answer
+  .replace(/#{1,6}\s*/g, "")             // remove markdown headers like ###
+  .replace(/\*\*(.*?)\*\*/g, "$1")       // remove bold markers
+  .replace(/\n{2,}/g, "\n\n")            // limit double newlines
+  .replace(/-\s+/g, "• ")                // replace dashes with bullets
+  .trim();
 
     context.res = cors({
       ok: true,
@@ -173,3 +181,4 @@ ${sourcesBlock || "(no sources found)"}`;
     context.res = cors({ ok:false, error:String(e?.message || e) }, 500);
   }
 };
+
