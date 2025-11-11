@@ -42,7 +42,7 @@ async function searchDocs(query, topN = 8) {
   const body = {
     search: query || "*",
     top: topN,
-    select: "content,metadata_storage_name,metadata_storage_path,id,@search.score",
+    select: "content,metadata_storage_name,metadata_storage_path,id",
     queryType: "simple"
   };
 
@@ -140,3 +140,4 @@ ${sourcesBlock || "(no sources found)"}`;
     context.res = cors({ ok:false, error:String(e?.message || e) }, 500);
   }
 };
+
