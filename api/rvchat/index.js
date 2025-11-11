@@ -6,6 +6,10 @@
  * - Strong ranking for MOD/SH + 2023/2021 manuals, and hard-prefer those when present
  */
 
+
+const _fetch = (typeof fetch !== 'undefined')
+  ? fetch
+  : ((...args) => import('node-fetch').then(({ default: f }) => f(...args)));
 const {
   AOAI_ENDPOINT, AOAI_KEY, AOAI_DEPLOYMENT,
   SEARCH_ENDPOINT, SEARCH_KEY, SEARCH_INDEX
@@ -111,7 +115,7 @@ async function searchDocs(query, topN = 10) {
     select: "content,metadata_storage_name,metadata_storage_path,id"
   };
 
-  const r = await fetch(url, {
+  const r = await _fetch(url, {
     method: "POST",
     headers: { "api-key": SEARCH_KEY, "Content-Type": "application/json" },
     body: JSON.stringify(body)
@@ -180,7 +184,7 @@ async function aoaiChat(systemPrompt, userPrompt) {
     ]
   };
 
-  const r = await fetch(url, {
+  const r = await _fetch(url, {
     method: "POST",
     headers: { "api-key": AOAI_KEY, "Content-Type": "application/json" },
     body: JSON.stringify(payload)
@@ -254,4 +258,5 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
     context.res = cors({ ok:false, error:String(e?.message || e), stack: String(e?.stack || "") }, 500);
   }
 };
+
 
