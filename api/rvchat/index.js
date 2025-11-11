@@ -87,9 +87,40 @@ async function searchDocs(query, topN = 8) {
   ];
 
   function score(d) {
-    let s = 0;
-    for (const rx of RX) { const m = d.content.match(rx); if (m) s += m.length * 2; }
-    const n = d.name.toLowerCase();
+  let s = 0;
+  const text = (d.content || "").toLowerCase();
+  const name = (d.name || "").toLowerCase();
+  const path = (d.path || "").toLowerCase();
+
+  // Keyword hits in content
+  const RX = [
+    /\bmod\s?[- ]?[a-z0-9]{1,3}\b/gi,
+    /\bsh\s?[- ]?[a-z0-9]{1,3}\b/gi,
+    /roof[-\s]?to[-\s]?roof/gi,
+    /slope change/gi,
+    /tie[-\s]?in/gi,
+    /\btransition(s)?\b/gi,
+    /\bflashing\b/gi,
+    /modified bitumen/gi,
+    /asphalt shingle/gi,
+    /\bexisting\b/gi
+  ];
+  for (const rx of RX) { const m = text.match(rx); if (m) s += m.length * 2; }
+
+  // Filename/Path boosts
+  if (name.includes('mod') || name.includes('-mod-')) s += 10;  // MOD series
+  if (name.includes('sh')  || name.includes('-sh-'))  s += 10;  // SH series
+  if (name.includes('membrane') || name.includes('2023')) s += 8;
+  if (name.includes('steep-slope') || name.includes('2021')) s += 8;
+
+  // Generic boosts
+  if (name.includes('nrca')) s += 6;
+  if (name.includes('manual')) s += 4;
+  if (name.includes('detail') || name.includes('details')) s += 4;
+  if (path.includes('roofdocs')) s += 2;
+
+  return s;
+}const n = d.name.toLowerCase();
     if (n.includes("nrca")) s += 6;
     if (n.includes("manual")) s += 4;
     if (n.includes("construction") || n.includes("detail")) s += 3;
@@ -151,13 +182,13 @@ module.exports = async function (context, req) {
     const sourcesBlock = snippets.map(s => `[[${s.id}]] ${s.source}\n${s.text}`).join("\n\n");
 
     const systemPrompt =
-      "You are RoofVault AI, a roofing standards assistant. " +
-      "Answer ONLY from the provided sources (NRCA, IIBEC, ASTM, etc.). " +
-      "If the answer is not clearly supported, say you are unsure and suggest the most relevant source sections. " +
-      "Cite sources inline using [#] that match the list below. " +
-      "Keep formatting clean and readable (no markdown headers).";
-
-    const userPrompt = `Question: ${question}
+  "You are RoofVault AI, a roofing standards assistant. " +
+  "Answer ONLY from the provided NRCA/IIBEC/ASTM sources. " +
+  "Start with a clear yes/no on whether a standard NRCA detail exists for the described junction. " +
+  "If none exists, say so, then outline the NRCA-aligned flashing/transition method. " +
+  "When possible, name relevant NRCA Construction Detail families/IDs (e.g., MOD-K-2, SH-L-1). " +
+  "Keep output neat (plain text, short bullets). " +
+  "Cite sources inline using [#] matching the list below.";const userPrompt = `Question: ${question}
 
 Sources:
 ${sourcesBlock || "(no sources found)"}`;
@@ -185,3 +216,4 @@ ${sourcesBlock || "(no sources found)"}`;
     context.res = cors({ ok:false, error:String(e?.message || e) }, 500);
   }
 };
+
