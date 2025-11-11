@@ -52,48 +52,64 @@
   <script src="/books.js?v=4"></script>
   <script src="/gen-exam.js?v=4"></script>
   <a id="rvchat-link" href="rvchat.html" class="btn" style="margin-left:8px;">RoofVault Chat</a>
-<style id="rv-btn-style">
+
+
+<style id="rv-btn-style2">
   .rv-btn-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 </style>
-<script id="rv-align">
+<script id="rv-align2">
   (function(){
-    function alignBtns(){
-      var gen = document.getElementById('gen50');
-      var chat = document.getElementById('rvchat');
-      if(!gen) return;
-      // create Chat if missing (last resort)
-      if(!chat){
-        chat = document.createElement('button');
-        chat.id = 'rvchat';
-        chat.textContent = 'Chat';
-        gen.parentNode.insertBefore(chat, gen.nextSibling);
+    function findButtonByText(txt){
+      var btns = document.querySelectorAll("button");
+      for (var i=0;i<btns.length;i++){
+        if ((btns[i].textContent||"").trim() === txt) return btns[i];
       }
-      // move Chat right after Generate 50 if needed
-      if(gen && chat && gen.nextSibling !== chat){
-        gen.parentNode.insertBefore(chat, gen.nextSibling);
-      }
-      // copy styling class
-      if(gen && chat){ chat.className = gen.className || 'btn'; }
-      // ensure parent is a flex row
-      if(gen && gen.parentElement){
-        gen.parentElement.classList.add('rv-btn-row');
-      }
-      // click handler -> open chat page
-      if(chat){
-        chat.addEventListener('click', function(){
-          window.location.href = 'rvchat.html';
-        }, { once:false });
-      }
+      return null;
     }
-    if(document.readyState === 'loading'){
-      document.addEventListener('DOMContentLoaded', alignBtns);
+    function ensureChatNextTo(target){
+      if(!target) return;
+      // create or find Chat
+      var chat = document.getElementById("rvchat");
+      if(!chat){
+        chat = document.createElement("button");
+        chat.id = "rvchat";
+        chat.textContent = "Chat";
+      }
+      // copy classes and basic attrs to match Generate 50
+      chat.className = target.className || chat.className;
+      chat.type = target.getAttribute("type") || "button";
+
+      // move Chat immediately after the target button
+      if (target.nextSibling !== chat) {
+        target.parentNode.insertBefore(chat, target.nextSibling);
+      }
+
+      // make parent a horizontal row
+      if (target.parentElement) {
+        target.parentElement.classList.add("rv-btn-row");
+      }
+
+      // click => open rvchat.html
+      chat.addEventListener("click", function(){
+        window.location.href = "rvchat.html";
+      });
+    }
+
+    function init(){
+      var gen = findButtonByText("Generate 50");
+      ensureChatNextTo(gen);
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", init);
     } else {
-      alignBtns();
+      init();
     }
   })();
 </script>
 </body>
 </html>
+
 
 
 
