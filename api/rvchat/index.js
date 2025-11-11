@@ -36,16 +36,19 @@ function validateEnv() {
 
 // --- Azure Search (REST) ---
 async function searchDocs(query, topN = 8) {
-  const enriched = `${query} (MOD K OR MOD L OR SH L OR SH M OR roof-to-roof transition OR slope change OR tie-in OR transition OR flashing)`;
+  // Expand query with NRCA terms
+  const enriched = `${query} (MOD K OR MOD L OR SH L OR SH M OR roof-to-roof transition OR slope change OR tie-in OR transition OR flashing OR modified bitumen OR asphalt shingle)`;
 
   const base = SEARCH_ENDPOINT.replace(/\/+$/, "");
   const url = `${base}/indexes('${encodeURIComponent(SEARCH_INDEX)}')/docs/search?api-version=2023-11-01`;
 
+  // Pull a wider net first
   const body = {
     search: enriched || "*",
-    top: topN,
-    searchFields: "content", select: "content,metadata_storage_name,metadata_storage_path,id",
-    queryType: "simple"
+    top: 24,
+    searchFields: "content",
+    queryType: "simple",
+    select: "content,metadata_storage_name,metadata_storage_path,id"
   };
 
   const r = await fetch(url, {
@@ -59,6 +62,54 @@ async function searchDocs(query, topN = 8) {
     throw new Error(`Search HTTP ${r.status}: ${json?.error?.message || json?.message || "unknown error"}`);
   }
 
+  const arr = Array.isArray(json.value) ? json.value : [];
+  const raw = arr.map(v => ({
+    content: (v.content ?? "").toString(),
+    source: v.metadata_storage_name || v.metadata_storage_path || "unknown",
+    path: v.metadata_storage_path || ""
+  })).filter(d => d.content && d.content.trim());
+
+  // Re-rank by MOD/SH and transition semantics
+  const RX = [
+    /\bMOD\s?[A-Z0-9-]{1,4}\b/gi,     // e.g., MOD K-1
+    /\bSH\s?[A-Z0-9-]{1,4}\b/gi,      // e.g., SH L-2
+    /roof[-\s]?to[-\s]?roof/gi,
+    /slope change/gi,
+    /tie[-\s]?in/gi,
+    /\btransition(s)?\b/gi,
+    /\bflashing\b/gi,
+    /modified bitumen/gi,
+    /asphalt shingle/gi
+  ];
+
+  function scoreDoc(d) {
+    let s = 0;
+    for (const rx of RX) {
+      const matches = d.content.match(rx);
+      if (matches) s += matches.length * 2;
+    }
+    // Prefer NRCA manuals by filename
+    const name = (d.source || "").toLowerCase();
+    if (name.includes("nrca")) s += 6;
+    if (name.includes("manual")) s += 4;
+    if (name.includes("construction") || name.includes("detail")) s += 3;
+    // Slight bonus if path points to your roofdocs container
+    if ((d.path || "").toLowerCase().includes("roofdocs")) s += 2;
+    return s;
+  }
+
+  const ranked = raw
+    .map(d => ({ ...d, __score: scoreDoc(d) }))
+    .sort((a, b) => b.__score - a.__score);
+
+  const best = ranked.some(d => d.__score > 0) ? ranked : raw; // fallback if all zeros
+
+  // Return topN with trimmed content
+  return best.slice(0, topN).map((d, i) => ({
+    content: d.content.slice(0, 1600),
+    source: d.source
+  }));
+}
   const arr = Array.isArray(json.value) ? json.value : [];
   // Normalize
   return arr.map(v => ({
@@ -142,5 +193,6 @@ ${sourcesBlock || "(no sources found)"}`;
     context.res = cors({ ok:false, error:String(e?.message || e) }, 500);
   }
 };
+
 
 
