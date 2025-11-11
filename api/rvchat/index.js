@@ -1,10 +1,9 @@
 ﻿/**
- * RoofVault /api/rvchat — REST-only
- * - Azure AI Search (REST)
- * - Azure OpenAI (REST)
- * - Exact phrasing when the question contains "existing"
- * - Strong ranking for MOD/SH + 2023/2021 manuals
- * - Clear JSON errors with stack
+ * RoofVault /api/rvchat — REST-only (no SDK imports)
+ * - Azure AI Search via REST
+ * - Azure OpenAI via REST
+ * - Exact phrasing when the question contains "existing"; otherwise query enrichment + rerank
+ * Requires Node 18+ (global fetch)
  */
 
 const {
@@ -32,15 +31,62 @@ function validateEnv() {
   return { missing, seen };
 }
 
+// If the boss’s wording includes "existing", do NOT alter the query.
 function enrichQuery(q) {
   const base = (q || "").trim();
-  // If boss phrasing includes "existing", do not alter the query
   if (/\bexisting\b/i.test(base)) return base;
   const boost = "(MOD K OR MOD L OR SH L OR SH M OR roof-to-roof transition OR slope change OR tie-in OR transition OR flashing OR modified bitumen OR asphalt shingle)";
   return base ? `${base} ${boost}` : boost;
 }
 
-function score(d) {
+async function searchDocs(query, topN = 8) {
+  const enriched = enrichQuery(query);
+  const base = SEARCH_ENDPOINT.replace(/\/+$/, "");
+  const url = `${base}/indexes('${encodeURIComponent(SEARCH_INDEX)}')/docs/search?api-version=2023-11-01`;
+
+  const body = {
+    search: enriched,
+    top: 24,                    // wider net
+    searchMode: "any",
+    searchFields: "content",
+    queryType: "simple",
+    select: "content,metadata_storage_name,metadata_storage_path,id"
+  };
+
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "api-key": SEARCH_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+
+  const text = await r.text();
+  let json = null; try { json = JSON.parse(text); } catch {}
+  if (!r.ok) {
+    throw new Error(`Search HTTP ${r.status}: ${json?.error?.message || json?.message || text || "unknown error"}`);
+  }
+
+  const arr = Array.isArray(json?.value) ? json.value : [];
+  const raw = arr.map(v => ({
+    content: (v?.content ?? "").toString(),
+    name: v?.metadata_storage_name || "",
+    path: v?.metadata_storage_path || ""
+  })).filter(d => d.content && d.content.trim());
+
+  // Keyword re-ranking
+  const RX = [
+    /\bMOD\s?[A-Z0-9-]{1,4}\b/gi,
+    /\bSH\s?[A-Z0-9-]{1,4}\b/gi,
+    /roof[-\s]?to[-\s]?roof/gi,
+    /slope change/gi,
+    /tie[-\s]?in/gi,
+    /\btransition(s)?\b/gi,
+    /\bflashing\b/gi,
+    /modified bitumen/gi,
+    /asphalt shingle/gi,
+    /\bexisting\b/gi
+  ];
+
+  function score(d) {
   let s = 0;
   const text = (d.content || "").toLowerCase();
   const name = (d.name || "").toLowerCase();
@@ -61,52 +107,26 @@ function score(d) {
   ];
   for (const rx of RX) { const m = text.match(rx); if (m) s += m.length * 2; }
 
-  // Filename/path boosts (prefer your new manuals)
-  if (name.includes("mod") || name.includes("-mod-")) s += 10;
-  if (name.includes("sh")  || name.includes("-sh-"))  s += 10;
-  if (name.includes("membrane") || name.includes("2023")) s += 8;
-  if (name.includes("steep-slope") || name.includes("2021")) s += 8;
+  // Filename/Path boosts
+  if (name.includes('mod') || name.includes('-mod-')) s += 10;  // MOD series
+  if (name.includes('sh')  || name.includes('-sh-'))  s += 10;  // SH series
+  if (name.includes('membrane') || name.includes('2023')) s += 8;
+  if (name.includes('steep-slope') || name.includes('2021')) s += 8;
 
-  if (name.includes("nrca")) s += 6;
-  if (name.includes("manual")) s += 4;
-  if (name.includes("detail") || name.includes("details")) s += 4;
-  if (path.includes("roofdocs")) s += 2;
+  // Generic boosts
+  if (name.includes('nrca')) s += 6;
+  if (name.includes('manual')) s += 4;
+  if (name.includes('detail') || name.includes('details')) s += 4;
+  if (path.includes('roofdocs')) s += 2;
 
   return s;
-}
-
-async function searchDocs(query, topN = 8) {
-  const enriched = enrichQuery(query);
-  const base = SEARCH_ENDPOINT.replace(/\/+$/, "");
-  const url = `${base}/indexes('${encodeURIComponent(SEARCH_INDEX)}')/docs/search?api-version=2023-11-01`;
-
-  const body = {
-    search: enriched,
-    top: 24,
-    searchMode: "any",
-    queryType: "simple",
-    searchFields: "content",
-    select: "content,metadata_storage_name,metadata_storage_path,id"
-  };
-
-  const r = await fetch(url, {
-    method: "POST",
-    headers: { "api-key": SEARCH_KEY, "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-
-  const rawText = await r.text();
-  let json = null; try { json = JSON.parse(rawText); } catch {}
-  if (!r.ok) {
-    throw new Error(`Search HTTP ${r.status}: ${json?.error?.message || json?.message || rawText || "unknown error"}`);
+}const n = d.name.toLowerCase();
+    if (n.includes("nrca")) s += 6;
+    if (n.includes("manual")) s += 4;
+    if (n.includes("construction") || n.includes("detail")) s += 3;
+    if ((d.path || "").toLowerCase().includes("roofdocs")) s += 2;
+    return s;
   }
-
-  const arr = Array.isArray(json?.value) ? json.value : [];
-  const raw = arr.map(v => ({
-    content: (v?.content ?? "").toString(),
-    name: v?.metadata_storage_name || "",
-    path: v?.metadata_storage_path || ""
-  })).filter(d => d.content && d.content.trim());
 
   const ranked = raw.map(d => ({ ...d, __score: score(d) }))
                     .sort((a, b) => b.__score - a.__score);
@@ -137,17 +157,17 @@ async function aoaiChat(systemPrompt, userPrompt) {
     body: JSON.stringify(payload)
   });
 
-  const rawText = await r.text();
-  let json = null; try { json = JSON.parse(rawText); } catch {}
+  const text = await r.text();
+  let json = null; try { json = JSON.parse(text); } catch {}
   if (!r.ok) {
-    throw new Error(`AOAI HTTP ${r.status}: ${json?.error?.message || json?.message || rawText || "unknown error"}`);
+    throw new Error(`AOAI HTTP ${r.status}: ${json?.error?.message || json?.message || text || "unknown error"}`);
   }
   return json?.choices?.[0]?.message?.content?.trim?.() || "No answer generated.";
 }
 
 module.exports = async function (context, req) {
   try {
-    if (req.method === "OPTIONS") { context.res = cors({ ok:true }); return; }
+    if (req.method === "OPTIONS") { context.res = cors({ ok: true }); return; }
 
     const { missing, seen } = validateEnv();
     if (missing.length) { context.res = cors({ ok:false, error:"Missing required environment variables.", missing, seen }, 500); return; }
@@ -157,32 +177,30 @@ module.exports = async function (context, req) {
     const question = body.question || (messages.length ? (messages[messages.length - 1]?.content || "") : "");
     if (!question) { context.res = cors({ ok:false, error:"No question provided." }, 400); return; }
 
-    // Search documents
+    // 1) Search
     const snippets = await searchDocs(question, 8);
     const sourcesBlock = snippets.map(s => `[[${s.id}]] ${s.source}\n${s.text}`).join("\n\n");
 
     const systemPrompt =
-      "You are RoofVault AI, a roofing standards assistant. " +
-      "Answer ONLY from the provided NRCA/IIBEC/ASTM sources. " +
-      "Start with a clear yes/no on whether a standard NRCA detail exists for the described junction. " +
-      "If none exists, say so, then outline the NRCA-aligned flashing/transition method. " +
-      "When possible, name relevant NRCA Construction Detail families/IDs (e.g., MOD-K-2, SH-L-1). " +
-      "Keep output neat (plain text, short bullets). " +
-      "Cite sources inline using [#] matching the list below.";
-
-    const userPrompt = `Question: ${question}
+  "You are RoofVault AI, a roofing standards assistant. " +
+  "Answer ONLY from the provided NRCA/IIBEC/ASTM sources. " +
+  "Start with a clear yes/no on whether a standard NRCA detail exists for the described junction. " +
+  "If none exists, say so, then outline the NRCA-aligned flashing/transition method. " +
+  "When possible, name relevant NRCA Construction Detail families/IDs (e.g., MOD-K-2, SH-L-1). " +
+  "Keep output neat (plain text, short bullets). " +
+  "Cite sources inline using [#] matching the list below.";const userPrompt = `Question: ${question}
 
 Sources:
 ${sourcesBlock || "(no sources found)"}`;
 
-    // Generate answer
+    // 2) Answer
     let answer = await aoaiChat(systemPrompt, userPrompt);
 
-    // Light cleanup
+    // Clean simple markdown noise
     answer = answer
       .replace(/#{1,6}\s*/g, "")
       .replace(/\*\*(.*?)\*\*/g, "$1")
-      .replace(/\n{3,}/g, "\n\n")
+      .replace(/\n{2,}/g, "\n\n")
       .replace(/-\s+/g, "• ")
       .trim();
 
@@ -194,6 +212,8 @@ ${sourcesBlock || "(no sources found)"}`;
     });
   } catch (e) {
     context.log.error("[rvchat] Fatal:", e);
-    context.res = cors({ ok:false, error:String(e?.message || e), stack: String(e?.stack || "") }, 500);
+    // Always return a JSON error body so the UI can show it
+    context.res = cors({ ok:false, error:String(e?.message || e) }, 500);
   }
 };
+
