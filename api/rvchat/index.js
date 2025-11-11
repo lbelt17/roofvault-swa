@@ -1,13 +1,12 @@
-﻿const { OpenAIClient } = require("@azure/openai");
-const { SearchClient } = require("@azure/search-documents");
+﻿const { SearchClient } = require("@azure/search-documents");
 const { AzureKeyCredential } = require("@azure/core-auth");
 
 // ENV VARS
 const {
-  AOAI_ENDPOINT,
+  AOAI_ENDPOINT,       // e.g. https://theroofvaultopenai1.openai.azure.com/
   AOAI_KEY,
-  AOAI_DEPLOYMENT,
-  SEARCH_ENDPOINT,
+  AOAI_DEPLOYMENT,     // e.g. roofvault-turbo or gpt-4o-mini
+  SEARCH_ENDPOINT,     // e.g. https://roofvaultsearch.search.windows.net
   SEARCH_KEY,
   SEARCH_INDEX
 } = process.env;
@@ -43,7 +42,7 @@ function validateEnv(context) {
   return { missing, seen };
 }
 
-// Collect up to N results from Azure AI Search, tolerant of SDK shape
+// Collect top N results from Azure AI Search, tolerant of SDK shapes
 async function searchTopN(context, client, query, topN = 6) {
   const resp = client.search(query, {
     top: topN,
@@ -102,7 +101,7 @@ module.exports = async function (context, req) {
       return;
     }
 
-    // Search
+    // 1) Search
     const searchClient = new SearchClient(SEARCH_ENDPOINT, SEARCH_INDEX, new AzureKeyCredential(SEARCH_KEY));
     const rawHits = await searchTopN(context, searchClient, question, 6);
 
@@ -133,21 +132,40 @@ module.exports = async function (context, req) {
 Sources:
 ${sourcesBlock || "(no sources found)"}`;
 
-    // AOAI chat
-    const aoai = new OpenAIClient(AOAI_ENDPOINT, new AzureKeyCredential(AOAI_KEY));
-    const completion = await aoai.getChatCompletions(AOAI_DEPLOYMENT, [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt }
-    ], { temperature: 0.2, maxTokens: 900 });
+    // 2) AOAI via REST (built-in fetch, no SDK)
+    const url = `${AOAI_ENDPOINT}openai/deployments/${encodeURIComponent(AOAI_DEPLOYMENT)}/chat/completions?api-version=2024-06-01`;
 
-    const answer = completion?.choices?.[0]?.message?.content?.trim() || "No answer generated.";
+    const payload = {
+      temperature: 0.2,
+      max_tokens: 900,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ]
+    };
+
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: {
+        "api-key": AOAI_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      context.log.error("[rvchat] AOAI error:", resp.status, data);
+      throw new Error(`AOAI HTTP ${resp.status}: ${data?.error?.message || data?.message || "unknown error"}`);
+    }
+
+    const answer = data?.choices?.[0]?.message?.content?.trim?.() || "No answer generated.";
 
     context.res = cors({
       ok: true,
       question,
       answer,
-      sources: snippets.map((s, i) => ({ id: i + 1, source: s.source, page: s.page })),
-      envSeen: seen
+      sources: snippets.map((s, i) => ({ id: i + 1, source: s.source, page: s.page }))
     });
   } catch (e) {
     context.log.error("[rvchat] Error:", e);
