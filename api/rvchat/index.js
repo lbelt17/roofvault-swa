@@ -44,7 +44,7 @@ function validateEnv(context) {
 
 // Collect top N results from Azure AI Search, tolerant of SDK shapes
 async function searchTopN(context, client, query, topN = 6) {
-  const resp = client.search(question, { top: 8, includeTotalCount: false, queryType: "simple", select: ["content","metadata_storage_name","metadata_storage_path","id","@search.score"] });
+  const resp = client.search(query, { select: ["content","metadata_storage_name","metadata_storage_path","id","@search.score"], top: 8, includeTotalCount: false, queryType: "simple", select: ["content","metadata_storage_name","metadata_storage_path","id","@search.score"] });
 
   let hits = [];
 
@@ -168,4 +168,5 @@ ${sourcesBlock || "(no sources found)"}`;
     context.res = cors({ ok: false, error: String(e?.message || e) }, 500);
   }
 };
+
 
