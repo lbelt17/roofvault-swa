@@ -33,6 +33,12 @@
     }
     .muted { color: #a7b0c0; }
   </style>
+<style id="rv-dropdown-pad">
+  /* Give the page extra room below the toolbar so native <select> prefers opening downward */
+  body { padding-bottom: 220px; }
+  /* Keep the book dropdown compact */
+  .rv-toolbar select, .rv-btn-row select { min-width: 120px !important; width: 140px !important; flex: 0 0 auto !important; }
+</style>
 </head>
 <body>
   <div class="wrap">
@@ -193,6 +199,7 @@
 </style>
 </body>
 </html>
+
 
 
 
