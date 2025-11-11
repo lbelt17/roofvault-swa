@@ -2,8 +2,8 @@
  * RoofVault /api/rvchat — REST-only (no SDK imports)
  * - Azure AI Search via REST
  * - Azure OpenAI via REST
- * - Query enrichment + keyword re-ranking (MOD/SH/transition terms)
- * Requires Node 18+ (global fetch available in Azure Functions v4 on SWA)
+ * - Exact phrasing when the question contains "existing"; otherwise query enrichment + rerank
+ * Requires Node 18+ (global fetch)
  */
 
 const {
@@ -31,13 +31,12 @@ function validateEnv() {
   return { missing, seen };
 }
 
+// If the boss’s wording includes "existing", do NOT alter the query.
 function enrichQuery(q) {
   const base = (q || "").trim();
-  // If the boss’s wording includes "existing", do NOT alter the query.
-  if (/\\bexisting\\b/i.test(base)) return base;
+  if (/\bexisting\b/i.test(base)) return base;
   const boost = "(MOD K OR MOD L OR SH L OR SH M OR roof-to-roof transition OR slope change OR tie-in OR transition OR flashing OR modified bitumen OR asphalt shingle)";
   return base ? `${base} ${boost}` : boost;
-} ${boost}` : boost;
 }
 
 async function searchDocs(query, topN = 8) {
@@ -47,9 +46,9 @@ async function searchDocs(query, topN = 8) {
 
   const body = {
     search: enriched,
-    top: 24,                                // pull wider net
+    top: 24,                    // wider net
     searchMode: "any",
-    searchFields: "content",                // hit OCR text
+    searchFields: "content",
     queryType: "simple",
     select: "content,metadata_storage_name,metadata_storage_path,id"
   };
@@ -60,21 +59,22 @@ async function searchDocs(query, topN = 8) {
     body: JSON.stringify(body)
   });
 
-  const json = await r.json().catch(() => ({}));
+  const text = await r.text();
+  let json = null; try { json = JSON.parse(text); } catch {}
   if (!r.ok) {
-    throw new Error(`Search HTTP ${r.status}: ${json?.error?.message || json?.message || "unknown error"}`);
+    throw new Error(`Search HTTP ${r.status}: ${json?.error?.message || json?.message || text || "unknown error"}`);
   }
 
-  const arr = Array.isArray(json.value) ? json.value : [];
+  const arr = Array.isArray(json?.value) ? json.value : [];
   const raw = arr.map(v => ({
     content: (v?.content ?? "").toString(),
     name: v?.metadata_storage_name || "",
     path: v?.metadata_storage_path || ""
   })).filter(d => d.content && d.content.trim());
 
-  // Keyword re-ranking (prefer explicit MOD/SH tokens and NRCA/manual filenames)
+  // Keyword re-ranking
   const RX = [
-    /\bMOD\s?[A-Z0-9-]{1,4}\b/gi,  // MOD K-1, etc.
+    /\bMOD\s?[A-Z0-9-]{1,4}\b/gi,
     /\bSH\s?[A-Z0-9-]{1,4}\b/gi,
     /roof[-\s]?to[-\s]?roof/gi,
     /slope change/gi,
@@ -82,15 +82,13 @@ async function searchDocs(query, topN = 8) {
     /\btransition(s)?\b/gi,
     /\bflashing\b/gi,
     /modified bitumen/gi,
-    /asphalt shingle/gi
+    /asphalt shingle/gi,
+    /\bexisting\b/gi
   ];
 
   function score(d) {
     let s = 0;
-    for (const rx of RX) {
-      const m = d.content.match(rx);
-      if (m) s += m.length * 2;
-    }
+    for (const rx of RX) { const m = d.content.match(rx); if (m) s += m.length * 2; }
     const n = d.name.toLowerCase();
     if (n.includes("nrca")) s += 6;
     if (n.includes("manual")) s += 4;
@@ -128,9 +126,10 @@ async function aoaiChat(systemPrompt, userPrompt) {
     body: JSON.stringify(payload)
   });
 
-  const json = await r.json().catch(() => ({}));
+  const text = await r.text();
+  let json = null; try { json = JSON.parse(text); } catch {}
   if (!r.ok) {
-    throw new Error(`AOAI HTTP ${r.status}: ${json?.error?.message || json?.message || "unknown error"}`);
+    throw new Error(`AOAI HTTP ${r.status}: ${json?.error?.message || json?.message || text || "unknown error"}`);
   }
   return json?.choices?.[0]?.message?.content?.trim?.() || "No answer generated.";
 }
@@ -155,7 +154,8 @@ module.exports = async function (context, req) {
       "You are RoofVault AI, a roofing standards assistant. " +
       "Answer ONLY from the provided sources (NRCA, IIBEC, ASTM, etc.). " +
       "If the answer is not clearly supported, say you are unsure and suggest the most relevant source sections. " +
-      "Cite sources inline using [#] that match the list below.";
+      "Cite sources inline using [#] that match the list below. " +
+      "Keep formatting clean and readable (no markdown headers).";
 
     const userPrompt = `Question: ${question}
 
@@ -165,13 +165,13 @@ ${sourcesBlock || "(no sources found)"}`;
     // 2) Answer
     let answer = await aoaiChat(systemPrompt, userPrompt);
 
-// Clean formatting for readability
-answer = answer
-  .replace(/#{1,6}\s*/g, "")             // remove markdown headers like ###
-  .replace(/\*\*(.*?)\*\*/g, "$1")       // remove bold markers
-  .replace(/\n{2,}/g, "\n\n")            // limit double newlines
-  .replace(/-\s+/g, "• ")                // replace dashes with bullets
-  .trim();
+    // Clean simple markdown noise
+    answer = answer
+      .replace(/#{1,6}\s*/g, "")
+      .replace(/\*\*(.*?)\*\*/g, "$1")
+      .replace(/\n{2,}/g, "\n\n")
+      .replace(/-\s+/g, "• ")
+      .trim();
 
     context.res = cors({
       ok: true,
@@ -181,8 +181,7 @@ answer = answer
     });
   } catch (e) {
     context.log.error("[rvchat] Fatal:", e);
+    // Always return a JSON error body so the UI can show it
     context.res = cors({ ok:false, error:String(e?.message || e) }, 500);
   }
 };
-
-
