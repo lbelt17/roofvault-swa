@@ -1,0 +1,54 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RoofVault Chat</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
+    .wrap { max-width: 900px; margin: 0 auto; }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    .sub { color:#666; margin-bottom:16px; }
+    .row { display:flex; gap:12px; align-items: center; margin-bottom:12px; flex-wrap: wrap; }
+    textarea { width:100%; min-height: 90px; padding:10px; font-size: 14px; }
+    button { padding: 10px 14px; border:1px solid #ccc; background:#fff; cursor:pointer; border-radius:10px; }
+    button:disabled { opacity:0.6; cursor:not-allowed; }
+    .pill { padding:6px 10px; border:1px solid #ddd; border-radius:999px; background:#fafafa; font-size:12px; }
+    .box { border:1px solid #eee; border-radius:12px; padding:14px; margin-top:12px; }
+    .msg { margin:10px 0; white-space: pre-wrap; }
+    .meta { color:#777; font-size:12px; margin-top:8px; }
+    .src { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:12px; border-top:1px solid #f0f0f0; padding-top:8px; margin-top:8px; }
+    .back { text-decoration:none; font-size:14px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="./index.html">← Back</a>
+    <h1>RoofVault Chat</h1>
+    <div class="sub">Ask questions grounded in your blob-backed Search index. Answers cite sources.</div>
+
+    <div class="row">
+      <span class="pill">Endpoint: /api/rvchat</span>
+      <span class="pill">Model: AOAI (<code>AOAI_DEPLOYMENT</code>)</span>
+      <span class="pill">Search: Azure AI Search (<code>SEARCH_INDEX</code>)</span>
+    </div>
+
+    <div>
+      <label for="q"><strong>Your question</strong></label>
+      <textarea id="q" placeholder="Ask a roofing question..."></textarea>
+      <div class="row">
+        <button id="ask">Ask</button>
+        <button id="bossQ">Ask Boss’s Specific Question</button>
+        <span id="status" class="meta"></span>
+      </div>
+    </div>
+
+    <div id="out" class="box" style="display:none;">
+      <div class="msg" id="answer"></div>
+      <div class="src" id="sources"></div>
+    </div>
+  </div>
+
+  <script src="./rvchat.js"></script>
+</body>
+</html>

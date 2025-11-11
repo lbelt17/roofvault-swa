@@ -1,7 +1,11 @@
 ﻿{
-  "name": "roofvault-swa-api",
-  "private": true,
+  "name": "roofvault-api",
   "version": "1.0.0",
-  "description": "API for RoofVault SWA",
-  "license": "MIT"
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "@azure/openai": "^2.0.0",
+    "@azure/search-documents": "^12.0.0",
+    "node-fetch": "^3.3.2"
+  }
 }
