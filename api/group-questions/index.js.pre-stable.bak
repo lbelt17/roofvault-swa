@@ -1,0 +1,189 @@
+﻿module.exports = async function (context, req) {
+  // --- Guards for runtime ---
+  if (!(global && global.fetch)) {
+    context.res = { status: 500, body: { error: "global.fetch not available in Functions runtime" } };
+    return;
+  }
+  const fetch = global.fetch;
+
+  // --- ENV ---
+  const rawSearchEndpoint = process.env.SEARCH_ENDPOINT || "";
+  const SEARCH_ENDPOINT   = rawSearchEndpoint.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+  const SEARCH_API_KEY    = process.env.SEARCH_API_KEY || "";
+  const SEARCH_INDEX      = process.env.SEARCH_INDEX || "azureblob-index";
+
+  const OPENAI_ENDPOINT   = (process.env.AZURE_OPENAI_ENDPOINT || process.env.OPENAI_ENDPOINT || "").replace(/\/+$/,"");
+  const OPENAI_API_KEY    = (process.env.AZURE_OPENAI_API_KEY || process.env.OPENAI_API_KEY || "");
+  const OPENAI_DEPLOYMENT = (process.env.AZURE_OPENAI_DEPLOYMENT || process.env.OPENAI_DEPLOYMENT || process.env.DEFAULT_MODEL || "roofvault-turbo");
+  const OPENAI_API_VERSION= process.env.OPENAI_API_VERSION || "2024-06-01"; // chat/completions stable
+
+  // --- Helpers ---
+  function send(code, obj) {
+    context.res = { status: code, headers: { "Content-Type":"application/json" }, body: obj };
+  }
+
+  // Parse body (handle both JSON and already-parsed)
+  let body = {};
+  try {
+    body = (req.body && typeof req.body === "object") ? req.body : JSON.parse(req.rawBody || req.body || "{}");
+  } catch { body = {}; }
+
+  const { objectives, books, filterField = "metadata_storage_name", countPerBook = 2, topK = 5 } = body || {};
+
+  if (!Array.isArray(objectives) || objectives.length === 0) return send(400, { error: "Missing 'objectives'[]" });
+  if (!Array.isArray(books) || books.length === 0)        return send(400, { error: "Missing 'books'[]" });
+  if (!SEARCH_ENDPOINT || !SEARCH_API_KEY || !SEARCH_INDEX) return send(500, { error: "Search env not configured" });
+  if (!OPENAI_ENDPOINT || !OPENAI_API_KEY || !OPENAI_DEPLOYMENT) return send(500, { error: "OpenAI env not configured" });
+
+  async function fetchSourceForBook(bookName) {
+    const safe = String(bookName).replace(/'/g,"''");
+    const url  = `https://${SEARCH_ENDPOINT}/indexes/${encodeURIComponent(SEARCH_INDEX)}/docs/search?api-version=2023-11-01`;
+    const payload = {
+      count: false,
+      search: "*",
+      filter: `${filterField} eq '${safe}'`,
+      select: "id,metadata_storage_name,metadata_storage_path,content",
+      top: topK,
+      queryType: "simple"
+    };
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type":"application/json", "api-key": SEARCH_API_KEY },
+      body: JSON.stringify(payload)
+    });
+    const t = await r.text();
+    if (!r.ok) throw new Error(`SEARCH_HTTP_${r.status}: ${t.slice(0,1500)}`);
+    let j = {};
+    try { j = JSON.parse(t); } catch { throw new Error("Search non-JSON"); }
+    const docs = Array.isArray(j.value) ? j.value : [];
+    const combined = docs.map(d => String(d.content || "")).join("\n\n---\n\n").slice(0, 120000);
+    return { docs, combined };
+  }
+
+  async function genAndGroup(bookName, combinedText) {
+    const schema = {
+      type: "object",
+      properties: {
+        groups: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              objectiveId:   { type:"string" },
+              objectiveTitle:{ type:"string" },
+              items: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    id:        { type:"string" },
+                    type:      { const:"mcq" },
+                    question:  { type:"string" },
+                    options: {
+                      type:"array",
+                      minItems:4, maxItems:4,
+                      items: {
+                        type:"object",
+                        properties: { id:{type:"string"}, text:{type:"string"} },
+                        required: ["id","text"],
+                        additionalProperties:false
+                      }
+                    },
+                    answer:    { type:"string" },
+                    explanation:{ type:"string" },
+                    cite:      { type:"string" }
+                  },
+                  required: ["id","type","question","options","answer","explanation","cite"],
+                  additionalProperties:false
+                }
+              }
+            },
+            required: ["objectiveId","objectiveTitle","items"],
+            additionalProperties:false
+          }
+        }
+      },
+      required: ["groups"],
+      additionalProperties: false
+    };
+
+    const sys = [
+      "You are a meticulous exam-item writer and classifier for roofing publications.",
+      "Return STRICT JSON only that matches the provided schema.",
+      "No prose or markdown — JSON only."
+    ].join("\n");
+
+    const objLines = (objectives || []).map(o => `- ${o.id}: ${o.title}`).join("\n");
+
+    const user = [
+      `SOURCE: ${bookName}`,
+      "",
+      `OBJECTIVES (choose exactly one objective per question):`,
+      objLines,
+      "",
+      `TASK:`,
+      `1) From the SOURCE EXCERPT below, create ${countPerBook} high-quality MCQs (A–D) with one correct answer.`,
+      `2) For EACH MCQ, include a 1–2 sentence 'explanation' justifying the correct answer.`,
+      `3) Immediately GROUP the new MCQs under the most relevant objective (by id and title).`,
+      `4) Use "${bookName}" as the cite for each MCQ.`,
+      "",
+      `IMPORTANT:`,
+      `- Only use information in the SOURCE EXCERPT (no outside knowledge).`,
+      `- If the excerpt is noisy (OCR), do your best to craft accurate, directly supported items.`,
+      "",
+      `RETURN: a JSON object with a 'groups' array. Each element has { objectiveId, objectiveTitle, items:[...MCQs...] }.`,
+      "",
+      "SOURCE EXCERPT (verbatim, may include OCR noise):",
+      String(combinedText || "").slice(0, 120000)
+    ].join("\n");
+
+    const url = `${OPENAI_ENDPOINT}/openai/deployments/${encodeURIComponent(OPENAI_DEPLOYMENT)}/chat/completions?api-version=${encodeURIComponent(OPENAI_API_VERSION)}`;
+    const payload = {
+      temperature: 0.2,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: sys },
+        { role: "user",   content: user }
+      ]
+    };
+
+    const headers = { "Content-Type":"application/json", "api-key": OPENAI_API_KEY };
+    const r = await fetch(url, { method:"POST", headers, body: JSON.stringify(payload) });
+    const t = await r.text();
+    if (!r.ok) throw new Error(`OpenAI HTTP ${r.status}: ${t.slice(0,1500)}`);
+    let j = {};
+    try { j = JSON.parse(t); } catch { throw new Error("OpenAI non-JSON"); }
+
+    const content = j?.choices?.[0]?.message?.content || "";
+    if (!content) throw new Error("OpenAI: missing content");
+    let parsed = {};
+    try { parsed = JSON.parse(content); } catch { throw new Error("OpenAI content not JSON"); }
+    const groups = Array.isArray(parsed.groups) ? parsed.groups : [];
+
+    // ensure cite
+    for (const g of groups) for (const it of (g.items||[])) if (!it.cite) it.cite = bookName;
+    return groups;
+  }
+
+  try {
+    const agg = new Map(); // objectiveId -> {objectiveId, objectiveTitle, items:[]}
+    for (const book of books) {
+      const { combined } = await fetchSourceForBook(book);
+      if (!combined || combined.trim().length === 0) continue;
+      const groups = await genAndGroup(book, combined);
+      for (const g of groups) {
+        const key = g.objectiveId || g.objectiveTitle || "UNMAPPED";
+        if (!agg.has(key)) agg.set(key, { objectiveId: g.objectiveId || key, objectiveTitle: g.objectiveTitle || key, items: [] });
+        agg.get(key).items.push(...(g.items||[]));
+      }
+    }
+    const out = Array.from(agg.values()).map(g => ({
+      objectiveId: g.objectiveId,
+      objectiveTitle: g.objectiveTitle,
+      items: g.items
+    }));
+    return send(200, { ok: true, groups: out, _diag: { booksCount: books.length, objectivesCount: objectives.length } });
+  } catch (e) {
+    return send(500, { error: String(e && e.message || e) });
+  }
+};

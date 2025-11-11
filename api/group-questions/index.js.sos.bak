@@ -1,4 +1,13 @@
-﻿module.exports = async function (context, req) {
+﻿if (!global.fetch) {
+  throw new Error("❌ global.fetch missing in Azure runtime");
+}
+
+process.on("unhandledRejection", (err) => {
+  console.error("❌ Unhandled rejection:", err?.message || err);
+});
+
+console.log("✅ group-questions handler loaded");
+module.exports = async function (context, req) {
   // --- Guards for runtime ---
   if (!(global && global.fetch)) {
     context.res = { status: 500, body: { error: "global.fetch not available in Functions runtime" } };
@@ -421,5 +430,6 @@ $m.Value + @"
 
   return allGroups;
 }
+
 
 
