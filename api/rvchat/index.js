@@ -1,5 +1,6 @@
-﻿const { OpenAIClient, AzureKeyCredential: AOAICred } = require("@azure/openai");
-const { SearchClient, AzureKeyCredential: SearchCred } = require("@azure/search-documents");
+﻿const { OpenAIClient } = require("@azure/openai");
+const { SearchClient } = require("@azure/search-documents");
+const { AzureKeyCredential } = require("@azure/core-auth");
 
 // ENV VARS
 const {
@@ -53,7 +54,6 @@ async function searchTopN(context, client, query, topN = 6) {
   let hits = [];
 
   try {
-    // Prefer async iterator shape
     if (resp && typeof resp[Symbol.asyncIterator] === "function") {
       for await (const item of resp) {
         hits.push(item);
@@ -66,12 +66,10 @@ async function searchTopN(context, client, query, topN = 6) {
   }
 
   try {
-    // Fallback: byPage() shape
     if (resp && typeof resp.byPage === "function") {
       const pageIter = resp.byPage({ maxPageSize: topN });
       const first = await pageIter.next();
       const pageVal = first?.value;
-      // SDKs differ: sometimes page.results, sometimes page.value
       const results = (pageVal?.results || pageVal?.value || []);
       return Array.isArray(results) ? results.slice(0, topN) : [];
     }
@@ -79,7 +77,6 @@ async function searchTopN(context, client, query, topN = 6) {
     context.log("[rvchat] paged search failed:", String(e));
   }
 
-  // Last resort: return empty
   return [];
 }
 
@@ -106,13 +103,12 @@ module.exports = async function (context, req) {
     }
 
     // Search
-    const searchClient = new SearchClient(SEARCH_ENDPOINT, SEARCH_INDEX, new SearchCred(SEARCH_KEY));
+    const searchClient = new SearchClient(SEARCH_ENDPOINT, SEARCH_INDEX, new AzureKeyCredential(SEARCH_KEY));
     const rawHits = await searchTopN(context, searchClient, question, 6);
 
-    // Normalize docs across SDK shapes
+    // Normalize docs
     const snippets = [];
     for (const h of rawHits) {
-      // v12 usually returns { document, score, ... }
       const doc = h?.document ?? h;
       const text = (doc?.content ?? "").toString().slice(0, 1200);
       const src = doc?.source || doc?.file || doc?.book || "unknown";
@@ -138,7 +134,7 @@ Sources:
 ${sourcesBlock || "(no sources found)"}`;
 
     // AOAI chat
-    const aoai = new OpenAIClient(AOAI_ENDPOINT, new AOAICred(AOAI_KEY));
+    const aoai = new OpenAIClient(AOAI_ENDPOINT, new AzureKeyCredential(AOAI_KEY));
     const completion = await aoai.getChatCompletions(AOAI_DEPLOYMENT, [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt }
