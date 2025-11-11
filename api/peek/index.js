@@ -1,11 +1,9 @@
 ﻿/**
  * /api/peek
- * Quick index inspector:
- *   - GET /api/peek            -> list 20 most recently indexed docs
- *   - GET /api/peek?q=membrane -> search by keyword in content
- *   - GET /api/peek?top=5      -> control number of rows
- *
- * Returns: { ok, count, items:[{name, path, lastModified}] }
+ * Inspect your Azure Search index with fields that exist in your schema.
+ *   - GET /api/peek             -> list up to 20 docs (unordered)
+ *   - GET /api/peek?q=membrane  -> simple content search
+ *   - GET /api/peek?top=5       -> control rows (max 50)
  */
 const { SEARCH_ENDPOINT, SEARCH_KEY, SEARCH_INDEX } = process.env;
 
@@ -35,17 +33,14 @@ module.exports = async function (context, req) {
     const base = SEARCH_ENDPOINT.replace(/\/+$/, "");
     const url = `${base}/indexes('${encodeURIComponent(SEARCH_INDEX)}')/docs/search?api-version=2023-11-01`;
 
-    // Use simple query on content; order by last modified when no q provided
     const body = {
       search: q || "*",
       top,
       queryType: "simple",
-      searchFields: "content", // only content is reliably searchable
-      select: "metadata_storage_name,metadata_storage_path,metadata_storage_last_modified,id"
+      // your index exposes these fields:
+      select: "metadata_storage_name,metadata_storage_path,id,content",
+      searchFields: "content"
     };
-    if (!q) {
-      body.orderby = "metadata_storage_last_modified desc";
-    }
 
     const r = await fetch(url, {
       method: "POST",
@@ -62,8 +57,9 @@ module.exports = async function (context, req) {
     const items = (json?.value || []).map(v => ({
       name: v?.metadata_storage_name || "",
       path: v?.metadata_storage_path || "",
-      lastModified: v?.metadata_storage_last_modified || null,
-      id: v?.id || null
+      id: v?.id || "",
+      // include a tiny preview so we can sanity-check hits
+      preview: (v?.content || "").toString().slice(0, 200)
     }));
 
     context.res = cors({ ok:true, count: items.length, items });
