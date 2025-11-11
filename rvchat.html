@@ -22,6 +22,14 @@
   </style>
 </head>
 <body>
+<div class="wrap">
+  <div class="rv-header" style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+    <div class="rv-logo" style="width:36px;height:36px;border-radius:10px;background:#111;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">RV</div>
+    <div class="rv-titles" style="line-height:1.15">
+      <div style="font-size:18px;font-weight:700">RoofVault AI — Technical Reference Summary</div>
+      <div style="font-size:12px;color:#666">Grounded in NRCA / IIBEC manuals from your RoofDocs index</div>
+    </div>
+  </div>
   <div class="wrap">
     <a class="back" href="./index.html">← Back</a>
     <h1>RoofVault Chat</h1>
@@ -38,7 +46,7 @@
       <textarea id="q" placeholder="Ask a roofing question..."></textarea>
       <div class="row">
         <button id="ask">Ask</button>
-        <button id="bossQ">Ask Boss’s Specific Question</button>
+        
         <span id="status" class="meta"></span>
       </div>
     </div>
@@ -52,3 +60,4 @@
   <script src="./rvchat.js"></script>
 </body>
 </html>
+

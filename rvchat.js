@@ -2,18 +2,14 @@
   const $ = (sel) => document.querySelector(sel);
   const q = $("#q");
   const ask = $("#ask");
-  const bossQ = $("#bossQ");
   const out = $("#out");
   const ans = $("#answer");
   const src = $("#sources");
   const status = $("#status");
 
-  const BOSS_QUESTION = "Is there a standard detail for tying a proposed low slope Modified Bitumen roof (nailable deck) into a steep slope asphalt Shingle roof (nailable deck) without any vertical component/segment in the junction?";
-
   function setBusy(b) {
     ask.disabled = b;
-    bossQ.disabled = b;
-    status.textContent = b ? "Working..." : "";
+    status.textContent = b ? "Working…" : "";
   }
 
   async function callRvChat(question) {
@@ -63,9 +59,6 @@
     callRvChat(question);
   });
 
-  bossQ.addEventListener("click", () => {
-    q.value = BOSS_QUESTION;
-    callRvChat(BOSS_QUESTION);
   });
 
   // Allow Ctrl+Enter to submit
@@ -75,3 +68,4 @@
     }
   });
 })();
+
