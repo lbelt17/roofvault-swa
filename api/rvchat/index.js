@@ -2,8 +2,9 @@
  * RoofVault /api/rvchat — REST-only
  * - Azure AI Search (REST)
  * - Azure OpenAI (REST)
- * - Exact phrasing if "existing" is present
- * - Strong ranking for MOD/SH + 2023/2021 manuals, and hard-prefer those when present
+ * - Exact phrasing when the question contains "existing"
+ * - Strong ranking for MOD/SH + 2023/2021 manuals
+ * - Clear JSON errors with stack
  */
 
 const {
@@ -45,7 +46,7 @@ function score(d) {
   const name = (d.name || "").toLowerCase();
   const path = (d.path || "").toLowerCase();
 
-  // Keyword hits
+  // Keyword hits in content
   const RX = [
     /\bmod\s?[- ]?[a-z0-9]{1,3}\b/gi,
     /\bsh\s?[- ]?[a-z0-9]{1,3}\b/gi,
@@ -61,29 +62,6 @@ function score(d) {
   for (const rx of RX) { const m = text.match(rx); if (m) s += m.length * 2; }
 
   // Filename/path boosts (prefer your new manuals)
-  if (name.includes("mod") || name.includes("-mod-")) s += 12;
-  if (name.includes("sh")  || name.includes("-sh-"))  s += 12;
-  if (name.includes("membrane") || name.includes("2023")) s += 12;
-  if (name.includes("steep-slope") || name.includes("2021")) s += 12;
-
-  // Generic boosts
-  if (name.includes("nrca")) s += 6;
-  if (name.includes("manual")) s += 4;
-  if (name.includes("detail") || name.includes("details")) s += 4;
-  if (path.includes("roofdocs")) s += 2;
-
-  // Penalize older editions so they don't outrank new ones
-  if (name.includes("1989")) s -= 10;
-  if (name.includes("1996")) s -= 9;
-  if (name.includes("2012")) s -= 6;
-  if (name.includes("2013")) s -= 6;
-  if (name.includes("2017")) s -= 3;
-
-  // Small bonus for any 2020+ year mentions
-  if (/(202[0-9])/.test(name)) s += 2;
-
-  return s;
-}  // Filename/path boosts (prefer your new manuals)
   if (name.includes("mod") || name.includes("-mod-")) s += 10;
   if (name.includes("sh")  || name.includes("-sh-"))  s += 10;
   if (name.includes("membrane") || name.includes("2023")) s += 8;
@@ -97,14 +75,14 @@ function score(d) {
   return s;
 }
 
-async function searchDocs(query, topN = 10) {
+async function searchDocs(query, topN = 8) {
   const enriched = enrichQuery(query);
   const base = SEARCH_ENDPOINT.replace(/\/+$/, "");
   const url = `${base}/indexes('${encodeURIComponent(SEARCH_INDEX)}')/docs/search?api-version=2023-11-01`;
 
   const body = {
     search: enriched,
-    top: 60, // wider catch
+    top: 24,
     searchMode: "any",
     queryType: "simple",
     searchFields: "content",
@@ -130,38 +108,11 @@ async function searchDocs(query, topN = 10) {
     path: v?.metadata_storage_path || ""
   })).filter(d => d.content && d.content.trim());
 
-  // Rank everything
   const ranked = raw.map(d => ({ ...d, __score: score(d) }))
                     .sort((a, b) => b.__score - a.__score);
 
-  // Priority selectors
-  const isMem2023 = (n) => /membrane/i.test(n) && /2023/.test(n);
-  const isSteep2021 = (n) => /steep[-\s]?slope/i.test(n) && /2021/.test(n);
-  const hasMOD = (n) => /\bmod\b|\-mod\-|mod\-details/i.test(n);
-  const hasSH  = (n) => /\bsh\b|\-sh\-|sh\-details/i.test(n);
-
-  const pri = [];
-  for (const d of ranked) {
-    const n = (d.name || "").toLowerCase();
-    if (isMem2023(n) && !pri.some(x => isMem2023((x.name||"").toLowerCase()))) pri.push(d);
-    if (isSteep2021(n) && !pri.some(x => isSteep2021((x.name||"").toLowerCase()))) pri.push(d);
-  }
-  // If still missing either family, grab first file that looks like MOD or SH
-  if (!pri.some(d => hasMOD((d.name||"").toLowerCase()))) {
-    const m = ranked.find(d => hasMOD((d.name||"").toLowerCase()));
-    if (m) pri.push(m);
-  }
-  if (!pri.some(d => hasSH((d.name||"").toLowerCase()))) {
-    const s = ranked.find(d => hasSH((d.name||"").toLowerCase()));
-    if (s) pri.push(s);
-  }
-
-  // Merge: priority first, then the rest (de-dup)
-  const seen = new Set(pri.map(d => d.path || d.name));
-  const tail = ranked.filter(d => !seen.has(d.path || d.name));
-  const merged = pri.concat(tail);
-
-  return merged.slice(0, topN).map((d, i) => ({
+  const best = ranked.some(d => d.__score > 0) ? ranked : raw;
+  return best.slice(0, topN).map((d, i) => ({
     id: i + 1,
     text: d.content.slice(0, 1600),
     source: d.name || d.path || "unknown"
@@ -219,23 +170,15 @@ module.exports = async function (context, req) {
       "Keep output neat (plain text, short bullets). " +
       "Cite sources inline using [#] matching the list below.";
 
-    const priorityNames = (snippets || [])
-  .map(s => s.source || "")
-  .filter(n => /membrane|2023|steep[-\s]?slope|2021|mod[- ]?details|sh[- ]?details/i.test(n))
-  .slice(0, 4);
-
-const userPrompt = `Question: ${question}
-
-Priority sources (by filename):
-${(priorityNames.length ? priorityNames.map(n => "- " + n).join("\n") : "(none)")}
+    const userPrompt = `Question: ${question}
 
 Sources:
-${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n") || "(no sources found)"}`;
+${sourcesBlock || "(no sources found)"}`;
 
     // Generate answer
     let answer = await aoaiChat(systemPrompt, userPrompt);
 
-    // Cleanup
+    // Light cleanup
     answer = answer
       .replace(/#{1,6}\s*/g, "")
       .replace(/\*\*(.*?)\*\*/g, "$1")
@@ -254,4 +197,3 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
     context.res = cors({ ok:false, error:String(e?.message || e), stack: String(e?.stack || "") }, 500);
   }
 };
-
