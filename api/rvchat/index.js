@@ -2,9 +2,8 @@
  * RoofVault /api/rvchat — REST-only
  * - Azure AI Search (REST)
  * - Azure OpenAI (REST)
- * - Exact phrasing when the question contains "existing"
- * - Strong ranking for MOD/SH + 2023/2021 manuals
- * - Clear JSON errors with stack
+ * - Exact phrasing if "existing" is present
+ * - Strong ranking for MOD/SH + 2023/2021 manuals, and hard-prefer those when present
  */
 
 const {
@@ -82,7 +81,7 @@ async function searchDocs(query, topN = 8) {
 
   const body = {
     search: enriched,
-    top: 24,
+    top: 48, // wider catch
     searchMode: "any",
     queryType: "simple",
     searchFields: "content",
@@ -108,11 +107,32 @@ async function searchDocs(query, topN = 8) {
     path: v?.metadata_storage_path || ""
   })).filter(d => d.content && d.content.trim());
 
+  // Rank everything
   const ranked = raw.map(d => ({ ...d, __score: score(d) }))
                     .sort((a, b) => b.__score - a.__score);
 
-  const best = ranked.some(d => d.__score > 0) ? ranked : raw;
-  return best.slice(0, topN).map((d, i) => ({
+  // Priority selectors: ensure these show up if present
+  const isMem2023 = (n) => /membrane/i.test(n) && /2023/.test(n);
+  const isSteep2021 = (n) => /steep[-\s]?slope/i.test(n) && /2021/.test(n);
+  const isModBundle = (n) => /mod-?details/i.test(n);
+  const isShBundle  = (n) => /\bsh-?details/i.test(n);
+
+  const pri = [];
+  for (const d of ranked) {
+    const n = (d.name || "").toLowerCase();
+    if (isMem2023(n) && !pri.some(x => isMem2023((x.name||"").toLowerCase()))) pri.push(d);
+    if (isSteep2021(n) && !pri.some(x => isSteep2021((x.name||"").toLowerCase()))) pri.push(d);
+    if (isModBundle(n) && !pri.some(x => isModBundle((x.name||"").toLowerCase()))) pri.push(d);
+    if (isShBundle(n)  && !pri.some(x => isShBundle((x.name||"").toLowerCase())))  pri.push(d);
+    if (pri.length >= 4) break;
+  }
+
+  // Merge: priority first, then the rest (without duplicates)
+  const seen = new Set(pri.map(d => d.path || d.name));
+  const tail = ranked.filter(d => !seen.has(d.path || d.name));
+  const merged = pri.concat(tail);
+
+  return merged.slice(0, topN).map((d, i) => ({
     id: i + 1,
     text: d.content.slice(0, 1600),
     source: d.name || d.path || "unknown"
@@ -178,7 +198,7 @@ ${sourcesBlock || "(no sources found)"}`;
     // Generate answer
     let answer = await aoaiChat(systemPrompt, userPrompt);
 
-    // Light cleanup
+    // Cleanup
     answer = answer
       .replace(/#{1,6}\s*/g, "")
       .replace(/\*\*(.*?)\*\*/g, "$1")
