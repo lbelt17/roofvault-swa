@@ -1,19 +1,16 @@
 ﻿/**
- * REST-only rvchat: no SDK imports. Works on Node 18+ (global fetch).
- * Uses Azure AI Search REST + Azure OpenAI REST.
+ * RoofVault /api/rvchat — REST-only (no SDK imports)
+ * - Azure AI Search via REST
+ * - Azure OpenAI via REST
+ * - Query enrichment + keyword re-ranking (MOD/SH/transition terms)
+ * Requires Node 18+ (global fetch available in Azure Functions v4 on SWA)
  */
 
-// ENV
 const {
-  AOAI_ENDPOINT,
-  AOAI_KEY,
-  AOAI_DEPLOYMENT,
-  SEARCH_ENDPOINT,
-  SEARCH_KEY,
-  SEARCH_INDEX
+  AOAI_ENDPOINT, AOAI_KEY, AOAI_DEPLOYMENT,
+  SEARCH_ENDPOINT, SEARCH_KEY, SEARCH_INDEX
 } = process.env;
 
-// CORS helper
 function cors(body, status = 200) {
   return {
     status,
@@ -34,19 +31,22 @@ function validateEnv() {
   return { missing, seen };
 }
 
-// --- Azure Search (REST) ---
-async function searchDocs(query, topN = 8) {
-  // Expand query with NRCA terms
-  const enriched = `${query} (MOD K OR MOD L OR SH L OR SH M OR roof-to-roof transition OR slope change OR tie-in OR transition OR flashing OR modified bitumen OR asphalt shingle)`;
+function enrichQuery(q) {
+  const base = (q || "").trim();
+  const boost = "(MOD K OR MOD L OR SH L OR SH M OR roof-to-roof transition OR slope change OR tie-in OR transition OR flashing OR modified bitumen OR asphalt shingle)";
+  return base ? `${base} ${boost}` : boost;
+}
 
+async function searchDocs(query, topN = 8) {
+  const enriched = enrichQuery(query);
   const base = SEARCH_ENDPOINT.replace(/\/+$/, "");
   const url = `${base}/indexes('${encodeURIComponent(SEARCH_INDEX)}')/docs/search?api-version=2023-11-01`;
 
-  // Pull a wider net first
   const body = {
-    search: enriched || "*",
-    top: 24,
-    searchFields: "content",
+    search: enriched,
+    top: 24,                                // pull wider net
+    searchMode: "any",
+    searchFields: "content",                // hit OCR text
     queryType: "simple",
     select: "content,metadata_storage_name,metadata_storage_path,id"
   };
@@ -64,15 +64,15 @@ async function searchDocs(query, topN = 8) {
 
   const arr = Array.isArray(json.value) ? json.value : [];
   const raw = arr.map(v => ({
-    content: (v.content ?? "").toString(),
-    source: v.metadata_storage_name || v.metadata_storage_path || "unknown",
-    path: v.metadata_storage_path || ""
+    content: (v?.content ?? "").toString(),
+    name: v?.metadata_storage_name || "",
+    path: v?.metadata_storage_path || ""
   })).filter(d => d.content && d.content.trim());
 
-  // Re-rank by MOD/SH and transition semantics
+  // Keyword re-ranking (prefer explicit MOD/SH tokens and NRCA/manual filenames)
   const RX = [
-    /\bMOD\s?[A-Z0-9-]{1,4}\b/gi,     // e.g., MOD K-1
-    /\bSH\s?[A-Z0-9-]{1,4}\b/gi,      // e.g., SH L-2
+    /\bMOD\s?[A-Z0-9-]{1,4}\b/gi,  // MOD K-1, etc.
+    /\bSH\s?[A-Z0-9-]{1,4}\b/gi,
     /roof[-\s]?to[-\s]?roof/gi,
     /slope change/gi,
     /tie[-\s]?in/gi,
@@ -82,47 +82,34 @@ async function searchDocs(query, topN = 8) {
     /asphalt shingle/gi
   ];
 
-  function scoreDoc(d) {
+  function score(d) {
     let s = 0;
     for (const rx of RX) {
-      const matches = d.content.match(rx);
-      if (matches) s += matches.length * 2;
+      const m = d.content.match(rx);
+      if (m) s += m.length * 2;
     }
-    // Prefer NRCA manuals by filename
-    const name = (d.source || "").toLowerCase();
-    if (name.includes("nrca")) s += 6;
-    if (name.includes("manual")) s += 4;
-    if (name.includes("construction") || name.includes("detail")) s += 3;
-    // Slight bonus if path points to your roofdocs container
+    const n = d.name.toLowerCase();
+    if (n.includes("nrca")) s += 6;
+    if (n.includes("manual")) s += 4;
+    if (n.includes("construction") || n.includes("detail")) s += 3;
     if ((d.path || "").toLowerCase().includes("roofdocs")) s += 2;
     return s;
   }
 
-  const ranked = raw
-    .map(d => ({ ...d, __score: scoreDoc(d) }))
-    .sort((a, b) => b.__score - a.__score);
+  const ranked = raw.map(d => ({ ...d, __score: score(d) }))
+                    .sort((a, b) => b.__score - a.__score);
 
-  const best = ranked.some(d => d.__score > 0) ? ranked : raw; // fallback if all zeros
-
-  // Return topN with trimmed content
+  const best = ranked.some(d => d.__score > 0) ? ranked : raw;
   return best.slice(0, topN).map((d, i) => ({
-    content: d.content.slice(0, 1600),
-    source: d.source
+    id: i + 1,
+    text: d.content.slice(0, 1600),
+    source: d.name || d.path || "unknown"
   }));
 }
-  const arr = Array.isArray(json.value) ? json.value : [];
-  // Normalize
-  return arr.map(v => ({
-    content: (v.content ?? "").toString(),
-    source: v.metadata_storage_name || v.metadata_storage_path || "unknown"
-  })).filter(d => d.content && d.content.trim());
-}
 
-// --- Azure OpenAI (REST) ---
 async function aoaiChat(systemPrompt, userPrompt) {
   const base = AOAI_ENDPOINT.replace(/\/+$/, "");
   const url = `${base}/openai/deployments/${encodeURIComponent(AOAI_DEPLOYMENT)}/chat/completions?api-version=2024-06-01`;
-
   const payload = {
     temperature: 0.2,
     max_tokens: 900,
@@ -157,15 +144,8 @@ module.exports = async function (context, req) {
     const question = body.question || (messages.length ? (messages[messages.length - 1]?.content || "") : "");
     if (!question) { context.res = cors({ ok:false, error:"No question provided." }, 400); return; }
 
-    // 1) Search your index
-    const docs = await searchDocs(question, 8);
-
-    const snippets = docs.slice(0, 8).map((d, i) => ({
-      id: i + 1,
-      text: d.content.slice(0, 1200),
-      source: d.source
-    }));
-
+    // 1) Search
+    const snippets = await searchDocs(question, 8);
     const sourcesBlock = snippets.map(s => `[[${s.id}]] ${s.source}\n${s.text}`).join("\n\n");
 
     const systemPrompt =
@@ -179,7 +159,7 @@ module.exports = async function (context, req) {
 Sources:
 ${sourcesBlock || "(no sources found)"}`;
 
-    // 2) Get answer
+    // 2) Answer
     const answer = await aoaiChat(systemPrompt, userPrompt);
 
     context.res = cors({
@@ -193,6 +173,3 @@ ${sourcesBlock || "(no sources found)"}`;
     context.res = cors({ ok:false, error:String(e?.message || e) }, 500);
   }
 };
-
-
-
