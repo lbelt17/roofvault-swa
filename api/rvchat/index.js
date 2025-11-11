@@ -1,5 +1,7 @@
-﻿const { SearchClient } = require("@azure/search-documents");
-const { AzureKeyCredential } = require("@azure/core-auth");
+﻿/**
+ * REST-only rvchat: no SDK imports. Works on Node 18+ (global fetch).
+ * Uses Azure AI Search REST + Azure OpenAI REST.
+ */
 
 // ENV
 const {
@@ -32,48 +34,42 @@ function validateEnv() {
   return { missing, seen };
 }
 
-async function searchTopN(context, client, query, topN = 8) {
-  const options = {
+// --- Azure Search (REST) ---
+async function searchDocs(query, topN = 8) {
+  const base = SEARCH_ENDPOINT.replace(/\/+$/, "");
+  const url = `${base}/indexes('${encodeURIComponent(SEARCH_INDEX)}')/docs/search?api-version=2023-11-01`;
+
+  const body = {
+    search: query || "*",
     top: topN,
-    includeTotalCount: false,
-    queryType: "simple",
-    select: ["content","metadata_storage_name","metadata_storage_path","id","@search.score"]
+    select: "content,metadata_storage_name,metadata_storage_path,id,@search.score",
+    queryType: "simple"
   };
 
-  let hits = [];
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "api-key": SEARCH_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
 
-  try {
-    const resp = client.search(query, options);
-    if (resp && typeof resp[Symbol.asyncIterator] === "function") {
-      for await (const item of resp) {
-        hits.push(item?.document ?? item);
-        if (hits.length >= topN) break;
-      }
-      return hits;
-    }
-  } catch (e) {
-    context.log("[rvchat] iterator search failed:", String(e));
+  const json = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    throw new Error(`Search HTTP ${r.status}: ${json?.error?.message || json?.message || "unknown error"}`);
   }
 
-  try {
-    const resp = client.search(query, options);
-    if (resp && typeof resp.byPage === "function") {
-      const iter = resp.byPage({ maxPageSize: topN });
-      const first = await iter.next();
-      const pv = first?.value;
-      const arr = (pv?.results || pv?.value || []);
-      for (const v of arr) hits.push(v?.document ?? v);
-      return hits.slice(0, topN);
-    }
-  } catch (e) {
-    context.log("[rvchat] paged search failed:", String(e));
-  }
-
-  return [];
+  const arr = Array.isArray(json.value) ? json.value : [];
+  // Normalize
+  return arr.map(v => ({
+    content: (v.content ?? "").toString(),
+    source: v.metadata_storage_name || v.metadata_storage_path || "unknown"
+  })).filter(d => d.content && d.content.trim());
 }
 
+// --- Azure OpenAI (REST) ---
 async function aoaiChat(systemPrompt, userPrompt) {
-  const url = `${AOAI_ENDPOINT.replace(/\/+$/, "")}/openai/deployments/${encodeURIComponent(AOAI_DEPLOYMENT)}/chat/completions?api-version=2024-06-01`;
+  const base = AOAI_ENDPOINT.replace(/\/+$/, "");
+  const url = `${base}/openai/deployments/${encodeURIComponent(AOAI_DEPLOYMENT)}/chat/completions?api-version=2024-06-01`;
+
   const payload = {
     temperature: 0.2,
     max_tokens: 900,
@@ -98,37 +94,26 @@ async function aoaiChat(systemPrompt, userPrompt) {
 
 module.exports = async function (context, req) {
   try {
-    if (req.method === "OPTIONS") {
-      context.res = cors({ ok: true });
-      return;
-    }
+    if (req.method === "OPTIONS") { context.res = cors({ ok: true }); return; }
 
     const { missing, seen } = validateEnv();
-    if (missing.length) {
-      context.res = cors({ ok: false, error: "Missing required environment variables.", missing, seen }, 500);
-      return;
-    }
+    if (missing.length) { context.res = cors({ ok:false, error:"Missing required environment variables.", missing, seen }, 500); return; }
 
     const body = req.body || {};
     const messages = Array.isArray(body.messages) ? body.messages : [];
     const question = body.question || (messages.length ? (messages[messages.length - 1]?.content || "") : "");
-    if (!question) {
-      context.res = cors({ ok: false, error: "No question provided." }, 400);
-      return;
-    }
+    if (!question) { context.res = cors({ ok:false, error:"No question provided." }, 400); return; }
 
     // 1) Search your index
-    const sc = new SearchClient(SEARCH_ENDPOINT, SEARCH_INDEX, new AzureKeyCredential(SEARCH_KEY));
-    const docs = await searchTopN(context, sc, question, 8);
+    const docs = await searchDocs(question, 8);
 
-    const snippets = [];
-    for (const d of docs) {
-      const text = (d?.content ?? "").toString().slice(0, 1200);
-      const src = d?.metadata_storage_name || d?.metadata_storage_path || "unknown";
-      if (text.trim()) snippets.push({ text, source: src });
-    }
+    const snippets = docs.slice(0, 8).map((d, i) => ({
+      id: i + 1,
+      text: d.content.slice(0, 1200),
+      source: d.source
+    }));
 
-    const sourcesBlock = snippets.map((s, i) => `[[${i + 1}]] ${s.source}\n${s.text}`).join("\n\n");
+    const sourcesBlock = snippets.map(s => `[[${s.id}]] ${s.source}\n${s.text}`).join("\n\n");
 
     const systemPrompt =
       "You are RoofVault AI, a roofing standards assistant. " +
@@ -141,22 +126,17 @@ module.exports = async function (context, req) {
 Sources:
 ${sourcesBlock || "(no sources found)"}`;
 
-    // 2) Azure OpenAI chat
+    // 2) Get answer
     const answer = await aoaiChat(systemPrompt, userPrompt);
 
     context.res = cors({
       ok: true,
       question,
       answer,
-      sources: snippets.map((s, i) => ({ id: i + 1, source: s.source }))
+      sources: snippets.map(s => ({ id: s.id, source: s.source }))
     });
   } catch (e) {
-    context.log.error("[rvchat] Fatal error:", e);
-    try {
-      context.res = cors({ ok: false, error: String(e?.message || e) }, 500);
-    } catch {
-      // If even setting res fails, let the platform return 500
-      throw e;
-    }
+    context.log.error("[rvchat] Fatal:", e);
+    context.res = cors({ ok:false, error:String(e?.message || e) }, 500);
   }
 };
