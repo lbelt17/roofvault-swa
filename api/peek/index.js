@@ -1,11 +1,4 @@
-﻿/**
- * /api/peek
- * Inspect your Azure Search index with fields that exist in your schema.
- *   - GET /api/peek             -> list up to 20 docs (unordered)
- *   - GET /api/peek?q=membrane  -> simple content search
- *   - GET /api/peek?top=5       -> control rows (max 50)
- */
-const { SEARCH_ENDPOINT, SEARCH_KEY, SEARCH_INDEX } = process.env;
+﻿const { SEARCH_ENDPOINT, SEARCH_KEY, SEARCH_INDEX } = process.env;
 
 function cors(body, status = 200) {
   return {
@@ -37,9 +30,9 @@ module.exports = async function (context, req) {
       search: q || "*",
       top,
       queryType: "simple",
-      // your index exposes these fields:
-      select: "metadata_storage_name,metadata_storage_path,id,content",
-      searchFields: "content"
+      searchFields: "content",
+      // Only fields your index exposes:
+      select: "metadata_storage_name,metadata_storage_path,id,content"
     };
 
     const r = await fetch(url, {
@@ -58,7 +51,6 @@ module.exports = async function (context, req) {
       name: v?.metadata_storage_name || "",
       path: v?.metadata_storage_path || "",
       id: v?.id || "",
-      // include a tiny preview so we can sanity-check hits
       preview: (v?.content || "").toString().slice(0, 200)
     }));
 
