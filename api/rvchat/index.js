@@ -56,9 +56,36 @@ async function searchSnippets(query, topN = 8) {
   });
   let parsed = null; try { parsed = JSON.parse(resp.text); } catch {}
   if (!resp.ok) throw new Error(`Search HTTP ${resp.status}: ${parsed?.error?.message || parsed?.message || resp.text || "unknown"}`);
-  const raw = Array.isArray(parsed?.value) ? parsed.value : [];
+  let raw = Array.isArray(parsed?.value) ? parsed.value : [];
 
-  function yearFromName(name) {
+    // --- Safe narrowing on raw search hits (never throws) ---
+  try {
+    const q = String(query || "");
+    const yearMatch = q.match(/\b(19\d{2}|20\d{2})\b/);
+    const wantYear = yearMatch ? yearMatch[1] : null;
+    const mentionsMembrane = /\bmembrane\b/i.test(q);
+
+    // Prefer explicit year if the question contains one
+    if (wantYear) {
+      const yr = raw.filter(v =>
+        (v?.metadata_storage_name || "").includes(wantYear) ||
+        (v?.metadata_storage_path || "").includes(wantYear)
+      );
+      if (yr.length >= 3) raw = yr;
+    }
+
+    // If question mentions "membrane" and membrane docs exist, drop steep-slope entirely
+    if (mentionsMembrane) {
+      const hasMem = raw.some(v =>
+        /membrane/i.test((v?.metadata_storage_name || "") + (v?.metadata_storage_path || ""))
+      );
+      if (hasMem) {
+        raw = raw.filter(v =>
+          !/steep[-\s]?slope/i.test((v?.metadata_storage_name || "") + (v?.metadata_storage_path || ""))
+        );
+      }
+    }
+  } catch (_) { /* never throw */ }function yearFromName(name) {
     const m = (name || "").match(/\b(19\d{2}|20\d{2})\b/);
     return m ? parseInt(m[1], 10) : null;
   }
@@ -197,6 +224,7 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
     context.res = jsonRes({ ok:false, error:String(e && (e.message || e)), stack:String(e && e.stack || ""), layer:"pipeline" }, 200);
   }
 };
+
 
 
 
