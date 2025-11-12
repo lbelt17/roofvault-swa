@@ -159,7 +159,7 @@ Sources:
 ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n") || "(no sources found)"}`;
 
     // 3) AOAI
-    let answer = await aoaiAnswer(systemPrompt, userPrompt);
+    context.res = jsonRes({ ok:true, layer:"pre-aoai", question, snippetCount: snippets.length, sampleSources: snippets.map(s=>s.source).slice(0,5) }); return;
     answer = answer.replace(/\n{3,}/g, "\n\n").trim();
 
     context.res = jsonRes({
@@ -172,5 +172,6 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
     context.res = jsonRes({ ok:false, error: String(e && (e.message || e)), stack: String(e && e.stack || ""), layer:"pipeline" }, 200);
   }
 };
+
 
 
