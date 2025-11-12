@@ -43,86 +43,59 @@ function postJson(url, headers, bodyObj) {
   });
 }
 
-// Minimal search (no enrichment yet)
+// Higher-quality search
 async function searchSnippets(query, topN = 8) {
-  // 1) High-recall fetch (bring back a wide pool from ALL 312 files)
   const base = (SEARCH_ENDPOINT || "").replace(/\/+$/, "");
   const url = `${base}/indexes('${encodeURIComponent(SEARCH_INDEX)}')/docs/search?api-version=2023-11-01`;
-
   const resp = await postJson(url, { "api-key": SEARCH_KEY }, {
     search: (query || "").trim(),
-    top: 60,                               // wider recall
+    top: 60,
     searchMode: "any",
     queryType: "simple",
     select: "content,metadata_storage_name,metadata_storage_path"
   });
-
   let parsed = null; try { parsed = JSON.parse(resp.text); } catch {}
   if (!resp.ok) throw new Error(`Search HTTP ${resp.status}: ${parsed?.error?.message || parsed?.message || resp.text || "unknown"}`);
-
   const raw = Array.isArray(parsed?.value) ? parsed.value : [];
 
-  // 2) Canonicalize + score
   function yearFromName(name) {
     const m = (name || "").match(/\b(19\d{2}|20\d{2})\b/);
     return m ? parseInt(m[1], 10) : null;
   }
   const wantHistoric = /\b(19\d{2}|200[0-9])\b/i.test(query || "") || /\bhistory|historical|older|archive\b/i.test(query || "");
+
   const items = raw.map((v) => {
     const source = v?.metadata_storage_name || v?.metadata_storage_path || "unknown";
     const text = (v?.content || "").toString();
     const lower = source.toLowerCase();
     let score = 0;
-
-    // Prefer your modern manuals/families
     if (/\bmembrane\b|2023/.test(lower)) score += 12;
     if (/\bsteep[-\s]?slope\b|2021/.test(lower)) score += 10;
     if (/\bmod\b/.test(lower)) score += 6;
     if (/\bsh\b/.test(lower))  score += 6;
-
-    // Recent editions up; very old down (unless you asked)
     const yr = yearFromName(source);
-    if (yr) score += Math.min(yr - 2000, 30);  // gentle recency bump
+    if (yr) score += Math.min(yr - 2000, 30);
     if (!wantHistoric && yr && yr < 2010) score -= 25;
-
-    // Generic boosts
     if (/nrca|iibec|astm|manual|detail/.test(lower)) score += 4;
-
     return { source, text, year: yr, score };
   }).filter(x => x.text && x.text.trim());
 
-  // 3) Sort and de-dupe by file (cap multiple snippets from same file)
   items.sort((a,b) => b.score - a.score);
-  const seen = new Map();  // source -> count
+  const seen = new Map();
   const picked = [];
   for (const it of items) {
     const c = seen.get(it.source) || 0;
-    if (c >= 2) continue;              // at most 2 hits per file
+    if (c >= 2) continue;
     seen.set(it.source, c + 1);
     picked.push(it);
     if (picked.length >= Math.max(6, Math.min(16, topN))) break;
   }
 
-  // 4) Trim text to stay under token budget
   return picked.map((x, i) => ({
     id: i + 1,
     source: x.source,
     text: x.text.slice(0, 1600)
   }));
-}/indexes('${encodeURIComponent(SEARCH_INDEX)}')/docs/search?api-version=2023-11-01`;
-  const resp = await postJson(url, { "api-key": SEARCH_KEY }, {
-    search: (query || "").trim(),
-    top: Math.max(3, Math.min(20, topN)),
-    select: "content,metadata_storage_name,metadata_storage_path"
-  });
-  let parsed = null; try { parsed = JSON.parse(resp.text); } catch {}
-  if (!resp.ok) throw new Error(`Search HTTP ${resp.status}: ${parsed?.error?.message || parsed?.message || resp.text || "unknown"}`);
-  const arr = Array.isArray(parsed?.value) ? parsed.value : [];
-  return arr.map((v, i) => ({
-    id: i + 1,
-    source: v?.metadata_storage_name || v?.metadata_storage_path || "unknown",
-    text: (v?.content || "").toString().slice(0, 1400)
-  })).filter(x => x.text);
 }
 
 async function aoaiAnswer(systemPrompt, userPrompt) {
@@ -142,30 +115,57 @@ async function aoaiAnswer(systemPrompt, userPrompt) {
 }
 
 module.exports = async function (context, req) {
-  if (req.method === "OPTIONS") { context.res = jsonRes({ ok:true }); return; }
-
-  // Env presence check
-  const seen = {
-    SEARCH_ENDPOINT: !!(SEARCH_ENDPOINT && SEARCH_ENDPOINT.trim()),
-    SEARCH_KEY: !!(SEARCH_KEY && SEARCH_KEY.trim()),
-    SEARCH_INDEX: !!(SEARCH_INDEX && SEARCH_INDEX.trim()),
-    AOAI_ENDPOINT: !!(AOAI_ENDPOINT && AOAI_ENDPOINT.trim()),
-    AOAI_KEY: !!(AOAI_KEY && AOAI_KEY.trim()),
-    AOAI_DEPLOYMENT: !!(AOAI_DEPLOYMENT && AOAI_DEPLOYMENT.trim())
-  };
-  if (!Object.values(seen).every(Boolean)) {
-    context.res = jsonRes({ ok:false, error:"Missing environment variables", seen }, 500);
-    return;
-  }
-
-  const body = req.body || {};
-  const msgs = Array.isArray(body.messages) ? body.messages : [];
-  const question = (body.question || (msgs.length ? (msgs[msgs.length-1]?.content || "") : "") || "").trim();
-  if (!question) { context.res = jsonRes({ ok:false, error:"No question provided." }, 400); return; }
-
   try {
+    if (req.method === "OPTIONS") { context.res = jsonRes({ ok:true }); return; }
+
+    // --- DIAG PATH: /api/rvchat?diag=1 ---
+    if ((req.query && (req.query.diag == "1")) || (req.body && req.body.diag == 1)) {
+      const seen = {
+        SEARCH_ENDPOINT: !!(SEARCH_ENDPOINT && SEARCH_ENDPOINT.trim()),
+        SEARCH_KEY: !!(SEARCH_KEY && SEARCH_KEY.trim()),
+        SEARCH_INDEX: !!(SEARCH_INDEX && SEARCH_INDEX.trim()),
+        AOAI_ENDPOINT: !!(AOAI_ENDPOINT && AOAI_ENDPOINT.trim()),
+        AOAI_KEY: !!(AOAI_KEY && AOAI_KEY.trim()),
+        AOAI_DEPLOYMENT: !!(AOAI_DEPLOYMENT && AOAI_DEPLOYMENT.trim())
+      };
+      let names = [], status = null, rawError = null;
+      if (seen.SEARCH_ENDPOINT && seen.SEARCH_KEY && seen.SEARCH_INDEX) {
+        const base = SEARCH_ENDPOINT.replace(/\/+$/, "");
+        const url = `${base}/indexes('${encodeURIComponent(SEARCH_INDEX)}')/docs/search?api-version=2023-11-01`;
+        try {
+          const r = await postJson(url, { "api-key": SEARCH_KEY }, { search: "membrane", top: 5, select: "metadata_storage_name" });
+          status = r.status;
+          const j = JSON.parse(r.text);
+          names = Array.isArray(j?.value) ? j.value.map(v => v?.metadata_storage_name || "unknown") : [];
+          if (!r.ok) rawError = j?.error?.message || j?.message || r.text || null;
+        } catch (e) { rawError = String(e && e.message || e); }
+      }
+      context.res = jsonRes({ ok:true, layer:"diag", node: process.version, seen, searchStatus: status, hitNames: names, rawError });
+      return;
+    }
+    // --- END DIAG ---
+
+    // Env presence check
+    const seen = {
+      SEARCH_ENDPOINT: !!(SEARCH_ENDPOINT && SEARCH_ENDPOINT.trim()),
+      SEARCH_KEY: !!(SEARCH_KEY && SEARCH_KEY.trim()),
+      SEARCH_INDEX: !!(SEARCH_INDEX && SEARCH_INDEX.trim()),
+      AOAI_ENDPOINT: !!(AOAI_ENDPOINT && AOAI_ENDPOINT.trim()),
+      AOAI_KEY: !!(AOAI_KEY && AOAI_KEY.trim()),
+      AOAI_DEPLOYMENT: !!(AOAI_DEPLOYMENT && AOAI_DEPLOYMENT.trim())
+    };
+    if (!Object.values(seen).every(Boolean)) {
+      context.res = jsonRes({ ok:false, error:"Missing environment variables", seen, layer:"env" }, 200);
+      return;
+    }
+
+    const body = req.body || {};
+    const msgs = Array.isArray(body.messages) ? body.messages : [];
+    const question = (body.question || (msgs.length ? (msgs[msgs.length-1]?.content || "") : "") || "").trim();
+    if (!question) { context.res = jsonRes({ ok:false, error:"No question provided.", layer:"input" }, 200); return; }
+
     // 1) Search
-    const snippets = await searchSnippets(question, 6);
+    const snippets = await searchSnippets(question, 8);
 
     // 2) Prompt
     const systemPrompt = "You are RoofVault AI. Answer using ONLY the provided snippets (NRCA, IIBEC, ASTM, manufacturers, or any uploaded docs). Prefer the most recent editions. If support is missing, say so. Keep it concise with short bullets. Cite as [#] matching the snippets list.";
@@ -185,8 +185,7 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
       sources: snippets.map(s => ({ id: s.id, source: s.source }))
     });
   } catch (e) {
-    context.res = jsonRes({ ok:false, error: String(e && (e.message || e)), layer:"pipeline" }, 500);
+    // Always 200 so we can see the actual error
+    context.res = jsonRes({ ok:false, error:String(e && (e.message || e)), stack:String(e && e.stack || ""), layer:"pipeline" }, 200);
   }
 };
-
-
