@@ -101,7 +101,16 @@ async function searchSnippets(query, topN = 8) {
   }
 
   const vals = Array.isArray(pass1?.value) ? pass1.value : [];
-  const groups = new Map();
+    // --- SAFE FALLBACK: return top results directly if present ---
+  if (Array.isArray(vals) && vals.length) {
+    const top = vals.slice(0, Math.max(topN, 8));
+    return top.map((v,i) => ({
+      id: i + 1,
+      source: (v?.metadata_storage_name || "unknown"),
+      text: String(v?.content || "").slice(0, 1400)
+    }));
+  }
+const groups = new Map();
   for (const v of vals) {
     const name = v?.metadata_storage_name || "";
     const path = v?.metadata_storage_path || "";
@@ -239,3 +248,4 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
     context.res = jsonRes({ ok:false, layer:"pipeline", error:String(e && (e.message||e)), stack:String(e && e.stack || "") }, 200);
   }
 };
+
