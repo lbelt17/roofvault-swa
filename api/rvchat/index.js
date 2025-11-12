@@ -293,6 +293,16 @@ async function aoaiAnswer(systemPrompt, userPrompt) {
 }
 
 module.exports = async function (context, req) {
+  // --- TEMP SHORT-CIRCUIT (debug) ---
+  if (req && String(req.query?.diag) === "1") {
+    context.res = {
+      status: 200,
+      headers: { "Content-Type":"application/json","Access-Control-Allow-Origin":"*" },
+      body: JSON.stringify({ ok:true, route:"rvchat", note:"short-circuit", node: process.version, t: new Date().toISOString() })
+    };
+    return;
+  }
+  // --- END TEMP SHORT-CIRCUIT ---
   // --- HARD DIAG GUARD (cannot throw) ---
   try {
     if (req?.method === "GET" && String(req?.query?.diag) === "1") {
@@ -394,6 +404,7 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
     context.res = jsonRes({ ok:false, error:String(e && (e.message || e)), stack:String(e && e.stack || ""), layer:"pipeline" }, 200);
   }
 };
+
 
 
 
