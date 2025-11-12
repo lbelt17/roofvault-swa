@@ -45,8 +45,55 @@ function postJson(url, headers, bodyObj) {
 
 // Minimal search (no enrichment, no fancy ranking)
 async function searchSnippets(query, topN = 6) {
+  function yearFromName(name) {
+    const m = (name || "").match(/\b(19\d{2}|20\d{2})\b/);
+    return m ? parseInt(m[1], 10) : null;
+  }
+  const wantHistoric = /\b(19\d{2}|200[0-9])\b/i.test(query || "") || /\bhistory|historical|older|archive\b/i.test(query || "");
+
   const base = (SEARCH_ENDPOINT || "").replace(/\/+$/, "");
   const url = `${base}/indexes('${encodeURIComponent(SEARCH_INDEX)}')/docs/search?api-version=2023-11-01`;
+
+  const resp = await postJson(url, { "api-key": SEARCH_KEY }, {
+    search: (query || "").trim(),
+    top: Math.max(10, Math.min(50, topN * 8)),   // fetch wider, filter locally
+    select: "content,metadata_storage_name,metadata_storage_path"
+  });
+
+  let parsed = null; try { parsed = JSON.parse(resp.text); } catch {}
+  if (!resp.ok) throw new Error(`Search HTTP ${resp.status}: ${parsed?.error?.message || parsed?.message || resp.text || "unknown"}`);
+
+  const raw = Array.isArray(parsed?.value) ? parsed.value : [];
+  let items = raw.map((v, i) => {
+    const source = v?.metadata_storage_name || v?.metadata_storage_path || "unknown";
+    return {
+      id: i + 1,
+      source,
+      year: yearFromName(source),
+      text: (v?.content || "").toString()
+    };
+  }).filter(x => x.text && x.text.trim());
+
+  // Freshness filter: drop <2010 unless user explicitly asked for historic years
+  if (!wantHistoric) {
+    items = items.filter(x => (x.year === null) || x.year >= 2010);
+  }
+
+  // Sort: newer editions first, then keep order
+  items.sort((a, b) => {
+    const ay = a.year ?? -1, by = b.year ?? -1;
+    return by - ay;
+  });
+
+  // Trim text to keep payload small
+  items = items.slice(0, Math.max(3, Math.min(20, topN))).map((x, idx) => ({
+    id: idx + 1,
+    source: x.source,
+    text: x.text.slice(0, 1400)
+  }));
+
+  return items;
+}/indexes('${encodeURIComponent(SEARCH_INDEX)}')/docs/search?api-version=2023-11-01`;
   const resp = await postJson(url, { "api-key": SEARCH_KEY }, {
     search: (query || "").trim(),
     top: Math.max(3, Math.min(20, topN)),
@@ -125,3 +172,4 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
     context.res = jsonRes({ ok:false, error: String(e && (e.message || e)), layer:"pipeline" }, 500);
   }
 };
+
