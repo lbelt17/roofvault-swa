@@ -37,11 +37,12 @@ function validateEnv() {
 
 function enrichQuery(q) {
   const base = (q || "").trim();
-  // Avoid over-biasing broad asks; no enrichment for very short queries
-  if (!base || base.split(/\s+/).length <= 3) return base;
-  // Keep as-is for now (no corpus-specific boosts)
+  // No enrichment for very short/broad queries
+  if (!base) return "";
+  if (base.split(/\s+/).length <= 3) return base;
+  // Neutral: return as-is (no corpus-specific boosts)
   return base;
-} ${boost}` : boost;
+
 }
 
 function score(d) {
@@ -247,6 +248,8 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
     context.res = cors({ ok:false, error:String(e?.message || e), stack: String(e?.stack || "") }, 500);
   }
 };
+
+
 
 
 
