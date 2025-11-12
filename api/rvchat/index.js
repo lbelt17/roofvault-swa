@@ -58,7 +58,22 @@ async function searchSnippets(query, topN = 8) {
   if (!resp.ok) throw new Error(`Search HTTP ${resp.status}: ${parsed?.error?.message || parsed?.message || resp.text || "unknown"}`);
   let raw = Array.isArray(parsed?.value) ? parsed.value : [];
 
-    // --- Safe narrowing on raw search hits (never throws) ---
+      // --- Org filter: if the question names IIBEC/NRCA/ASTM, keep only those hits (when present) ---
+  try {
+    const q = String(query || "").toLowerCase();
+    let org = null;
+    if (/\biibec\b/.test(q)) org = 'iibec';
+    else if (/\bnrca\b/.test(q)) org = 'nrca';
+    else if (/\bastm\b/.test(q)) org = 'astm';
+
+    if (org) {
+      const matches = raw.filter(v => {
+        const name = ((v?.metadata_storage_name || '') + ' ' + (v?.metadata_storage_path || '')).toLowerCase();
+        return name.includes(org);
+      });
+      if (matches.length >= 1) raw = matches; // only narrow if we found at least one
+    }
+  } catch (_) { /* never throw */ }// --- Safe narrowing on raw search hits (never throws) ---
   try {
     const q = String(query || "");
     const yearMatch = q.match(/\b(19\d{2}|20\d{2})\b/);
@@ -224,6 +239,7 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
     context.res = jsonRes({ ok:false, error:String(e && (e.message || e)), stack:String(e && e.stack || ""), layer:"pipeline" }, 200);
   }
 };
+
 
 
 
