@@ -293,6 +293,25 @@ async function aoaiAnswer(systemPrompt, userPrompt) {
 }
 
 module.exports = async function (context, req) {
+  // --- HARD DIAG GUARD (cannot throw) ---
+  try {
+    if (req?.method === "GET" && String(req?.query?.diag) === "1") {
+      const seen = {
+        SEARCH_ENDPOINT: !!(process.env.SEARCH_ENDPOINT||"").trim(),
+        SEARCH_KEY: !!(process.env.SEARCH_KEY||"").trim(),
+        SEARCH_INDEX: !!(process.env.SEARCH_INDEX||"").trim(),
+        AOAI_ENDPOINT: !!(process.env.AOAI_ENDPOINT||"").trim(),
+        AOAI_KEY: !!(process.env.AOAI_KEY||"").trim(),
+        AOAI_DEPLOYMENT: !!(process.env.AOAI_DEPLOYMENT||"").trim()
+      };
+      context.res = jsonRes({ ok:true, layer:"diag", node:process.version, seen, t:new Date().toISOString() }, 200);
+      return;
+    }
+  } catch(_e) {
+    context.res = jsonRes({ ok:false, layer:"diag", node:process.version, error:String(_e && _e.message || _e) }, 200);
+    return;
+  }
+  // --- END HARD DIAG GUARD ---
   try {
     if (req.method === "OPTIONS") { context.res = jsonRes({ ok:true }); return; }
 
@@ -375,6 +394,7 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
     context.res = jsonRes({ ok:false, error:String(e && (e.message || e)), stack:String(e && e.stack || ""), layer:"pipeline" }, 200);
   }
 };
+
 
 
 
