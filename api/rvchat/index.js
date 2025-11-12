@@ -87,20 +87,7 @@ function score(d) {
   if (/(202[0-9])/.test(name)) s += 2;
 
   return s;
-}  // Filename/path boosts (prefer your new manuals)
-  if (name.includes("mod") || name.includes("-mod-")) s += 10;
-  if (name.includes("sh")  || name.includes("-sh-"))  s += 10;
-  if (name.includes("membrane") || name.includes("2023")) s += 8;
-  if (name.includes("steep-slope") || name.includes("2021")) s += 8;
-
-  if (name.includes("nrca")) s += 6;
-  if (name.includes("manual")) s += 4;
-  if (name.includes("detail") || name.includes("details")) s += 4;
-  if (path.includes("roofdocs")) s += 2;
-
-  return s;
 }
-
 async function searchDocs(query, topN = 10) {
   const enriched = enrichQuery(query);
   const base = SEARCH_ENDPOINT.replace(/\/+$/, "");
@@ -258,6 +245,7 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
     context.res = cors({ ok:false, error:String(e?.message || e), stack: String(e?.stack || "") }, 500);
   }
 };
+
 
 
 
