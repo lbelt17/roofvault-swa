@@ -169,7 +169,8 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
       sources: snippets.map(s => ({ id: s.id, source: s.source }))
     });
   } catch (e) {
-    context.res = jsonRes({ ok:false, error: String(e && (e.message || e)), layer:"pipeline" }, 500);
+    context.res = jsonRes({ ok:false, error: String(e && (e.message || e)), stack: String(e && e.stack || ""), layer:"pipeline" }, 200);
   }
 };
+
 
