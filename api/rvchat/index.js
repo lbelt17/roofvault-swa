@@ -37,10 +37,11 @@ function validateEnv() {
 
 function enrichQuery(q) {
   const base = (q || "").trim();
-  // If boss phrasing includes "existing", do not alter the query
-  if (/\bexisting\b/i.test(base)) return base;
-  const boost = "(MOD K OR MOD L OR SH L OR SH M OR roof-to-roof transition OR slope change OR tie-in OR transition OR flashing OR modified bitumen OR asphalt shingle)";
-  return base ? `${base} ${boost}` : boost;
+  // Avoid over-biasing broad asks; no enrichment for very short queries
+  if (!base || base.split(/\s+/).length <= 3) return base;
+  // Keep as-is for now (no corpus-specific boosts)
+  return base;
+} ${boost}` : boost;
 }
 
 function score(d) {
@@ -201,18 +202,19 @@ module.exports = async function (context, req) {
     const snippets = await searchDocs(question, 8);
     const sourcesBlock = snippets.map(s => `[[${s.id}]] ${s.source}\n${s.text}`).join("\n\n");
 
-    const systemPrompt =
-      "You are RoofVault AI, a roofing standards assistant. " +
-      "Answer ONLY from the provided NRCA/IIBEC/ASTM sources. " +
-      "Start with a clear yes/no on whether a standard NRCA detail exists for the described junction. " +
-      "If none exists, say so, then outline the NRCA-aligned flashing/transition method. " +
-      "When possible, name relevant NRCA Construction Detail families/IDs (e.g., MOD-K-2, SH-L-1). " +
-      "Keep output neat (plain text, short bullets). " +
-      "Cite sources inline using [#] matching the list below.";
+    const systemPrompt = `
+You are RoofVault AI, a building-envelope/roofing standards assistant.
+Use ONLY the provided source snippets (NRCA, IIBEC, ASTM, manufacturers, or any uploaded docs).
+If the sources do not support a claim, say you do not have support.
+Prefer the most recent guidance when multiple editions conflict; call out edition/year if relevant.
+Do not invent standard numbers or detail IDs—mention them only if the exact text appears in the snippets.
+Keep responses concise with plain text and short bullets.
+Cite sources inline as [#] where # maps to the list below.
+`;
 
     const priorityNames = (snippets || [])
   .map(s => s.source || "")
-  .filter(n => /membrane|2023|steep[-\s]?slope|2021|mod[- ]?details|sh[- ]?details/i.test(n))
+  .filter(Boolean)
   .slice(0, 4);
 
 const userPrompt = `Question: ${question}
@@ -245,6 +247,7 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
     context.res = cors({ ok:false, error:String(e?.message || e), stack: String(e?.stack || "") }, 500);
   }
 };
+
 
 
 
