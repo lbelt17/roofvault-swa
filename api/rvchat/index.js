@@ -161,7 +161,12 @@ async function searchDocs(query, topN = 10) {
   }));
 }
 
-async function aoaiChat(systemPrompt, userPrompt) {
+function extractDetailIDs(text) {
+  const rx = /\b(?:MOD|SH|BUR|SMM|EPDM|SBS|APP)[-\s]?[A-Z]?\d{0,2}[-\s]?\d+\b/gi;
+  const set = new Set();
+  for (const m of text.matchAll(rx)) set.add(m[0].toUpperCase());
+  return Array.from(set);
+}async function aoaiChat(systemPrompt, userPrompt) {
   const base = AOAI_ENDPOINT.replace(/\/+$/, "");
   const url = `${base}/openai/deployments/${encodeURIComponent(AOAI_DEPLOYMENT)}/chat/completions?api-version=2024-06-01`;
   const payload = {
@@ -202,6 +207,9 @@ module.exports = async function (context, req) {
     // Search documents
     const snippets = await searchDocs(question, 8);
     const sourcesBlock = snippets.map(s => `[[${s.id}]] ${s.source}\n${s.text}`).join("\n\n");
+    // Extract which detail IDs are actually present in snippets
+    const allSnippetText = (snippets || []).map(s => (s.text || '') + '\n' + (s.source || '')).join('\n');
+    const allowedDetailIDs = extractDetailIDs(allSnippetText);
 
     const systemPrompt = `
 You are RoofVault AI, a building-envelope/roofing standards assistant.
@@ -236,6 +244,18 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
       .replace(/\n{3,}/g, "\n\n")
       .replace(/-\s+/g, "• ")
       .trim();
+    // Honesty filter: remove any detail IDs the snippets didn't contain
+    const rxDetail = /\b(?:MOD|SH|BUR|SMM|EPDM|SBS|APP)[-\s]?[A-Z]?\d{0,2}[-\s]?\d+\b/gi;
+    const mentioned = Array.from(new Set((answer.match(rxDetail) || []).map(x => x.toUpperCase())));
+    const unverified = mentioned.filter(x => !allowedDetailIDs.includes(x));
+    if (unverified.length) {
+      answer = answer.replace(rxDetail, m => allowedDetailIDs.includes(m.toUpperCase()) ? m : '').replace(/\s{2,}/g,' ').trim();
+      if (!allowedDetailIDs.length) {
+        answer += '\n\n(Notes: No specific detail IDs were present in the provided sources for this question.)';
+      } else {
+        answer += \n\n(Notes: Only detail IDs present in sources are shown: .);
+      }
+    }
 
     context.res = cors({
       ok: true,
@@ -248,6 +268,7 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
     context.res = cors({ ok:false, error:String(e?.message || e), stack: String(e?.stack || "") }, 500);
   }
 };
+
 
 
 
