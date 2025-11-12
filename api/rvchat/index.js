@@ -88,7 +88,7 @@ async function searchSnippets(query, topN = 8) {
   let pass1;
   try {
     const r = await postJson(url, { "api-key": SEARCH_KEY }, {
-      search: q1,
+      search: qToks.join(" "),
       top: 60,
       searchMode: "any",
       queryType: "full",
@@ -248,4 +248,5 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
     context.res = jsonRes({ ok:false, layer:"pipeline", error:String(e && (e.message||e)), stack:String(e && e.stack || "") }, 200);
   }
 };
+
 
