@@ -1,4 +1,4 @@
-﻿const { SEARCH_ENDPOINT, SEARCH_KEY, SEARCH_INDEX } = process.env;
+﻿const { AOAI_ENDPOINT, AOAI_KEY, AOAI_DEPLOYMENT } = process.env;
 
 function jsonRes(body, status = 200) {
   return {
@@ -46,41 +46,43 @@ function postJson(url, headers, bodyObj) {
 module.exports = async function (context, req) {
   if (req.method === "OPTIONS") { context.res = jsonRes({ ok:true }); return; }
 
-  // Show env presence (not values)
   const seen = {
-    SEARCH_ENDPOINT: !!(SEARCH_ENDPOINT && SEARCH_ENDPOINT.trim()),
-    SEARCH_KEY: !!(SEARCH_KEY && SEARCH_KEY.trim()),
-    SEARCH_INDEX: !!(SEARCH_INDEX && SEARCH_INDEX.trim())
+    AOAI_ENDPOINT: !!(AOAI_ENDPOINT && AOAI_ENDPOINT.trim()),
+    AOAI_KEY: !!(AOAI_KEY && AOAI_KEY.trim()),
+    AOAI_DEPLOYMENT: !!(AOAI_DEPLOYMENT && AOAI_DEPLOYMENT.trim())
   };
-  if (!seen.SEARCH_ENDPOINT || !seen.SEARCH_KEY || !seen.SEARCH_INDEX) {
-    context.res = jsonRes({ ok:false, layer:"search", seen, error:"Missing search env var(s)" }, 200);
+  if (!seen.AOAI_ENDPOINT || !seen.AOAI_KEY || !seen.AOAI_DEPLOYMENT) {
+    context.res = jsonRes({ ok:false, layer:"aoai", seen, error:"Missing AOAI env var(s)" }, 200);
     return;
   }
 
-  const base = SEARCH_ENDPOINT.replace(/\/+$/, "");
-  const url = `${base}/indexes('${encodeURIComponent(SEARCH_INDEX)}')/docs/search?api-version=2023-11-01`;
+  const base = AOAI_ENDPOINT.replace(/\/+$/, "");
+  const url = `${base}/openai/deployments/${encodeURIComponent(AOAI_DEPLOYMENT)}/chat/completions?api-version=2024-06-01`;
+
   let resp;
   try {
-    resp = await postJson(url, { "api-key": SEARCH_KEY }, {
-      search: "membrane",
-      top: 5,
-      select: "metadata_storage_name"
+    resp = await postJson(url, { "api-key": AOAI_KEY }, {
+      temperature: 0,
+      max_tokens: 10,
+      messages: [
+        { role: "system", content: "You are a test probe." },
+        { role: "user", content: "Say OK." }
+      ]
     });
   } catch (e) {
-    context.res = jsonRes({ ok:false, layer:"search", seen, networkError:String(e&&e.message||e) }, 200);
+    context.res = jsonRes({ ok:false, layer:"aoai", seen, networkError:String(e&&e.message||e) }, 200);
     return;
   }
 
   let parsed = null;
   try { parsed = JSON.parse(resp.text); } catch {}
 
-  // Return diagnostics without throwing 500s
   context.res = jsonRes({
     ok: resp.ok,
-    layer: "search",
+    layer: "aoai",
     status: resp.status,
     seen,
-    hitNames: Array.isArray(parsed?.value) ? parsed.value.map(v => v?.metadata_storage_name || "unknown") : [],
+    message: parsed?.choices?.[0]?.message?.content || null,
     rawError: resp.ok ? null : (parsed?.error?.message || parsed?.message || resp.text || null)
   });
 };
