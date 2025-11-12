@@ -234,6 +234,10 @@ function extractDetailIDs(text) {
 
 module.exports = async function (context, req) {
   try {
+      // --- TEMP PROBE: early return to confirm handler executes ---
+      context.res = cors({ ok:true, probe:"entered-handler", node: process.version });
+      return;
+      // --- END TEMP PROBE ---
     if (req.method === "OPTIONS") { context.res = cors({ ok:true }); return; }
 
     const { missing, seen } = validateEnv();
@@ -308,6 +312,7 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
     context.res = cors({ ok:false, error:String(e?.message || e), stack: String(e?.stack || "") }, 500);
   }
 };
+
 
 
 
