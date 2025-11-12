@@ -101,7 +101,69 @@ async function searchSnippets(query, topN = 8) {
   }
 
   const vals = Array.isArray(pass1?.value) ? pass1.value : [];
-  const groups = new Map();
+  // --- fallback selection: if family dominance is unclear, just use top-ranked pass1 hits ---
+  // Rank by filename/path relevance (scoreFamily) and pick a generous slice; downstream will trim to topN.
+  let chosen = (vals || []);
+  try {
+    // group by family (if you already do below, this is harmless)
+    const groups = new Map();
+    for (const v of vals) {
+      const name = v?.metadata_storage_name || "";
+      const key = (name || "").toLowerCase().replace(/_part\d+|[\s\-]part\d+|_final.*|\.pdf$|_ocr/g,"").replace(/\s+/g," ").slice(0,180);
+      const s = (function scoreFamilyLocal(qToks, nm, pth){
+        const toks = (nm + " " + (pth||"")).toLowerCase().replace(/[^a-z0-9\-\._ ]+/g," ").split(/\s+/);
+        let hit = 0;
+        for (const t of (qToks||[])) if (t && toks.includes(t)) hit += 1;
+        if (/\b2023\b/.test(nm)) hit += 0.5;
+        if (/\b2021\b/.test(nm)) hit += 0.2;
+        if (/membrane/.test(nm)) hit += 0.5;
+        if (/steep[-\s]?slope/.test(nm)) hit += 0.5;
+        if (/roof\s*decks/.test(nm) || /atoz|a[\s-]*to[\s-]*z/.test(nm)) hit += 0.8;
+        return hit;
+      })( (function makeToks(s){ return (s||"").toLowerCase().replace(/[^a-z0-9\-\._ ]+/g," ").split(/\s+/).filter(w=>w&&w.length>2); })(q1), name, v?.metadata_storage_path );
+
+      const g = groups.get(key) || { key, total:0, items:[] };
+      g.total += s;
+      g.items.push(v);
+      groups.set(key, g);
+    }
+
+    // find best family
+    let best = null;
+    for (const g of groups.values()) if (!best || g.total > best.total) best = g;
+
+    // If a family clearly wins, use it; else use a ranked list of all pass1 hits
+    if (best && best.total >= 1.0) {
+      chosen = best.items;
+    } else {
+      chosen = vals
+        .map(v => {
+          const nm = v?.metadata_storage_name || "";
+          const pth = v?.metadata_storage_path || "";
+          // reuse same scoring
+          let hit = 0;
+          const toks = (nm + " " + pth).toLowerCase().replace(/[^a-z0-9\-\._ ]+/g," ").split(/\s+/);
+          for (const t of (function makeToks(s){ return (s||"").toLowerCase().replace(/[^a-z0-9\-\._ ]+/g," ").split(/\s+/).filter(w=>w&&w.length>2); })(q1)) {
+            if (t && toks.includes(t)) hit += 1;
+          }
+          if (/\b2023\b/.test(nm)) hit += 0.5;
+          if (/\b2021\b/.test(nm)) hit += 0.2;
+          if (/membrane/.test(nm)) hit += 0.5;
+          if (/steep[-\s]?slope/.test(nm)) hit += 0.5;
+          if (/roof\s*decks/.test(nm) || /atoz|a[\s-]*to[\s-]*z/.test(nm)) hit += 0.8;
+          return { v, hit };
+        })
+        .sort((a,b) => b.hit - a.hit)
+        .map(x => x.v);
+    }
+  } catch(_e) {
+    // in case any of the above fails, just fall back to pass1 vals
+    chosen = vals;
+  }
+
+  // Downstream code should build snippets from chosen (not raw pass1 vals):
+  const raw = chosen.slice(0, Math.max(topN*2, 20)); // generous slice; later we trim to topN
+const groups = new Map();
   for (const v of vals) {
     const name = v?.metadata_storage_name || "";
     const path = v?.metadata_storage_path || "";
@@ -239,3 +301,4 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
     context.res = jsonRes({ ok:false, layer:"pipeline", error:String(e && (e.message||e)), stack:String(e && e.stack || "") }, 200);
   }
 };
+
