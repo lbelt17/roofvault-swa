@@ -1,4 +1,4 @@
-﻿const { AOAI_ENDPOINT, AOAI_KEY, AOAI_DEPLOYMENT } = process.env;
+﻿const { SEARCH_ENDPOINT, SEARCH_KEY, SEARCH_INDEX, AOAI_ENDPOINT, AOAI_KEY, AOAI_DEPLOYMENT } = process.env;
 
 function jsonRes(body, status = 200) {
   return {
@@ -13,7 +13,7 @@ function jsonRes(body, status = 200) {
   };
 }
 
-// Tiny https POST without external deps
+// Tiny https POST (no external deps)
 function postJson(url, headers, bodyObj) {
   return new Promise((resolve, reject) => {
     try {
@@ -43,46 +43,85 @@ function postJson(url, headers, bodyObj) {
   });
 }
 
+// Minimal search (no enrichment yet)
+async function searchSnippets(query, topN = 6) {
+  const base = (SEARCH_ENDPOINT || "").replace(/\/+$/, "");
+  const url = `${base}/indexes('${encodeURIComponent(SEARCH_INDEX)}')/docs/search?api-version=2023-11-01`;
+  const resp = await postJson(url, { "api-key": SEARCH_KEY }, {
+    search: (query || "").trim(),
+    top: Math.max(3, Math.min(20, topN)),
+    select: "content,metadata_storage_name,metadata_storage_path"
+  });
+  let parsed = null; try { parsed = JSON.parse(resp.text); } catch {}
+  if (!resp.ok) throw new Error(`Search HTTP ${resp.status}: ${parsed?.error?.message || parsed?.message || resp.text || "unknown"}`);
+  const arr = Array.isArray(parsed?.value) ? parsed.value : [];
+  return arr.map((v, i) => ({
+    id: i + 1,
+    source: v?.metadata_storage_name || v?.metadata_storage_path || "unknown",
+    text: (v?.content || "").toString().slice(0, 1400)
+  })).filter(x => x.text);
+}
+
+async function aoaiAnswer(systemPrompt, userPrompt) {
+  const base = (AOAI_ENDPOINT || "").replace(/\/+$/, "");
+  const url = `${base}/openai/deployments/${encodeURIComponent(AOAI_DEPLOYMENT)}/chat/completions?api-version=2024-06-01`;
+  const resp = await postJson(url, { "api-key": AOAI_KEY }, {
+    temperature: 0.2,
+    max_tokens: 900,
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt }
+    ]
+  });
+  let parsed = null; try { parsed = JSON.parse(resp.text); } catch {}
+  if (!resp.ok) throw new Error(`AOAI HTTP ${resp.status}: ${parsed?.error?.message || parsed?.message || resp.text || "unknown"}`);
+  return parsed?.choices?.[0]?.message?.content?.trim?.() || "No answer generated.";
+}
+
 module.exports = async function (context, req) {
   if (req.method === "OPTIONS") { context.res = jsonRes({ ok:true }); return; }
 
+  // Env presence check
   const seen = {
+    SEARCH_ENDPOINT: !!(SEARCH_ENDPOINT && SEARCH_ENDPOINT.trim()),
+    SEARCH_KEY: !!(SEARCH_KEY && SEARCH_KEY.trim()),
+    SEARCH_INDEX: !!(SEARCH_INDEX && SEARCH_INDEX.trim()),
     AOAI_ENDPOINT: !!(AOAI_ENDPOINT && AOAI_ENDPOINT.trim()),
     AOAI_KEY: !!(AOAI_KEY && AOAI_KEY.trim()),
     AOAI_DEPLOYMENT: !!(AOAI_DEPLOYMENT && AOAI_DEPLOYMENT.trim())
   };
-  if (!seen.AOAI_ENDPOINT || !seen.AOAI_KEY || !seen.AOAI_DEPLOYMENT) {
-    context.res = jsonRes({ ok:false, layer:"aoai", seen, error:"Missing AOAI env var(s)" }, 200);
+  if (!Object.values(seen).every(Boolean)) {
+    context.res = jsonRes({ ok:false, error:"Missing environment variables", seen }, 500);
     return;
   }
 
-  const base = AOAI_ENDPOINT.replace(/\/+$/, "");
-  const url = `${base}/openai/deployments/${encodeURIComponent(AOAI_DEPLOYMENT)}/chat/completions?api-version=2024-06-01`;
+  const body = req.body || {};
+  const msgs = Array.isArray(body.messages) ? body.messages : [];
+  const question = (body.question || (msgs.length ? (msgs[msgs.length-1]?.content || "") : "") || "").trim();
+  if (!question) { context.res = jsonRes({ ok:false, error:"No question provided." }, 400); return; }
 
-  let resp;
   try {
-    resp = await postJson(url, { "api-key": AOAI_KEY }, {
-      temperature: 0,
-      max_tokens: 10,
-      messages: [
-        { role: "system", content: "You are a test probe." },
-        { role: "user", content: "Say OK." }
-      ]
+    // 1) Search
+    const snippets = await searchSnippets(question, 6);
+
+    // 2) Prompt
+    const systemPrompt = "You are RoofVault AI. Answer using ONLY the provided snippets (NRCA, IIBEC, ASTM, manufacturers, or any uploaded docs). Prefer the most recent editions. If support is missing, say so. Keep it concise with short bullets. Cite as [#] matching the snippets list.";
+    const userPrompt = `Question: ${question}
+
+Sources:
+${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n") || "(no sources found)"}`;
+
+    // 3) AOAI
+    let answer = await aoaiAnswer(systemPrompt, userPrompt);
+    answer = answer.replace(/\n{3,}/g, "\n\n").trim();
+
+    context.res = jsonRes({
+      ok: true,
+      question,
+      answer,
+      sources: snippets.map(s => ({ id: s.id, source: s.source }))
     });
   } catch (e) {
-    context.res = jsonRes({ ok:false, layer:"aoai", seen, networkError:String(e&&e.message||e) }, 200);
-    return;
+    context.res = jsonRes({ ok:false, error: String(e && (e.message || e)), layer:"pipeline" }, 500);
   }
-
-  let parsed = null;
-  try { parsed = JSON.parse(resp.text); } catch {}
-
-  context.res = jsonRes({
-    ok: resp.ok,
-    layer: "aoai",
-    status: resp.status,
-    seen,
-    message: parsed?.choices?.[0]?.message?.content || null,
-    rawError: resp.ok ? null : (parsed?.error?.message || parsed?.message || resp.text || null)
-  });
 };
