@@ -102,8 +102,8 @@ async function aoaiAnswer(systemPrompt, userPrompt) {
   const base = (AOAI_ENDPOINT || "").replace(/\/+$/, "");
   const url = `${base}/openai/deployments/${encodeURIComponent(AOAI_DEPLOYMENT)}/chat/completions?api-version=2024-06-01`;
   const resp = await postJson(url, { "api-key": AOAI_KEY }, {
-    temperature: 0.2,
-    max_tokens: 900,
+    temperature: 0.1,
+    max_tokens: 700,
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt }
@@ -168,7 +168,15 @@ module.exports = async function (context, req) {
     const snippets = await searchSnippets(question, 8);
 
     // 2) Prompt
-    const systemPrompt = "You are RoofVault AI. Answer using ONLY the provided snippets (NRCA, IIBEC, ASTM, manufacturers, or any uploaded docs). Prefer the most recent editions. If support is missing, say so. Keep it concise with short bullets. Cite as [#] matching the snippets list.";
+    const systemPrompt = [
+  "You are RoofVault AI.",
+  "Use ONLY the provided snippets (NRCA, IIBEC, ASTM, manufacturers, or any uploaded docs).",
+  "If a claim is not supported by the snippets, say: 'No support in the provided sources.'",
+  "Prefer the most recent editions; if guidance conflicts, name the edition/year.",
+  "Do NOT invent standard numbers, detail IDs, or language not present in the snippets.",
+  "Answers must be concise, in short bullets, and each bullet must include at least one [#] citation.",
+  "Citations [#] map exactly to the numbered snippets list provided."
+].join(" ");
     const userPrompt = `Question: ${question}
 
 Sources:
@@ -189,3 +197,4 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
     context.res = jsonRes({ ok:false, error:String(e && (e.message || e)), stack:String(e && e.stack || ""), layer:"pipeline" }, 200);
   }
 };
+
