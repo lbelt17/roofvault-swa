@@ -207,7 +207,7 @@ module.exports = async function (context, req) {
     if (!question) { context.res = jsonRes({ ok:false, error:"No question provided.", layer:"input" }, 200); return; }
 
     // 1) Search
-    const snippets = await searchSnippets(question, 8);
+    const snippets = await searchSnippets(aliasExpand(question), 8);
 
     // 2) Prompt
     const systemPrompt = [
@@ -239,6 +239,7 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
     context.res = jsonRes({ ok:false, error:String(e && (e.message || e)), stack:String(e && e.stack || ""), layer:"pipeline" }, 200);
   }
 };
+
 
 
 
