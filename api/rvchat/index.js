@@ -7,9 +7,49 @@
  */
 
 
-const _fetch = (typeof fetch !== 'undefined')
-  ? fetch
-  : ((...args) => import('node-fetch').then(({ default: f }) => f(...args)));
+const _fetch = (typeof globalThis.fetch === "function")
+  ? globalThis.fetch
+  : (url, opts = {}) => new Promise((resolve, reject) => {
+      try {
+        const { URL } = require("node:url");
+        const u = new URL(url);
+        const isHttps = u.protocol === "https:";
+        const mod = require(isHttps ? "node:https" : "node:http");
+
+        const reqOpts = {
+          method: opts.method || "GET",
+          headers: opts.headers || {},
+          hostname: u.hostname,
+          port: u.port || (isHttps ? 443 : 80),
+          path: u.pathname + (u.search || ""),
+        };
+
+        const req = mod.request(reqOpts, (res) => {
+          let data = "";
+          res.on("data", (chunk) => (data += chunk));
+          res.on("end", () => {
+            resolve({
+              ok: res.statusCode >= 200 && res.statusCode < 300,
+              status: res.statusCode,
+              headers: res.headers,
+              text: async () => data
+            });
+          });
+        });
+
+        req.on("error", reject);
+
+        if (opts.body) {
+          if (typeof opts.body === "string" || Buffer.isBuffer(opts.body)) {
+            req.write(opts.body);
+          } else {
+            const s = JSON.stringify(opts.body);
+            req.write(s);
+          }
+        }
+        req.end();
+      } catch (e) { reject(e); }
+    });
 const {
   AOAI_ENDPOINT, AOAI_KEY, AOAI_DEPLOYMENT,
   SEARCH_ENDPOINT, SEARCH_KEY, SEARCH_INDEX
@@ -268,6 +308,7 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
     context.res = cors({ ok:false, error:String(e?.message || e), stack: String(e?.stack || "") }, 500);
   }
 };
+
 
 
 
