@@ -44,9 +44,72 @@ function postJson(url, headers, bodyObj) {
 }
 
 // Minimal search (no enrichment yet)
-async function searchSnippets(query, topN = 6) {
+async function searchSnippets(query, topN = 8) {
+  // 1) High-recall fetch (bring back a wide pool from ALL 312 files)
   const base = (SEARCH_ENDPOINT || "").replace(/\/+$/, "");
   const url = `${base}/indexes('${encodeURIComponent(SEARCH_INDEX)}')/docs/search?api-version=2023-11-01`;
+
+  const resp = await postJson(url, { "api-key": SEARCH_KEY }, {
+    search: (query || "").trim(),
+    top: 60,                               // wider recall
+    searchMode: "any",
+    queryType: "simple",
+    select: "content,metadata_storage_name,metadata_storage_path"
+  });
+
+  let parsed = null; try { parsed = JSON.parse(resp.text); } catch {}
+  if (!resp.ok) throw new Error(`Search HTTP ${resp.status}: ${parsed?.error?.message || parsed?.message || resp.text || "unknown"}`);
+
+  const raw = Array.isArray(parsed?.value) ? parsed.value : [];
+
+  // 2) Canonicalize + score
+  function yearFromName(name) {
+    const m = (name || "").match(/\b(19\d{2}|20\d{2})\b/);
+    return m ? parseInt(m[1], 10) : null;
+  }
+  const wantHistoric = /\b(19\d{2}|200[0-9])\b/i.test(query || "") || /\bhistory|historical|older|archive\b/i.test(query || "");
+  const items = raw.map((v) => {
+    const source = v?.metadata_storage_name || v?.metadata_storage_path || "unknown";
+    const text = (v?.content || "").toString();
+    const lower = source.toLowerCase();
+    let score = 0;
+
+    // Prefer your modern manuals/families
+    if (/\bmembrane\b|2023/.test(lower)) score += 12;
+    if (/\bsteep[-\s]?slope\b|2021/.test(lower)) score += 10;
+    if (/\bmod\b/.test(lower)) score += 6;
+    if (/\bsh\b/.test(lower))  score += 6;
+
+    // Recent editions up; very old down (unless you asked)
+    const yr = yearFromName(source);
+    if (yr) score += Math.min(yr - 2000, 30);  // gentle recency bump
+    if (!wantHistoric && yr && yr < 2010) score -= 25;
+
+    // Generic boosts
+    if (/nrca|iibec|astm|manual|detail/.test(lower)) score += 4;
+
+    return { source, text, year: yr, score };
+  }).filter(x => x.text && x.text.trim());
+
+  // 3) Sort and de-dupe by file (cap multiple snippets from same file)
+  items.sort((a,b) => b.score - a.score);
+  const seen = new Map();  // source -> count
+  const picked = [];
+  for (const it of items) {
+    const c = seen.get(it.source) || 0;
+    if (c >= 2) continue;              // at most 2 hits per file
+    seen.set(it.source, c + 1);
+    picked.push(it);
+    if (picked.length >= Math.max(6, Math.min(16, topN))) break;
+  }
+
+  // 4) Trim text to stay under token budget
+  return picked.map((x, i) => ({
+    id: i + 1,
+    source: x.source,
+    text: x.text.slice(0, 1600)
+  }));
+}/indexes('${encodeURIComponent(SEARCH_INDEX)}')/docs/search?api-version=2023-11-01`;
   const resp = await postJson(url, { "api-key": SEARCH_KEY }, {
     search: (query || "").trim(),
     top: Math.max(3, Math.min(20, topN)),
@@ -125,3 +188,4 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
     context.res = jsonRes({ ok:false, error: String(e && (e.message || e)), layer:"pipeline" }, 500);
   }
 };
+
