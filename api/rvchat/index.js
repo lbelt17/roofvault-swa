@@ -97,11 +97,11 @@ async function searchSnippets(query, topN = 8) {
     });
     pass1 = JSON.parse(r.text || "{}");
   } catch (e) {
-    return []; // fail closed → no snippets, caller will show "No support…"
+    return []; 
   }
 
   const vals = Array.isArray(pass1?.value) ? pass1.value : [];
-    // --- SAFE FALLBACK: return top results directly if present ---
+
   if (Array.isArray(vals) && vals.length) {
     const top = vals.slice(0, Math.max(topN, 8));
     return top.map((v,i) => ({
@@ -110,7 +110,8 @@ async function searchSnippets(query, topN = 8) {
       text: String(v?.content || "").slice(0, 1400)
     }));
   }
-const groups = new Map();
+
+  const groups = new Map();
   for (const v of vals) {
     const name = v?.metadata_storage_name || "";
     const path = v?.metadata_storage_path || "";
@@ -122,19 +123,16 @@ const groups = new Map();
     groups.set(key, g);
   }
 
-  // pick dominant family (if one clearly stands out)
   let best = null;
   for (const g of groups.values()) { if (!best || g.total > best.total) best = g; }
-  const chosen = (best && best.total >= 1) ? best.items : vals; // fallback to all when weak
+  const chosen = (best && best.total >= 1) ? best.items : vals;
 
-  // shape to snippets
   const out = (chosen || []).slice(0, 50).map((v, i) => ({
     id: i+1,
     source: v?.metadata_storage_name || "unknown.pdf",
     text: (v?.content || "").toString().slice(0, 1200)
   })).filter(s => s.text && s.source);
 
-  // prefer topN
   return out.slice(0, topN);
 }
 
@@ -146,7 +144,7 @@ async function aoaiAnswer(systemPrompt, userPrompt) {
   try {
     resp = await postJson(url, { "api-key": AOAI_KEY }, {
       temperature: 0.1,
-      max_tokens: 700,
+      max_tokens: 900,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user",   content: userPrompt }
@@ -165,10 +163,8 @@ async function aoaiAnswer(systemPrompt, userPrompt) {
 }
 
 module.exports = async function (context, req) {
-  // Hard guard: never throw on OPTIONS
   if (req.method === "OPTIONS") { context.res = jsonRes({ ok:true }); return; }
 
-  // Hard diag (must never 500)
   try {
     if (req?.method === "GET" && String(req?.query?.diag) === "1") {
       const seen = {
@@ -188,7 +184,6 @@ module.exports = async function (context, req) {
   }
 
   try {
-    // Env presence (report, don't 500)
     const seen = {
       SEARCH_ENDPOINT: !!(SEARCH_ENDPOINT||"").trim(),
       SEARCH_KEY:      !!(SEARCH_KEY||"").trim(),
@@ -202,23 +197,28 @@ module.exports = async function (context, req) {
       return;
     }
 
-    // Parse input
     const body = req.body || {};
     const msgs = Array.isArray(body.messages) ? body.messages : [];
     const question = (body.question || (msgs.length ? (msgs[msgs.length-1]?.content || "") : "") || "").trim();
     if (!question) { context.res = jsonRes({ ok:false, layer:"input", error:"No question provided." }, 200); return; }
 
-    // 1) Search (defensive: empty → "No support")
+    // Search
     const snippets = await searchSnippets(question, 8);
 
-    // 2) Prompts (strict)
+    // **NEW ADVANCED SYSTEM PROMPT**
     const systemPrompt = [
-      "You are RoofVault AI.",
-      "Use ONLY the provided snippets (NRCA, IIBEC, ASTM, manufacturers, or any uploaded docs).",
-      "If a claim is not supported by the snippets, say: 'No support in the provided sources.'",
+      "You are RoofVault AI, a senior roofing consultant and technical expert.",
+      "Your job is to provide highly detailed, technical, consultant-level explanations—not brief summaries.",
+      "Use ONLY the provided snippets (NRCA, IIBEC, ASTM, manufacturers, or any uploaded documents) as your factual base.",
+      "Always respond with:",
+      "1) A high-level overview of the topic (2–3 sentences).",
+      "2) A deep technical explanation covering definitions, concepts, assembly behavior, material interactions, typical failure modes, and best practices.",
+      "3) Real-world relevance: why this matters during design, installation, inspection, and forensic analysis.",
       "Prefer the most recent editions; if guidance conflicts, name the edition/year.",
-      "Do NOT invent standard numbers, detail IDs, or language not present in the snippets.",
-      "Answers must be concise, in short bullets, and each bullet must include at least one [#] citation.",
+      "If a claim is not clearly supported by the snippets, say: 'No support in the provided sources.'",
+      "Do NOT invent standard numbers, detail IDs, or precise language not present in the snippets.",
+      "Use multiple paragraphs or structured bullets for clarity and depth.",
+      "Every major factual statement MUST include at least one [#] citation.",
       "Citations [#] map exactly to the numbered snippets list provided."
     ].join(" ");
 
@@ -227,14 +227,15 @@ module.exports = async function (context, req) {
 Sources:
 ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n") || "(no sources found)"}`;
 
-    // 3) AOAI (defensive)
     const ao = await aoaiAnswer(systemPrompt, userPrompt);
     let answer = (ao.ok ? ao.content : "") || "";
+
     if (!answer && (!snippets || !snippets.length)) {
       answer = "No support in the provided sources.";
     } else if (!answer && ao.error) {
       answer = `No answer due to model error: ${ao.error}`;
     }
+
     answer = answer.replace(/\n{3,}/g, "\n\n").trim();
 
     context.res = jsonRes({
@@ -243,10 +244,8 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
       answer,
       sources: (snippets||[]).map(s => ({ id: s.id, source: s.source }))
     }, 200);
+
   } catch (e) {
-    // Final catch: still 200, never 500
     context.res = jsonRes({ ok:false, layer:"pipeline", error:String(e && (e.message||e)), stack:String(e && e.stack || "") }, 200);
   }
 };
-
-
