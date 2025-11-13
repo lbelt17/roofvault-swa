@@ -44,7 +44,7 @@ function postJson(url, headers, bodyObj) {
   });
 }
 
-/* Lightweight alias expansion so queries can say "roof decks a-z", etc. */
+/* Lightweight alias expansion */
 function aliasExpand(q) {
   let s = String(q || "");
   s = s.replace(/\bmembrane (roof )?systems?\b/ig, "Membrane Roof Systems");
@@ -53,7 +53,7 @@ function aliasExpand(q) {
   return s;
 }
 
-/* Normalize filename family and score by overlap with query tokens */
+/* Helpers for family grouping/scoring */
 function _norm(s){ return (s||"").toLowerCase(); }
 function _tokens(s){
   return _norm(s).replace(/[^a-z0-9\-\._ ]+/g," ")
@@ -77,7 +77,7 @@ function _scoreFamily(qToks, name, path){
   return hit;
 }
 
-/* Azure AI Search -> return snippets [{id, source, text}] without throwing */
+/* Azure AI Search → return snippets */
 async function searchSnippets(query, topN = 8) {
   const base = (SEARCH_ENDPOINT || "").replace(/\/+$/, "");
   const url  = `${base}/indexes('${encodeURIComponent(SEARCH_INDEX)}')/docs/search?api-version=2023-11-01`;
@@ -97,12 +97,12 @@ async function searchSnippets(query, topN = 8) {
     });
     pass1 = JSON.parse(r.text || "{}");
   } catch (e) {
-    return []; 
+    return [];
   }
 
   const vals = Array.isArray(pass1?.value) ? pass1.value : [];
 
-  if (Array.isArray(vals) && vals.length) {
+  if (vals.length) {
     const top = vals.slice(0, Math.max(topN, 8));
     return top.map((v,i) => ({
       id: i + 1,
@@ -124,22 +124,21 @@ async function searchSnippets(query, topN = 8) {
   }
 
   let best = null;
-  for (const g of groups.values()) { if (!best || g.total > best.total) best = g; }
+  for (const g of groups.values()){ if (!best || g.total > best.total) best = g; }
   const chosen = (best && best.total >= 1) ? best.items : vals;
 
-  const out = (chosen || []).slice(0, 50).map((v, i) => ({
+  return (chosen || []).slice(0, topN).map((v, i) => ({
     id: i+1,
     source: v?.metadata_storage_name || "unknown.pdf",
-    text: (v?.content || "").toString().slice(0, 1200)
+    text: String(v?.content || "").slice(0, 1200)
   })).filter(s => s.text && s.source);
-
-  return out.slice(0, topN);
 }
 
-/* AOAI chat completion (defensive) */
+/* AOAI chat completion wrapper */
 async function aoaiAnswer(systemPrompt, userPrompt) {
   const base = (AOAI_ENDPOINT || "").replace(/\/+$/, "");
   const url  = `${base}/openai/deployments/${encodeURIComponent(AOAI_DEPLOYMENT)}/chat/completions?api-version=2024-06-01`;
+
   let resp;
   try {
     resp = await postJson(url, { "api-key": AOAI_KEY }, {
@@ -153,73 +152,97 @@ async function aoaiAnswer(systemPrompt, userPrompt) {
   } catch (e) {
     return { ok:false, error:String(e && e.message || e) };
   }
-  let parsed=null; try { parsed = JSON.parse(resp.text || "{}"); } catch {}
+
+  let parsed = null;
+  try { parsed = JSON.parse(resp.text || "{}"); } catch {}
+
   if (!resp.ok) {
     const err = parsed?.error?.message || parsed?.message || resp.text || "unknown";
     return { ok:false, error:`AOAI HTTP ${resp.status}: ${err}` };
   }
+
   const content = parsed?.choices?.[0]?.message?.content?.trim?.() || "";
   return { ok:true, content };
 }
 
 module.exports = async function (context, req) {
-  if (req.method === "OPTIONS") { context.res = jsonRes({ ok:true }); return; }
+  if (req.method === "OPTIONS") {
+    context.res = jsonRes({ ok:true });
+    return;
+  }
 
+  /* Hard diag */
   try {
-    if (req?.method === "GET" && String(req?.query?.diag) === "1") {
+    if (req.method === "GET" && String(req.query?.diag) === "1") {
       const seen = {
-        SEARCH_ENDPOINT: !!(SEARCH_ENDPOINT||"").trim(),
-        SEARCH_KEY:      !!(SEARCH_KEY||"").trim(),
-        SEARCH_INDEX:    !!(SEARCH_INDEX||"").trim(),
-        AOAI_ENDPOINT:   !!(AOAI_ENDPOINT||"").trim(),
-        AOAI_KEY:        !!(AOAI_KEY||"").trim(),
-        AOAI_DEPLOYMENT: !!(AOAI_DEPLOYMENT||"").trim()
+        SEARCH_ENDPOINT: !!SEARCH_ENDPOINT,
+        SEARCH_KEY:      !!SEARCH_KEY,
+        SEARCH_INDEX:    !!SEARCH_INDEX,
+        AOAI_ENDPOINT:   !!AOAI_ENDPOINT,
+        AOAI_KEY:        !!AOAI_KEY,
+        AOAI_DEPLOYMENT: !!AOAI_DEPLOYMENT
       };
-      context.res = jsonRes({ ok:true, layer:"diag", node:process.version, seen, t:new Date().toISOString() }, 200);
+      context.res = jsonRes({ ok:true, layer:"diag", node:process.version, seen, t:new Date().toISOString() });
       return;
     }
   } catch(e) {
-    context.res = jsonRes({ ok:false, layer:"diag", node:process.version, error:String(e && e.message || e) }, 200);
+    context.res = jsonRes({ ok:false, layer:"diag", node:process.version, error:String(e) });
     return;
   }
 
   try {
-    const seen = {
-      SEARCH_ENDPOINT: !!(SEARCH_ENDPOINT||"").trim(),
-      SEARCH_KEY:      !!(SEARCH_KEY||"").trim(),
-      SEARCH_INDEX:    !!(SEARCH_INDEX||"").trim(),
-      AOAI_ENDPOINT:   !!(AOAI_ENDPOINT||"").trim(),
-      AOAI_KEY:        !!(AOAI_KEY||"").trim(),
-      AOAI_DEPLOYMENT: !!(AOAI_DEPLOYMENT||"").trim()
+    /* Env guard */
+    const reqEnv = {
+      SEARCH_ENDPOINT: !!SEARCH_ENDPOINT,
+      SEARCH_KEY:      !!SEARCH_KEY,
+      SEARCH_INDEX:    !!SEARCH_INDEX,
+      AOAI_ENDPOINT:   !!AOAI_ENDPOINT,
+      AOAI_KEY:        !!AOAI_KEY,
+      AOAI_DEPLOYMENT: !!AOAI_DEPLOYMENT
     };
-    if (!Object.values(seen).every(Boolean)) {
-      context.res = jsonRes({ ok:false, layer:"env", error:"Missing environment variables", seen }, 200);
+    if (!Object.values(reqEnv).every(Boolean)) {
+      context.res = jsonRes({ ok:false, layer:"env", error:"Missing environment variables", seen:reqEnv });
       return;
     }
 
+    /* Input parsing */
     const body = req.body || {};
     const msgs = Array.isArray(body.messages) ? body.messages : [];
-    const question = (body.question || (msgs.length ? (msgs[msgs.length-1]?.content || "") : "") || "").trim();
-    if (!question) { context.res = jsonRes({ ok:false, layer:"input", error:"No question provided." }, 200); return; }
+    const question =
+      (body.question ||
+       (msgs.length ? (msgs[msgs.length-1]?.content || "") : "") ||
+      "").trim();
 
-    // Search
+    if (!question) {
+      context.res = jsonRes({ ok:false, layer:"input", error:"No question provided." });
+      return;
+    }
+
+    /* Search */
     const snippets = await searchSnippets(question, 8);
 
-    // **NEW ADVANCED SYSTEM PROMPT**
+    /* NEW FORMATTED SYSTEM PROMPT */
     const systemPrompt = [
       "You are RoofVault AI, a senior roofing consultant and technical expert.",
-      "Your job is to provide highly detailed, technical, consultant-level explanations—not brief summaries.",
-      "Use ONLY the provided snippets (NRCA, IIBEC, ASTM, manufacturers, or any uploaded documents) as your factual base.",
-      "Always respond with:",
-      "1) A high-level overview of the topic (2–3 sentences).",
-      "2) A deep technical explanation covering definitions, concepts, assembly behavior, material interactions, typical failure modes, and best practices.",
-      "3) Real-world relevance: why this matters during design, installation, inspection, and forensic analysis.",
-      "Prefer the most recent editions; if guidance conflicts, name the edition/year.",
-      "If a claim is not clearly supported by the snippets, say: 'No support in the provided sources.'",
-      "Do NOT invent standard numbers, detail IDs, or precise language not present in the snippets.",
-      "Use multiple paragraphs or structured bullets for clarity and depth.",
-      "Every major factual statement MUST include at least one [#] citation.",
-      "Citations [#] map exactly to the numbered snippets list provided."
+      "Provide detailed, technical, consultant-level explanations using clean, professional formatting.",
+      "Use ONLY the provided snippets as your factual base.",
+      "Your response must always follow this structure:",
+      "",
+      "1) **Overview Section** — A short, plain-language summary (2–3 sentences).",
+      "2) **Technical Explanation Section** — Well-organized paragraphs with bold section headers (e.g., **Definitions**, **Assembly Behavior**, **Failure Modes**, **Best Practices**).",
+      "3) **Real-World Relevance Section** — Explain why the information matters for design, installation, inspections, and forensic analysis.",
+      "",
+      "Formatting rules:",
+      "- Use bold headers, NOT Markdown headings (no ###).",
+      "- Use paragraphs, not code blocks.",
+      "- Do not bullet every line — mix bullets and paragraphs naturally.",
+      "- Maintain clear spacing and clean layout.",
+      "",
+      "Content rules:",
+      "- Prefer the most recent edition; if guidance conflicts, name the year.",
+      "- Every factual point must include a [#] citation directly tied to a snippet.",
+      "- If something is not supported by snippets, state: 'No support in the provided sources.'",
+      "- Do not invent detail IDs, standard numbers, or language not in the snippets."
     ].join(" ");
 
     const userPrompt = `Question: ${question}
@@ -230,11 +253,8 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
     const ao = await aoaiAnswer(systemPrompt, userPrompt);
     let answer = (ao.ok ? ao.content : "") || "";
 
-    if (!answer && (!snippets || !snippets.length)) {
-      answer = "No support in the provided sources.";
-    } else if (!answer && ao.error) {
-      answer = `No answer due to model error: ${ao.error}`;
-    }
+    if (!answer && !snippets.length) answer = "No support in the provided sources.";
+    if (!answer && ao.error) answer = `No answer due to model error: ${ao.error}`;
 
     answer = answer.replace(/\n{3,}/g, "\n\n").trim();
 
@@ -242,10 +262,15 @@ ${snippets.map(s => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")
       ok: true,
       question,
       answer,
-      sources: (snippets||[]).map(s => ({ id: s.id, source: s.source }))
-    }, 200);
+      sources: snippets.map(s => ({ id: s.id, source: s.source }))
+    });
 
   } catch (e) {
-    context.res = jsonRes({ ok:false, layer:"pipeline", error:String(e && (e.message||e)), stack:String(e && e.stack || "") }, 200);
+    context.res = jsonRes({
+      ok:false,
+      layer:"pipeline",
+      error:String((e && e.message) || e),
+      stack:String(e && e.stack || "")
+    });
   }
 };
