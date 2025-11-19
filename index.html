@@ -1,209 +1,388 @@
 ﻿<!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>RoofVault Chat</title>
+  <title>RoofVault – Practice Exams</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #151922;
+      --panel-soft: #0c0f14;
+      --border-subtle: #252a36;
+      --accent: #21b3ff;
+      --accent-soft: #1a8ee0;
+      --text-main: #e6e9ef;
+      --text-muted: #a7b0c0;
+      --chip-bg: #1c2230;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background: #0f1115;
-      color: #e6e9ef;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(circle at top, #1c2333 0, #05060a 55%, #020308 100%);
+      color: var(--text-main);
       display: flex;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
       margin: 0;
+      padding: 16px;
     }
+
     .wrap {
-      width: min(900px, 92vw);
-      padding: 28px;
-      background: #151922;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      width: min(980px, 100vw - 24px);
+      padding: 24px 24px 20px;
+      background: rgba(14, 17, 25, 0.96);
+      border-radius: 18px;
+      box-shadow:
+        0 22px 45px rgba(0,0,0,0.55),
+        0 0 0 1px rgba(255,255,255,0.02);
+      border: 1px solid rgba(70, 80, 110, 0.35);
+      backdrop-filter: blur(10px);
     }
-    button {
-      padding: 10px 14px;
-      border: none;
-      border-radius: 10px;
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .header-main {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: radial-gradient(circle at 30% 0, #46cdff 0, #008dff 45%, #0046b3 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #02111c;
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: 0.06em;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.65);
+    }
+
+    .titles {
+      line-height: 1.2;
+    }
+
+    .titles-main {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .titles-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      font-size: 11px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(120, 135, 170, 0.55);
+      background: rgba(15, 19, 30, 0.9);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .pill code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 11px;
+      color: #a2b7ff;
+    }
+
+    h1 {
+      font-size: 20px;
+      margin: 0 0 6px 0;
+    }
+
+    .subtext {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .section {
+      border-radius: 14px;
+      background: var(--panel);
+      border: 1px solid var(--border-subtle);
+      padding: 14px 14px 16px;
+      margin-bottom: 14px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .section-title {
+      font-size: 14px;
       font-weight: 600;
-      color: #071018;
-      background: linear-gradient(180deg,#2aa9ff,#0ec0ff);
-      cursor: pointer;
     }
-    .muted { color: #a7b0c0; }
+
+    .section-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .book-row {
+      margin-top: 4px;
+    }
+
+    #bookMount {
+      margin: 4px 0 0 0;
+    }
+
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    button {
+      padding: 9px 14px;
+      border-radius: 999px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.05s ease-out, box-shadow 0.08s ease-out, background 0.15s ease-out;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-primary {
+      color: #041018;
+      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.55);
+    }
+
+    .btn-outline {
+      color: var(--text-main);
+      background: transparent;
+      border: 1px solid rgba(120, 135, 170, 0.65);
+    }
+
+    .btn-outline:hover:not(:disabled) {
+      background: rgba(26, 33, 48, 0.9);
+      transform: translateY(-1px);
+    }
+
+    .btn-outline span.icon {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    #qList {
+      background: var(--panel-soft);
+      border-radius: 12px;
+      border: 1px solid var(--border-subtle);
+      padding: 12px 12px 10px;
+      margin-top: 10px;
+      min-height: 220px;
+      max-height: 55vh;
+      overflow: auto;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .q-empty {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .q-item {
+      margin-bottom: 8px;
+      padding: 8px 9px;
+      border-radius: 8px;
+      background: rgba(20, 26, 40, 0.96);
+      border: 1px solid rgba(70, 80, 110, 0.6);
+    }
+
+    .q-item strong {
+      color: #f6f7ff;
+    }
+
+    #diag {
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+      max-height: 26vh;
+      overflow: auto;
+      background: transparent;
+      border-radius: 8px;
+      border: 1px dashed rgba(90, 100, 135, 0.8);
+      padding: 8px 9px;
+      white-space: pre-wrap;
+    }
+
+    .diag-label {
+      font-weight: 600;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(163, 176, 204, 0.9);
+      margin-bottom: 3px;
+    }
+
+    .footer-hint {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .footer-hint span {
+      opacity: 0.8;
+    }
+
+    @media (max-width: 640px) {
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .header-actions {
+        justify-content: flex-start;
+      }
+      .wrap {
+        padding: 18px 16px 14px;
+      }
+    }
   </style>
-<style id="rv-dropdown-pad">
-  /* Give the page extra room below the toolbar so native <select> prefers opening downward */
-  body { padding-bottom: 220px; }
-  /* Keep the book dropdown compact */
-  .rv-toolbar select, .rv-btn-row select { min-width: 120px !important; width: 140px !important; flex: 0 0 auto !important; }
-</style>
 </head>
 <body>
   <div class="wrap">
-    <h1>RoofVault Chat</h1>
+    <!-- Header -->
+    <div class="header">
+      <div class="header-main">
+        <div class="logo">RV</div>
+        <div class="titles">
+          <div class="titles-main">RoofVault – Practice Exam Generator</div>
+          <div class="titles-sub">Generate book-specific exams grounded in your RoofDocs index.</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="pill">
+          Search
+          <code>azureblob-index</code>
+        </div>
+        <div class="pill">
+          Model
+          <code>AOAI_DEPLOYMENT</code>
+        </div>
+      </div>
+    </div>
 
-    <!-- ✅ this is the container that books.js populates -->
-    <div id="bookMount" style="margin:10px 0 16px 0;"></div>
+    <h1>Interactive Practice Exam</h1>
+    <div class="subtext">
+      Select a book from your library, then generate a <strong>25-question practice exam</strong> based only on that source.
+      You can click again to regenerate a fresh exam from the same book.
+    </div>
 
-    <button id="btnGenExam50ByBook">Generate 50</button>
+    <!-- Book selection -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">1. Choose a book</div>
+        <div class="section-hint">Books are loaded from your Azure Blob + Search index.</div>
+      </div>
+      <div class="book-row">
+        <!-- books.js / interactive-exam.js will populate this -->
+        <div id="bookMount"></div>
+      </div>
+    </div>
 
-    <div id="qList" style="background:#0c0f14;border:1px solid #2a2f3a;border-radius:12px;padding:14px;margin-top:16px;min-height:220px;max-height:55vh;overflow:auto;"></div>
+    <!-- Controls + output -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">2. Generate a 25Q practice exam</div>
+        <div class="section-hint">Questions should cite and align with the selected document.</div>
+      </div>
 
-    <pre id="diag" style="margin-top:14px;font-size:12px;color:#a7b0c0;max-height:30vh;overflow:auto;"></pre>
+      <div class="controls-row">
+        <button id="btnGenExam50ByBook" class="btn-primary">
+          <span>Generate 25Q Practice Exam</span>
+        </button>
+
+        <button id="btnOpenChat" class="btn-outline" type="button">
+          <span class="icon">💬</span>
+          <span>Open RoofVault Chat</span>
+        </button>
+      </div>
+
+      <div id="qList">
+        <div class="q-empty">
+          Your generated practice questions will appear here.  
+          Pick a book above, then click <strong>“Generate 25Q Practice Exam”</strong>.
+        </div>
+      </div>
+
+      <pre id="diag">
+<span class="diag-label">Diagnostics</span>
+Ready.
+      </pre>
+
+      <div class="footer-hint">
+        <span>Tip: Click “Generate 25Q Practice Exam” again to get a new randomized exam from the same book.</span>
+      </div>
+    </div>
   </div>
 
+  <!-- Existing logic (don’t touch these paths so your pipeline keeps working) -->
   <script src="/interactive-exam.js?v=4"></script>
   <script src="/books.js?v=4"></script>
   <script src="/gen-exam.js?v=4"></script>
-  <a id="rvchat-link" href="rvchat.html" class="btn" style="margin-left:8px;">RoofVault Chat</a>
 
-
-<style id="rv-btn-style2">
-  .rv-btn-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-</style>
-<script id="rv-align2">
-  (function(){
-    function findButtonByText(txt){
-      var btns = document.querySelectorAll("button");
-      for (var i=0;i<btns.length;i++){
-        if ((btns[i].textContent||"").trim() === txt) return btns[i];
+  <!-- Simple script: wire Chat button to rvchat.html; keep everything else to your existing JS -->
+  <script>
+    (function () {
+      var chatBtn = document.getElementById("btnOpenChat");
+      if (chatBtn) {
+        chatBtn.addEventListener("click", function () {
+          window.location.href = "rvchat.html";
+        });
       }
-      return null;
-    }
-    function ensureChatNextTo(target){
-      if(!target) return;
-      // create or find Chat
-      var chat = document.getElementById("rvchat");
-      if(!chat){
-        chat = document.createElement("button");
-        chat.id = "rvchat";
-        chat.textContent = "Chat";
-      }
-      // copy classes and basic attrs to match Generate 50
-      chat.className = target.className || chat.className;
-      chat.type = target.getAttribute("type") || "button";
-
-      // move Chat immediately after the target button
-      if (target.nextSibling !== chat) {
-        target.parentNode.insertBefore(chat, target.nextSibling);
-      }
-
-      // make parent a horizontal row
-      if (target.parentElement) {
-        target.parentElement.classList.add("rv-btn-row");
-      }
-
-      // click => open rvchat.html
-      chat.addEventListener("click", function(){
-        window.location.href = "rvchat.html";
-      });
-    }
-
-    function init(){
-      var gen = findButtonByText("Generate 50");
-      ensureChatNextTo(gen);
-    }
-
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", init);
-    } else {
-      init();
-    }
-  })();
-</script>
-<style id="rv-polish-style">
-  /* Toolbar look */
-  .rv-toolbar, .rv-btn-row {          /* support both our previous class and new one */
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  /* Controls sizing */
-  .rv-toolbar select, .rv-btn-row select,
-  .rv-toolbar input[type="text"], .rv-btn-row input[type="text"] {
-    min-width: 260px;           /* avoid skinny dropdowns/inputs */
-    flex: 1 1 300px;            /* grow nicely but allow wrapping */
-    height: 36px;
-    padding: 6px 10px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-  }
-  /* Buttons uniform */
-  .rv-toolbar .btn, .rv-btn-row .btn,
-  .rv-toolbar button, .rv-btn-row button {
-    height: 36px;
-    line-height: 36px;
-    padding: 0 14px;
-    border-radius: 8px;
-    cursor: pointer;
-  }
-  /* Small labels spacing */
-  .rv-toolbar label, .rv-btn-row label {
-    margin-right: 4px;
-    font-weight: 500;
-  }
-</style>
-<script id="rv-polish-script">
-  (function(){
-    function tidy(){
-      // Find the "Generate 50" button by visible text, like before
-      var btns = document.querySelectorAll("button");
-      var gen = null;
-      for(var i=0;i<btns.length;i++){
-        if((btns[i].textContent||"").trim() === "Generate 50"){ gen = btns[i]; break; }
-      }
-      if(!gen) return;
-
-      // Ensure parent is a neat toolbar
-      var parent = gen.parentElement;
-      if(parent){
-        parent.classList.add("rv-toolbar");  // our tidy class
-      }
-
-      // Make sure "Chat" is right after Generate 50 (keep existing behavior)
-      var chat = document.getElementById("rvchat");
-      if(chat && gen.nextSibling !== chat){
-        parent.insertBefore(chat, gen.nextSibling);
-      }
-
-      // If there's a select or input nearby, it will auto-size via CSS
-      // but we can nudge min widths if they are extremely narrow at start
-      var controls = parent.querySelectorAll("select, input[type='text']");
-      controls.forEach(function(el){
-        if (el.offsetWidth < 200) {
-          el.style.minWidth = "260px";
-        }
-      });
-    }
-    if(document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", tidy);
-    } else {
-      tidy();
-    }
-  })();
-</script>
-<style id="rv-fix-style">
-  .rv-toolbar select, .rv-btn-row select {
-    min-width: 120px !important;
-    width: 140px !important;
-    flex: 0 0 auto !important;
-    height: 32px;
-  }
-  .rv-toolbar button, .rv-btn-row button {
-    height: 32px;
-    line-height: 32px;
-  }
-</style>
+    })();
+  </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
