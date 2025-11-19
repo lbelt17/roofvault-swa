@@ -110,6 +110,36 @@ function _tokens(s) {
     );
 }
 
+/* 🔓 Decode index id (base64-encoded URL) into a nice filename */
+function decodeIdToName(id) {
+  try {
+    const raw = String(id || "").trim();
+    if (!raw) return id || "unknown";
+
+    // Some Azure IDs are URL-safe base64; normalize then pad
+    let b64 = raw.replace(/-/g, "+").replace(/_/g, "/");
+    const padLen = (4 - (b64.length % 4)) % 4;
+    if (padLen) b64 += "=".repeat(padLen);
+
+    const url = Buffer.from(b64, "base64").toString("utf8");
+
+    // If that didn't look like a URL, just return the original id
+    if (!/^https?:\/\//i.test(url)) return id;
+
+    // Take only the filename part
+    const lastSegment = url.split("/").pop() || url;
+
+    // Decode URL-encoded characters if present
+    try {
+      return decodeURIComponent(lastSegment);
+    } catch {
+      return lastSegment;
+    }
+  } catch {
+    return id || "unknown";
+  }
+}
+
 /* 🔎 Azure Search snippet fetch – matches your schema: id + content */
 async function searchSnippets(query, topN = 8) {
   const base = (SEARCH_ENDPOINT || "").replace(/\/+$/, "");
@@ -134,26 +164,28 @@ async function searchSnippets(query, topN = 8) {
         top: 60,
         searchMode: "any",
         queryType: "full",
-        // 🚨 Your index only has "id" and "content"
+        // Your index has "id" and "content"
         searchFields: "content",
         select: "id,content"
       }
     );
     pass1 = JSON.parse(r.text || "{}");
   } catch (e) {
-    // If search itself blows up, we return no snippets
     return [];
   }
 
   const vals = Array.isArray(pass1?.value) ? pass1.value : [];
   if (!vals.length) return [];
 
-  return vals.slice(0, Math.max(topN, 8)).map((v, i) => ({
-    id: i + 1,
-    // We don't have metadata_storage_name, so we use the doc id as "source label"
-    source: v?.id || `doc-${i + 1}`,
-    text: String(v?.content || "").slice(0, 1400)
-  }));
+  return vals.slice(0, Math.max(topN, 8)).map((v, i) => {
+    const rawId = v?.id || `doc-${i + 1}`;
+    const niceName = decodeIdToName(rawId);
+    return {
+      id: i + 1,
+      source: niceName, // ✅ human-readable PDF-ish name
+      text: String(v?.content || "").slice(0, 1400)
+    };
+  });
 }
 
 /* AOAI wrapper */
