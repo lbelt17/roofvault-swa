@@ -110,7 +110,7 @@ function _tokens(s) {
     );
 }
 
-/* Unified Azure Search snippet fetch */
+/* 🔎 Azure Search snippet fetch – matches your schema: id + content */
 async function searchSnippets(query, topN = 8) {
   const base = (SEARCH_ENDPOINT || "").replace(/\/+$/, "");
   const url = `${base}/indexes('${encodeURIComponent(
@@ -134,12 +134,14 @@ async function searchSnippets(query, topN = 8) {
         top: 60,
         searchMode: "any",
         queryType: "full",
-        searchFields: "content,metadata_storage_name,metadata_storage_path",
-        select: "content,metadata_storage_name,metadata_storage_path"
+        // 🚨 Your index only has "id" and "content"
+        searchFields: "content",
+        select: "id,content"
       }
     );
     pass1 = JSON.parse(r.text || "{}");
   } catch (e) {
+    // If search itself blows up, we return no snippets
     return [];
   }
 
@@ -148,7 +150,8 @@ async function searchSnippets(query, topN = 8) {
 
   return vals.slice(0, Math.max(topN, 8)).map((v, i) => ({
     id: i + 1,
-    source: v?.metadata_storage_name || "unknown.pdf",
+    // We don't have metadata_storage_name, so we use the doc id as "source label"
+    source: v?.id || `doc-${i + 1}`,
     text: String(v?.content || "").slice(0, 1400)
   }));
 }
@@ -198,7 +201,7 @@ module.exports = async function (context, req) {
     return;
   }
 
-  /* 🔍 Enhanced diag mode — now shows the REAL index name */
+  /* 🔍 Diag: show env wiring & index name */
   if (req.method === "GET" && String(req.query?.diag) === "1") {
     const seen = {
       SEARCH_ENDPOINT: !!SEARCH_ENDPOINT,
