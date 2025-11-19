@@ -5,94 +5,321 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>RoofVault Chat</title>
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
-    .wrap {  margin: 0 auto; }
-    h1 { font-size: 24px; margin-bottom: 8px; }
-    .sub { color:#666; margin-bottom:16px; }
-    .row { display:flex; gap:12px; align-items: center; margin-bottom:12px; flex-wrap: wrap; }
-    textarea { width: 100%; min-height: 90px; padding:10px; font-size: 14px; }
-    button { padding: 10px 14px; border:1px solid #ccc; background:#fff; cursor:pointer; border-radius:10px; }
-    button:disabled { opacity:0.6; cursor:not-allowed; }
-    .pill { padding:6px 10px; border:1px solid #ddd; border-radius:999px; background:#fafafa; font-size:12px; }
-    .box { border:1px solid #eee; border-radius:12px; padding:14px; margin-top:12px; }
-    .msg { margin:10px 0; white-space: pre-wrap; }
-    .meta { color:#777; font-size:12px; margin-top:8px; }
-    .src { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:12px; border-top:1px solid #f0f0f0; padding-top:8px; margin-top:8px; }
-    .back { text-decoration:none; font-size:14px; }
+    :root {
+      --rv-bg: #f4f5f7;
+      --rv-card-bg: #ffffff;
+      --rv-border: #e1e4ea;
+      --rv-accent: #111827;
+      --rv-accent-soft: #e5e7eb;
+      --rv-text-main: #111827;
+      --rv-text-muted: #6b7280;
+      --rv-pill-bg: #f3f4f6;
+      --rv-radius-lg: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px 16px 40px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Arial, sans-serif;
+      background: var(--rv-bg);
+      color: var(--rv-text-main);
+    }
+
+    .wrap {
+      max-width: 880px;
+      margin: 0 auto;
+    }
+
+    .rv-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .rv-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #111827, #4b5563);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 18px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
+    }
+
+    .rv-titles-main {
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .rv-titles-sub {
+      font-size: 12px;
+      color: var(--rv-text-muted);
+    }
+
+    .rv-card {
+      background: var(--rv-card-bg);
+      border-radius: var(--rv-radius-lg);
+      border: 1px solid var(--rv-border);
+      padding: 18px 18px 20px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.07);
+    }
+
+    h1 {
+      font-size: 18px;
+      margin: 0 0 6px;
+      letter-spacing: -0.01em;
+    }
+
+    .sub {
+      color: var(--rv-text-muted);
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+
+    .back {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      text-decoration: none;
+      font-size: 13px;
+      color: var(--rv-text-muted);
+      margin-bottom: 10px;
+    }
+    .back:hover {
+      color: var(--rv-text-main);
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .pill {
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: var(--rv-pill-bg);
+      border: 1px solid #e5e7eb;
+      font-size: 11px;
+      color: #4b5563;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .pill code {
+      font-size: 11px;
+      background: transparent;
+      padding: 0;
+    }
+
+    label[for="q"] {
+      font-size: 13px;
+      font-weight: 600;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 90px;
+      padding: 10px 11px;
+      font-size: 14px;
+      border-radius: 10px;
+      border: 1px solid var(--rv-border);
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      background: #f9fafb;
+    }
+
+    textarea:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.25);
+      background: #ffffff;
+    }
+
+    button {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid #3b82f6;
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+      transition: transform 0.08s ease, box-shadow 0.08s ease,
+        filter 0.08s ease;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(37, 99, 235, 0.4);
+      filter: brightness(1.03);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: 0 3px 8px rgba(37, 99, 235, 0.35);
+    }
+
+    button:disabled {
+      opacity: 0.7;
+      cursor: default;
+      box-shadow: none;
+    }
+
+    #status {
+      font-size: 12px;
+      color: var(--rv-text-muted);
+    }
+
+    /* Output panel (ChatGPT-ish bubble) */
+    #out {
+      display: none;
+      border-radius: var(--rv-radius-lg);
+      border: 1px solid var(--rv-border);
+      background: #f9fafb;
+      padding: 16px 16px 10px;
+      margin-top: 14px;
+    }
+
+    #answer {
+      white-space: pre-wrap;
+      line-height: 1.6;
+      font-size: 15px;
+      color: var(--rv-text-main);
+      margin-bottom: 10px;
+    }
+
+    /* Let basic markdown-style headings look nicer if present */
+    #answer h1,
+    #answer h2,
+    #answer h3 {
+      margin: 0 0 4px;
+      font-weight: 600;
+    }
+
+    #answer h1 {
+      font-size: 18px;
+    }
+    #answer h2 {
+      font-size: 17px;
+    }
+    #answer h3 {
+      font-size: 16px;
+    }
+
+    #answer strong {
+      font-weight: 600;
+      color: #111827;
+    }
+
+    #answer p {
+      margin: 0 0 6px;
+    }
+
+    #sources {
+      white-space: pre-wrap;
+      color: var(--rv-text-muted);
+      font-size: 12px;
+      border-top: 1px solid #e5e7eb;
+      padding-top: 7px;
+      margin-top: 4px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", monospace;
+    }
+
+    #sources strong {
+      font-weight: 600;
+      color: #374151;
+    }
+
+    @media (max-width: 600px) {
+      .rv-card {
+        padding: 14px;
+      }
+      body {
+        padding: 16px 10px 30px;
+      }
+    }
   </style>
-<style id="rvchat-fullwidth">
-  #out { width: 100% !important; max-width: none !important; }
-  .wrap { max-width: none !important; }
-</style>
 </head>
 <body>
-<div class="wrap">
-  <div class="rv-header" style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
-    <div class="rv-logo" style="width:36px;height:36px;border-radius:10px;background:#111;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">RV</div>
-    <div class="rv-titles" style="line-height:1.15">
-      <div style="font-size:18px;font-weight:700">RoofVault AI — Technical Reference Summary</div>
-      <div style="font-size:12px;color:#666">Grounded in NRCA / IIBEC manuals from your RoofDocs index</div>
-    </div>
-  </div>
   <div class="wrap">
-    <a class="back" href="./index.html">← Back</a>
-    <h1>RoofVault Chat</h1>
-    <div class="sub">Ask questions grounded in your blob-backed Search index. Answers cite sources.</div>
-
-    <div class="row">
-      <span class="pill">Endpoint: /api/rvchat</span>
-      <span class="pill">Model: AOAI (<code>AOAI_DEPLOYMENT</code>)</span>
-      <span class="pill">Search: Azure AI Search (<code>SEARCH_INDEX</code>)</span>
-    </div>
-
-    <div>
-      <label for="q"><strong>Your question</strong></label>
-      <textarea id="q" placeholder="Ask a roofing question..."></textarea>
-      <div class="row">
-        <button id="ask">Ask</button>
-        
-        <span id="status" class="meta"></span>
+    <div class="rv-header">
+      <div class="rv-logo">RV</div>
+      <div>
+        <div class="rv-titles-main">RoofVault AI — Technical Reference Chat</div>
+        <div class="rv-titles-sub">
+          Answers grounded in NRCA / IIBEC manuals from your RoofDocs index.
+        </div>
       </div>
     </div>
 
-    <div id="out" class="box" style="display:none;">
-      <div class="msg" id="answer"></div>
-      <div class="src" id="sources"></div>
+    <div class="rv-card">
+      <a class="back" href="./index.html">← Back to RoofVault</a>
+
+      <h1>RoofVault Chat</h1>
+      <div class="sub">
+        Ask any roofing question. Answers are generated using Azure OpenAI and
+        grounded in your Azure AI Search index, with full source citations.
+      </div>
+
+      <div class="row">
+        <span class="pill">
+          Endpoint:
+          <code>/api/rvchat</code>
+        </span>
+        <span class="pill">
+          Model:
+          <code>AOAI_DEPLOYMENT</code>
+        </span>
+        <span class="pill">
+          Search Index:
+          <code>SEARCH_INDEX</code>
+        </span>
+      </div>
+
+      <div>
+        <label for="q">Your question</label>
+        <textarea
+          id="q"
+          placeholder="Example: Explain the difference between mechanically attached and fully adhered membrane roof systems, with [#] citations."
+        ></textarea>
+        <div class="row" style="margin-top: 8px;">
+          <button id="ask">
+            <span>Ask RoofVault</span>
+          </button>
+          <span id="status"></span>
+        </div>
+      </div>
+
+      <div id="out">
+        <div id="answer"></div>
+        <div id="sources"></div>
+      </div>
     </div>
   </div>
 
+  <!-- Keep using your existing JS logic; we are only changing the look -->
   <script src="./rvchat.js"></script>
-<style id="rvchat-out-style">
-  /* Big, neat output panel */
-  #out{
-    display:none; /* stays hidden until results appear */
-    border:1px solid #e6e6e6;
-    border-radius:12px;
-    padding:16px 18px;
-    background:#fff;
-    width: 100%;
-    
-    min-height: 420px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
-    margin-top: 10px;
-  }
-  #answer{
-    white-space: pre-wrap;
-    line-height: 1.55;
-    font-size: 15px;
-    color: #222;
-    margin-bottom: 10px;
-  }
-  #sources{
-    white-space: pre-wrap;
-    color:#555;
-    font-size:12px;
-    border-top:1px solid #eee;
-    padding-top:8px;
-  }
-</style>
 </body>
 </html>
-
-
-
