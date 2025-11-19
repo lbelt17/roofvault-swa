@@ -9,7 +9,7 @@ const {
   AOAI_DEPLOYMENT
 } = process.env;
 
-/* Always-JSON response helper (never throws, never 500s) */
+/* Always-JSON response helper */
 function jsonRes(body, status = 200) {
   return {
     status,
@@ -23,7 +23,7 @@ function jsonRes(body, status = 200) {
   };
 }
 
-/* Tiny HTTP(S) JSON POST */
+/* Minimal HTTP(S) POST for JSON */
 function postJson(url, headers, bodyObj) {
   return new Promise((resolve, reject) => {
     try {
@@ -50,7 +50,11 @@ function postJson(url, headers, bodyObj) {
           let text = "";
           res.on("data", (c) => (text += c));
           res.on("end", () =>
-            resolve({ status: res.statusCode, ok: res.statusCode >= 200 && res.statusCode < 300, text })
+            resolve({
+              status: res.statusCode,
+              ok: res.statusCode >= 200 && res.statusCode < 300,
+              text
+            })
           );
         }
       );
@@ -63,7 +67,7 @@ function postJson(url, headers, bodyObj) {
   });
 }
 
-/* Lightweight alias expansion */
+/* Query normalization helpers */
 function aliasExpand(q) {
   let s = String(q || "");
   s = s.replace(/\bmembrane (roof )?systems?\b/gi, "Membrane Roof Systems");
@@ -72,7 +76,6 @@ function aliasExpand(q) {
   return s;
 }
 
-/* Helpers for family grouping/scoring (kept for future use) */
 function _norm(s) {
   return (s || "").toLowerCase();
 }
@@ -107,7 +110,7 @@ function _tokens(s) {
     );
 }
 
-/* Azure AI Search → return snippets from ALL docs in the index */
+/* Unified Azure Search snippet fetch */
 async function searchSnippets(query, topN = 8) {
   const base = (SEARCH_ENDPOINT || "").replace(/\/+$/, "");
   const url = `${base}/indexes('${encodeURIComponent(
@@ -117,7 +120,8 @@ async function searchSnippets(query, topN = 8) {
   const raw = String(query || "").trim();
   const expanded = aliasExpand(raw);
   const qToks = _tokens(expanded);
-  // If tokenization strips everything, fall back to expanded text or "*" to still hit the index
+
+  // If tokenization removes everything -> fallback to expanded text or "*"
   const searchText = qToks.length ? qToks.join(" ") : expanded || "*";
 
   let pass1;
@@ -136,26 +140,20 @@ async function searchSnippets(query, topN = 8) {
     );
     pass1 = JSON.parse(r.text || "{}");
   } catch (e) {
-    // If search itself blows up, just say "no snippets"
     return [];
   }
 
   const vals = Array.isArray(pass1?.value) ? pass1.value : [];
-  if (!vals.length) {
-    return [];
-  }
+  if (!vals.length) return [];
 
-  const limited = vals.slice(0, Math.max(topN, 8));
-  return limited
-    .map((v, i) => ({
-      id: i + 1,
-      source: v?.metadata_storage_name || "unknown.pdf",
-      text: String(v?.content || "").slice(0, 1400)
-    }))
-    .filter((s) => s.text && s.source);
+  return vals.slice(0, Math.max(topN, 8)).map((v, i) => ({
+    id: i + 1,
+    source: v?.metadata_storage_name || "unknown.pdf",
+    text: String(v?.content || "").slice(0, 1400)
+  }));
 }
 
-/* AOAI chat completion wrapper */
+/* AOAI wrapper */
 async function aoaiAnswer(systemPrompt, userPrompt) {
   const base = (AOAI_ENDPOINT || "").replace(/\/+$/, "");
   const url = `${base}/openai/deployments/${encodeURIComponent(
@@ -177,7 +175,7 @@ async function aoaiAnswer(systemPrompt, userPrompt) {
       }
     );
   } catch (e) {
-    return { ok: false, error: String((e && e.message) || e) };
+    return { ok: false, error: String(e && e.message) };
   }
 
   let parsed = null;
@@ -200,38 +198,31 @@ module.exports = async function (context, req) {
     return;
   }
 
-  /* Hard diag endpoint */
-  try {
-    if (req.method === "GET" && String(req.query?.diag) === "1") {
-      const seen = {
-        SEARCH_ENDPOINT: !!SEARCH_ENDPOINT,
-        SEARCH_KEY: !!SEARCH_KEY,
-        SEARCH_INDEX: !!SEARCH_INDEX,
-        AOAI_ENDPOINT: !!AOAI_ENDPOINT,
-        AOAI_KEY: !!AOAI_KEY,
-        AOAI_DEPLOYMENT: !!AOAI_DEPLOYMENT
-      };
-      context.res = jsonRes({
-        ok: true,
-        layer: "diag",
-        node: process.version,
-        seen,
-        t: new Date().toISOString()
-      });
-      return;
-    }
-  } catch (e) {
+  /* 🔍 Enhanced diag mode — now shows the REAL index name */
+  if (req.method === "GET" && String(req.query?.diag) === "1") {
+    const seen = {
+      SEARCH_ENDPOINT: !!SEARCH_ENDPOINT,
+      SEARCH_KEY: !!SEARCH_KEY,
+      SEARCH_INDEX_EXISTS: !!SEARCH_INDEX,
+      AOAI_ENDPOINT: !!AOAI_ENDPOINT,
+      AOAI_KEY: !!AOAI_KEY,
+      AOAI_DEPLOYMENT: !!AOAI_DEPLOYMENT,
+      INDEX_NAME: SEARCH_INDEX || null
+    };
+
     context.res = jsonRes({
-      ok: false,
+      ok: true,
       layer: "diag",
       node: process.version,
-      error: String(e)
+      seen,
+      t: new Date().toISOString()
     });
     return;
   }
 
+  /* Main Pipeline */
   try {
-    /* Env guard */
+    /* Env Var Guard */
     const reqEnv = {
       SEARCH_ENDPOINT: !!SEARCH_ENDPOINT,
       SEARCH_KEY: !!SEARCH_KEY,
@@ -250,14 +241,13 @@ module.exports = async function (context, req) {
       return;
     }
 
-    /* Input parsing */
+    /* Parse Input */
     const body = req.body || {};
     const msgs = Array.isArray(body.messages) ? body.messages : [];
-    const question = (
-      body.question ||
-      (msgs.length ? msgs[msgs.length - 1]?.content || "" : "") ||
-      ""
-    ).trim();
+    const question =
+      (body.question ||
+        (msgs.length ? msgs[msgs.length - 1]?.content || "" : "") ||
+        "").trim();
 
     if (!question) {
       context.res = jsonRes({
@@ -268,10 +258,10 @@ module.exports = async function (context, req) {
       return;
     }
 
-    /* Search across ALL docs in the index */
+    /* 🔎 Perform Azure Search */
     const snippets = await searchSnippets(question, 8);
 
-    // If there are ZERO snippets, do NOT let the model hallucinate.
+    /* If we have no snippets → no support */
     if (!snippets.length) {
       context.res = jsonRes({
         ok: true,
@@ -282,48 +272,32 @@ module.exports = async function (context, req) {
       return;
     }
 
-    /* Formatted system prompt – forces citations & source grounding */
+    /* System Prompt */
     const systemPrompt = [
-      "You are RoofVault AI, a senior roofing consultant and technical expert.",
-      "Provide detailed, technical, consultant-level explanations using clean, professional formatting.",
-      "Use ONLY the provided snippets as your factual base.",
+      "You are RoofVault AI, a senior roofing consultant.",
+      "Use ONLY the provided snippets as factual basis.",
+      "Always include [#] citations matching provided snippets.",
+      "If unsupported → explicitly say 'No support in the provided sources.'",
       "",
-      "Your response must always follow this structure:",
-      "1) **Overview Section** — A short, plain-language summary (2–3 sentences).",
-      "2) **Technical Explanation Section** — Well-organized paragraphs with bold section headers (e.g., **Definitions**, **Assembly Behavior**, **Failure Modes**, **Best Practices**).",
-      "3) **Real-World Relevance Section** — Explain why the information matters for design, installation, inspections, and forensic analysis.",
-      "",
-      "Formatting rules:",
-      "- Use bold headers, NOT Markdown headings (no ###).",
-      "- Use paragraphs, not code blocks.",
-      "- Do not bullet every line — mix bullets and paragraphs naturally.",
-      "- Maintain clear spacing and clean layout.",
-      "",
-      "Content rules:",
-      "- Prefer the most recent edition; if guidance conflicts, name the year.",
-      "- Every factual point must include a [#] citation directly tied to a snippet.",
-      "- If something is not supported by snippets, state: 'No support in the provided sources.'",
-      "- Do not invent detail IDs, standard numbers, or language not in the snippets."
+      "Response structure:",
+      "1) **Overview Section**",
+      "2) **Technical Explanation Section**",
+      "3) **Real-World Relevance Section**"
     ].join(" ");
 
     const userPrompt = `Question: ${question}
 
 Sources:
-${
-  snippets
-    .map((s) => "[[" + s.id + "]] " + s.source + "\n" + s.text)
-    .join("\n\n") || "(no sources found)"
-}`;
+${snippets.map((s) => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")}`;
 
+    /* Call AOAI */
     const ao = await aoaiAnswer(systemPrompt, userPrompt);
     let answer = (ao.ok ? ao.content : "") || "";
 
     if (!answer) {
-      if (ao.error) {
-        answer = `No answer due to model error: ${ao.error}`;
-      } else {
-        answer = "No support in the provided sources.";
-      }
+      answer = ao.error
+        ? `No answer due to model error: ${ao.error}`
+        : "No support in the provided sources.";
     }
 
     answer = answer.replace(/\n{3,}/g, "\n\n").trim();
@@ -338,8 +312,8 @@ ${
     context.res = jsonRes({
       ok: false,
       layer: "pipeline",
-      error: String((e && e.message) || e),
-      stack: String((e && e.stack) || "")
+      error: String(e && e.message),
+      stack: String(e && e.stack)
     });
   }
 };
