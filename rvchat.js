@@ -1,107 +1,58 @@
-﻿(function () {
-  const $ = (sel) => document.querySelector(sel);
+﻿// rvchat.js — Clean ChatGPT-style output formatting
 
-  // Guard/rehydrate required nodes
-  function ensureNode(id, tag) {
-    let el = document.getElementById(id);
-    if (!el) {
-      el = document.createElement(tag || "div");
-      el.id = id;
-      document.body.appendChild(el);
-    }
-    return el;
-  }
+document.addEventListener("DOMContentLoaded", () => {
+  const askBtn = document.getElementById("ask");
+  const q = document.getElementById("q");
+  const out = document.getElementById("out");
+  const answerBox = document.getElementById("answer");
+  const srcBox = document.getElementById("sources");
+  const status = document.getElementById("status");
 
-  const q = $("#q") || ensureNode("q", "textarea");
-  const ask = $("#ask") || ensureNode("ask", "button");
-  const out = $("#out") || ensureNode("out", "div");
-  const ans = $("#answer") || ensureNode("answer", "div");
-  const src = $("#sources") || ensureNode("sources", "div");
-  const status = $("#status") || ensureNode("status", "div");
+  async function askQuestion() {
+    const question = q.value.trim();
+    if (!question) return;
 
-  // Basic styling fallback so layout is visible even if CSS changed
-  out.style.border = out.style.border || "1px solid #e6e6e6";
-  out.style.borderRadius = out.style.borderRadius || "12px";
-  out.style.padding = out.style.padding || "14px";
-  out.style.marginTop = out.style.marginTop || "10px";
-  out.style.background = out.style.background || "#fff";
-  out.style.width = out.style.width || "100%";
+    askBtn.disabled = true;
+    status.textContent = "Thinking...";
+    out.style.display = "none";
 
-  function showOut() { out.style.display = "block"; }
-  function hideOut() { out.style.display = "none"; }
-
-  function setBusy(b) {
-    ask.disabled = !!b;
-    status.textContent = b ? "Working…" : "";
-  }
-
-  async function callRvChat(question) {
-    setBusy(true);
-    ans.textContent = "";
-    src.textContent = "";
-    // Show a placeholder immediately so user sees activity
-    showOut();
-    ans.textContent = "Thinking…";
-
-    try {
-      const resp = await fetch("/api/rvchat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question })
-      });
-
-      // Try to read JSON; if fails, capture raw text
-      let json = null, raw = null;
-      try { json = await resp.json(); } catch { try { raw = await resp.text(); } catch {} }
-
-      if (!resp.ok || !json || json.ok === false) {
-        const msg = (json && (json.error || json.message)) || raw || ("HTTP " + resp.status);
-        ans.textContent = "Error: " + msg;
-        src.textContent = "";
-        showOut();
-        return;
-      }
-
-      // Success
-      ans.textContent = json.answer || "(no answer)";
-      if (Array.isArray(json.sources) && json.sources.length) {
-        const lines = json.sources.map(s => {
-          const tag = `[${s.id ?? "?"}]`;
-          const where = s.page ? ` (p.${s.page})` : "";
-          return `${tag} ${s.source}${where}`;
-        });
-        src.textContent = "Sources:\n" + lines.join("\n");
-      } else {
-        src.textContent = "Sources: (none returned)";
-      }
-      showOut();
-    } catch (e) {
-      ans.textContent = "Error: " + String(e && e.message || e);
-      src.textContent = "";
-      showOut();
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  // Wire up Ask button (create label if we had to inject)
-  if (ask && !ask.dataset.wired) {
-    ask.dataset.wired = "1";
-    if (!ask.textContent.trim()) ask.textContent = "Ask";
-    ask.addEventListener("click", () => {
-      const question = (q.value || "").trim();
-      if (!question) { q.focus(); return; }
-      callRvChat(question);
+    const res = await fetch("/api/rvchat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question })
     });
+
+    const data = await res.json();
+
+    // Format answer in a ChatGPT-style way
+    let a = data.answer || "";
+    a = a
+      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") // bold formatting
+      .replace(/\n\n/g, "<br><br>")                     // spacing
+      .replace(/\n/g, "<br>");                          // single newlines
+
+    answerBox.innerHTML = a;
+
+    // Format sources
+    if (data.sources && data.sources.length) {
+      const lines = data.sources
+        .map(s => `• <strong>[${s.id}]</strong> ${s.source}`)
+        .join("<br>");
+      srcBox.innerHTML = `<strong>Sources</strong><br>${lines}`;
+    } else {
+      srcBox.innerHTML = "<strong>Sources</strong><br>No sources returned.";
+    }
+
+    out.style.display = "block";
+    status.textContent = "";
+    askBtn.disabled = false;
   }
 
-  // Ctrl/Cmd + Enter submits
-  if (q && !q.dataset.wired) {
-    q.dataset.wired = "1";
-    q.addEventListener("keydown", (ev) => {
-      if ((ev.ctrlKey || ev.metaKey) && ev.key === "Enter") {
-        ask.click();
-      }
-    });
-  }
-})();
+  askBtn.addEventListener("click", askQuestion);
+
+  q.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && e.ctrlKey) {
+      askQuestion();
+    }
+  });
+});
