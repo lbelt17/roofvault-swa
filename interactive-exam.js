@@ -167,7 +167,7 @@
     const ctrls = el("div", { class:"rv-ctr" });
     let checkBtn = null;
 
-    if (isMulti) {
+      if (isMulti) {
       checkBtn = el("button", { class:"rv-nav", text:"Check answer" });
       checkBtn.onclick = () => {
         if (answered) return;
@@ -186,14 +186,22 @@
           correctLetters.length === selectedLetters.length &&
           correctLetters.every(l => selSet.has(l));
 
-        [...optsWrap.querySelectorAll(".rv-btn")].forEach(btn=>{
-          const l = String(btn.getAttribute("data-letter") || btn.textContent.trim().charAt(0)).toUpperCase();
+        [...optsWrap.querySelectorAll(".rv-btn")].forEach(btn => {
+          const l = String(btn.getAttribute("data-letter") || "").toUpperCase();
+
+          // 🔹 Clear the blue “selected” state so red/green are obvious
+          btn.classList.remove("selected");
+
+          // 🔹 Show all correct answers in green
           if (correctSet.has(l)) {
             btn.classList.add("correct");
           }
+
+          // 🔹 Only your chosen wrong answers in red
           if (!correctSet.has(l) && selSet.has(l)) {
             btn.classList.add("incorrect");
           }
+
           btn.disabled = true;
         });
 
@@ -202,13 +210,16 @@
           exp.style.display = "block";
           exp.appendChild(whyBtn);
         } else {
-          exp.textContent = item.explanation || "Review the correct combination based on the study guide.";
+          exp.textContent =
+            item.explanation ||
+            "Review the correct combination based on the study guide.";
           exp.style.display = "block";
           expShown = true;
         }
       };
       ctrls.appendChild(checkBtn);
     }
+
 
     const backBtn = el("button", { class:"rv-nav", text:"Back" });
     const nextBtn = el("button", { class:"rv-nav", text:"Next" });
