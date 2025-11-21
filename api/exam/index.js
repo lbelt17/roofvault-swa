@@ -40,6 +40,82 @@ module.exports = async function (context, req) {
       deployment: DEPLOYMENT || "(none)"
     };
 
+    // Helper to hard-fix Q103 + Q104 from the RWC guide
+    function patchRwcQuestion(q) {
+      if (!q || typeof q !== "object") return q;
+
+      // 103. PVC dumbbell waterstop – turn into a proper MCQ
+      if (q.number === 103) {
+        const options = [
+          {
+            id: "A",
+            text: "in a concrete construction joint with minimal movement, embedded in concrete on both sides as a waterstop"
+          },
+          {
+            id: "B",
+            text: "at control joints in gypsum board partitions"
+          },
+          {
+            id: "C",
+            text: "at expansion joints in metal roof panels"
+          },
+          {
+            id: "D",
+            text: "as an exterior surface seal on masonry veneer"
+          }
+        ];
+        return {
+          ...q,
+          type: "mcq",
+          options,
+          answer: "A",
+          multi: false,
+          correctIndexes: [0],
+          expectedSelections: 1,
+          explanation:
+            q.explanation ||
+            "A PVC dumbbell waterstop is intended for use in concrete construction joints with minimal movement, embedded in concrete on both sides to act as a waterstop."
+        };
+      }
+
+      // 104. Types of waterproofing for concrete (pick 2)
+      if (q.number === 104) {
+        const options = [
+          {
+            id: "A",
+            text: "Integral crystalline admixture"
+          },
+          {
+            id: "B",
+            text: "Air entrainment"
+          },
+          {
+            id: "C",
+            text: "Ordinary reinforcing steel"
+          },
+          {
+            id: "D",
+            text: "Exterior paint only"
+          }
+        ];
+        return {
+          ...q,
+          type: "mcq",
+          options,
+          answer: "A,B",
+          multi: true,
+          correctIndexes: [0, 1],
+          expectedSelections: 2,
+          explanation:
+            q.explanation ||
+            "Integral crystalline admixtures and (in this study guide context) air entrainment are treated as waterproofing approaches for concrete; the other options are not primary waterproofing methods."
+        };
+      }
+
+      // everything else untouched
+      return q;
+    }
+
     // 🔹 Special-case: RWC study guide uses the static JS bank, not AI
     const lowerBook = book.toLowerCase();
     const isRwcStudyGuide =
@@ -58,7 +134,9 @@ module.exports = async function (context, req) {
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
       }
 
-      const items = shuffled.slice(0, n);
+      // Patch Q103 & Q104 so they always have proper choices
+      const patched = shuffled.map(patchRwcQuestion);
+      const items = patched.slice(0, n);
 
       return send(200, {
         items,
