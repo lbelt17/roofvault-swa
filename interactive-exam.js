@@ -19,6 +19,7 @@
       .rv-hint { font-size:12px; color:#ffb347; margin-top:6px; }
       .rv-img-wrap { margin:10px 0; }
       .rv-img-wrap img { max-width:100%; border-radius:12px; border:1px solid #2a2f3a; display:block; }
+      .rv-score { margin-top:12px; padding:10px 12px; border-radius:10px; background:#111520; border:1px solid #2a2f3a; font-size:13px; color:#e6e9ef; }
     `;
     const s = document.createElement("style");
     s.id = STYLE_ID; s.textContent = css;
@@ -40,7 +41,22 @@
     return n;
   }
 
-  function renderOne(mount, item, idx, total, onNav){
+  // Letter grade mapping
+  function gradeFromPercent(pct){
+    if (pct >= 97) return "A+";
+    if (pct >= 93) return "A";
+    if (pct >= 90) return "A-";
+    if (pct >= 87) return "B+";
+    if (pct >= 83) return "B";
+    if (pct >= 80) return "B-";
+    if (pct >= 77) return "C+";
+    if (pct >= 73) return "C";
+    if (pct >= 70) return "C-";
+    if (pct >= 60) return "D";
+    return "F";
+  }
+
+  function renderOne(mount, item, idx, total, onNav, state, updateScore){
     mount.innerHTML = "";
 
     const optionsArr = Array.isArray(item.options) ? item.options : [];
@@ -151,6 +167,12 @@
             btn.disabled = true;
           });
 
+          // 🔹 Update score state
+          if (state && state.results) {
+            state.results[idx] = { answered: true, correct: isChosenCorrect };
+            updateScore && updateScore();
+          }
+
           if (!isChosenCorrect) {
             exp.textContent = item.explanation || "No explanation provided.";
             exp.style.display = "block";
@@ -207,6 +229,12 @@
 
           btn.disabled = true;
         });
+
+        // 🔹 Update score state
+        if (state && state.results) {
+          state.results[idx] = { answered: true, correct: allCorrect };
+          updateScore && updateScore();
+        }
 
         if (allCorrect) {
           exp.textContent = "Correct!";
@@ -265,12 +293,58 @@
       mount.textContent = "(No items)";
       return;
     }
+
+    // 🔹 Score state for this 25-question run
+    const state = {
+      results: new Array(items.length).fill(null)
+    };
+
+    // 🔹 Score box
+    let scoreBox = document.getElementById("rv-score");
+    if (!scoreBox) {
+      scoreBox = el("div", { id: "rv-score", class: "rv-score" });
+      if (mount.parentNode) {
+        mount.parentNode.insertBefore(scoreBox, mount.nextSibling);
+      } else {
+        document.body.appendChild(scoreBox);
+      }
+    }
+
+    function updateScore(){
+      const total = items.length;
+      let answered = 0;
+      let correct = 0;
+
+      for (const r of state.results) {
+        if (r && r.answered) {
+          answered++;
+          if (r.correct) correct++;
+        }
+      }
+
+      if (answered === 0) {
+        scoreBox.textContent = `No questions answered yet.`;
+        return;
+      }
+
+      if (answered < total) {
+        const pctAnswered = Math.round((correct / answered) * 100);
+        scoreBox.textContent =
+          `Progress: ${answered} / ${total} answered • Current score: ${correct} / ${answered} (${pctAnswered}%).`;
+      } else {
+        const pct = Math.round((correct / total) * 100);
+        const grade = gradeFromPercent(pct);
+        scoreBox.textContent =
+          `Final score: ${correct} / ${total} (${pct}%) — Grade: ${grade}`;
+      }
+    }
+
     let i = 0;
     const nav = (next) => {
       if (next < 0) next = 0;
       if (next > items.length - 1) next = items.length - 1;
       i = next;
-      renderOne(mount, items[i], i, items.length, nav);
+      renderOne(mount, items[i], i, items.length, nav, state, updateScore);
       const sb = $("summaryBlock");
       if (sb) {
         const key = items.map(it => `${it.id || "Q"}: ${it.answer}`).join(", ");
