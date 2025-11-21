@@ -299,38 +299,38 @@ const RWC_QUESTION_BANK_FULL = {
       "needsReview": false
     },
     {
-      "id": "RWC-11",
-      "type": "mcq",
-      "question": "Refer to Exhibit #1",
-      "options": [
-        {
-          "id": "A",
-          "text": "bentonite sheets"
-        },
-        {
-          "id": "B",
-          "text": "butyl rubber"
-        },
-        {
-          "id": "C",
-          "text": "liquid-applied membranes"
-        },
-        {
-          "id": "D",
-          "text": "PVC sheets."
-        }
-      ],
-      "answer": "A",
-      "multi": false,
-      "correctIndexes": [
-        0
-      ],
-      "expectedSelections": 1,
-      "cite": "IIBEC - RWC Study Guide.docx",
-      "explanation": "",
-      "imageRef": "",
-      "needsReview": false
+     "id": "RWC-11",
+  "type": "mcq",
+  "question": "Refer to Exhibit #1",
+  "options": [
+    {
+      "id": "A",
+      "text": "bentonite sheets"
     },
+    {
+      "id": "B",
+      "text": "butyl rubber"
+    },
+    {
+      "id": "C",
+      "text": "liquid-applied membranes"
+    },
+    {
+      "id": "D",
+      "text": "PVC sheets."
+    }
+  ],
+  "answer": "A",
+  "multi": false,
+  "correctIndexes": [0],
+  "expectedSelections": 1,
+  "cite": "IIBEC - RWC Study Guide.docx",
+  "explanation": "",
+  "imageRef": "",
+  "needsReview": false,
+
+  "exhibitImage": "/img/rwc/rwc-exhibit-1.png"
+},
     {
       "id": "RWC-12",
       "type": "mcq",
@@ -611,39 +611,40 @@ const RWC_QUESTION_BANK_FULL = {
       "imageRef": "",
       "needsReview": false
     },
+  {
+  "id": "RWC-21",
+  "type": "mcq",
+  "question": "Refer to Exhibit #2",
+  "options": [
     {
-      "id": "RWC-21",
-      "type": "mcq",
-      "question": "Refer to Exhibit #2",
-      "options": [
-        {
-          "id": "A",
-          "text": "6-inch diameter pipe at 1/2 inch per foot slope [4 percent]"
-        },
-        {
-          "id": "B",
-          "text": "6-inch diameter pipe at 1/4 inch per foot slope [2 percent]"
-        },
-        {
-          "id": "C",
-          "text": "6-inch diameter pipe at 1/8 inch per foot slope [1 percent]"
-        },
-        {
-          "id": "D",
-          "text": "8-inch diameter pipe at 1/8 inch per foot slope [1 percent]"
-        }
-      ],
-      "answer": "D",
-      "multi": false,
-      "correctIndexes": [
-        3
-      ],
-      "expectedSelections": 1,
-      "cite": "IIBEC - RWC Study Guide.docx",
-      "explanation": "",
-      "imageRef": "",
-      "needsReview": false
+      "id": "A",
+      "text": "6-inch diameter pipe at 1/2 inch per foot slope [4 percent]"
     },
+    {
+      "id": "B",
+      "text": "6-inch diameter pipe at 1/4 inch per foot slope [2 percent]"
+    },
+    {
+      "id": "C",
+      "text": "6-inch diameter pipe at 1/8 inch per foot slope [1 percent]"
+    },
+    {
+      "id": "D",
+      "text": "8-inch diameter pipe at 1/8 inch per foot slope [1 percent]"
+    }
+  ],
+  "answer": "D",
+  "multi": false,
+  "correctIndexes": [3],
+  "expectedSelections": 1,
+  "cite": "IIBEC - RWC Study Guide.docx",
+  "explanation": "",
+  "imageRef": "",
+  "needsReview": false,
+
+  "exhibitImage": "/img/rwc/rwc-exhibit-2.png"
+},
+
     {
       "id": "RWC-22",
       "type": "multi",
@@ -679,38 +680,39 @@ const RWC_QUESTION_BANK_FULL = {
       "needsReview": false
     },
     {
-      "id": "RWC-23",
-      "type": "mcq",
-      "question": "Refer to Exhibit #3. You observed the crack shown in the exhibit at a below-grade parking garage.",
-      "options": [
-        {
-          "id": "A",
-          "text": "self-adhering tape"
-        },
-        {
-          "id": "B",
-          "text": "chemical grout injection"
-        },
-        {
-          "id": "C",
-          "text": "Route and seal the crack with silicone sealant"
-        },
-        {
-          "id": "D",
-          "text": "Route and seal the crack with urethane sealant"
-        }
-      ],
-      "answer": "B",
-      "multi": false,
-      "correctIndexes": [
-        1
-      ],
-      "expectedSelections": 1,
-      "cite": "IIBEC - RWC Study Guide.docx",
-      "explanation": "",
-      "imageRef": "",
-      "needsReview": false
+  "id": "RWC-23",
+  "type": "mcq",
+  "question": "Refer to Exhibit #3. You observed the crack shown in the exhibit at a below-grade parking garage.",
+  "options": [
+    {
+      "id": "A",
+      "text": "self-adhering tape"
     },
+    {
+      "id": "B",
+      "text": "chemical grout injection"
+    },
+    {
+      "id": "C",
+      "text": "Route and seal the crack with silicone sealant"
+    },
+    {
+      "id": "D",
+      "text": "Route and seal the crack with urethane sealant"
+    }
+  ],
+  "answer": "B",
+  "multi": false,
+  "correctIndexes": [1],
+  "expectedSelections": 1,
+  "cite": "IIBEC - RWC Study Guide.docx",
+  "explanation": "",
+  "imageRef": "",
+  "needsReview": false,
+
+  "exhibitImage": "/img/rwc/rwc-exhibit-3.png"
+},
+
     {
       "id": "RWC-24",
       "type": "mcq",
@@ -745,38 +747,39 @@ const RWC_QUESTION_BANK_FULL = {
       "needsReview": false
     },
     {
-      "id": "RWC-25",
-      "type": "mcq",
-      "question": "Refer to Exhibit #4. The exhibit shows a wet-film thickness measurement on a liquid-applied membrane with an 80% solids content based on the measured wet-film thickness shown on the exhibit.",
-      "options": [
-        {
-          "id": "A",
-          "text": "12.5"
-        },
-        {
-          "id": "B",
-          "text": "44"
-        },
-        {
-          "id": "C",
-          "text": "48"
-        },
-        {
-          "id": "D",
-          "text": "52"
-        }
-      ],
-      "answer": "C",
-      "multi": false,
-      "correctIndexes": [
-        2
-      ],
-      "expectedSelections": 1,
-      "cite": "IIBEC - RWC Study Guide.docx",
-      "explanation": "",
-      "imageRef": "",
-      "needsReview": false
+  "id": "RWC-25",
+  "type": "mcq",
+  "question": "Refer to Exhibit #4. The exhibit shows a wet-film thickness measurement on a liquid-applied membrane with an 80% solids content based on the measured wet-film thickness shown on the exhibit.",
+  "options": [
+    {
+      "id": "A",
+      "text": "12.5"
     },
+    {
+      "id": "B",
+      "text": "44"
+    },
+    {
+      "id": "C",
+      "text": "48"
+    },
+    {
+      "id": "D",
+      "text": "52"
+    }
+  ],
+  "answer": "C",
+  "multi": false,
+  "correctIndexes": [2],
+  "expectedSelections": 1,
+  "cite": "IIBEC - RWC Study Guide.docx",
+  "explanation": "",
+  "imageRef": "",
+  "needsReview": false,
+
+  "exhibitImage": "/img/rwc/rwc-exhibit-4.png"
+},
+
     {
       "id": "RWC-26",
       "type": "multi",
