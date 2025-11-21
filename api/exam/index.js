@@ -18,25 +18,39 @@ module.exports = async function (context, req) {
     const body = (req && req.body) || {};
     const book = (body.book || "").trim();
     const filterField = (body.filterField || "metadata_storage_name").trim();
-    const count = Math.min(Math.max(parseInt(body.count || 50, 10) || 50, 1), 50);
+    const count = Math.min(
+      Math.max(parseInt(body.count || 50, 10) || 50, 1),
+      50
+    );
 
     // --- env
     const SEARCH_ENDPOINT = process.env.SEARCH_ENDPOINT;
-    const SEARCH_API_KEY  = process.env.SEARCH_API_KEY;
-    const SEARCH_INDEX    = process.env.SEARCH_INDEX;
+    const SEARCH_API_KEY = process.env.SEARCH_API_KEY;
+    const SEARCH_INDEX = process.env.SEARCH_INDEX;
 
-    const AOAI_ENDPOINT   = process.env.AZURE_OPENAI_ENDPOINT || process.env.OPENAI_ENDPOINT || process.env.AOAI_ENDPOINT;
-    const AOAI_KEY        = process.env.AZURE_OPENAI_API_KEY   || process.env.OPENAI_API_KEY   || process.env.AOAI_KEY;
-    const DEPLOYMENT      = process.env.AZURE_OPENAI_DEPLOYMENT
-                         || process.env.OPENAI_DEPLOYMENT
-                         || process.env.AOAI_DEPLOYMENT_TURBO
-                         || process.env.DEFAULT_MODEL
-                         || process.env.OPENAI_GPT4O_MINI;
+    const AOAI_ENDPOINT =
+      process.env.AZURE_OPENAI_ENDPOINT ||
+      process.env.OPENAI_ENDPOINT ||
+      process.env.AOAI_ENDPOINT;
+    const AOAI_KEY =
+      process.env.AZURE_OPENAI_API_KEY ||
+      process.env.OPENAI_API_KEY ||
+      process.env.AOAI_KEY;
+    const DEPLOYMENT =
+      process.env.AZURE_OPENAI_DEPLOYMENT ||
+      process.env.OPENAI_DEPLOYMENT ||
+      process.env.AOAI_DEPLOYMENT_TURBO ||
+      process.env.DEFAULT_MODEL ||
+      process.env.OPENAI_GPT4O_MINI;
 
     const envDiag = {
-      searchEndpoint: (SEARCH_ENDPOINT||"").replace(/https?:\/\//,"").split("/")[0],
+      searchEndpoint: (SEARCH_ENDPOINT || "")
+        .replace(/https?:\/\//, "")
+        .split("/")[0],
       searchIndex: SEARCH_INDEX,
-      aoaiEndpointHost: (AOAI_ENDPOINT||"").replace(/https?:\/\//,"").split("/")[0],
+      aoaiEndpointHost: (AOAI_ENDPOINT || "")
+        .replace(/https?:\/\//, "")
+        .split("/")[0],
       deployment: DEPLOYMENT || "(none)"
     };
 
@@ -49,7 +63,8 @@ module.exports = async function (context, req) {
         const options = [
           {
             id: "A",
-            text: "in a concrete construction joint with minimal movement, embedded in concrete on both sides as a waterstop"
+            text:
+              "in a concrete construction joint with minimal movement, embedded in concrete on both sides as a waterstop"
           },
           {
             id: "B",
@@ -124,19 +139,29 @@ module.exports = async function (context, req) {
       lowerBook.includes("guide");
 
     if (isRwcStudyGuide && Array.isArray(RWC_BANK) && RWC_BANK.length) {
-      const total = RWC_BANK.length;
+      // Patch everything once up front
+      const patchedAll = RWC_BANK.map(patchRwcQuestion);
+
+      const total = patchedAll.length;
       const n = Math.min(count, total);
 
-      // Fisher–Yates shuffle to randomize without replacement
-      const shuffled = [...RWC_BANK];
+      // Fisher–Yates shuffle on a copy to randomize order
+      const shuffled = [...patchedAll];
       for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
       }
 
-      // Patch Q103 & Q104 so they always have proper choices
-      const patched = shuffled.map(patchRwcQuestion);
-      const items = patched.slice(0, n);
+      // EXTRA SAFETY: enforce unique IDs (no repeats even if bank had dupes)
+      const seenIds = new Set();
+      const items = [];
+      for (const q of shuffled) {
+        if (!q || !q.id) continue;
+        if (seenIds.has(q.id)) continue;
+        seenIds.add(q.id);
+        items.push(q);
+        if (items.length >= n) break;
+      }
 
       return send(200, {
         items,
@@ -282,7 +307,15 @@ module.exports = async function (context, req) {
               cite: { type: "string" },
               explanation: { type: "string" }
             },
-            required: ["id", "type", "question", "options", "answer", "cite", "explanation"],
+            required: [
+              "id",
+              "type",
+              "question",
+              "options",
+              "answer",
+              "cite",
+              "explanation"
+            ],
             additionalProperties: false
           },
           minItems: 1
