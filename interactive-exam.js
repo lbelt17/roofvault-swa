@@ -17,6 +17,8 @@
       .rv-tag { font-size:11px; color:#a7b0c0; margin-top:4px; }
       .rv-why { background:transparent; border:none; color:#a7b0c0; text-decoration:underline; cursor:pointer; padding:0; margin-left:10px; font-size:12px; }
       .rv-hint { font-size:12px; color:#ffb347; margin-top:6px; }
+      .rv-img-wrap { margin:10px 0; }
+      .rv-img-wrap img { max-width:100%; border-radius:12px; border:1px solid #2a2f3a; display:block; }
     `;
     const s = document.createElement("style");
     s.id = STYLE_ID; s.textContent = css;
@@ -72,6 +74,8 @@
         ? item.expectedSelections
         : (isMulti ? (correctLetters.length || 2) : 1);
 
+    const correctSet = new Set(correctLetters);
+
     const box = el("div", { class: "rv-q" });
     const title = el("h3", { text: item.question || "(no question)" });
 
@@ -101,8 +105,6 @@
 
     const selectedLetters = [];
 
-    const correctSet = new Set(correctLetters);
-
     function toggleSelection(letter, btnEl){
       const idx = selectedLetters.indexOf(letter);
       if (idx >= 0) {
@@ -114,6 +116,7 @@
       }
     }
 
+    // Build options
     (item.options || []).forEach(opt=>{
       const letter = String(opt.id || "").trim().toUpperCase();
       const b = el("button", { class:"rv-btn" });
@@ -121,45 +124,44 @@
       b.innerHTML = `<strong>${letter}.</strong> ${opt.text || ""}`;
 
       if (isMulti) {
-        // Multi-select: toggle selection, wait for "Check Answer"
+        // Multi-select: toggle selections, grade on "Check answer"
         b.onclick = () => {
           if (answered) return;
           toggleSelection(letter, b);
         };
-        } else {
-      // Single-choice: grade on first click
-      b.onclick = () => {
-        if (answered) return;
-        answered = true;
-        const chosenLetter = letter;
-        const isChosenCorrect = correctSet.has(chosenLetter);
+      } else {
+        // Single-choice: grade immediately
+        b.onclick = () => {
+          if (answered) return;
+          answered = true;
+          const chosenLetter = letter;
+          const isChosenCorrect = correctSet.has(chosenLetter);
 
-        // Mark correct answer(s) green; only the chosen wrong option red
-        [...optsWrap.querySelectorAll(".rv-btn")].forEach(btn => {
-          const l = String(btn.getAttribute("data-letter") || "").toUpperCase();
+          // Mark correct answer(s) green; only the chosen wrong option red
+          [...optsWrap.querySelectorAll(".rv-btn")].forEach(btn => {
+            const l = String(btn.getAttribute("data-letter") || "").toUpperCase();
 
-          if (correctSet.has(l)) {
-            btn.classList.add("correct");
+            if (correctSet.has(l)) {
+              btn.classList.add("correct");
+            }
+            if (!correctSet.has(l) && l === chosenLetter) {
+              btn.classList.add("incorrect");
+            }
+
+            btn.disabled = true;
+          });
+
+          if (!isChosenCorrect) {
+            exp.textContent = item.explanation || "No explanation provided.";
+            exp.style.display = "block";
+            expShown = true;
+          } else {
+            exp.textContent = "Correct!";
+            exp.style.display = "block";
+            exp.appendChild(whyBtn);
           }
-          if (!correctSet.has(l) && l === chosenLetter) {
-            btn.classList.add("incorrect");
-          }
-
-          btn.disabled = true;
-        });
-
-        if (!isChosenCorrect) {
-          exp.textContent = item.explanation || "No explanation provided.";
-          exp.style.display = "block";
-          expShown = true;
-        } else {
-          exp.textContent = "Correct!";
-          exp.style.display = "block";
-          exp.appendChild(whyBtn);
-        }
-      };
-    }
-
+        };
+      }
 
       optsWrap.appendChild(b);
     });
@@ -167,7 +169,8 @@
     const ctrls = el("div", { class:"rv-ctr" });
     let checkBtn = null;
 
-      if (isMulti) {
+    // Multi-select grading button
+    if (isMulti) {
       checkBtn = el("button", { class:"rv-nav", text:"Check answer" });
       checkBtn.onclick = () => {
         if (answered) return;
@@ -189,15 +192,15 @@
         [...optsWrap.querySelectorAll(".rv-btn")].forEach(btn => {
           const l = String(btn.getAttribute("data-letter") || "").toUpperCase();
 
-          // 🔹 Clear the blue “selected” state so red/green are obvious
+          // Clear blue selection so red/green is obvious
           btn.classList.remove("selected");
 
-          // 🔹 Show all correct answers in green
+          // Show all correct answers in green
           if (correctSet.has(l)) {
             btn.classList.add("correct");
           }
 
-          // 🔹 Only your chosen wrong answers in red
+          // Only your chosen wrong answers in red
           if (!correctSet.has(l) && selSet.has(l)) {
             btn.classList.add("incorrect");
           }
@@ -220,7 +223,6 @@
       ctrls.appendChild(checkBtn);
     }
 
-
     const backBtn = el("button", { class:"rv-nav", text:"Back" });
     const nextBtn = el("button", { class:"rv-nav", text:"Next" });
 
@@ -230,7 +232,20 @@
     ctrls.appendChild(backBtn);
     ctrls.appendChild(nextBtn);
 
+    // Assemble card
     box.appendChild(title);
+
+    // 🔹 Exhibit image block (for questions with diagrams)
+    if (item.imageRef) {
+      const imgWrap = el("div", { class: "rv-img-wrap" });
+      const img = el("img", {
+        src: item.imageRef,
+        alt: "Exhibit",
+      });
+      imgWrap.appendChild(img);
+      box.appendChild(imgWrap);
+    }
+
     box.appendChild(tag);
     box.appendChild(optsWrap);
     box.appendChild(exp);
