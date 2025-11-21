@@ -126,32 +126,40 @@
           if (answered) return;
           toggleSelection(letter, b);
         };
-      } else {
-        // Single-choice: grade on first click
-        b.onclick = () => {
-          if (answered) return;
-          answered = true;
-          const isChosenCorrect = correctSet.has(letter);
+        } else {
+      // Single-choice: grade on first click
+      b.onclick = () => {
+        if (answered) return;
+        answered = true;
+        const chosenLetter = letter;
+        const isChosenCorrect = correctSet.has(chosenLetter);
 
-          // mark all buttons & lock
-          [...optsWrap.querySelectorAll(".rv-btn")].forEach(btn=>{
-            const l = String(btn.getAttribute("data-letter") || btn.textContent.trim().charAt(0)).toUpperCase();
-            if (correctSet.has(l)) btn.classList.add("correct");
-            else btn.classList.add("incorrect");
-            btn.disabled = true;
-          });
+        // Mark correct answer(s) green; only the chosen wrong option red
+        [...optsWrap.querySelectorAll(".rv-btn")].forEach(btn => {
+          const l = String(btn.getAttribute("data-letter") || "").toUpperCase();
 
-          if (!isChosenCorrect) {
-            exp.textContent = item.explanation || "No explanation provided.";
-            exp.style.display = "block";
-            expShown = true;
-          } else {
-            exp.textContent = "Correct!";
-            exp.style.display = "block";
-            exp.appendChild(whyBtn);
+          if (correctSet.has(l)) {
+            btn.classList.add("correct");
           }
-        };
-      }
+          if (!correctSet.has(l) && l === chosenLetter) {
+            btn.classList.add("incorrect");
+          }
+
+          btn.disabled = true;
+        });
+
+        if (!isChosenCorrect) {
+          exp.textContent = item.explanation || "No explanation provided.";
+          exp.style.display = "block";
+          expShown = true;
+        } else {
+          exp.textContent = "Correct!";
+          exp.style.display = "block";
+          exp.appendChild(whyBtn);
+        }
+      };
+    }
+
 
       optsWrap.appendChild(b);
     });
