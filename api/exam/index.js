@@ -19,7 +19,6 @@ function loadRwcBank() {
     const questions = Array.isArray(json.questions) ? json.questions : [];
     return questions;
   } catch (e) {
-    // If anything fails, just act like no bank exists
     return [];
   }
 }
@@ -27,15 +26,6 @@ function loadRwcBank() {
 /**
  * Convert a question object from rwc-study-guide.json into the MCQ schema
  * expected by the front-end (and consistent with the AI-generated items).
- *
- * Our rwc JSON format:
- * {
- *   question: "text",
- *   options: ["A text", "B text", "C text", "D text"],
- *   correctIndexes: [0,2],          // 0-based indices
- *   multi: true,                    // optional
- *   expectedSelections: 2           // optional
- * }
  */
 function mapRwcQuestionToMcq(q, idx, citeName) {
   const questionText = String(q.question || "").trim();
@@ -43,7 +33,6 @@ function mapRwcQuestionToMcq(q, idx, citeName) {
   const correctIdxs = Array.isArray(q.correctIndexes) ? q.correctIndexes : [];
   const hasMulti = correctIdxs.length > 1 || !!q.multi;
 
-  // Normalize to exactly 4 options, padding if needed.
   const paddedOptions = [...optionsArr];
   while (paddedOptions.length < 4) {
     paddedOptions.push(`Option ${paddedOptions.length + 1}`);
@@ -52,7 +41,6 @@ function mapRwcQuestionToMcq(q, idx, citeName) {
 
   const letters = ["A", "B", "C", "D"];
 
-  // Use first correct index as canonical "answer" for legacy single-answer logic
   const primaryCorrectIndex = correctIdxs.length ? correctIdxs[0] : 0;
   const safeIndex = Math.min(Math.max(primaryCorrectIndex, 0), 3);
   const answerLetter = letters[safeIndex];
@@ -67,18 +55,19 @@ function mapRwcQuestionToMcq(q, idx, citeName) {
     type: "mcq",
     question: questionText || "(missing question text)",
     options,
-    answer: answerLetter,                // legacy single-answer key
+    answer: answerLetter,
     cite: citeName || "IIBEC - RWC Study Guide.docx",
     explanation:
       (q.explanation && String(q.explanation).trim()) ||
       "Refer to the IIBEC RWC Study Guide for the supporting details.",
-    // Extra fields for richer UI / multi-select handling
     multi: hasMulti,
     correctIndexes: correctIdxs,
     expectedSelections:
       typeof q.expectedSelections === "number" && q.expectedSelections > 0
         ? q.expectedSelections
-        : (hasMulti ? correctIdxs.length || 2 : 1)
+        : hasMulti
+        ? correctIdxs.length || 2
+        : 1
   };
 }
 
@@ -129,19 +118,24 @@ module.exports = async function (context, req) {
       deployment: DEPLOYMENT || "(none)"
     };
 
-    // 🔹 Special-case: IIBEC RWC Study Guide uses a fixed question bank, not AI
-    const isRwcStudyGuide = book === "IIBEC - RWC Study Guide.docx";
+    // 🔹 Robust special-case: RWC study guide uses fixed bank, not AI
+    const lowerBook = book.toLowerCase();
+    const isRwcStudyGuide =
+      lowerBook.includes("rwc") &&
+      lowerBook.includes("study") &&
+      lowerBook.includes("guide");
 
     if (isRwcStudyGuide) {
       const rwcQuestions = loadRwcBank();
-      if (!rwcQuestions.length) {
-        // If the bank is missing/empty, fall through to normal AI pipeline with a clear diag.
-        // But we do NOT crash; we still generate questions via AI.
-        context.log("[/api/exam] RWC study guide selected, but question bank is empty; falling back to AI generation.");
-      } else {
+      if (rwcQuestions.length) {
         const citeName = book || "IIBEC - RWC Study Guide.docx";
-        const picked = pickRandom(rwcQuestions, Math.min(count, rwcQuestions.length));
-        const items = picked.map((q, idx) => mapRwcQuestionToMcq(q, idx, citeName));
+        const picked = pickRandom(
+          rwcQuestions,
+          Math.min(count, rwcQuestions.length)
+        );
+        const items = picked.map((q, idx) =>
+          mapRwcQuestionToMcq(q, idx, citeName)
+        );
         return send(200, {
           items,
           modelDeployment: "RWC-STATIC-BANK",
@@ -152,6 +146,10 @@ module.exports = async function (context, req) {
             book
           }
         });
+      } else {
+        context.log(
+          "[/api/exam] RWC study guide selected, but question bank is empty; falling back to AI generation."
+        );
       }
     }
 
@@ -161,12 +159,21 @@ module.exports = async function (context, req) {
       return send(500, { error: "Missing SEARCH_* env vars", _env: envDiag });
     }
     if (!AOAI_ENDPOINT || !AOAI_KEY || !DEPLOYMENT) {
-      return send(500, { error: "Missing OpenAI/Azure OpenAI env (endpoint/key/deployment)", _env: envDiag });
+      return send(500, {
+        error: "Missing OpenAI/Azure OpenAI env (endpoint/key/deployment)",
+        _env: envDiag
+      });
     }
 
-    // --- search
-    const searchUrl = `${SEARCH_ENDPOINT.replace(/\/+$/,"")}/indexes/${encodeURIComponent(SEARCH_INDEX)}/docs/search?api-version=2023-11-01`;
-    const filter = book ? `${filterField} eq '${book.replace(/'/g, "''")}'` : null;
+    const searchUrl = `${SEARCH_ENDPOINT.replace(
+      /\/+$/,
+      ""
+    )}/indexes/${encodeURIComponent(
+      SEARCH_INDEX
+    )}/docs/search?api-version=2023-11-01`;
+    const filter = book
+      ? `${filterField} eq '${book.replace(/'/g, "''")}'`
+      : null;
 
     const searchPayload = {
       search: "*",
@@ -179,32 +186,67 @@ module.exports = async function (context, req) {
     let sTxt = "";
     const sRes = await fetch(searchUrl, {
       method: "POST",
-      headers: { "Content-Type":"application/json", "api-key": SEARCH_API_KEY },
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": SEARCH_API_KEY
+      },
       body: JSON.stringify(searchPayload)
-    }).catch(e => { throw new Error("FETCH_SEARCH_FAILED: "+(e?.message||e)); });
+    }).catch((e) => {
+      throw new Error("FETCH_SEARCH_FAILED: " + (e?.message || e));
+    });
 
-    sTxt = await sRes.text().catch(()=> "");
-    if (!sRes.ok) return send(500, { error: `Search HTTP ${sRes.status}`, raw: sTxt, _env: envDiag });
+    sTxt = await sRes.text().catch(() => "");
+    if (!sRes.ok)
+      return send(500, {
+        error: `Search HTTP ${sRes.status}`,
+        raw: sTxt,
+        _env: envDiag
+      });
 
-    let sJson; try { sJson = JSON.parse(sTxt); } catch { return send(500, { error: "Search returned non-JSON", raw: sTxt.slice(0,2000), _env: envDiag }); }
+    let sJson;
+    try {
+      sJson = JSON.parse(sTxt);
+    } catch {
+      return send(500, {
+        error: "Search returned non-JSON",
+        raw: sTxt.slice(0, 2000),
+        _env: envDiag
+      });
+    }
     const hits = Array.isArray(sJson.value) ? sJson.value : [];
-    const texts = hits.map(h => (h.content || "")).filter(Boolean);
-    const citeName = book || (hits[0]?.metadata_storage_name) || "<mixed sources>";
+    const texts = hits.map((h) => h.content || "").filter(Boolean);
+    const citeName =
+      book || hits[0]?.metadata_storage_name || "<mixed sources>";
     const combined = texts.join("\n\n").slice(0, 120000);
     const combinedLen = combined.length;
 
-    const _diag = { _env: envDiag, searchHits: hits.length, firstDocKeys: hits[0] ? Object.keys(hits[0]).slice(0,5) : [], combinedLen, combinedSample: combined.slice(0,800) };
+    const _diag = {
+      _env: envDiag,
+      searchHits: hits.length,
+      firstDocKeys: hits[0] ? Object.keys(hits[0]).slice(0, 5) : [],
+      combinedLen,
+      combinedSample: combined.slice(0, 800)
+    };
 
-    if (combinedLen < 1000) return send(500, { error: "Not enough source text to generate questions.", _diag });
+    if (combinedLen < 1000)
+      return send(500, {
+        error: "Not enough source text to generate questions.",
+        _diag
+      });
 
-    // --- OpenAI (Azure vs non-Azure)
     const isAzure = /azure\.com/i.test(AOAI_ENDPOINT);
     let chatUrl;
     if (isAzure) {
-      const apiVersion = process.env.AZURE_OPENAI_API_VERSION || "2024-08-01-preview";
-      chatUrl = `${AOAI_ENDPOINT.replace(/\/+$/,"")}/openai/deployments/${encodeURIComponent(DEPLOYMENT)}/chat/completions?api-version=${apiVersion}`;
+      const apiVersion =
+        process.env.AZURE_OPENAI_API_VERSION || "2024-08-01-preview";
+      chatUrl = `${AOAI_ENDPOINT.replace(
+        /\/+$/,
+        ""
+      )}/openai/deployments/${encodeURIComponent(
+        DEPLOYMENT
+      )}/chat/completions?api-version=${apiVersion}`;
     } else {
-      chatUrl = `${AOAI_ENDPOINT.replace(/\/+$/,"")}/v1/chat/completions`;
+      chatUrl = `${AOAI_ENDPOINT.replace(/\/+$/, "")}/v1/chat/completions`;
     }
 
     const sys =
@@ -214,7 +256,6 @@ module.exports = async function (context, req) {
       "Return exactly the requested count of questions. " +
       "Output ONLY valid JSON matching the schema provided.";
 
-    // include 'explanation' field in schema
     const schema = {
       type: "object",
       properties: {
@@ -228,17 +269,26 @@ module.exports = async function (context, req) {
               question: { type: "string" },
               options: {
                 type: "array",
-                items: { type:"object", properties:{ id:{type:"string"}, text:{type:"string"} }, required:["id","text"], additionalProperties:false },
-                minItems: 4, maxItems: 4
+                items: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string" },
+                    text: { type: "string" }
+                  },
+                  required: ["id", "text"],
+                  additionalProperties: false
+                },
+                minItems: 4,
+                maxItems: 4
               },
-              answer: { type:"string" },
-              cite: { type:"string" },
-              explanation: { type:"string" }
+              answer: { type: "string" },
+              cite: { type: "string" },
+              explanation: { type: "string" }
             },
-            required: ["id","type","question","options","answer","cite","explanation"],
+            required: ["id", "type", "question", "options", "answer", "cite", "explanation"],
             additionalProperties: false
           },
-          minItems: count, maxItems: count
+          minItems: 1
         }
       },
       required: ["items"],
@@ -259,29 +309,77 @@ module.exports = async function (context, req) {
     ].join("\n");
 
     const payload = {
-      messages: [{ role:"system", content: sys }, { role:"user", content: user }],
+      messages: [
+        { role: "system", content: sys },
+        { role: "user", content: user }
+      ],
       temperature: 0.3,
-      response_format: { type: "json_schema", json_schema: { name: "mcq_list", schema } }
+      response_format: {
+        type: "json_schema",
+        json_schema: { name: "mcq_list", schema }
+      }
     };
 
     const headers = { "Content-Type": "application/json" };
-    if (isAzure) headers["api-key"] = AOAI_KEY; else headers["Authorization"] = `Bearer ${AOAI_KEY}`;
+    if (isAzure) headers["api-key"] = AOAI_KEY;
+    else headers["Authorization"] = `Bearer ${AOAI_KEY}`;
 
     let mTxt = "";
-    const mRes = await fetch(chatUrl, { method:"POST", headers, body: JSON.stringify(payload) }).catch(e => { throw new Error("FETCH_OPENAI_FAILED: "+(e?.message||e)); });
-    mTxt = await mRes.text().catch(()=> "");
-    if (!mRes.ok) return send(500, { error: `OpenAI HTTP ${mRes.status}`, raw: mTxt.slice(0,4000), _diag });
+    const mRes = await fetch(chatUrl, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload)
+    }).catch((e) => {
+      throw new Error("FETCH_OPENAI_FAILED: " + (e?.message || e));
+    });
+    mTxt = await mRes.text().catch(() => "");
+    if (!mRes.ok)
+      return send(500, {
+        error: `OpenAI HTTP ${mRes.status}`,
+        raw: mTxt.slice(0, 4000),
+        _diag
+      });
 
-    let mJson; try { mJson = JSON.parse(mTxt); } catch { return send(500, { error:"Model returned non-JSON", raw: mTxt.slice(0,4000), _diag }); }
+    let mJson;
+    try {
+      mJson = JSON.parse(mTxt);
+    } catch {
+      return send(500, {
+        error: "Model returned non-JSON",
+        raw: mTxt.slice(0, 4000),
+        _diag
+      });
+    }
     const content = mJson?.choices?.[0]?.message?.content;
-    if (!content) return send(500, { error:"No content from model", raw: mJson, _diag });
+    if (!content)
+      return send(500, {
+        error: "No content from model",
+        raw: mJson,
+        _diag
+      });
 
-    let parsed; try { parsed = JSON.parse(content); } catch { return send(500, { error:"Content not valid JSON", content: content.slice(0,4000), _diag }); }
+    let parsed;
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      return send(500, {
+        error: "Content not valid JSON",
+        content: content.slice(0, 4000),
+        _diag
+      });
+    }
     const items = Array.isArray(parsed.items) ? parsed.items : [];
-    if (items.length !== count) return send(500, { error:`Model returned ${items.length} items; expected ${count}`, _diag });
+    if (!items.length)
+      return send(500, {
+        error: "Model returned no items",
+        _diag
+      });
 
     return send(200, { items, modelDeployment: DEPLOYMENT, _diag });
   } catch (e) {
-    return send(500, { error: String(e?.message||e), stack: String(e?.stack||"") });
+    return send(500, {
+      error: String(e?.message || e),
+      stack: String(e?.stack || "")
+    });
   }
 };
