@@ -71,6 +71,43 @@
     return { qList, btn };
   }
 
+  // 🔍 Helper: is this the IIBEC RWC Study Guide book?
+  function isRwcStudyGuide(pick) {
+    if (!pick) return false;
+    const name = (pick.label || pick.text || pick.value || "").toLowerCase();
+    // Relaxed match in case you tweak naming
+    return name.includes("rwc") && name.includes("study") && name.includes("guide");
+  }
+
+  // 🔧 Helper: for RWC Study Guide ONLY, mark "choose two / pick two" questions as multi-select
+  function markRwcMultiSelect(items, pick) {
+    if (!Array.isArray(items) || !isRwcStudyGuide(pick)) return items;
+
+    const multiRegex = /(choose\s*two|pick\s*two|pick\s*2)/i;
+
+    return items.map(item => {
+      // Try a few common property names for the question text
+      const qText =
+        (item.question ??
+         item.prompt ??
+         item.q ??
+         item.text ??
+         "") + "";
+
+      if (multiRegex.test(qText)) {
+        return {
+          ...item,
+          // These flags can be used by renderQuiz() to show checkboxes, etc.
+          type: item.type || "multi",
+          multi: true,
+          expectedSelections: item.expectedSelections || 2
+        };
+      }
+
+      return item;
+    });
+  }
+
   // Fetch with timeout + retry
   async function safeFetch(url, opts = {}, timeoutMs = 45000, retries = 1) {
     const ctrl = new AbortController();
@@ -144,7 +181,7 @@
         return;
       }
 
-      const items = Array.isArray(data.items) ? data.items : [];
+      let items = Array.isArray(data.items) ? data.items : [];
       if (items.length === 0) {
         showDiag({
           status: res.status,
@@ -155,6 +192,9 @@
         setStatus("Error");
         return;
       }
+
+      // 🔑 RWC-only tweak: mark "choose two / pick two" questions as multi-select
+      items = markRwcMultiSelect(items, pick);
 
       // If you have a fancy quiz renderer, use it; otherwise dump JSON
       if (typeof window.renderQuiz === "function") {
