@@ -1,48 +1,74 @@
-﻿(function(){
-  // Minimal styles injected once for feedback/explanations
-  const STYLE_ID = "rv-exam-inline-style";
-  if (!document.getElementById(STYLE_ID)) {
-    const css = `
-      .rv-q { border:1px solid #2a2f3a; border-radius:12px; padding:14px; margin:10px 0; background:#0c0f14; }
-      .rv-q h3 { margin:0 0 10px 0; font-size:16px; line-height:1.35; }
-      .rv-opt { display:flex; flex-direction:column; gap:8px; margin:10px 0; }
-      .rv-btn { display:block; text-align:left; padding:10px 12px; border:1px solid #2a2f3a; background:#0f131a; color:#e6e9ef; border-radius:10px; cursor:pointer; }
-      .rv-btn.correct { border-color:#20e3b2; box-shadow:0 0 0 1px rgba(32,227,178,.25) inset; }
-      .rv-btn.incorrect { border-color:#ff5a5a; box-shadow:0 0 0 1px rgba(255,90,90,.25) inset; }
-      .rv-btn.selected { border-color:#2aa9ff; box-shadow:0 0 0 1px rgba(42,169,255,.25) inset; }
-      .rv-btn:disabled { opacity:.8; cursor:default; }
-      .rv-exp { margin-top:10px; font-size:13px; color:#a7b0c0; border-top:1px dashed #2a2f3a; padding-top:10px; }
-      .rv-ctr { display:flex; gap:8px; justify-content:flex-end; margin-top:10px; flex-wrap:wrap; }
-      .rv-nav { padding:8px 12px; border:none; border-radius:10px; background:#2aa9ff; color:#071018; font-weight:600; cursor:pointer; }
-      .rv-tag { font-size:11px; color:#a7b0c0; margin-top:4px; }
-      .rv-why { background:transparent; border:none; color:#a7b0c0; text-decoration:underline; cursor:pointer; padding:0; margin-left:10px; font-size:12px; }
-      .rv-hint { font-size:12px; color:#ffb347; margin-top:6px; }
-      .rv-img-wrap { margin:10px 0; }
-      .rv-img-wrap img { max-width:100%; border-radius:12px; border:1px solid #2a2f3a; display:block; }
-      .rv-score { margin-top:12px; padding:10px 12px; border-radius:10px; background:#111520; border:1px solid #2a2f3a; font-size:13px; color:#e6e9ef; }
-    `;
-    const s = document.createElement("style");
-    s.id = STYLE_ID; s.textContent = css;
-    document.head.appendChild(s);
-  }
-
-  function $(id){ return document.getElementById(id); }
-  function el(tag, attrs={}, children=[]){
+﻿(function () {
+  // ---------- Small helpers ----------
+  function $(id) { return document.getElementById(id); }
+  function el(tag, attrs = {}, children = []) {
     const n = document.createElement(tag);
-    Object.entries(attrs).forEach(([k,v])=>{
+    Object.entries(attrs).forEach(([k, v]) => {
       if (k === "class") n.className = v;
       else if (k === "text") n.textContent = v;
       else n.setAttribute(k, v);
     });
-    (Array.isArray(children) ? children : [children]).forEach(c=>{
+    (Array.isArray(children) ? children : [children]).forEach(c => {
       if (typeof c === "string") n.appendChild(document.createTextNode(c));
       else if (c) n.appendChild(c);
     });
     return n;
   }
 
-  // Letter grade mapping
-  function gradeFromPercent(pct){
+  // ---------- Inject styles once ----------
+  const STYLE_ID = "rv-exam-inline-style";
+  if (!document.getElementById(STYLE_ID)) {
+    const css = `
+      .rv-q { border:1px solid #2a2f3a; border-radius:12px; padding:14px; margin:10px 0; background:#0c0f14; }
+      .rv-q h3 { margin:0 0 10px 0; font-size:16px; line-height:1.35; }
+      .rv-tag { font-size:11px; color:#a7b0c0; margin-top:4px; }
+
+      .rv-opt { display:flex; flex-direction:column; gap:8px; margin:12px 0; }
+      .rv-btn { display:block; text-align:left; padding:10px 12px; border:1px solid #2a2f3a; background:#0f131a; color:#e6e9ef; border-radius:10px; cursor:pointer; }
+      .rv-btn.correct { border-color:#20e3b2; box-shadow:0 0 0 1px rgba(32,227,178,.25) inset; }
+      .rv-btn.incorrect { border-color:#ff5a5a; box-shadow:0 0 0 1px rgba(255,90,90,.25) inset; }
+      .rv-btn.selected { border-color:#2aa9ff; box-shadow:0 0 0 1px rgba(42,169,255,.25) inset; }
+      .rv-btn:disabled { opacity:.8; cursor:default; }
+
+      .rv-exp { margin-top:10px; font-size:13px; color:#a7b0c0; border-top:1px dashed #2a2f3a; padding-top:10px; }
+
+      .rv-ctr { display:flex; gap:8px; justify-content:flex-end; margin-top:10px; flex-wrap:wrap; }
+      .rv-nav { padding:8px 12px; border:none; border-radius:10px; background:#2aa9ff; color:#071018; font-weight:600; cursor:pointer; }
+
+      .rv-why { background:transparent; border:none; color:#a7b0c0; text-decoration:underline; cursor:pointer; padding:0; margin-left:10px; font-size:12px; }
+
+      .rv-scorebar { margin-top:8px; font-size:13px; color:#a7b0c0; }
+
+      /* Thumbnail + lightbox */
+      .rv-img-wrap { margin:8px 0 4px 0; text-align:center; }
+      .rv-img-thumb { max-width:220px; max-height:160px; border-radius:10px; border:1px solid #2a2f3a; cursor:pointer; display:inline-block; object-fit:contain; }
+      .rv-img-caption { font-size:11px; color:#a7b0c0; margin-top:4px; }
+
+      .rv-lightbox {
+        position:fixed; inset:0; background:rgba(0,0,0,.8);
+        display:flex; align-items:center; justify-content:center;
+        z-index:9999;
+      }
+      .rv-lightbox img {
+        max-width:90vw; max-height:90vh;
+        border-radius:12px; border:1px solid #3a3f4a;
+        background:#000;
+      }
+      .rv-lightbox-close {
+        position:absolute; top:18px; right:24px;
+        background:rgba(0,0,0,.6); color:#fff;
+        border:none; border-radius:999px;
+        padding:6px 10px; cursor:pointer; font-size:13px;
+      }
+    `;
+    const s = document.createElement("style");
+    s.id = STYLE_ID;
+    s.textContent = css;
+    document.head.appendChild(s);
+  }
+
+  // ---------- Scoring helpers ----------
+  function gradeFromPercent(pct) {
     if (pct >= 97) return "A+";
     if (pct >= 93) return "A";
     if (pct >= 90) return "A-";
@@ -52,24 +78,78 @@
     if (pct >= 77) return "C+";
     if (pct >= 73) return "C";
     if (pct >= 70) return "C-";
-    if (pct >= 60) return "D";
+    if (pct >= 67) return "D+";
+    if (pct >= 63) return "D";
+    if (pct >= 60) return "D-";
     return "F";
   }
 
-  function renderOne(mount, item, idx, total, onNav, state, updateScore){
+  function ensureScoreBar() {
+    let scoreEl = $("examScore");
+    if (!scoreEl) {
+      scoreEl = el("div", { id: "examScore", class: "rv-scorebar" });
+      const qList = $("qList");
+      if (qList && qList.parentNode) {
+        qList.parentNode.appendChild(scoreEl);
+      } else {
+        document.body.appendChild(scoreEl);
+      }
+    }
+    return scoreEl;
+  }
+
+  function updateScoreBar(state) {
+    const scoreEl = ensureScoreBar();
+    const total = state.items.length;
+    const answered = state.answered;
+    const correct = state.correct;
+    const pct = answered ? Math.round((correct / answered) * 100) : 0;
+    const grade = answered ? gradeFromPercent(pct) : "–";
+    scoreEl.textContent =
+      `Progress: ${answered} / ${total} answered · ` +
+      `Current score: ${correct} / ${answered || "0"} (${pct}%) · Grade: ${grade}`;
+  }
+
+  // ---------- Lightbox ----------
+  function showLightbox(src) {
+    const overlay = el("div", { class: "rv-lightbox" });
+    const img = el("img");
+    img.src = src;
+
+    const closeBtn = el("button", { class: "rv-lightbox-close", text: "Close ×" });
+
+    const close = () => {
+      overlay.remove();
+    };
+
+    overlay.onclick = (e) => {
+      if (e.target === overlay) close();
+    };
+    closeBtn.onclick = (e) => {
+      e.stopPropagation();
+      close();
+    };
+
+    overlay.appendChild(img);
+    overlay.appendChild(closeBtn);
+    document.body.appendChild(overlay);
+  }
+
+  // ---------- Render a single question ----------
+  function renderOne(mount, item, idx, total, onNav, state) {
     mount.innerHTML = "";
 
     const optionsArr = Array.isArray(item.options) ? item.options : [];
     const correctIdxs = Array.isArray(item.correctIndexes) ? item.correctIndexes : [];
     let correctLetters = [];
 
-    // Derive correct letters either from correctIndexes or answer string
+    // derive correct letters
     if (correctIdxs.length && optionsArr.length) {
       correctLetters = correctIdxs
         .map(i => {
           const opt = optionsArr[i];
           if (!opt) return null;
-          return String(opt.id || ["A","B","C","D"][i] || "").trim().toUpperCase();
+          return String(opt.id || ["A", "B", "C", "D"][i] || "").trim().toUpperCase();
         })
         .filter(Boolean);
     } else if (typeof item.answer === "string" && item.answer.trim()) {
@@ -79,7 +159,6 @@
         .filter(Boolean);
     }
     if (!correctLetters.length && optionsArr.length) {
-      // Fallback: first option
       correctLetters = [String(optionsArr[0].id || "A").trim().toUpperCase()];
     }
 
@@ -95,20 +174,38 @@
     const box = el("div", { class: "rv-q" });
     const title = el("h3", { text: item.question || "(no question)" });
 
-    let tagText = `Question ${idx+1} of ${total} • Source: ${item.cite || "source"}`;
+    let tagText = `Question ${idx + 1} of ${total} • Source: ${item.cite || "source"}`;
     if (isMulti) {
       tagText += ` • Multi-select: choose ${expectedSelections}`;
     }
-    const tag = el("div", { class:"rv-tag", text: tagText });
+    const tag = el("div", { class: "rv-tag", text: tagText });
 
-    const optsWrap = el("div", { class:"rv-opt" });
+    box.appendChild(title);
+    box.appendChild(tag);
 
-    let answered = false;
-    const exp = el("div", { class:"rv-exp" });
+    // ---------- optional diagram image ----------
+    if (item.imageRef) {
+      const imgWrap = el("div", { class: "rv-img-wrap" });
+      const thumb = el("img", {
+        class: "rv-img-thumb",
+        src: item.imageRef
+      });
+      thumb.onclick = () => showLightbox(item.imageRef);
+      imgWrap.appendChild(thumb);
+      imgWrap.appendChild(el("div", {
+        class: "rv-img-caption",
+        text: "Click to enlarge exhibit"
+      }));
+      box.appendChild(imgWrap);
+    }
+
+    const optsWrap = el("div", { class: "rv-opt" });
+
+    const exp = el("div", { class: "rv-exp" });
     exp.style.display = "none";
-    let expShown = false;
 
-    const whyBtn = el("button", { class:"rv-why", text:"Why?" });
+    let expShown = false;
+    const whyBtn = el("button", { class: "rv-why", text: "Why?" });
     whyBtn.onclick = () => {
       if (!expShown) {
         exp.textContent = item.explanation || "No explanation provided.";
@@ -120,11 +217,12 @@
     };
 
     const selectedLetters = [];
+    let finishedThisQuestion = !!item.__graded;
 
-    function toggleSelection(letter, btnEl){
-      const idx = selectedLetters.indexOf(letter);
-      if (idx >= 0) {
-        selectedLetters.splice(idx, 1);
+    function toggleSelection(letter, btnEl) {
+      const ix = selectedLetters.indexOf(letter);
+      if (ix >= 0) {
+        selectedLetters.splice(ix, 1);
         btnEl.classList.remove("selected");
       } else {
         selectedLetters.push(letter);
@@ -132,70 +230,64 @@
       }
     }
 
-    // Build options
-    (item.options || []).forEach(opt=>{
+    (optionsArr || []).forEach(opt => {
       const letter = String(opt.id || "").trim().toUpperCase();
-      const b = el("button", { class:"rv-btn" });
+      const b = el("button", { class: "rv-btn" });
       b.setAttribute("data-letter", letter);
       b.innerHTML = `<strong>${letter}.</strong> ${opt.text || ""}`;
 
       if (isMulti) {
-        // Multi-select: toggle selections, grade on "Check answer"
         b.onclick = () => {
-          if (answered) return;
+          if (finishedThisQuestion) return;
           toggleSelection(letter, b);
         };
       } else {
-        // Single-choice: grade immediately
         b.onclick = () => {
-          if (answered) return;
-          answered = true;
+          if (finishedThisQuestion) return;
+          finishedThisQuestion = true;
           const chosenLetter = letter;
-          const isChosenCorrect = correctSet.has(chosenLetter);
+          const isCorrect = correctSet.has(chosenLetter);
 
-          // Mark correct answer(s) green; only the chosen wrong option red
+          // mark all buttons
           [...optsWrap.querySelectorAll(".rv-btn")].forEach(btn => {
             const l = String(btn.getAttribute("data-letter") || "").toUpperCase();
 
-            if (correctSet.has(l)) {
-              btn.classList.add("correct");
-            }
-            if (!correctSet.has(l) && l === chosenLetter) {
-              btn.classList.add("incorrect");
-            }
+            if (correctSet.has(l)) btn.classList.add("correct");
+            if (!correctSet.has(l) && l === chosenLetter) btn.classList.add("incorrect");
 
             btn.disabled = true;
           });
 
-          // 🔹 Update score state
-          if (state && state.results) {
-            state.results[idx] = { answered: true, correct: isChosenCorrect };
-            updateScore && updateScore();
+          if (!item.__graded) {
+            state.answered++;
+            if (isCorrect) state.correct++;
+            item.__graded = true;
+            item.__isCorrect = isCorrect;
           }
 
-          if (!isChosenCorrect) {
-            exp.textContent = item.explanation || "No explanation provided.";
-            exp.style.display = "block";
-            expShown = true;
-          } else {
+          if (isCorrect) {
             exp.textContent = "Correct!";
             exp.style.display = "block";
             exp.appendChild(whyBtn);
+          } else {
+            exp.textContent = item.explanation || "No explanation provided.";
+            exp.style.display = "block";
+            expShown = true;
           }
+
+          updateScoreBar(state);
         };
       }
 
       optsWrap.appendChild(b);
     });
 
-    const ctrls = el("div", { class:"rv-ctr" });
-    let checkBtn = null;
+    const ctrls = el("div", { class: "rv-ctr" });
 
-    // Multi-select grading button
     if (isMulti) {
-      checkBtn = el("button", { class:"rv-nav", text:"Check answer" });
+      const checkBtn = el("button", { class: "rv-nav", text: "Check answer" });
       checkBtn.onclick = () => {
-        if (answered) return;
+        if (finishedThisQuestion) return;
 
         if (!selectedLetters.length) {
           exp.textContent = `Select at least one option (expected ~${expectedSelections}).`;
@@ -204,7 +296,7 @@
           return;
         }
 
-        answered = true;
+        finishedThisQuestion = true;
         const selSet = new Set(selectedLetters);
 
         const allCorrect =
@@ -214,26 +306,19 @@
         [...optsWrap.querySelectorAll(".rv-btn")].forEach(btn => {
           const l = String(btn.getAttribute("data-letter") || "").toUpperCase();
 
-          // Clear blue selection so red/green is obvious
           btn.classList.remove("selected");
 
-          // Show all correct answers in green
-          if (correctSet.has(l)) {
-            btn.classList.add("correct");
-          }
-
-          // Only your chosen wrong answers in red
-          if (!correctSet.has(l) && selSet.has(l)) {
-            btn.classList.add("incorrect");
-          }
+          if (correctSet.has(l)) btn.classList.add("correct");
+          if (!correctSet.has(l) && selSet.has(l)) btn.classList.add("incorrect");
 
           btn.disabled = true;
         });
 
-        // 🔹 Update score state
-        if (state && state.results) {
-          state.results[idx] = { answered: true, correct: allCorrect };
-          updateScore && updateScore();
+        if (!item.__graded) {
+          state.answered++;
+          if (allCorrect) state.correct++;
+          item.__graded = true;
+          item.__isCorrect = allCorrect;
         }
 
         if (allCorrect) {
@@ -247,110 +332,65 @@
           exp.style.display = "block";
           expShown = true;
         }
+
+        updateScoreBar(state);
       };
       ctrls.appendChild(checkBtn);
     }
 
-    const backBtn = el("button", { class:"rv-nav", text:"Back" });
-    const nextBtn = el("button", { class:"rv-nav", text:"Next" });
+    const backBtn = el("button", { class: "rv-nav", text: "Back" });
+    const nextBtn = el("button", { class: "rv-nav", text: "Next" });
 
-    backBtn.onclick = () => onNav(idx-1);
-    nextBtn.onclick = () => onNav(idx+1);
+    backBtn.onclick = () => onNav(idx - 1);
+    nextBtn.onclick = () => onNav(idx + 1);
 
     ctrls.appendChild(backBtn);
     ctrls.appendChild(nextBtn);
 
-    // Assemble card
-    box.appendChild(title);
-
-    // 🔹 Exhibit image block (for questions with diagrams)
-    if (item.imageRef) {
-      const imgWrap = el("div", { class: "rv-img-wrap" });
-      const img = el("img", {
-        src: item.imageRef,
-        alt: "Exhibit",
-      });
-      imgWrap.appendChild(img);
-      box.appendChild(imgWrap);
-    }
-
-    box.appendChild(tag);
     box.appendChild(optsWrap);
     box.appendChild(exp);
     box.appendChild(ctrls);
     mount.appendChild(box);
   }
 
-  // Exposed renderer
-  window.renderQuiz = function(items){
-    const mount = $("qList") || (function(){
+  // ---------- Exposed renderer ----------
+  window.renderQuiz = function (items) {
+    const mount = $("qList") || (function () {
       const div = el("div"); div.id = "qList";
       document.body.appendChild(div);
       return div;
     })();
 
-    if (!Array.isArray(items) || items.length === 0){
+    if (!Array.isArray(items) || items.length === 0) {
       mount.textContent = "(No items)";
       return;
     }
 
-    // 🔹 Score state for this 25-question run
+    // exam state
     const state = {
-      results: new Array(items.length).fill(null)
+      items,
+      answered: 0,
+      correct: 0
     };
+    items.forEach(it => { it.__graded = false; it.__isCorrect = false; });
 
-    // 🔹 Score box
-    let scoreBox = document.getElementById("rv-score");
-    if (!scoreBox) {
-      scoreBox = el("div", { id: "rv-score", class: "rv-score" });
-      if (mount.parentNode) {
-        mount.parentNode.insertBefore(scoreBox, mount.nextSibling);
-      } else {
-        document.body.appendChild(scoreBox);
-      }
-    }
-
-    function updateScore(){
-      const total = items.length;
-      let answered = 0;
-      let correct = 0;
-
-      for (const r of state.results) {
-        if (r && r.answered) {
-          answered++;
-          if (r.correct) correct++;
-        }
-      }
-
-      if (answered === 0) {
-        scoreBox.textContent = `No questions answered yet.`;
-        return;
-      }
-
-      if (answered < total) {
-        const pctAnswered = Math.round((correct / answered) * 100);
-        scoreBox.textContent =
-          `Progress: ${answered} / ${total} answered • Current score: ${correct} / ${answered} (${pctAnswered}%).`;
-      } else {
-        const pct = Math.round((correct / total) * 100);
-        const grade = gradeFromPercent(pct);
-        scoreBox.textContent =
-          `Final score: ${correct} / ${total} (${pct}%) — Grade: ${grade}`;
-      }
-    }
+    updateScoreBar(state);
 
     let i = 0;
     const nav = (next) => {
       if (next < 0) next = 0;
       if (next > items.length - 1) next = items.length - 1;
       i = next;
-      renderOne(mount, items[i], i, items.length, nav, state, updateScore);
-      const sb = $("summaryBlock");
-      if (sb) {
-        const key = items.map(it => `${it.id || "Q"}: ${it.answer}`).join(", ");
-        sb.innerHTML = `<span class="muted">Answer key hidden. Click/check each question to reveal feedback. (Key: ${key})</span>`;
-      }
+      renderOne(mount, items[i], i, items.length, nav, state);
     };
     nav(0);
+
+    const sb = $("summaryBlock");
+    if (sb) {
+      const key = items.map(it => `${it.id || "Q"}: ${it.answer || "?"}`).join(", ");
+      sb.innerHTML =
+        `<span class="muted">Answer key hidden. ` +
+        `Check each question to reveal feedback. (Key: ${key})</span>`;
+    }
   };
 })();
