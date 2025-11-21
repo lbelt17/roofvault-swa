@@ -3,6 +3,97 @@
  * POST { book: string, filterField: string, count?: number }
  * Returns: { items:[...], modelDeployment, _diag }
  */
+
+const fs = require("node:fs");
+const path = require("node:path");
+
+/**
+ * Load the fixed question bank for the IIBEC RWC Study Guide, if available.
+ * File: /data/rwc-study-guide.json
+ */
+function loadRwcBank() {
+  try {
+    const p = path.join(__dirname, "..", "..", "data", "rwc-study-guide.json");
+    const raw = fs.readFileSync(p, "utf8");
+    const json = JSON.parse(raw || "{}");
+    const questions = Array.isArray(json.questions) ? json.questions : [];
+    return questions;
+  } catch (e) {
+    // If anything fails, just act like no bank exists
+    return [];
+  }
+}
+
+/**
+ * Convert a question object from rwc-study-guide.json into the MCQ schema
+ * expected by the front-end (and consistent with the AI-generated items).
+ *
+ * Our rwc JSON format:
+ * {
+ *   question: "text",
+ *   options: ["A text", "B text", "C text", "D text"],
+ *   correctIndexes: [0,2],          // 0-based indices
+ *   multi: true,                    // optional
+ *   expectedSelections: 2           // optional
+ * }
+ */
+function mapRwcQuestionToMcq(q, idx, citeName) {
+  const questionText = String(q.question || "").trim();
+  const optionsArr = Array.isArray(q.options) ? q.options : [];
+  const correctIdxs = Array.isArray(q.correctIndexes) ? q.correctIndexes : [];
+  const hasMulti = correctIdxs.length > 1 || !!q.multi;
+
+  // Normalize to exactly 4 options, padding if needed.
+  const paddedOptions = [...optionsArr];
+  while (paddedOptions.length < 4) {
+    paddedOptions.push(`Option ${paddedOptions.length + 1}`);
+  }
+  const finalOptions = paddedOptions.slice(0, 4);
+
+  const letters = ["A", "B", "C", "D"];
+
+  // Use first correct index as canonical "answer" for legacy single-answer logic
+  const primaryCorrectIndex = correctIdxs.length ? correctIdxs[0] : 0;
+  const safeIndex = Math.min(Math.max(primaryCorrectIndex, 0), 3);
+  const answerLetter = letters[safeIndex];
+
+  const options = finalOptions.map((txt, i) => ({
+    id: letters[i],
+    text: String(txt || "")
+  }));
+
+  return {
+    id: `RWC-${idx + 1}`,
+    type: "mcq",
+    question: questionText || "(missing question text)",
+    options,
+    answer: answerLetter,                // legacy single-answer key
+    cite: citeName || "IIBEC - RWC Study Guide.docx",
+    explanation:
+      (q.explanation && String(q.explanation).trim()) ||
+      "Refer to the IIBEC RWC Study Guide for the supporting details.",
+    // Extra fields for richer UI / multi-select handling
+    multi: hasMulti,
+    correctIndexes: correctIdxs,
+    expectedSelections:
+      typeof q.expectedSelections === "number" && q.expectedSelections > 0
+        ? q.expectedSelections
+        : (hasMulti ? correctIdxs.length || 2 : 1)
+  };
+}
+
+/**
+ * Randomly pick up to `count` items from an array without replacement.
+ */
+function pickRandom(arr, count) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a.slice(0, count);
+}
+
 module.exports = async function (context, req) {
   const send = (status, obj) => {
     context.res = {
@@ -24,7 +115,7 @@ module.exports = async function (context, req) {
     const SEARCH_INDEX    = process.env.SEARCH_INDEX;
 
     const AOAI_ENDPOINT   = process.env.AZURE_OPENAI_ENDPOINT || process.env.OPENAI_ENDPOINT || process.env.AOAI_ENDPOINT;
-    const AOAI_KEY        = process.env.AZURE_OPENAI_API_KEY   || process.env.OPENAI_API_KEY   || process.env.AOAI_API_KEY;
+    const AOAI_KEY        = process.env.AZURE_OPENAI_API_KEY   || process.env.OPENAI_API_KEY   || process.env.AOAI_KEY;
     const DEPLOYMENT      = process.env.AZURE_OPENAI_DEPLOYMENT
                          || process.env.OPENAI_DEPLOYMENT
                          || process.env.AOAI_DEPLOYMENT_TURBO
@@ -37,6 +128,34 @@ module.exports = async function (context, req) {
       aoaiEndpointHost: (AOAI_ENDPOINT||"").replace(/https?:\/\//,"").split("/")[0],
       deployment: DEPLOYMENT || "(none)"
     };
+
+    // 🔹 Special-case: IIBEC RWC Study Guide uses a fixed question bank, not AI
+    const isRwcStudyGuide = book === "IIBEC - RWC Study Guide.docx";
+
+    if (isRwcStudyGuide) {
+      const rwcQuestions = loadRwcBank();
+      if (!rwcQuestions.length) {
+        // If the bank is missing/empty, fall through to normal AI pipeline with a clear diag.
+        // But we do NOT crash; we still generate questions via AI.
+        context.log("[/api/exam] RWC study guide selected, but question bank is empty; falling back to AI generation.");
+      } else {
+        const citeName = book || "IIBEC - RWC Study Guide.docx";
+        const picked = pickRandom(rwcQuestions, Math.min(count, rwcQuestions.length));
+        const items = picked.map((q, idx) => mapRwcQuestionToMcq(q, idx, citeName));
+        return send(200, {
+          items,
+          modelDeployment: "RWC-STATIC-BANK",
+          _diag: {
+            mode: "rwc-bank",
+            totalAvailable: rwcQuestions.length,
+            used: items.length,
+            book
+          }
+        });
+      }
+    }
+
+    // --- If not RWC (or if bank was empty), use the existing AI-based pipeline ---
 
     if (!SEARCH_ENDPOINT || !SEARCH_API_KEY || !SEARCH_INDEX) {
       return send(500, { error: "Missing SEARCH_* env vars", _env: envDiag });
@@ -166,4 +285,3 @@ module.exports = async function (context, req) {
     return send(500, { error: String(e?.message||e), stack: String(e?.stack||"") });
   }
 };
-

@@ -1,0 +1,1012 @@
+{
+  "book": "IIBEC - RWC Study Guide.docx",
+  "questions": [
+    {
+      "number": 2,
+      "question": "Which type of material only becomes waterproof when exposed to moisture?",
+      "options": [
+        "acrylic modified cement",
+        "bentonite clay panels",
+        "hot rubberized asphalt membrane",
+        "thermoplastic membrane"
+      ],
+      "correctIndexes": [
+        1
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 3,
+      "question": "A concrete structure constructed over a retail area is intended to be a pedestrian walkway to gain access to an adjacent building. Which two systems would be used to waterproof the top surface of the concrete structure? (Choose two.)",
+      "options": [
+        "two-ply modified-bitumen membrane with an aluminum foil-faced surfacing.",
+        "polyurethane coating with embedded sand aggregate surfacing",
+        "prefabricated cardboard bentonite panels with concrete pavers.",
+        "PVC single-ply membrane with metal walkway planks"
+      ],
+      "correctIndexes": [
+        1,
+        3
+      ],
+      "multi": true,
+      "expectedSelections": 2
+    },
+    {
+      "number": 4,
+      "question": "Pavers will be installed on pedestals that are to be placed over a waterproofing membrane applied on a concrete plaza deck. Which two materials would be installed between the pedestals and waterproofing membrane? (Choose two.)",
+      "options": [
+        "high density polyisocyanurate insulation board",
+        "extruded polystyrene insulation board",
+        "exterior glass mat gypsum board",
+        "prefabricated drainage composite panel"
+      ],
+      "correctIndexes": [
+        1,
+        3
+      ],
+      "multi": true,
+      "expectedSelections": 2
+    },
+    {
+      "number": 7,
+      "question": "A concrete contractor has submitted a Request for Substitution for replacing the specified PVC water stop with a hydrophilic rubber water stop in the vertical and horizontal foundation joints. You approve this request under what condition? Systems",
+      "options": [
+        "Make the replacement, but not in the keyway of the foundation wall or slab.",
+        "Make the replacement, but not on the in-board side of the reinforcing bars.",
+        "Make the replacement, but not within 1 inch [25 mm] of the concrete face.",
+        "Make the replacement, but not at the top and side of the keyway."
+      ],
+      "correctIndexes": [
+        2
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 8,
+      "question": "While designing the connecting tunnel between an existing office building and a new car park garage, it was determined that the tunnel would need to be protected from damage due to moisture. The tunnel will be constructed using a cast-in-place concrete floor and ceiling slab with 8-inch [200 mm] thick reinforced concrete masonry unit walls. The geotechnical report indicates that the tunnel will be exposed to hydrostatic pressure on a seasonal basis. Which material should be applied to the exterior of the tunnel construction?",
+      "options": [
+        "fiber-reinforced cement parging",
+        "self-adhered modified-bitumen membrane",
+        "siloxane compound",
+        "clay emulsified asphalt"
+      ],
+      "correctIndexes": [
+        1
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 9,
+      "question": "For conditions where void (carton) forms are required due to expansive soils, which two waterproofing systems would you recommend for use as a positive side, under slab, waterproofing. system? (Choose two.)",
+      "options": [
+        "adhesive-coated HDPE sheet waterproofing",
+        "Bentonite sheet waterproofing",
+        "thermoplastic sheet waterproofing",
+        "cementitious waterproofing."
+      ],
+      "correctIndexes": [
+        0,
+        2
+      ],
+      "multi": true,
+      "expectedSelections": 2
+    },
+    {
+      "number": 10,
+      "question": "Chronic leaks have been occurring in a parking deck with a cast concrete slab wearing surface over the waterproofing system installed on a structural concrete substrate. Which two actions should be performed to rehabilitate the waterproofing? (Choose two.) and place a new 6-inch [150 mm] concrete topping slab. [150 mm] concrete topping slab. modified asphalt waterproofing.",
+      "options": [
+        "Clean the surface of the concrete topping slab and apply crystalline waterproofing.",
+        "Remove the topping slab, install hot-fluid-applied polymer-modified asphalt waterproofing,",
+        "Remove the topping slab, install bentonite panel waterproofing, and place a new 6-inch.",
+        "Prepare the surface of the concrete topping slab and install a new hot-fluid-applied polymer."
+      ],
+      "correctIndexes": [
+        1,
+        2
+      ],
+      "multi": true,
+      "expectedSelections": 2
+    },
+    {
+      "number": 11,
+      "question": "Refer to Exhibit #1 Which waterproofing is an acceptable material for the condition represented in the photograph, shown in the exhibit? Exhibit #1",
+      "options": [
+        "bentonite sheets",
+        "butyl rubber",
+        "liquid-applied membranes",
+        "PVC sheets."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 12,
+      "question": "A parking garage deck waterproofing system has horizontal joints that are expected to experience 50% movement. According to ASTM C920, the horizontal joints should be treated with which. sealant? (SIKA 2 C-SL) (M=Multi Component=Self Leveling, P=Pedestrian Traffic Class 50= 50% movement, T=roadways) Design",
+      "options": [
+        "Type M, Grade NS, Class 25",
+        "Type M, Grade P, Class 50, Use T",
+        "Type M, Grade P, Class 25, Use T",
+        "Type M, Grade NS, Class 50, Use NT"
+      ],
+      "correctIndexes": [
+        1
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 13,
+      "question": "According to ASTM C981, what are the conditions related to drainage for a concrete plaza, over occupied space, with a built-up asphalt bituminous membrane for waterproofing?",
+      "options": [
+        "The deck can be level since these membranes can withstand ponding.",
+        "The deck must be sloped 1/4 inch/foot [2%] to drain.",
+        "The deck must be sloped 1/8 inch/foot [1%] to drain.",
+        "The deck can be level only if you use a drainage board over the membrane."
+      ],
+      "correctIndexes": [
+        1
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 14,
+      "question": "Which waterproofing system would be applied to concrete that was placed seven days ago and may be subject to dynamic cracks?",
+      "options": [
+        "prefabricated bentonite geocomposite sheet",
+        "fully adhered polymer-modified bitumen sheet",
+        "crystalline cementitious waterproofing",
+        "liquid-applied bitumen-extended urethane"
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 6,
+      "question": "20 X 10^ (-6) inch/ (inch. degree F) [11.1 X 10^ (-6) mm/ (mm. degree C)], with a low temperature of 40 degrees F [4 degrees C] and a high temp of 140 degrees F [60 degrees C], sealant movement of 50%, and zero tolerances?",
+      "options": [
+        "movement = 0.2232 inch [5.6 mm]; joint size = 3/8 inch [9 mm]",
+        "movement = 0.2232 inch [5.6 mm]; joint size = 1/2 inch [13 mm]",
+        "movement = 0.3125 inch [7.8 mm]; joint size = 5/8 inch [16 mm]",
+        "movement = 0.3125 inch [7.8mm]; joint size = 3/8 inch [9 mm]"
+      ],
+      "correctIndexes": [
+        1
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 16,
+      "question": "You are asked to specify a sealant for a parking deck expansion joint. The structural engineer has indicated the 1 inch [25 mm] wide joint will need to accommodate up to \u00bd\u201d inch [12.5 mm] movement. Which sealant would you recommend? (M=Multicomponent, NS=Non-Sag, T=roadways) (\u00bd=50% movement)",
+      "options": [
+        "Type S; Grade NS; Use T; movement up to 25%",
+        "Type M; Grade NS; Use T; movement up to 50% (SIKA 2C-NS)",
+        "Type S; Grade P; Use NT; movement up to 125%",
+        "Type M; Grade P; Use NT; movement up to 25%"
+      ],
+      "correctIndexes": [
+        1
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 17,
+      "question": "You are considering several designs for the perimeter details of a proposed vegetative waterproofing assembly. According to the RCI (now IIBEC) Waterproofing Manual, which two advantages would a 4-foot [1.2 m] wide ballasted strip have over a monolithic concrete traffic slab in this scenario? (Choose two.)",
+      "options": [
+        "access to repair membrane flashings",
+        "prevention of root growth towards membrane flashings",
+        "ventilation of root systems",
+        "compliance with wind uplift requirements"
+      ],
+      "correctIndexes": [
+        0,
+        2
+      ],
+      "multi": true,
+      "expectedSelections": 2
+    },
+    {
+      "number": 18,
+      "question": "What is a water table? Industry Standards",
+      "options": [
+        "An underground lake that intersects the footings.",
+        "The level of water in the ground below which the soil is saturated.",
+        "Water that is retained by an impermeable clay layer.",
+        "Water flows across the foundation from one side to the other."
+      ],
+      "correctIndexes": [
+        1
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 19,
+      "question": "What describes a safe oxygen level for human occupancy in an excavation greater than four feet deep? [What describes a safe oxygen level for human occupancy in a confined space?]",
+      "options": [
+        "an oxygen level greater than 10.5%, but less than 12.8%",
+        "an oxygen level greater than 16.5%, but less than 19.5%",
+        "an oxygen level greater than 19.5%, but less than 23.5%",
+        "an oxygen level greater than 23.5%, but less than 33.3%"
+      ],
+      "correctIndexes": [
+        2
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 20,
+      "question": "You are specifying a self-adhesive rubberized asphalt membrane for a below-grade foundation wall. Which two design considerations should be included in your specifications? (Choose two.)",
+      "options": [
+        "Treat cracks less than 1/16 inch [1.6 mm].",
+        "Ensure substrate is clean, dry, and frost-free.",
+        "Prime the substrate.",
+        "Prepare voids and honeycombs with silicone sealant."
+      ],
+      "correctIndexes": [
+        1,
+        2
+      ],
+      "multi": true,
+      "expectedSelections": 2
+    },
+    {
+      "number": 21,
+      "question": "Refer to Exhibit #2 During the preliminary design of a third-floor employee terrace area for a new office building, you are asked to design the terrace drainage system. The configuration of the terrace area is shown in the exhibit. The design rainfall is 4 inches per hour. Due to available space in the ceiling plenum, the maximum roof leader pipe slope is limited to 1/4 inch per foot [2 percent]. Referring to the exhibit, what is the size and slope of the last section of the horizontal roof leader? Is piping required before continuing down through the building? Exhibit #2 Testing and Investigation",
+      "options": [
+        "6-inch diameter pipe at 1/2 inch per foot slope [4 percent]",
+        "6-inch diameter pipe at 1/4 inch per foot slope [2 percent]",
+        "6-inch diameter pipe at 1/8 inch per foot slope [1 percent]",
+        "8-inch diameter pipe at 1/8 inch per foot slope [1 percent]"
+      ],
+      "correctIndexes": [
+        3
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 22,
+      "question": "You are asked to investigate water infiltration problems on the topmost level of a below-grade parking garage. The upper surface of the garage at grade is grass-covered. From inside the garage, you can see that the main garage roof structure is composed of 5-foot [1.5 m] wide single-span precast concrete double-tees. After heavy rains and snow melts, water leaks appear through the joints between the precast members in widely dispersed areas of the garage. A recent building condition report indicates that the garage structure is about 30 years old, and the original waterproofing consists of an organic felt built-up membrane. The total area of the waterproofed surface is approximately 20,000 square feet [1,860 square meters]. Which two investigative procedures would be appropriate to determine remedial action? (Choose two.) waterproofing and structural system from the top side, chosen at random, to get a number of samples of the membrane and concrete condition. Conduct moisture content testing on the membrane samples. of the garage down to the membrane level to expose the system construction. Conduct electronic leak detection tests on the membrane from the upper surface of the deck. leaking areas, down to the membrane level, and investigate the condition and the construction of the waterproofing membrane.",
+      "options": [
+        "Conduct a series of 25 4-inch [100 mm] diameter test cores through the full",
+        "Remove the landscaping material at the roof/wall junction at the exterior edge",
+        "Perform chloride ion tests on the concrete to establish the extent of corrosion.",
+        "Dig three test openings 6 feet by 6 feet [1.8 m by 1.8 m] in size, chosen over"
+      ],
+      "correctIndexes": [
+        1,
+        3
+      ],
+      "multi": true,
+      "expectedSelections": 2
+    },
+    {
+      "number": 23,
+      "question": "Refer to Exhibit #3. You observed the crack shown in the exhibit at a below-grade parking garage. Which repair method should you recommend? Exhibit #3.",
+      "options": [
+        "self-adhering tape",
+        "chemical grout injection",
+        "Route and seal the crack with silicone sealant",
+        "Route and seal the crack with urethane sealant"
+      ],
+      "correctIndexes": [
+        1
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 24,
+      "question": "You are asked to perform quality control testing on an extensive garden roof with a 15-degree slope. The membrane is black, fully adhered to EPDM over rigid insulation. Which test should you use?",
+      "options": [
+        "EFVM",
+        "nuclear",
+        "capacitance",
+        "ASTM D5957 flood test"
+      ],
+      "correctIndexes": [
+        1
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 25,
+      "question": "Refer to Exhibit #4. The exhibit shows a wet-film thickness measurement on a liquid-applied membrane with an 80% solids content based on the measured wet-film thickness shown on the exhibit. What is the expected minimum dry-film thickness at the measured location? (60mils-12mils=48) Exhibit #4.",
+      "options": [
+        "12.5",
+        "44",
+        "48",
+        "52"
+      ],
+      "correctIndexes": [
+        2
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 26,
+      "question": "What types of construction joints can be used for a water stop? Choose Two.",
+      "options": [
+        "Construction.",
+        "Recessed.",
+        "Expansion.",
+        "Contraction."
+      ],
+      "correctIndexes": [
+        2,
+        3
+      ],
+      "multi": true,
+      "expectedSelections": 2
+    },
+    {
+      "number": 27,
+      "question": "According to ASTM 5957 Standard Guide for Flood Testing, what is the height of the amount of water that can be used to form a hydrostatic head?",
+      "options": [
+        "2\u201d",
+        "4\u201d",
+        "6\u201d"
+      ],
+      "correctIndexes": [
+        1
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 33,
+      "question": "ASTM C-898 Standard in 1978 for Liquid Applied Membranes. (LAM)",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 34,
+      "question": "ASTM C-981 Standard in 1978 for Built-Up Bituminous Applied Membranes.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 35,
+      "question": "ASTM C 989 & C 891 Established three design principles for plaza waterproofing membranes)",
+      "options": [
+        "Slope: Sloping for the structural deck is required for dependable drainage.",
+        "Insulation: Need for thermal insulation. (reduces thermal heat transfer & stress on",
+        "Drainage: Need for a drainage course above the membrane."
+      ],
+      "correctIndexes": [
+        0,
+        1,
+        2
+      ],
+      "multi": true,
+      "expectedSelections": 3
+    },
+    {
+      "number": 36,
+      "question": "A Protected Membrane Roof System is one that allows removal of overburden to maintain the membrane by using pedestal pavers.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 37,
+      "question": "Plaza Waterproofing systems use an overburden that cannot be easily removed, such as concrete, dirt, etc.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 38,
+      "question": "According to the Manual of Below Grade Waterproofing Systems, Hydrostatic pressure typically ranges from 30-62.4 PSF per square foot of depth.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 39,
+      "question": "Passive Resistance can be accomplished by installing under-slab drains and footing drains directed to the storm water system.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 40,
+      "question": "Grading to control surface water run off should be a minimum slope of 5% or greater for the first 10 feet. (BOCA Code states a 1-12 ratio, and that translates to 8.7%)",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 41,
+      "question": "ASTM D 2487: Refers to the aggregate types and sizes used for drainage.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 42,
+      "question": "Damproofing resists water vapor migration. Perimeter drainage is typically the best practice recommended when using damp proofing. Foundation walls and slabs on ground.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 43,
+      "question": "Positive side: Waterproofing resists hydrostatic pressure and vapor migration. In cases where the water table is above 6 inches below the slab and cannot be maintained at that level.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 44,
+      "question": "Waterproofing is defined as a material or system that can prevent leakage of water through a subsurface building component under hydrostatic pressure.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 46,
+      "question": "Metallic oxide: Cementitious coatings were replaced by crystalline in the 1990s.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 47,
+      "question": "Bentonite materials are a poor choice for soils that have intermittent moisture.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 48,
+      "question": "Elastomeric sheets of modified bitumen with high breaking strains are best over unstable substrates.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 53,
+      "question": "BUR Waterproofing system consisting of coal tar is the least environmentally friendly system.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 54,
+      "question": "ASTM D5295 or ACI 515: Specifications related to surface preparation for waterproofing coatings.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 55,
+      "question": "Loose-laid Membranes: Materials for waterproofing systems can be limited to PVC and Butyl membranes.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 57,
+      "question": "ASTM Test Method D95: Limits the water absorption of membranes to a maximum rate of 5%.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 58,
+      "question": "Crystalline waterproofing is self-healing and can bridge cracks up to 3mm. (0.12)",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 59,
+      "question": "Corrosive Soils: The Only positive side is that waterproofing membranes can protect a structure from corrosive soils.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 60,
+      "question": "CRD C48-73: Test method for crystalline waterproofing to determine permeability of coatings on concrete as determined by the US Army Corps of Engineers.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 61,
+      "question": "Hot Applied: Built up bituminous waterproofing, AKA hot applied waterproofing, long record of success and is considered the oldest waterproofing system.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 62,
+      "question": "Built-up Membranes: Do not use organic felts for flashings and protective layers. Specify felts as ASTM D227 Type IV or Type VI.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 63,
+      "question": "Modified Bitumen: Sheet waterproofing 60 mils has elongation break at 150% vs 2% BUR Systems.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 64,
+      "question": "Blind Side Applications MB: Modified bitumen waterproofing is unsuitable for blind side applications & has poor UV resistance.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 67,
+      "question": "Bentonite waterproofing: Requires a minimum of 30 psf of water forming a hydrostatic head for the system to perform correctly over time.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 68,
+      "question": "Plaza waterproofing for a remedial application: can cost up to 10 times the original application due to overburden removal and cleaning required to service the membrane.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 69,
+      "question": "ASTM C-981: for built-up membrane application.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 70,
+      "question": "ASTM C989: Liquid-applied membrane application.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 71,
+      "question": "Slope: Structural deck sloping best practices for waterproofing the structural deck are 2%.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 72,
+      "question": "LAM: Minimum solid content for applications is 65% solids, and typical products have 80% solids.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 73,
+      "question": "XPS: 60 psi insulation is required type and density of insulation for waterproofing plaza decks for parking garage applications. DOW Plazamate is an example of the above-referenced insulation board.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 74,
+      "question": "Base flashing Penetrations: Plaza deck waterproofing should be 6 inches apart.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 75,
+      "question": "Base flashing: For plaza deck waterproofing should extend at least 8-12 inches above the wearing course and be installed prior to the waterproofing membrane.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 76,
+      "question": "ASTM D 5957: Flood testing standard for plaza membranes. Uses 4 \u201cof water for the test.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 77,
+      "question": "Topping slab: Design over a precast deck, minimum 3,000 psi, 3 inches thick with welded wire.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 79,
+      "question": "ASTM D5295: Preparation of Concrete Surfaces for Adhered Membrane Waterproofing Systems.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 80,
+      "question": "Bentonite: Backfilling ASTM D1557 90% maximum density for proper application.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 81,
+      "question": "ASTM E1907: Standard Practice for Determining Moisture-Related Acceptability of Concrete Floors to receive Moisture-Sensitive Finishes.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 82,
+      "question": "Hydrostatic Head vs Waterproofing Walls: Below-grade structures typically need to resist hydrostatic pressures ranging from 30 to 62.4 psi per foot of depth. The exact pressure depends on the surrounding soils.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 83,
+      "question": "Hydrostatic Head Calculation: Multiply the height of the water column in feet by 0.433 to get the pressure in pounds per square inch (psi). For example, a water column that's 10 feet high produces a pressure of 4.33 psi at the base.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 86,
+      "question": "The 90%- 1% Principal: As much as 90% of all water intrusion problems occur within 1% of the total building or structure exterior surface areas.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 87,
+      "question": "The Second Most Important Principle Waterproofing: 99% of all leaks are attributable to causes other than material or system failures.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 89,
+      "question": "Bentonite composition: 85-90% montmorillonite clay and 15 % natural sediments like volcanic ash.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 90,
+      "question": "ASTM C-836 enables fluid-applied systems to bridge cracking up to 1/16th wide.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 91,
+      "question": "Hydrophobic waterproofing resins expand in the presence of water? (reactive)",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 92,
+      "question": "According to ASTM 5957 Water Testing of Assemblies minimum height of the low point for water is 1\u201d and max height at the low point is 4\u201d. In a 24-72 hour Test.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    },
+    {
+      "number": 95,
+      "question": "Sleeved penetration Waterproofing recommends a non-shrink grout and a mechanical seal embedded into the edges of the grout.",
+      "options": [
+        "True.",
+        "False."
+      ],
+      "correctIndexes": [
+        0
+      ],
+      "multi": false,
+      "expectedSelections": 1
+    }
+  ]
+}
