@@ -21,6 +21,10 @@
       .rv-hint { font-size:12px; color:#ffb347; margin-top:6px; }
       .rv-progress { font-size:12px; color:#a7b0c0; margin-top:6px; }
       .rv-progress strong { color:#e6e9ef; }
+      .rv-summary { border:1px solid #2a2f3a; border-radius:12px; padding:18px; margin:10px 0; background:#0c0f14; text-align:center; }
+      .rv-grade-big { font-size:32px; font-weight:800; margin-bottom:8px; }
+      .rv-summary-text { font-size:13px; color:#a7b0c0; margin:4px 0; }
+      .rv-summary-actions { margin-top:14px; display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
     `;
     const s = document.createElement("style");
     s.id = STYLE_ID;
@@ -105,8 +109,60 @@
     }
   }
 
+  // ---------- Summary / finish screen ----------
+  function renderSummary(mount) {
+    const total = ExamState.items.length || 0;
+    const answered = ExamState.results.filter((r) => r.answered).length;
+    const correct = ExamState.results.filter((r) => r.correct).length;
+    const pctTotal = total ? Math.round((correct / total) * 100) : 0;
+    const grade = letterGrade(pctTotal);
+
+    mount.innerHTML = "";
+
+    const box = el("div", { class: "rv-summary" });
+    const big = el("div", { class: "rv-grade-big", text: grade });
+    const line1 = el("div", {
+      class: "rv-summary-text",
+      text: `You answered ${correct} out of ${total} questions correctly (${pctTotal}%).`
+    });
+    const line2 = el("div", {
+      class: "rv-summary-text",
+      text: `Questions attempted: ${answered} / ${total}`
+    });
+
+    const actions = el("div", { class: "rv-summary-actions" });
+    const newBtn = el("button", {
+      class: "rv-nav",
+      text: "New 25Q Practice Exam"
+    });
+    newBtn.onclick = () => {
+      // Try to click the generate button if it exists
+      const genBtn =
+        document.getElementById("generateExamBtn") ||
+        document.getElementById("btnGenerate25") ||
+        document.querySelector("button[data-role='generate-exam']") ||
+        document.querySelector("button[data-exam-generate='25']");
+      if (genBtn) {
+        genBtn.click();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        // Fallback: just scroll to top so the user can click it
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    };
+
+    actions.appendChild(newBtn);
+
+    box.appendChild(big);
+    box.appendChild(line1);
+    box.appendChild(line2);
+    box.appendChild(actions);
+
+    mount.appendChild(box);
+  }
+
   // ---------- Core renderer ----------
-  function renderOne(mount, item, idx, total, onNav) {
+  function renderOne(mount, item, idx, total, onNav, onFinish) {
     mount.innerHTML = "";
 
     const optionsArr = Array.isArray(item.options) ? item.options : [];
@@ -332,10 +388,18 @@
     }
 
     const backBtn = el("button", { class: "rv-nav", text: "Back" });
-    const nextBtn = el("button", { class: "rv-nav", text: "Next" });
+    const isLast = idx === total - 1;
+    const nextLabel = isLast ? "Finish" : "Next";
+    const nextBtn = el("button", { class: "rv-nav", text: nextLabel });
 
     backBtn.onclick = () => onNav(idx - 1);
-    nextBtn.onclick = () => onNav(idx + 1);
+    nextBtn.onclick = () => {
+      if (isLast && typeof onFinish === "function") {
+        onFinish();
+      } else {
+        onNav(idx + 1);
+      }
+    };
 
     ctrls.appendChild(backBtn);
     ctrls.appendChild(nextBtn);
@@ -368,10 +432,21 @@
     ExamState.currentIndex = 0;
 
     const nav = (next) => {
+      const lastIdx = ExamState.items.length - 1;
       if (next < 0) next = 0;
-      if (next > ExamState.items.length - 1) next = ExamState.items.length - 1;
+      if (next > lastIdx) next = lastIdx;
       ExamState.currentIndex = next;
-      renderOne(mount, ExamState.items[next], next, ExamState.items.length, nav);
+      renderOne(
+        mount,
+        ExamState.items[next],
+        next,
+        ExamState.items.length,
+        nav,
+        () => {
+          renderSummary(mount);
+          updateProgress();
+        }
+      );
       updateProgress();
     };
 
