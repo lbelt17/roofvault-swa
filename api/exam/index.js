@@ -138,15 +138,23 @@ module.exports = async function (context, req) {
       lowerBook.includes("study") &&
       lowerBook.includes("guide");
 
-    if (isRwcStudyGuide && Array.isArray(RWC_BANK) && RWC_BANK.length) {
+       if (isRwcStudyGuide && Array.isArray(RWC_BANK) && RWC_BANK.length) {
       // Patch everything once up front
       const patchedAll = RWC_BANK.map(patchRwcQuestion);
 
-      const total = patchedAll.length;
+      // 🔒 Filter out any questions that don't have real MCQ options + answer
+      const bankMcqOnly = patchedAll.filter((q) => {
+        if (!q) return false;
+        if (!Array.isArray(q.options) || q.options.length < 2) return false;
+        if (typeof q.answer !== "string" || !q.answer.trim()) return false;
+        return true;
+      });
+
+      const total = bankMcqOnly.length;
       const n = Math.min(count, total);
 
       // Fisher–Yates shuffle on a copy to randomize order
-      const shuffled = [...patchedAll];
+      const shuffled = [...bankMcqOnly];
       for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
@@ -169,11 +177,14 @@ module.exports = async function (context, req) {
         _diag: {
           mode: "rwc-bank-js",
           totalAvailable: total,
+          requested: count,
           used: items.length,
+          skippedWithoutOptions: patchedAll.length - bankMcqOnly.length,
           book
         }
       });
     }
+
 
     // --- If not RWC, fall back to existing AI-based pipeline ---
 
