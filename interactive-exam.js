@@ -78,7 +78,6 @@
     let p = $("examProgress");
     if (!p) {
       p = el("div", { id: "examProgress", class: "rv-progress" });
-      // Put it under qList if possible
       const qList = $("qList");
       if (qList && qList.parentElement) {
         qList.parentElement.appendChild(p);
@@ -131,24 +130,21 @@
     });
 
     const actions = el("div", { class: "rv-summary-actions" });
-const newBtn = el("button", {
-  class: "rv-nav",
-  text: "New 25Q Practice Exam"
-});
+    const newBtn = el("button", {
+      class: "rv-nav",
+      text: "New 25Q Practice Exam"
+    });
 
-newBtn.onclick = () => {
-  // This is the **actual** generator button used by gen-exam.js
-  const genBtn = document.getElementById("btnGenExam50ByBook");
-
-  if (genBtn) {
-    genBtn.click();  // triggers a fresh exam call to /api/exam
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  } else {
-    console.warn("Generate button not found (btnGenExam50ByBook).");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-};
-
+    newBtn.onclick = () => {
+      const genBtn = document.getElementById("btnGenExam50ByBook");
+      if (genBtn) {
+        genBtn.click();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        console.warn("Generate button not found (btnGenExam50ByBook).");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    };
 
     actions.appendChild(newBtn);
 
@@ -195,7 +191,7 @@ newBtn.onclick = () => {
       ];
     }
 
-    const hasMultiFlag = !!item.multi || (correctIdxs.length > 1);
+    const hasMultiFlag = !!item.multi || correctIdxs.length > 1;
     const isMulti = hasMultiFlag || correctLetters.length > 1;
     const expectedSelectionsRaw =
       typeof item.expectedSelections === "number" && item.expectedSelections > 0
@@ -217,11 +213,12 @@ newBtn.onclick = () => {
 
     box.appendChild(title);
 
-    // Optional image for exhibit questions
-    if (item.imageRef) {
+    // Show exhibit image if present (imageRef or exhibitImage)
+    const imgSrc = item.imageRef || item.exhibitImage;
+    if (imgSrc) {
       const img = el("img", {
-        src: item.imageRef,
-        alt: "Exhibit",
+        src: imgSrc,
+        alt: "Exhibit image",
         class: "rv-img"
       });
       const cap = el("div", {
@@ -317,7 +314,6 @@ newBtn.onclick = () => {
               exp.appendChild(whyBtn);
             }
 
-            // record result
             ExamState.results[idx].answered = true;
             ExamState.results[idx].correct = isChosenCorrect;
             updateProgress();
