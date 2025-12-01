@@ -47,65 +47,38 @@
     };
   };
 
-   async function fetchBooks() {
+     // Load books from /api/books (shape: { field, values:[string,...] })
+  async function fetchBooks() {
     const res = await fetch("/api/books", { method: "GET" });
     if (!res.ok) throw new Error("HTTP " + res.status);
 
-    const text = await res.text();
-    let json;
-    try {
-      json = JSON.parse(text);
-    } catch {
-      json = text;
-    }
+    const json = await res.json();
 
-    let items = [];
+    const field = json.field || "metadata_storage_name";
+    const vals = Array.isArray(json.values) ? json.values : [];
 
-    // Handle lots of possible shapes:
-    if (Array.isArray(json)) {
-      items = json;
-    } else if (json && typeof json === "object") {
-      if (Array.isArray(json.items)) {
-        items = json.items;
-      } else if (Array.isArray(json.data?.items)) {
-        items = json.data.items;
-      } else if (Array.isArray(json.books)) {
-        items = json.books;
-      } else if (Array.isArray(json.value)) {
-        items = json.value;
-      } else {
-        // Fallback: first array value we can find
-        for (const v of Object.values(json)) {
-          if (Array.isArray(v)) {
-            items = v;
-            break;
-          }
-        }
-      }
-    }
+    const items = vals.map((v) => {
+      const label = String(v || "").trim();
+      return {
+        value: label,          // this is what we send to /api/exam
+        label: label,          // shown in the dropdown
+        field: field           // passed as filterField
+      };
+    });
 
-    if (!Array.isArray(items)) items = [];
-
-    const mapped = items
-      .map((b) => ({
-        value: b.value || b.id || b.name || b.fileName || "",
-        label: b.label || b.text || b.name || b.fileName || b.value || "",
-        field: b.field || b.metadata_field || "metadata_storage_name"
-      }))
-      .filter((b) => b.value);
-
-    // Optional: show what we saw in the DIAGNOSTICS box if nothing found
-    if (!mapped.length) {
+    // Optional: if nothing parsed, show raw response in DIAGNOSTICS
+    if (!items.length) {
       const diag = document.getElementById("diag");
       if (diag) {
         diag.textContent =
           "No books parsed from /api/books. Raw response: " +
-          (typeof json === "string" ? json.slice(0, 400) : JSON.stringify(json, null, 2));
+          JSON.stringify(json, null, 2);
       }
     }
 
-    return mapped;
+    return items;
   }
+
 
 
   function renderUI(mount) {
