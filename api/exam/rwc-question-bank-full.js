@@ -278,7 +278,7 @@ const RWC_QUESTION_BANK_FULL = {
       explanation: "",
       imageRef: "",
       needsReview: false,
-      exhibitImage: "/img/rwc/rwc-exhibit-1.png"
+      exhibitImage: "/static/img/rwc/rwc-exhibit-1.png"
     },
 
     {
@@ -548,7 +548,7 @@ const RWC_QUESTION_BANK_FULL = {
       explanation: "",
       imageRef: "",
       needsReview: false,
-      exhibitImage: "/img/rwc/rwc-exhibit-2.png"
+      exhibitImage: "/static/img/rwc/rwc-exhibit-2.png"
     },
 
     {
@@ -603,7 +603,7 @@ const RWC_QUESTION_BANK_FULL = {
       explanation: "",
       imageRef: "",
       needsReview: false,
-      exhibitImage: "/img/rwc/rwc-exhibit-3.png"
+      exhibitImage: "/static/img/rwc/rwc-exhibit-3.png"
     },
 
     {
@@ -646,7 +646,7 @@ const RWC_QUESTION_BANK_FULL = {
       explanation: "",
       imageRef: "",
       needsReview: false,
-      exhibitImage: "/img/rwc/rwc-exhibit-4.png"
+      exhibitImage: "/static/img/rwc/rwc-exhibit-4.png"
     },
 
     {
