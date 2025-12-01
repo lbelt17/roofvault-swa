@@ -47,24 +47,66 @@
     };
   };
 
-  async function fetchBooks() {
+   async function fetchBooks() {
     const res = await fetch("/api/books", { method: "GET" });
     if (!res.ok) throw new Error("HTTP " + res.status);
-    const json = await res.json();
 
-    // Support both { items:[...] } and bare [ ... ] shapes
-    const items = Array.isArray(json?.items)
-      ? json.items
-      : Array.isArray(json)
-      ? json
-      : [];
+    const text = await res.text();
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      json = text;
+    }
 
-    return items.map((b) => ({
-      value: b.value || b.id || b.name || "",
-      label: b.label || b.text || b.name || b.value || "",
-      field: b.field || "metadata_storage_name"
-    }));
+    let items = [];
+
+    // Handle lots of possible shapes:
+    if (Array.isArray(json)) {
+      items = json;
+    } else if (json && typeof json === "object") {
+      if (Array.isArray(json.items)) {
+        items = json.items;
+      } else if (Array.isArray(json.data?.items)) {
+        items = json.data.items;
+      } else if (Array.isArray(json.books)) {
+        items = json.books;
+      } else if (Array.isArray(json.value)) {
+        items = json.value;
+      } else {
+        // Fallback: first array value we can find
+        for (const v of Object.values(json)) {
+          if (Array.isArray(v)) {
+            items = v;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!Array.isArray(items)) items = [];
+
+    const mapped = items
+      .map((b) => ({
+        value: b.value || b.id || b.name || b.fileName || "",
+        label: b.label || b.text || b.name || b.fileName || b.value || "",
+        field: b.field || b.metadata_field || "metadata_storage_name"
+      }))
+      .filter((b) => b.value);
+
+    // Optional: show what we saw in the DIAGNOSTICS box if nothing found
+    if (!mapped.length) {
+      const diag = document.getElementById("diag");
+      if (diag) {
+        diag.textContent =
+          "No books parsed from /api/books. Raw response: " +
+          (typeof json === "string" ? json.slice(0, 400) : JSON.stringify(json, null, 2));
+      }
+    }
+
+    return mapped;
   }
+
 
   function renderUI(mount) {
     mount.innerHTML = "";
