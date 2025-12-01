@@ -131,25 +131,24 @@
     });
 
     const actions = el("div", { class: "rv-summary-actions" });
-    const newBtn = el("button", {
-      class: "rv-nav",
-      text: "New 25Q Practice Exam"
-    });
-    newBtn.onclick = () => {
-      // Try to click the generate button if it exists
-      const genBtn =
-        document.getElementById("generateExamBtn") ||
-        document.getElementById("btnGenerate25") ||
-        document.querySelector("button[data-role='generate-exam']") ||
-        document.querySelector("button[data-exam-generate='25']");
-      if (genBtn) {
-        genBtn.click();
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      } else {
-        // Fallback: just scroll to top so the user can click it
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-    };
+const newBtn = el("button", {
+  class: "rv-nav",
+  text: "New 25Q Practice Exam"
+});
+
+newBtn.onclick = () => {
+  // This is the **actual** generator button used by gen-exam.js
+  const genBtn = document.getElementById("btnGenExam50ByBook");
+
+  if (genBtn) {
+    genBtn.click();  // triggers a fresh exam call to /api/exam
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  } else {
+    console.warn("Generate button not found (btnGenExam50ByBook).");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+};
+
 
     actions.appendChild(newBtn);
 
