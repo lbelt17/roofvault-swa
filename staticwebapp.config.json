@@ -5,13 +5,7 @@
         "registration": {
           "clientIdSettingName": "AADB2C_PROVIDER_CLIENT_ID",
           "clientSecretSettingName": "AADB2C_PROVIDER_CLIENT_SECRET",
-          "openIdConnectConfiguration": {
-            "wellKnownOpenIdConfiguration": "https://RoofVaultUsers.ciamlogin.com/08994c9e-5d60-44c4-8f4c-a1c7afe1aa93/v2.0/.well-known/openid-configuration"
-          }
-        },
-        "login": {
-          "scopes": [ "openid", "profile", "email" ],
-          "loginParameterNames": []
+          "openIdIssuer": "https://RoofVaultUsers.ciamlogin.com/08994c9e-5d60-44c4-8f4c-a1c7afe1aa93/v2.0/"
         }
       }
     }
