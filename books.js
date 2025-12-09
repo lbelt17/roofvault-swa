@@ -20,6 +20,27 @@
 
   let ALL_BOOKS = []; // full list from API
   let CURRENT_BOOKS = []; // filtered list
+// Optional: metadata for nicer citations on the quiz screen
+// Fill in years as you confirm them from each book.
+const BOOK_METADATA = {
+  // example key: whatever value we use for metadata_storage_name for this book
+  // You can add more entries over time.
+  "Roofing-Design-and-Practice-Part1.pdf": {
+    title: "Roofing Design and Practice – Part One",
+    year: "????" // <-- replace with real year when you know it
+  },
+  "Roofing-Design-and-Practice-Part2.pdf": {
+    title: "Roofing Design and Practice – Part Two",
+    year: "????"
+  }
+  // Add more books here as needed
+};
+
+// Helper so other scripts (interactive-exam.js) can look this up
+window.getBookMetadata = function (bookValue) {
+  if (!bookValue) return null;
+  return BOOK_METADATA[String(bookValue)] || null;
+};
 
   // Exposed helper used by other scripts (gen-exam, rvchat)
   window.getSelectedBook = function () {

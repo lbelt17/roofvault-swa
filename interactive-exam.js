@@ -71,8 +71,12 @@
   const ExamState = {
     items: [],
     results: [], // { answered: bool, correct: bool }
-    currentIndex: 0
+    currentIndex: 0,
+    // New: metadata for citations
+    sourceTitle: null,
+    sourceYear: null
   };
+
 
   function ensureProgressElement() {
     let p = $("examProgress");
@@ -205,11 +209,28 @@
     const box = el("div", { class: "rv-q" });
     const title = el("h3", { text: item.question || "(no question)" });
 
-    let tagText = `Question ${idx + 1} of ${total} • Source: ${item.cite || "source"}`;
-    if (isMulti) {
-      tagText += ` • Multi-select: choose ${expectedSelectionsRaw}`;
+    // Build a nice tag line with question number, book source, and optional per-question ref
+    const tagParts = [`Question ${idx + 1} of ${total}`];
+
+    if (ExamState.sourceTitle) {
+      if (ExamState.sourceYear && ExamState.sourceYear !== "Year not specified") {
+        tagParts.push(`Source: ${ExamState.sourceTitle} (${ExamState.sourceYear})`);
+      } else {
+        tagParts.push(`Source: ${ExamState.sourceTitle}`);
+      }
     }
-    const tag = el("div", { class: "rv-tag", text: tagText });
+
+    // Keep any short citation/ref string coming from the backend, if present
+    if (item.cite) {
+      tagParts.push(`Ref: ${item.cite}`);
+    }
+
+    if (isMulti) {
+      tagParts.push(`Multi-select: choose ${expectedSelectionsRaw}`);
+    }
+
+    const tag = el("div", { class: "rv-tag", text: tagParts.join(" • ") });
+
 
     box.appendChild(title);
 
@@ -425,7 +446,23 @@
     ExamState.items = items;
     ExamState.results = items.map(() => ({ answered: false, correct: false }));
     ExamState.currentIndex = 0;
+// NEW: work out the book source title/year for this quiz, so each question can show it
+    try {
+      const selectedBook = window.getSelectedBook ? window.getSelectedBook() : null;
+      const meta =
+        selectedBook && window.getBookMetadata
+          ? window.getBookMetadata(selectedBook.value)
+          : null;
 
+      ExamState.sourceTitle =
+        (meta && meta.title) || (selectedBook && selectedBook.label) || "Selected book";
+
+      ExamState.sourceYear = (meta && meta.year) || "Year not specified";
+    } catch (e) {
+      console.warn("Unable to resolve book metadata for citations:", e);
+      ExamState.sourceTitle = "Selected book";
+      ExamState.sourceYear = "Year not specified";
+    }
     const nav = (next) => {
       const lastIdx = ExamState.items.length - 1;
       if (next < 0) next = 0;

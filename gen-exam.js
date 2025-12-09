@@ -2,7 +2,9 @@
 (function () {
   const QUESTION_COUNT = 25;
 
-  function $(id) { return document.getElementById(id); }
+  function $(id) {
+    return document.getElementById(id);
+  }
 
   const statusEl = $("status");
   const diagEl = $("diag");
@@ -14,9 +16,8 @@
   function showDiag(o) {
     if (!diagEl) return;
     try {
-      diagEl.textContent = typeof o === "string"
-        ? o
-        : JSON.stringify(o, null, 2);
+      diagEl.textContent =
+        typeof o === "string" ? o : JSON.stringify(o, null, 2);
     } catch {
       diagEl.textContent = String(o);
     }
@@ -60,9 +61,9 @@
 
       holder.appendChild(btn);
 
-      const bm = $("bookMount");
-      if (bm && bm.parentNode) {
-        bm.parentNode.insertBefore(holder, qList.nextSibling);
+      const bm2 = $("bookMount");
+      if (bm2 && bm2.parentNode) {
+        bm2.parentNode.insertBefore(holder, qList.nextSibling);
       } else {
         document.body.insertBefore(holder, document.body.firstChild);
       }
@@ -85,14 +86,14 @@
 
     const multiRegex = /(choose\s*two|pick\s*two|pick\s*2)/i;
 
-    return items.map(item => {
+    return items.map((item) => {
       // Try a few common property names for the question text
       const qText =
         (item.question ??
-         item.prompt ??
-         item.q ??
-         item.text ??
-         "") + "";
+          item.prompt ??
+          item.q ??
+          item.text ??
+          "") + "";
 
       if (multiRegex.test(qText)) {
         return {
@@ -108,6 +109,97 @@
     });
   }
 
+  // 🧹 Normalize + filter questions to reduce hallucinations and enforce book-only semantics
+  function normalizeAndFilterItems(rawItems, pick) {
+    const items = Array.isArray(rawItems) ? rawItems.slice() : [];
+    const removed = [];
+
+    // Resolve metadata for this book so we can attach a consistent citation
+    let meta = null;
+    try {
+      if (window.getBookMetadata && pick && pick.value != null) {
+        meta = window.getBookMetadata(pick.value);
+      }
+    } catch (e) {
+      console.warn("Error reading BOOK_METADATA:", e);
+    }
+
+    const defaultSourceTitle =
+      (meta && meta.title) || pick.label || pick.text || "Selected book";
+    const defaultSourceYear =
+      (meta && meta.year) || "Year not specified";
+
+    // Heuristic for market-share style questions we want to be very strict about
+    const MARKET_REGEX =
+      /(market share|% of the market|percent of roofs|dominates\s+the\s+market|portion of the market)/i;
+
+    const cleaned = items.filter((item) => {
+      if (!item || typeof item !== "object") return false;
+
+      const sourceStatus = String(item.sourceStatus || "").toUpperCase();
+      const fromBook =
+        item.fromBook === true ||
+        sourceStatus === "FROM_BOOK" ||
+        sourceStatus === "IN_BOOK";
+
+      // 🚫 1) If backend explicitly said this is NOT in the book, drop it
+      if (
+        sourceStatus === "NOT_IN_BOOK" ||
+        sourceStatus === "OUT_OF_SCOPE" ||
+        sourceStatus === "UNKNOWN"
+      ) {
+        removed.push({
+          reason: sourceStatus,
+          question: item.question || ""
+        });
+        return false;
+      }
+
+      // Text we use to check for risky/statistical language
+      const qText =
+        ((item.question ||
+          item.prompt ||
+          item.text ||
+          "") + "").trim();
+      const expText = ((item.explanation || "") + "").trim();
+
+      // 🚫 2) Drop market-share style questions unless backend explicitly marks them as "from book"
+      if (MARKET_REGEX.test(qText) || MARKET_REGEX.test(expText)) {
+        if (!fromBook) {
+          removed.push({
+            reason: "market-share-heuristic",
+            question: qText
+          });
+          return false;
+        }
+      }
+
+      // ✅ 3) Attach default source/citation fields if missing
+      if (!item.sourceTitle) item.sourceTitle = defaultSourceTitle;
+      if (!item.sourceYear) item.sourceYear = defaultSourceYear;
+
+      // If backend provided a page or section, build a short cite
+      if (!item.cite) {
+        if (item.page) {
+          item.cite = `p. ${item.page}`;
+        } else if (item.section) {
+          item.cite = `Section ${item.section}`;
+        }
+      }
+
+      return true;
+    });
+
+    if (removed.length && diagEl) {
+      showDiag({
+        removedCount: removed.length,
+        removed
+      });
+    }
+
+    return cleaned;
+  }
+
   // Fetch with timeout + retry
   async function safeFetch(url, opts = {}, timeoutMs = 45000, retries = 1) {
     const ctrl = new AbortController();
@@ -119,7 +211,7 @@
     } catch (e) {
       clearTimeout(t);
       if (retries > 0) {
-        await new Promise(r => setTimeout(r, 800));
+        await new Promise((r) => setTimeout(r, 800));
         return safeFetch(url, opts, timeoutMs, retries - 1);
       }
       throw e;
@@ -153,18 +245,26 @@
 
       setStatus(`Generating ${QUESTION_COUNT}-question exam…`);
       qList.classList.add("mono");
-      qList.textContent = `⏳ Generating a ${QUESTION_COUNT}-question practice exam for "${bookName}" from /api/exam …`;
+      qList.textContent = `⏳ Generating a ${QUESTION_COUNT}-question practice exam for "${bookName}" from /api/exam (book-only mode)…`;
 
       // Each click calls the API again → fresh 25Q set each time
-      const res = await safeFetch("/api/exam", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          book: pick.value,        // which file to use (from dropdown)
-          filterField: pick.field, // whatever your API expects
-          count: QUESTION_COUNT    // 🔥 25 questions, not 50
-        })
-      }, 45000, 1);
+      const res = await safeFetch(
+        "/api/exam",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            book: pick.value, // which file to use (from dropdown)
+            filterField: pick.field, // whatever your API expects
+            count: QUESTION_COUNT, // 25 questions, not 50
+            // Hint for backend: be strict about using ONLY this document
+            mode: "BOOK_ONLY",
+            bookLabel: bookName
+          })
+        },
+        45000,
+        1
+      );
 
       const txt = await res.text();
       let data;
@@ -182,6 +282,7 @@
       }
 
       let items = Array.isArray(data.items) ? data.items : [];
+
       if (items.length === 0) {
         showDiag({
           status: res.status,
@@ -189,6 +290,20 @@
           hint: "API responded but no items[] returned"
         });
         qList.textContent = "(No questions returned)";
+        setStatus("Error");
+        return;
+      }
+
+      // 🧹 Normalize + filter questionable items (market share, NOT_IN_BOOK, etc.)
+      items = normalizeAndFilterItems(items, pick);
+
+      if (!items.length) {
+        showDiag({
+          status: res.status,
+          hint: "All generated questions were filtered out as unsafe or out-of-book."
+        });
+        qList.textContent =
+          "(Questions were generated but filtered out — no safe, in-book questions available. Try another book or adjust the exam settings.)";
         setStatus("Error");
         return;
       }
@@ -206,16 +321,17 @@
         qList.textContent = JSON.stringify(items, null, 2);
       }
 
-      setStatus(`Ready • ${QUESTION_COUNT} questions generated`);
+      setStatus(`Ready • ${items.length} questions generated`);
     } catch (e) {
-      const msg = (e && e.name === "AbortError")
-        ? "timeout"
-        : (e?.message || String(e));
+      const msg =
+        e && e.name === "AbortError"
+          ? "timeout"
+          : e?.message || String(e);
 
       showDiag({ error: msg, hint: "Request aborted or network error" });
 
-      const { qList } = ensureUI();
-      qList.textContent = `{ "error": "${msg}" }`;
+      const { qList: qList2 } = ensureUI();
+      qList2.textContent = `{ "error": "${msg}" }`;
       setStatus("Error");
     } finally {
       const btn = $("btnGenExam50ByBook");
@@ -237,7 +353,7 @@
     if (btn) {
       try {
         btn.onclick = genExam;
-      } catch { }
+      } catch {}
       return;
     }
     if (attempt < maxAttempts) {
