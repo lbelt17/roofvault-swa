@@ -1,4 +1,27 @@
 ﻿{
+  "auth": {
+    "identityProviders": {
+      "customOpenIdConnectProviders": {
+        "aadb2c": {
+          "registration": {
+            "clientIdSettingName": "AADB2C_PROVIDER_CLIENT_ID",
+            "clientCredential": {
+              "clientSecretSettingName": "AADB2C_PROVIDER_CLIENT_SECRET"
+            },
+            "openIdConnectConfiguration": {
+              "wellKnownOpenIdConfiguration": "https://RoofVaultUsers.ciamlogin.com/08994c9e-5d60-44c4-8f4c-a1c7afe1aa93/v2.0/.well-known/openid-configuration"
+            }
+          },
+          "login": {
+            "nameClaimType": "name",
+            "scopes": [ "openid", "profile", "email" ],
+            "loginParameterNames": []
+          }
+        }
+      }
+    }
+  },
+
   "routes": [
     { "route": "/api/*", "allowedRoles": [ "anonymous" ] }
   ]
