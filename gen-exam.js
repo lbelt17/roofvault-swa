@@ -42,22 +42,27 @@
         document.body.appendChild(qList);
       }
     }
+let btn = $("btnGenExam50ByBook");
+if (!btn) {
+  const holder = document.createElement("div");
+  holder.style.margin = "10px 0";
 
-    let btn = $("btnGenExam50ByBook");
-    if (!btn) {
-      const holder = document.createElement("div");
-      holder.style.margin = "10px 0";
+  btn = document.createElement("button");
+  btn.id = "btnGenExam50ByBook";
+  btn.textContent = "Generate 25Q Practice Exam";
 
-      btn = document.createElement("button");
-      btn.id = "btnGenExam50ByBook";
-      btn.textContent = "Generate 25Q Practice Exam";
-      btn.style.padding = "10px 14px";
-      btn.style.borderRadius = "8px";
-      btn.style.border = "none";
-      btn.style.cursor = "pointer";
-      btn.style.background = "linear-gradient(180deg,#2aa9ff,#0ec0ff)";
-      btn.style.color = "#071018";
-      btn.style.fontWeight = "700";
+  // Lock by default unless logged in
+  btn.disabled = true;
+  btn.title = "Please log in to generate exams.";
+
+  btn.style.padding = "10px 14px";
+  btn.style.borderRadius = "8px";
+  btn.style.border = "none";
+  btn.style.cursor = "pointer";
+  btn.style.background = "linear-gradient(180deg,#2aa9ff,#0ec0ff)";
+  btn.style.color = "#071018";
+  btn.style.fontWeight = "700";
+
 
       holder.appendChild(btn);
 
