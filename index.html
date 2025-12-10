@@ -391,6 +391,19 @@ Ready.
   <script src="/gen-exam.js?v=4"></script>
 
   <!-- Simple script: wire Chat button to rvchat.html -->
+ <!-- Wire Chat button to rvchat.html -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var chatBtn = document.getElementById('btnOpenChat');
+    if (chatBtn) {
+      chatBtn.addEventListener('click', function () {
+        window.location.href = 'rvchat.html';
+      });
+    }
+  });
+</script>
+
+ 
  <script>
   (function () {
     const loginBtn = document.getElementById('login-btn');
