@@ -400,54 +400,83 @@ Ready.
         });
       }
     })();
-  </script>
-
-  <!-- Auth script: handles login/logout and shows user email -->
   <script>
-    (function () {
+  (function () {
+    let isLoggedIn = false;
+
+    function updateProtectedFeatures() {
+      const protectedEls = document.querySelectorAll('.requires-auth');
+      protectedEls.forEach((el) => {
+        if (isLoggedIn) {
+          el.disabled = false;
+          el.classList.remove('disabled-feature');
+          el.title = '';
+        } else {
+          el.disabled = true;
+          el.classList.add('disabled-feature');
+          el.title = 'Please log in to use this feature.';
+        }
+      });
+    }
+
+    function setLoggedInUI(email) {
       const loginBtn = document.getElementById('login-btn');
       const logoutBtn = document.getElementById('logout-btn');
-      const userEmail = document.getElementById('user-email');
+      const userEmailSpan = document.getElementById('user-email');
 
-      if (!loginBtn || !logoutBtn || !userEmail) return;
+      if (loginBtn) loginBtn.style.display = 'none';
+      if (logoutBtn) logoutBtn.style.display = 'inline-block';
+      if (userEmailSpan) userEmailSpan.textContent = email;
 
-      async function refreshAuthState() {
-        try {
-          const res = await fetch('/.auth/me', { credentials: 'include' });
-          if (!res.ok) throw new Error('not logged in');
-          const data = await res.json();
-          const cp = data && data.clientPrincipal;
+      isLoggedIn = true;
+      updateProtectedFeatures();
+    }
 
-          if (cp) {
-            loginBtn.style.display = 'none';
-            logoutBtn.style.display = 'inline-flex';
-            userEmail.textContent = cp.userDetails || '';
-          } else {
-            loginBtn.style.display = 'inline-flex';
-            logoutBtn.style.display = 'none';
-            userEmail.textContent = '';
-          }
-        } catch (e) {
-          loginBtn.style.display = 'inline-flex';
-          logoutBtn.style.display = 'none';
-          userEmail.textContent = '';
+    function setLoggedOutUI() {
+      const loginBtn = document.getElementById('login-btn');
+      const logoutBtn = document.getElementById('logout-btn');
+      const userEmailSpan = document.getElementById('user-email');
+
+      if (loginBtn) loginBtn.style.display = 'inline-block';
+      if (logoutBtn) logoutBtn.style.display = 'none';
+      if (userEmailSpan) userEmailSpan.textContent = '';
+
+      isLoggedIn = false;
+      updateProtectedFeatures();
+    }
+
+    async function refreshAuthUI() {
+      try {
+        const res = await fetch('/.auth/me', { credentials: 'include' });
+        if (!res.ok) {
+          setLoggedOutUI();
+          return;
         }
+
+        const data = await res.json();
+        const user = data.clientPrincipal;
+
+        if (user && user.userDetails) {
+          setLoggedInUI(user.userDetails);
+        } else {
+          setLoggedOutUI();
+        }
+      } catch (e) {
+        console.error('Auth check failed', e);
+        setLoggedOutUI();
       }
+    }
 
-     loginBtn.addEventListener('click', function () {
-  const redirect = encodeURIComponent(window.location.pathname || '/');
-  window.location.href = '/login';
-});
-
-
-      logoutBtn.addEventListener('click', function () {
-        const redirect = encodeURIComponent('/');
-        window.location.href = '/.auth/logout?post_logout_redirect_uri=' + redirect;
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        window.location.href = '/logout';
       });
+    }
 
-      // Check auth status on page load
-      refreshAuthState();
-    })();
-  </script>
+    // Run on page load
+    refreshAuthUI();
+  })();
+</script>
 </body>
 </html>
