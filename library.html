@@ -764,144 +764,144 @@
     
   
     
-  // ---------------------------
-  // RoofVault Library Renderer
-  // Loads books ONLY from books.js (window.BOOKS)
-  // ---------------------------
+// ---------------------------
+// RoofVault Library Renderer
+// Loads books from /api/books (Azure Search → Blob Storage)
+// ---------------------------
 
-  const bookGrid = document.getElementById('bookGrid');
-  const searchInput = document.getElementById('searchInput');
-  const resultCount = document.getElementById('resultCount');
-  const emptyState = document.getElementById('emptyState');
-  const badgeBookCount = document.getElementById('badgeBookCount');
+const bookGrid = document.getElementById("bookGrid");
+const searchInput = document.getElementById("searchInput");
+const resultCount = document.getElementById("resultCount");
+const emptyState = document.getElementById("emptyState");
+const badgeBookCount = document.getElementById("badgeBookCount");
 
-  let ALL_BOOKS = [];
+let ALL_BOOKS = [];
 
-  // Clean title from file name
-  function cleanTitleFromFile(fileName) {
-    if (!fileName) return "Untitled Manual";
+// Turn blob filenames into clean titles
+function cleanTitle(name) {
+  if (!name) return "Untitled Manual";
 
-    let title = fileName
-      .replace(/\.[^/.]+$/, "")     // remove .pdf/.docx
-      .replace(/[_\-]+/g, " ")      // underscores/dashes → spaces
-      .replace(/\s+/g, " ")         // collapse double spaces
-      .trim();
+  let title = name
+    .replace(/\.[^/.]+$/, "")     // remove extension
+    .replace(/[_\-]+/g, " ")      // underscores → spaces
+    .replace(/\s+/g, " ")         // collapse spaces
+    .trim();
 
-    // Capitalize words
-    title = title.replace(/\b\w+/g, (word) => {
-      return word.charAt(0).toUpperCase() + word.slice(1);
-    });
+  // Capitalize each word
+  return title.replace(/\b\w+/g, (w) => w.charAt(0).toUpperCase() + w.slice(1));
+}
 
-    return title;
-  }
+// Extract year if found inside the filename
+function extractYear(name) {
+  const match = name.match(/(19|20)\d{2}/);
+  return match ? match[0] : null;
+}
 
-  // Filter search results
-  function filterBooks(query) {
-    if (!query) return ALL_BOOKS;
-    const q = query.toLowerCase();
+// Search filter
+function filterBooks(query) {
+  if (!query) return ALL_BOOKS;
+  const q = query.toLowerCase();
 
-    return ALL_BOOKS.filter((book) => {
-      return (
-        book.title.toLowerCase().includes(q) ||
-        book.fileName.toLowerCase().includes(q)
-      );
-    });
-  }
+  return ALL_BOOKS.filter((b) =>
+    b.title.toLowerCase().includes(q) ||
+    b.fileName.toLowerCase().includes(q)
+  );
+}
 
-  // Create each card
-  function createBookCard(book) {
-    const firstLetter = book.title.charAt(0).toUpperCase() || "R";
+// Build each book card
+function createBookCard(book) {
+  const firstLetter = book.title.charAt(0).toUpperCase() || "R";
 
-    const card = document.createElement("article");
-    card.className = "book-card";
+  const card = document.createElement("article");
+  card.className = "book-card";
 
-    card.innerHTML = `
-      <div class="book-main">
-        <div class="book-thumbnail">
-          <span>${firstLetter}</span>
-        </div>
-        <div class="book-info">
-          <div class="book-title">${book.title}</div>
-          <div class="book-meta">${book.fileName}</div>
-        </div>
+  card.innerHTML = `
+    <div class="book-main">
+      <div class="book-thumbnail">
+        <span>${firstLetter}</span>
       </div>
-      <div class="book-footer">
-        <div class="book-footer-left">
-          <span class="pill-soft">
-            <span>📄</span>
-            <span>${book.fileName}</span>
-          </span>
-        </div>
-        <button class="btn-view" type="button">
-          <span>View Details</span>
-          <span>➜</span>
-        </button>
+      <div class="book-info">
+        <div class="book-title">${book.title}</div>
+        <div class="book-meta">${book.fileName}</div>
       </div>
-    `;
+    </div>
+    <div class="book-footer">
+      <div class="book-footer-left">
+        <span class="pill-soft">
+          <span>📄</span>
+          <span>${book.fileName}</span>
+        </span>
+      </div>
+      <button class="btn-view" type="button">
+        <span>View Details</span>
+        <span>➜</span>
+      </button>
+    </div>
+  `;
 
-    card.querySelector(".btn-view").addEventListener("click", () => {
-      alert(`Book selected:\n\n${book.title}\n\nFull viewer coming in Step 4.`);
-    });
+  card.querySelector(".btn-view").addEventListener("click", () => {
+    alert(`Book selected:\n\n${book.title}\n\nFull viewer coming in Step 4.`);
+  });
 
-    return card;
+  return card;
+}
+
+// Render list
+function renderBooks(list) {
+  bookGrid.innerHTML = "";
+
+  if (list.length === 0) {
+    bookGrid.classList.add("hidden");
+    emptyState.classList.remove("hidden");
+    resultCount.textContent = "No books found.";
+    return;
   }
 
-  // Render full list
-  function renderBooks(list) {
-    bookGrid.innerHTML = "";
+  emptyState.classList.add("hidden");
+  bookGrid.classList.remove("hidden");
 
-    if (list.length === 0) {
-      bookGrid.classList.add("hidden");
-      emptyState.classList.remove("hidden");
-      resultCount.textContent = "No books found.";
-      return;
-    }
+  list.forEach((b) => bookGrid.appendChild(createBookCard(b)));
 
-    emptyState.classList.add("hidden");
-    bookGrid.classList.remove("hidden");
+  resultCount.textContent =
+    list.length === 1 ? "1 book found" : `${list.length} books found`;
+}
 
-    list.forEach((book) => bookGrid.appendChild(createBookCard(book)));
+// Load books from your Azure Search API route
+async function loadBooks() {
+  try {
+    const res = await fetch("/api/books");
+    const data = await res.json();
 
-    resultCount.textContent =
-      list.length === 1 ? "1 book found" : `${list.length} books found`;
-  }
+    const filenames = data.values || [];
 
-  // Load from books.js only
-  async function loadBooks() {
-    if (Array.isArray(window.BOOKS) && window.BOOKS.length > 0) {
-      ALL_BOOKS = window.BOOKS.map((item) => {
-        const file = item.fileName || item.filename || "";
-        return {
-          title: cleanTitleFromFile(file),
-          fileName: file,
-          raw: item
-        };
-      });
-    } else {
-      ALL_BOOKS = [];
-    }
+    ALL_BOOKS = filenames.map((fn) => ({
+      title: cleanTitle(fn),
+      fileName: fn,
+      year: extractYear(fn),
+    }));
 
-    // Update badge
     badgeBookCount.textContent =
-      ALL_BOOKS.length === 1
-        ? "1 manual"
-        : `${ALL_BOOKS.length} manuals`;
+      ALL_BOOKS.length === 1 ? "1 manual" : `${ALL_BOOKS.length} manuals`;
 
     renderBooks(ALL_BOOKS);
+  } catch (err) {
+    console.error("Library load error:", err);
+    resultCount.textContent = "Could not load library.";
   }
+}
 
-  // Startup
-  document.addEventListener("DOMContentLoaded", () => {
-    loadAuthState();  // Your login check
-    loadBooks();      // Load books from Blob list
+// Initialize page
+document.addEventListener("DOMContentLoaded", () => {
+  loadAuthState();
+  loadBooks();
 
-    if (searchInput) {
-      searchInput.addEventListener("input", (e) => {
-        const filtered = filterBooks(e.target.value.trim());
-        renderBooks(filtered);
-      });
-    }
-  });
+  if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+      const filtered = filterBooks(e.target.value.trim());
+      renderBooks(filtered);
+    });
+  }
+});
 </script>
 </body>
 </html>
