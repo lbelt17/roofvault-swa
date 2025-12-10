@@ -409,6 +409,8 @@ Ready.
     const loginBtn = document.getElementById('login-btn');
     const logoutBtn = document.getElementById('logout-btn');
     const userEmail = document.getElementById('user-email');
+    // Global flag other scripts can read
+    window.isLoggedIn = false;
 
     // If the elements don't exist, do nothing
     if (!loginBtn || !logoutBtn || !userEmail) return;
@@ -421,23 +423,33 @@ Ready.
         const data = await res.json();
         const cp = data && data.clientPrincipal;
 
-        if (cp) {
+                if (cp) {
           // Logged in
           loginBtn.style.display = 'none';
           logoutBtn.style.display = 'inline-flex';
           userEmail.textContent = cp.userDetails || '';
+
+          window.isLoggedIn = true;
         } else {
           // Not logged in
           loginBtn.style.display = 'inline-flex';
           logoutBtn.style.display = 'none';
           userEmail.textContent = '';
+
+          window.isLoggedIn = false;
         }
-      } catch (e) {
+
+
+
+            } catch (e) {
         // Treat errors as "not logged in"
         loginBtn.style.display = 'inline-flex';
         logoutBtn.style.display = 'none';
         userEmail.textContent = '';
+
+        window.isLoggedIn = false;
       }
+
     }
 
     // Login button → go to /login
