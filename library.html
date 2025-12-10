@@ -20,6 +20,15 @@
       --radius-pill: 999px;
       --shadow-soft: 0 20px 40px rgba(15, 23, 42, 0.7);
       --transition-fast: 150ms ease-out;
+      /* Hide the exam dropdown UI when inside the library page */
+#bookSelect,
+#bookSearchInput,
+label[for="bookSelect"] {
+  display: none !important;
+}
+
+
+
     }
 
     * {
