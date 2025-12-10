@@ -763,8 +763,9 @@
 
     
   
+  
   // ---------------------------
-  // Library rendering (smart loader)
+  // Library rendering (deep objectives scan)
   // ---------------------------
 
   const bookGrid = document.getElementById('bookGrid');
@@ -879,26 +880,105 @@
       list.length === 1 ? '1 book found' : `${list.length} books found`;
   }
 
+  // Recursively walk any JSON object and collect all array items
+  function collectAllArrayItems(node, out) {
+    if (!node) return;
+
+    if (Array.isArray(node)) {
+      for (const item of node) {
+        out.push(item);
+        collectAllArrayItems(item, out);
+      }
+    } else if (typeof node === 'object') {
+      for (const value of Object.values(node)) {
+        collectAllArrayItems(value, out);
+    function collectAllArrayItems(node, out) {
+  if (!node) return;
+
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      out.push(item);
+      collectAllArrayItems(item, out);
+    }
+  } else if (typeof node === 'object') {
+    for (const value of Object.values(node)) {
+      collectAllArrayItems(value, out);
+    }
+  }
+}
+
+
   async function loadBooksFromObjectivesJson() {
-    try {
-      const res = await fetch('objectives.json');
-      if (!res.ok) throw new Error('Failed to load objectives.json');
+  try {
+    const res = await fetch('objectives.json');
+    if (!res.ok) throw new Error('Failed to load objectives.json');
 
-      const raw = await res.json();
+    const raw = await res.json();
 
-      let items = [];
-      if (Array.isArray(raw)) {
-        items = raw;
-      } else if (raw && typeof raw === 'object') {
-        const keyWithArray = Object.keys(raw).find(
-          (k) => Array.isArray(raw[k])
-        );
-        if (keyWithArray) {
-          items = raw[keyWithArray];
+    // Walk the whole JSON and collect everything inside any arrays
+    const allItems = [];
+    collectAllArrayItems(raw, allItems);
+
+    // Keep only objects that look like books
+    const candidates = allItems.filter((item) => {
+      if (!item || typeof item !== 'object') return false;
+
+      return (
+        item.displayName ||
+        item.title ||
+        item.name ||
+        item.fileName ||
+        item.filename
+      );
+    });
+
+    // Deduplicate by title + file
+    const seen = new Set();
+    const unique = [];
+    for (const item of candidates) {
+      const key =
+        (item.displayName ||
+         item.title ||
+         item.name ||
+         item.fileName ||
+         item.filename) +
+        '|' +
+        (item.fileName || item.filename || '');
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(item);
+      }
+    }
+
+    // Convert into book card objects
+    ALL_BOOKS = unique.map(normalizeItemToBook);
+
+  } catch (err) {
+    console.error('Error loading books from objectives.json:', err);
+    ALL_BOOKS = [];
+  }
+}
+
+
+      // Deduplicate by (title + fileName)
+      const seen = new Set();
+      const unique = [];
+      for (const item of candidates) {
+        const key =
+          (item.displayName ||
+            item.title ||
+            item.name ||
+            item.fileName ||
+            item.filename) +
+          '|' +
+          (item.fileName || item.filename || '');
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(item);
         }
       }
 
-      ALL_BOOKS = items.map(normalizeItemToBook);
+      ALL_BOOKS = unique.map(normalizeItemToBook);
     } catch (err) {
       console.error('Error loading books from objectives.json:', err);
       ALL_BOOKS = [];
@@ -906,17 +986,16 @@
   }
 
   async function loadBooks() {
-    // 1️⃣ Try global BOOKS (from books.js) first
+    // 1️⃣ Try window.BOOKS (from books.js) first, if it exists and has data
     if (Array.isArray(window.BOOKS) && window.BOOKS.length) {
       console.log('Loading books from window.BOOKS');
       ALL_BOOKS = window.BOOKS.map(normalizeItemToBook);
     } else {
-      // 2️⃣ Fallback to objectives.json
-      console.log('window.BOOKS empty, loading from objectives.json');
+      // 2️⃣ Otherwise, scan objectives.json deeply
+      console.log('window.BOOKS empty, scanning objectives.json');
       await loadBooksFromObjectivesJson();
     }
 
-    // Update UI
     badgeBookCount.textContent =
       ALL_BOOKS.length === 1 ? '1 manual' : `${ALL_BOOKS.length} manuals`;
 
