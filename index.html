@@ -417,19 +417,22 @@ Ready.
 
     // Turn the Generate 25Q button on/off + lock icon
     function updateExamAccess(isLoggedIn) {
-      const genBtn = document.getElementById('btnGenExam50ByBook');
-      if (!genBtn) return;
+  const genBtn = document.getElementById('btnGenExam50ByBook');
+  if (!genBtn) return;
 
-      if (isLoggedIn) {
-        genBtn.disabled = false;
-        genBtn.title = 'Generate a 25-question practice exam.';
-        genBtn.textContent = '🔓 Generate 25Q Practice Exam';
-      } else {
-        genBtn.disabled = true;
-        genBtn.title = 'Please log in to generate exams.';
-        genBtn.textContent = '🔒 Generate 25Q Practice Exam';
-      }
-    }
+  if (isLoggedIn) {
+    genBtn.disabled = false;
+    genBtn.title = 'Generate a 25-question practice exam.';
+    genBtn.textContent = '🔓 Generate 25Q Practice Exam';
+    genBtn.style.cursor = 'pointer';
+  } else {
+    genBtn.disabled = true;
+    genBtn.title = 'Please log in to generate exams.';
+    genBtn.textContent = '🔒 Generate 25Q Practice Exam';
+    genBtn.style.cursor = 'not-allowed';
+  }
+}
+
 
     async function refreshAuthState() {
       try {
