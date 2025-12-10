@@ -869,7 +869,8 @@ function renderBooks(list) {
 // Load books from your Azure Search API route
 async function loadBooks() {
   try {
-    const res = await fetch("/api/books");
+    const res = await fetch("https://kind-flower-0fe142d0f.3.azurestaticapps.net/api/books");
+
     const data = await res.json();
 
     const filenames = data.values || [];
