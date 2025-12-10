@@ -762,8 +762,9 @@
     });
 
     
+  
   // ---------------------------
-  // Library rendering (NEW)
+  // Library rendering (smart loader)
   // ---------------------------
 
   const bookGrid = document.getElementById('bookGrid');
@@ -774,20 +775,20 @@
 
   let ALL_BOOKS = [];
 
-  // Convert objectives.json entries into book cards
-  function normalizeObjectiveToBook(obj) {
+  function normalizeItemToBook(item) {
     return {
       title:
-        obj.displayName ||
-        obj.title ||
-        obj.fileName ||
-        obj.filename ||
+        item.displayName ||
+        item.title ||
+        item.name ||
+        item.fileName ||
+        item.filename ||
         'Untitled Manual',
-      fileName: obj.fileName || obj.filename || '',
-      system: obj.system || obj.category || obj.series || null,
-      pages: obj.pages || obj.pageCount || null,
-      year: obj.year || obj.publicationYear || null,
-      raw: obj
+      fileName: item.fileName || item.filename || '',
+      system: item.system || item.category || item.series || null,
+      pages: item.pages || item.pageCount || null,
+      year: item.year || item.publicationYear || null,
+      raw: item
     };
   }
 
@@ -838,7 +839,7 @@
         <div class="book-footer-left">
           <span class="pill-soft">
             <span>📄</span>
-            <span>${fileName}</span>
+            <span>${fileName || 'source: Blob Storage'}</span>
           </span>
         </div>
         <button class="btn-view" type="button">
@@ -849,7 +850,9 @@
     `;
 
     card.querySelector('.btn-view').addEventListener('click', () => {
-      alert(`Book selected:\n\n${title}\n\nA full viewer will be added in Step 4.`);
+      alert(
+        `Book selected:\n\n${title}\n\nA full viewer will be added in Step 4.`
+      );
     });
 
     return card;
@@ -876,31 +879,57 @@
       list.length === 1 ? '1 book found' : `${list.length} books found`;
   }
 
-  async function loadBooks() {
+  async function loadBooksFromObjectivesJson() {
     try {
       const res = await fetch('objectives.json');
       if (!res.ok) throw new Error('Failed to load objectives.json');
 
       const raw = await res.json();
-      const items = Array.isArray(raw) ? raw : [];
 
-      ALL_BOOKS = items.map(normalizeObjectiveToBook);
+      let items = [];
+      if (Array.isArray(raw)) {
+        items = raw;
+      } else if (raw && typeof raw === 'object') {
+        const keyWithArray = Object.keys(raw).find(
+          (k) => Array.isArray(raw[k])
+        );
+        if (keyWithArray) {
+          items = raw[keyWithArray];
+        }
+      }
 
-      badgeBookCount.textContent =
-        ALL_BOOKS.length === 1 ? '1 manual' : `${ALL_BOOKS.length} manuals`;
-
-      renderBooks(ALL_BOOKS);
+      ALL_BOOKS = items.map(normalizeItemToBook);
     } catch (err) {
-      console.error('Error loading books:', err);
+      console.error('Error loading books from objectives.json:', err);
       ALL_BOOKS = [];
-      badgeBookCount.textContent = '0 manuals';
-      renderBooks([]);
+    }
+  }
+
+  async function loadBooks() {
+    // 1️⃣ Try global BOOKS (from books.js) first
+    if (Array.isArray(window.BOOKS) && window.BOOKS.length) {
+      console.log('Loading books from window.BOOKS');
+      ALL_BOOKS = window.BOOKS.map(normalizeItemToBook);
+    } else {
+      // 2️⃣ Fallback to objectives.json
+      console.log('window.BOOKS empty, loading from objectives.json');
+      await loadBooksFromObjectivesJson();
+    }
+
+    // Update UI
+    badgeBookCount.textContent =
+      ALL_BOOKS.length === 1 ? '1 manual' : `${ALL_BOOKS.length} manuals`;
+
+    renderBooks(ALL_BOOKS);
+
+    if (!ALL_BOOKS.length) {
       resultCount.textContent = 'Could not load library.';
     }
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     loadAuthState();
+
     loadBooks();
 
     if (searchInput) {
@@ -911,6 +940,6 @@
       });
     }
   });
-  </script>
+</script>
 </body>
 </html>
