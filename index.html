@@ -366,6 +366,11 @@
           <span>Open RoofVault Chat</span>
         </button>
       </div>
+      <button id="btnOpenLibrary" class="btn-outline" type="button">
+  <span class="icon">📚</span>
+  <span>Open RoofVault Library</span>
+</button>
+
 
       <div id="qList">
         <div class="q-empty">
@@ -398,6 +403,28 @@ Ready.
     if (chatBtn) {
       chatBtn.addEventListener('click', function () {
         window.location.href = 'rvchat.html';
+      });
+    }
+  });
+</script>
+<!-- Wire Chat button to rvchat.html -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var chatBtn = document.getElementById('btnOpenChat');
+    if (chatBtn) {
+      chatBtn.addEventListener('click', function () {
+        window.location.href = 'rvchat.html';
+      });
+    }
+  });
+</script>
+<!-- Wire Library button to roofvault-library.html -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var libBtn = document.getElementById('btnOpenLibrary');
+    if (libBtn) {
+      libBtn.addEventListener('click', function () {
+        window.location.href = 'roofvault-library.html';
       });
     }
   });
