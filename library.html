@@ -761,181 +761,156 @@
       window.location.href = '/';
     });
 
-    // ---------------------------
-    // Library rendering
-    // ---------------------------
+    
+  // ---------------------------
+  // Library rendering (NEW)
+  // ---------------------------
 
-    const bookGrid = document.getElementById('bookGrid');
-    const searchInput = document.getElementById('searchInput');
-    const resultCount = document.getElementById('resultCount');
-    const emptyState = document.getElementById('emptyState');
-    const badgeBookCount = document.getElementById('badgeBookCount');
+  const bookGrid = document.getElementById('bookGrid');
+  const searchInput = document.getElementById('searchInput');
+  const resultCount = document.getElementById('resultCount');
+  const emptyState = document.getElementById('emptyState');
+  const badgeBookCount = document.getElementById('badgeBookCount');
 
-    // Expecting books.js to define a global BOOKS array.
-    // We handle the case where it doesn't exist gracefully.
-    const ALL_BOOKS = Array.isArray(window.BOOKS) ? window.BOOKS : [];
+  let ALL_BOOKS = [];
 
-    function getBookTitle(book) {
+  // Convert objectives.json entries into book cards
+  function normalizeObjectiveToBook(obj) {
+    return {
+      title:
+        obj.displayName ||
+        obj.title ||
+        obj.fileName ||
+        obj.filename ||
+        'Untitled Manual',
+      fileName: obj.fileName || obj.filename || '',
+      system: obj.system || obj.category || obj.series || null,
+      pages: obj.pages || obj.pageCount || null,
+      year: obj.year || obj.publicationYear || null,
+      raw: obj
+    };
+  }
+
+  function filterBooks(query) {
+    if (!query) return ALL_BOOKS;
+    const q = query.toLowerCase();
+
+    return ALL_BOOKS.filter((book) => {
+      const title = book.title.toLowerCase();
+      const system = String(book.system || '').toLowerCase();
+      const fileName = String(book.fileName || '').toLowerCase();
       return (
-        book.title ||
-        book.name ||
-        book.displayName ||
-        book.fileName ||
-        book.filename ||
-        'Untitled Manual'
+        title.includes(q) ||
+        system.includes(q) ||
+        fileName.includes(q)
       );
-    }
+    });
+  }
 
-    function getBookSystemTag(book) {
-      return (
-        book.system ||
-        book.category ||
-        book.series ||
-        null
-      );
-    }
+  function createBookCard(book) {
+    const title = book.title;
+    const system = book.system;
+    const pages = book.pages;
+    const year = book.year;
+    const fileName = book.fileName;
+    const firstLetter = title.trim().charAt(0).toUpperCase() || 'R';
 
-    function getBookPages(book) {
-      return book.pages || book.pageCount || null;
-    }
+    const card = document.createElement('article');
+    card.className = 'book-card';
 
-    function getBookYear(book) {
-      return book.year || book.publicationYear || null;
-    }
-
-    function filterBooks(query) {
-      if (!query) return ALL_BOOKS;
-      const q = query.toLowerCase();
-
-      return ALL_BOOKS.filter((book) => {
-        const title = String(getBookTitle(book)).toLowerCase();
-        const system = String(getBookSystemTag(book) || '').toLowerCase();
-        const fileName = String(book.fileName || book.filename || '').toLowerCase();
-        const tags = Array.isArray(book.tags) ? book.tags.join(' ').toLowerCase() : '';
-
-        return (
-          title.includes(q) ||
-          system.includes(q) ||
-          fileName.includes(q) ||
-          tags.includes(q)
-        );
-      });
-    }
-
-    function createBookCard(book) {
-      const title = getBookTitle(book);
-      const system = getBookSystemTag(book);
-      const pages = getBookPages(book);
-      const year = getBookYear(book);
-      const fileName = book.fileName || book.filename || '';
-
-      const firstLetter = title.trim().charAt(0).toUpperCase() || 'R';
-
-      const card = document.createElement('article');
-      card.className = 'book-card';
-
-      card.innerHTML = `
-        <div class="book-main">
-          <div class="book-thumbnail">
-            <span>${firstLetter}</span>
+    card.innerHTML = `
+      <div class="book-main">
+        <div class="book-thumbnail">
+          <span>${firstLetter}</span>
+        </div>
+        <div class="book-info">
+          <div class="book-title" title="${title}">${title}</div>
+          <div class="book-meta">
+            ${system ? system + ' &bull; ' : ''}${fileName || 'PDF'}
           </div>
-          <div class="book-info">
-            <div class="book-title" title="${title}">${title}</div>
-            <div class="book-meta">
-              ${system ? system + ' &bull; ' : ''}${fileName || 'PDF'}
-            </div>
-            <div class="book-tags">
-              ${
-                year
-                  ? `<span class="tag">Year: ${year}</span>`
-                  : ''
-              }
-              ${
-                pages
-                  ? `<span class="tag">${pages} pages</span>`
-                  : ''
-              }
-            </div>
+          <div class="book-tags">
+            ${year ? `<span class="tag">Year: ${year}</span>` : ''}
+            ${pages ? `<span class="tag">${pages} pages</span>` : ''}
           </div>
         </div>
-        <div class="book-footer">
-          <div class="book-footer-left">
-            <span class="pill-soft">
-              <span>📄</span>
-              <span>${fileName || 'source: Blob Storage'}</span>
-            </span>
-          </div>
-          <button class="btn-view" type="button">
-            <span>View Details</span>
-            <span>➜</span>
-          </button>
+      </div>
+      <div class="book-footer">
+        <div class="book-footer-left">
+          <span class="pill-soft">
+            <span>📄</span>
+            <span>${fileName}</span>
+          </span>
         </div>
-      `;
+        <button class="btn-view" type="button">
+          <span>View Details</span>
+          <span>➜</span>
+        </button>
+      </div>
+    `;
 
-      const viewBtn = card.querySelector('.btn-view');
-      viewBtn.addEventListener('click', () => {
-        // STEP 4 will replace this with a real view-book.html route.
-        // For now we just log it so you can see it's wired up.
-        console.log('Selected book:', {
-          title,
-          fileName,
-          system,
-          pages,
-          year,
-          raw: book
-        });
+    card.querySelector('.btn-view').addEventListener('click', () => {
+      alert(`Book selected:\n\n${title}\n\nA full viewer will be added in Step 4.`);
+    });
 
-        alert(
-          `Book selected:\n\n${title}\n\n` +
-          `This button will eventually open a dedicated book viewer page (view-book.html) in a later step.`
-        );
-      });
+    return card;
+  }
 
-      return card;
+  function renderBooks(list) {
+    bookGrid.innerHTML = '';
+
+    if (!list.length) {
+      bookGrid.classList.add('hidden');
+      emptyState.classList.remove('hidden');
+      resultCount.textContent = 'No books found.';
+      return;
     }
 
-    function renderBooks(list) {
-      bookGrid.innerHTML = '';
+    emptyState.classList.add('hidden');
+    bookGrid.classList.remove('hidden');
 
-      if (!list.length) {
-        bookGrid.classList.add('hidden');
-        emptyState.classList.remove('hidden');
-        resultCount.textContent = 'No books found.';
-        return;
-      }
+    list.forEach((book) => {
+      bookGrid.appendChild(createBookCard(book));
+    });
 
-      emptyState.classList.add('hidden');
-      bookGrid.classList.remove('hidden');
+    resultCount.textContent =
+      list.length === 1 ? '1 book found' : `${list.length} books found`;
+  }
 
-      list.forEach((book) => {
-        const card = createBookCard(book);
-        bookGrid.appendChild(card);
-      });
+  async function loadBooks() {
+    try {
+      const res = await fetch('objectives.json');
+      if (!res.ok) throw new Error('Failed to load objectives.json');
 
-      resultCount.textContent =
-        list.length === 1 ? '1 book found' : `${list.length} books found`;
-    }
+      const raw = await res.json();
+      const items = Array.isArray(raw) ? raw : [];
 
-    function initLibrary() {
+      ALL_BOOKS = items.map(normalizeObjectiveToBook);
+
       badgeBookCount.textContent =
-        ALL_BOOKS.length === 1
-          ? '1 manual'
-          : `${ALL_BOOKS.length} manuals`;
+        ALL_BOOKS.length === 1 ? '1 manual' : `${ALL_BOOKS.length} manuals`;
 
       renderBooks(ALL_BOOKS);
+    } catch (err) {
+      console.error('Error loading books:', err);
+      ALL_BOOKS = [];
+      badgeBookCount.textContent = '0 manuals';
+      renderBooks([]);
+      resultCount.textContent = 'Could not load library.';
+    }
+  }
 
+  document.addEventListener('DOMContentLoaded', () => {
+    loadAuthState();
+    loadBooks();
+
+    if (searchInput) {
       searchInput.addEventListener('input', (e) => {
         const value = e.target.value.trim();
         const filtered = filterBooks(value);
         renderBooks(filtered);
       });
     }
-
-    // Initialize everything once DOM + auth are ready
-    document.addEventListener('DOMContentLoaded', () => {
-      loadAuthState();
-      initLibrary();
-    });
+  });
   </script>
 </body>
 </html>
