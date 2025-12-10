@@ -391,91 +391,56 @@ Ready.
   <script src="/gen-exam.js?v=4"></script>
 
   <!-- Simple script: wire Chat button to rvchat.html -->
-  <script>
-    (function () {
-      var chatBtn = document.getElementById("btnOpenChat");
-      if (chatBtn) {
-        chatBtn.addEventListener("click", function () {
-          window.location.href = "rvchat.html";
-        });
-      }
-    })();
-  <script>
+ <script>
   (function () {
-    let isLoggedIn = false;
+    const loginBtn = document.getElementById('login-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+    const userEmail = document.getElementById('user-email');
 
-    function updateProtectedFeatures() {
-      const protectedEls = document.querySelectorAll('.requires-auth');
-      protectedEls.forEach((el) => {
-        if (isLoggedIn) {
-          el.disabled = false;
-          el.classList.remove('disabled-feature');
-          el.title = '';
-        } else {
-          el.disabled = true;
-          el.classList.add('disabled-feature');
-          el.title = 'Please log in to use this feature.';
-        }
-      });
-    }
+    // If the elements don't exist, do nothing
+    if (!loginBtn || !logoutBtn || !userEmail) return;
 
-    function setLoggedInUI(email) {
-      const loginBtn = document.getElementById('login-btn');
-      const logoutBtn = document.getElementById('logout-btn');
-      const userEmailSpan = document.getElementById('user-email');
-
-      if (loginBtn) loginBtn.style.display = 'none';
-      if (logoutBtn) logoutBtn.style.display = 'inline-block';
-      if (userEmailSpan) userEmailSpan.textContent = email;
-
-      isLoggedIn = true;
-      updateProtectedFeatures();
-    }
-
-    function setLoggedOutUI() {
-      const loginBtn = document.getElementById('login-btn');
-      const logoutBtn = document.getElementById('logout-btn');
-      const userEmailSpan = document.getElementById('user-email');
-
-      if (loginBtn) loginBtn.style.display = 'inline-block';
-      if (logoutBtn) logoutBtn.style.display = 'none';
-      if (userEmailSpan) userEmailSpan.textContent = '';
-
-      isLoggedIn = false;
-      updateProtectedFeatures();
-    }
-
-    async function refreshAuthUI() {
+    async function refreshAuthState() {
       try {
         const res = await fetch('/.auth/me', { credentials: 'include' });
-        if (!res.ok) {
-          setLoggedOutUI();
-          return;
-        }
+        if (!res.ok) throw new Error('not logged in');
 
         const data = await res.json();
-        const user = data.clientPrincipal;
+        const cp = data && data.clientPrincipal;
 
-        if (user && user.userDetails) {
-          setLoggedInUI(user.userDetails);
+        if (cp) {
+          // Logged in
+          loginBtn.style.display = 'none';
+          logoutBtn.style.display = 'inline-flex';
+          userEmail.textContent = cp.userDetails || '';
         } else {
-          setLoggedOutUI();
+          // Not logged in
+          loginBtn.style.display = 'inline-flex';
+          logoutBtn.style.display = 'none';
+          userEmail.textContent = '';
         }
       } catch (e) {
-        console.error('Auth check failed', e);
-        setLoggedOutUI();
+        // Treat errors as "not logged in"
+        loginBtn.style.display = 'inline-flex';
+        logoutBtn.style.display = 'none';
+        userEmail.textContent = '';
       }
     }
 
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', () => {
-        window.location.href = '/logout';
-      });
-    }
+    // Login button → go to /login
+    loginBtn.addEventListener('click', function () {
+      const redirect = encodeURIComponent(window.location.pathname || '/');
+      window.location.href = '/login';
+    });
 
-    // Run on page load
-    refreshAuthUI();
+    // Logout button → go through .auth logout
+    logoutBtn.addEventListener('click', function () {
+      const redirect = encodeURIComponent('/');
+      window.location.href = '/.auth/logout?post_logout_redirect_uri=' + redirect;
+    });
+
+    // Check auth status on page load
+    refreshAuthState();
   })();
 </script>
 </body>
