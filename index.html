@@ -366,7 +366,7 @@
           <span>Open RoofVault Chat</span>
         </button>
       
-      <button id="btnOpenLibrary" class="btn-outline" type="button">
+      <button id="btnLibrary" class="btn-outline" type="button">
   <span class="icon">📚</span>
   <span>Open RoofVault Library</span>
 </button>
@@ -421,10 +421,10 @@ Ready.
 <!-- Wire Library button to roofvault-library.html -->
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    var libBtn = document.getElementById('btnOpenLibrary');
+    var libBtn = document.getElementById('btnLibrary');
     if (libBtn) {
       libBtn.addEventListener('click', function () {
-        window.location.href = 'roofvault-library.html';
+        window.location.href = 'library.html';
       });
     }
   });
