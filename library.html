@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RoofVault Library</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Simple, self-contained styles -->
+  <style>
+    :root {
+      --bg: #050816;
+      --bg-soft: rgba(15, 23, 42, 0.85);
+      --card-bg: rgba(15, 23, 42, 0.95);
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.15);
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --border-subtle: rgba(148, 163, 184, 0.3);
+      --radius-xl: 18px;
+      --radius-pill: 999px;
+      --shadow-soft: 0 20px 40px rgba(15, 23, 42, 0.7);
+      --transition-fast: 150ms ease-out;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(59, 130, 246, 0.15), transparent 55%),
+        radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.12), transparent 55%),
+        var(--bg);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top navigation */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(18px);
+      background: linear-gradient(
+        to bottom,
+        rgba(15, 23, 42, 0.9),
+        rgba(15, 23, 42, 0.75),
+        transparent
+      );
+      border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+    }
+
+    .nav {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0.9rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .logo-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-pill);
+      background: radial-gradient(circle at 20% 0%, #38bdf8, #0ea5e9);
+      color: white;
+      font-weight: 700;
+      font-size: 0.9rem;
+      box-shadow: 0 10px 30px rgba(56, 189, 248, 0.55);
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .brand-title {
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      font-size: 0.98rem;
+    }
+
+    .brand-subtitle {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .user-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      padding: 0.3rem 0.75rem;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: radial-gradient(
+        circle at top left,
+        rgba(56, 189, 248, 0.12),
+        rgba(15, 23, 42, 0.85)
+      );
+      max-width: 230px;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .tier-pill {
+      font-size: 0.72rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      background: rgba(8, 47, 73, 0.9);
+      color: #e0f2fe;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .btn {
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border-subtle);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-main);
+      font-size: 0.8rem;
+      padding: 0.4rem 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: background var(--transition-fast),
+        border-color var(--transition-fast),
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast),
+        opacity var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      border-color: rgba(56, 189, 248, 0.75);
+      background: radial-gradient(circle at top left, #38bdf8, #0ea5e9);
+      color: #0b1120;
+      font-weight: 600;
+      box-shadow: 0 12px 30px rgba(56, 189, 248, 0.5);
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(148, 163, 184, 0.8);
+      background: rgba(15, 23, 42, 0.98);
+      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.9);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 18px 40px rgba(56, 189, 248, 0.75);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    .btn-secondary {
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .btn-text {
+      background: transparent;
+      border-color: transparent;
+      padding-inline: 0.2rem;
+    }
+
+    .btn-text:hover {
+      background: rgba(15, 23, 42, 0.8);
+      border-color: transparent;
+      box-shadow: none;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    main {
+      max-width: 1120px;
+      margin: 1.4rem auto 2.4rem auto;
+      padding: 0 1.25rem 1.5rem 1.25rem;
+      flex: 1;
+      width: 100%;
+    }
+
+    .hero-card {
+      border-radius: 24px;
+      padding: 1.4rem 1.4rem 1.1rem 1.4rem;
+      background: radial-gradient(
+          circle at top left,
+          rgba(56, 189, 248, 0.18),
+          rgba(15, 23, 42, 0.96)
+        ),
+        radial-gradient(
+          circle at bottom right,
+          rgba(129, 140, 248, 0.22),
+          rgba(15, 23, 42, 0.98)
+        );
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      margin-bottom: 1.4rem;
+    }
+
+    .hero-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .hero-title {
+      font-size: 1.35rem;
+      font-weight: 650;
+      letter-spacing: 0.03em;
+    }
+
+    .hero-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      max-width: 520px;
+    }
+
+    .hero-badges {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.8);
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .search-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: center;
+      margin-top: 0.2rem;
+    }
+
+    .search-wrapper {
+      flex: 1 1 230px;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.65rem 0.85rem 0.65rem 2.1rem;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: radial-gradient(
+        circle at top left,
+        rgba(15, 23, 42, 0.97),
+        rgba(15, 23, 42, 0.9)
+      );
+      color: var(--text-main);
+      font-size: 0.86rem;
+      outline: none;
+      transition: border-color var(--transition-fast),
+        box-shadow var(--transition-fast),
+        background var(--transition-fast),
+        transform var(--transition-fast);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .search-input:focus {
+      border-color: rgba(56, 189, 248, 0.85);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.5),
+        0 20px 45px rgba(15, 23, 42, 0.9);
+      background: radial-gradient(
+        circle at top left,
+        rgba(15, 23, 42, 0.98),
+        rgba(15, 23, 42, 0.96)
+      );
+      transform: translateY(-0.5px);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 0.85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .result-count {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .library-layout {
+      margin-top: 1.1rem;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.85rem;
+    }
+
+    .shelf-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .book-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 0.9rem;
+    }
+
+    .book-card {
+      border-radius: var(--radius-xl);
+      background: var(--card-bg);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      padding: 0.85rem 0.85rem 0.8rem 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.85);
+      transition: transform var(--transition-fast),
+        box-shadow var(--transition-fast),
+        border-color var(--transition-fast),
+        background var(--transition-fast);
+    }
+
+    .book-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        circle at top left,
+        rgba(56, 189, 248, 0.18),
+        transparent 55%
+      );
+      opacity: 0;
+      transition: opacity var(--transition-fast);
+      pointer-events: none;
+    }
+
+    .book-card:hover {
+      transform: translateY(-2px) translateZ(0);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.95);
+      border-color: rgba(56, 189, 248, 0.85);
+      background: radial-gradient(
+          circle at top left,
+          rgba(30, 64, 175, 0.5),
+          transparent 55%
+        ),
+        rgba(15, 23, 42, 1);
+    }
+
+    .book-card:hover::before {
+      opacity: 1;
+    }
+
+    .book-main {
+      display: flex;
+      gap: 0.6rem;
+    }
+
+    .book-thumbnail {
+      width: 54px;
+      height: 74px;
+      border-radius: 9px;
+      background: linear-gradient(
+        145deg,
+        rgba(59, 130, 246, 0.25),
+        rgba(56, 189, 248, 0.4)
+      );
+      border: 1px solid rgba(56, 189, 248, 0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #0b1120;
+      font-weight: 700;
+      font-size: 1rem;
+      box-shadow: 0 18px 35px rgba(56, 189, 248, 0.55);
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .book-thumbnail::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        120deg,
+        rgba(248, 250, 252, 0.24),
+        transparent 50%
+      );
+      mix-blend-mode: screen;
+      opacity: 0.75;
+    }
+
+    .book-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      min-width: 0;
+    }
+
+    .book-title {
+      font-size: 0.92rem;
+      font-weight: 600;
+      line-height: 1.25;
+    }
+
+    .book-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .book-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin-top: 0.1rem;
+    }
+
+    .tag {
+      font-size: 0.68rem;
+      padding: 0.18rem 0.5rem;
+      border-radius: var(--radius-pill);
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      color: var(--text-muted);
+    }
+
+    .book-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 0.25rem;
+    }
+
+    .book-footer-left {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .pill-soft {
+      padding: 0.18rem 0.45rem;
+      border-radius: var(--radius-pill);
+      background: rgba(15, 23, 42, 0.98);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      font-size: 0.68rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.22rem;
+      color: var(--text-muted);
+    }
+
+    .btn-view {
+      font-size: 0.78rem;
+      padding: 0.34rem 0.9rem;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(56, 189, 248, 0.85);
+      background: radial-gradient(
+        circle at top left,
+        rgba(56, 189, 248, 0.98),
+        rgba(14, 165, 233, 0.98)
+      );
+      color: #0b1120;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(56, 189, 248, 0.65);
+      transition: transform var(--transition-fast),
+        box-shadow var(--transition-fast),
+        filter var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .btn-view:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 35px rgba(56, 189, 248, 0.85);
+      filter: brightness(1.03);
+    }
+
+    .btn-view:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    .empty-state {
+      border-radius: var(--radius-xl);
+      border: 1px dashed rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.9);
+      padding: 1.2rem;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 0.7rem;
+    }
+
+    .empty-icon {
+      font-size: 1.3rem;
+    }
+
+    footer {
+      max-width: 1120px;
+      width: 100%;
+      margin: 0 auto 1.2rem auto;
+      padding: 0 1.25rem;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      opacity: 0.85;
+    }
+
+    @media (max-width: 720px) {
+      .nav {
+        align-items: flex-start;
+      }
+
+      .nav-right {
+        justify-content: flex-start;
+      }
+
+      .hero-card {
+        padding: 1.1rem 1rem 0.95rem 1rem;
+      }
+
+      .book-card {
+        padding: 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Top navigation -->
+  <header>
+    <div class="nav">
+      <div class="nav-left">
+        <div class="logo-pill">RV</div>
+        <div class="brand-text">
+          <div class="brand-title">RoofVault Library</div>
+          <div class="brand-subtitle">
+            Search your roofing manuals & study guides in one place.
+          </div>
+        </div>
+      </div>
+      <div class="nav-right">
+        <span id="userEmailLabel" class="user-label">Not signed in</span>
+        <span id="subscriptionLabel" class="tier-pill hidden"></span>
+
+        <button id="btnLogin" class="btn btn-secondary">
+          <span>🔓 Login</span>
+        </button>
+        <button id="btnLogout" class="btn btn-secondary hidden">
+          <span>🚪 Logout</span>
+        </button>
+
+        <button id="btnBackHome" class="btn btn-text">
+          ⬅ Back to Exams
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main content -->
+  <main>
+    <section class="hero-card">
+      <div class="hero-header">
+        <div>
+          <h1 class="hero-title">Your Roofing Reference Shelf</h1>
+          <p class="hero-subtitle">
+            Browse RoofVault's library of technical manuals, study guides, and reference
+            PDFs. Use the search bar to filter by title, system, or keyword.
+          </p>
+        </div>
+        <div class="hero-badges">
+          <span class="badge">
+            📚 <span id="badgeBookCount">0 manuals</span>
+          </span>
+          <span class="badge">
+            🧠 AI-ready content
+          </span>
+        </div>
+      </div>
+
+      <div class="search-row">
+        <div class="search-wrapper">
+          <span class="search-icon">🔍</span>
+          <input
+            id="searchInput"
+            class="search-input"
+            type="text"
+            placeholder="Search by book title, system, or keyword…"
+          />
+        </div>
+        <div class="result-count" id="resultCount">
+          Loading library…
+        </div>
+      </div>
+    </section>
+
+    <section class="library-layout">
+      <div>
+        <div class="shelf-label">All Books</div>
+        <div id="bookGrid" class="book-grid"></div>
+        <div id="emptyState" class="empty-state hidden">
+          <div class="empty-icon">🕵️‍♂️</div>
+          <div>
+            No books matched your search. Try a different keyword, or clear the search
+            box to see the full RoofVault library again.
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>RoofVault &bull; Azure Static Web App</span>
+    <span>Library preview &mdash; book viewing limits come in a later step.</span>
+  </footer>
+
+  <!-- Load your books + logic -->
+  <!-- Make sure books.js is in the same folder as library.html -->
+  <script src="books.js"></script>
+
+  <script>
+    // ---------------------------
+    // Auth + subscription basics
+    // ---------------------------
+
+    window.isLoggedIn = false;
+    window.subscriptionTier = 'free';
+
+    const OWNER_EMAILS = [
+      'msaulnier@cmcflorida.com',
+      'joesorrentinollc@gmail.com',
+      'jbelt@beltengineering.com',
+      'lbelt17@outlook.com'
+    ];
+
+    const userEmailLabel = document.getElementById('userEmailLabel');
+    const subscriptionLabel = document.getElementById('subscriptionLabel');
+    const btnLogin = document.getElementById('btnLogin');
+    const btnLogout = document.getElementById('btnLogout');
+    const btnBackHome = document.getElementById('btnBackHome');
+
+    async function loadAuthState() {
+      try {
+        const res = await fetch('/.auth/me');
+        if (!res.ok) throw new Error('No auth info');
+        const data = await res.json();
+
+        const principal =
+          data?.clientPrincipal || (Array.isArray(data) ? data[0]?.clientPrincipal : null);
+
+        if (!principal) {
+          // Not logged in
+          window.isLoggedIn = false;
+          window.subscriptionTier = 'free';
+          userEmailLabel.textContent = 'Not signed in';
+          subscriptionLabel.classList.add('hidden');
+          btnLogin.classList.remove('hidden');
+          btnLogout.classList.add('hidden');
+          return;
+        }
+
+        const email =
+          principal.userDetails ||
+          principal.userId ||
+          'Signed in';
+
+        const isOwner = OWNER_EMAILS.includes(email.toLowerCase());
+        window.isLoggedIn = true;
+        window.subscriptionTier = isOwner ? 'owner' : 'free';
+
+        userEmailLabel.textContent = email;
+
+        subscriptionLabel.textContent =
+          window.subscriptionTier === 'owner' ? 'Owner Access' : 'Free Tier';
+        subscriptionLabel.classList.remove('hidden');
+
+        btnLogin.classList.add('hidden');
+        btnLogout.classList.remove('hidden');
+      } catch (err) {
+        // Treat as logged out
+        window.isLoggedIn = false;
+        window.subscriptionTier = 'free';
+        userEmailLabel.textContent = 'Not signed in';
+        subscriptionLabel.classList.add('hidden');
+        btnLogin.classList.remove('hidden');
+        btnLogout.classList.add('hidden');
+      }
+    }
+
+    btnLogin.addEventListener('click', () => {
+      window.location.href = '/login';
+    });
+
+    btnLogout.addEventListener('click', () => {
+      window.location.href = '/.auth/logout';
+    });
+
+    btnBackHome.addEventListener('click', () => {
+      // This assumes index.html is the root page
+      window.location.href = '/';
+    });
+
+    // ---------------------------
+    // Library rendering
+    // ---------------------------
+
+    const bookGrid = document.getElementById('bookGrid');
+    const searchInput = document.getElementById('searchInput');
+    const resultCount = document.getElementById('resultCount');
+    const emptyState = document.getElementById('emptyState');
+    const badgeBookCount = document.getElementById('badgeBookCount');
+
+    // Expecting books.js to define a global BOOKS array.
+    // We handle the case where it doesn't exist gracefully.
+    const ALL_BOOKS = Array.isArray(window.BOOKS) ? window.BOOKS : [];
+
+    function getBookTitle(book) {
+      return (
+        book.title ||
+        book.name ||
+        book.displayName ||
+        book.fileName ||
+        book.filename ||
+        'Untitled Manual'
+      );
+    }
+
+    function getBookSystemTag(book) {
+      return (
+        book.system ||
+        book.category ||
+        book.series ||
+        null
+      );
+    }
+
+    function getBookPages(book) {
+      return book.pages || book.pageCount || null;
+    }
+
+    function getBookYear(book) {
+      return book.year || book.publicationYear || null;
+    }
+
+    function filterBooks(query) {
+      if (!query) return ALL_BOOKS;
+      const q = query.toLowerCase();
+
+      return ALL_BOOKS.filter((book) => {
+        const title = String(getBookTitle(book)).toLowerCase();
+        const system = String(getBookSystemTag(book) || '').toLowerCase();
+        const fileName = String(book.fileName || book.filename || '').toLowerCase();
+        const tags = Array.isArray(book.tags) ? book.tags.join(' ').toLowerCase() : '';
+
+        return (
+          title.includes(q) ||
+          system.includes(q) ||
+          fileName.includes(q) ||
+          tags.includes(q)
+        );
+      });
+    }
+
+    function createBookCard(book) {
+      const title = getBookTitle(book);
+      const system = getBookSystemTag(book);
+      const pages = getBookPages(book);
+      const year = getBookYear(book);
+      const fileName = book.fileName || book.filename || '';
+
+      const firstLetter = title.trim().charAt(0).toUpperCase() || 'R';
+
+      const card = document.createElement('article');
+      card.className = 'book-card';
+
+      card.innerHTML = `
+        <div class="book-main">
+          <div class="book-thumbnail">
+            <span>${firstLetter}</span>
+          </div>
+          <div class="book-info">
+            <div class="book-title" title="${title}">${title}</div>
+            <div class="book-meta">
+              ${system ? system + ' &bull; ' : ''}${fileName || 'PDF'}
+            </div>
+            <div class="book-tags">
+              ${
+                year
+                  ? `<span class="tag">Year: ${year}</span>`
+                  : ''
+              }
+              ${
+                pages
+                  ? `<span class="tag">${pages} pages</span>`
+                  : ''
+              }
+            </div>
+          </div>
+        </div>
+        <div class="book-footer">
+          <div class="book-footer-left">
+            <span class="pill-soft">
+              <span>📄</span>
+              <span>${fileName || 'source: Blob Storage'}</span>
+            </span>
+          </div>
+          <button class="btn-view" type="button">
+            <span>View Details</span>
+            <span>➜</span>
+          </button>
+        </div>
+      `;
+
+      const viewBtn = card.querySelector('.btn-view');
+      viewBtn.addEventListener('click', () => {
+        // STEP 4 will replace this with a real view-book.html route.
+        // For now we just log it so you can see it's wired up.
+        console.log('Selected book:', {
+          title,
+          fileName,
+          system,
+          pages,
+          year,
+          raw: book
+        });
+
+        alert(
+          `Book selected:\n\n${title}\n\n` +
+          `This button will eventually open a dedicated book viewer page (view-book.html) in a later step.`
+        );
+      });
+
+      return card;
+    }
+
+    function renderBooks(list) {
+      bookGrid.innerHTML = '';
+
+      if (!list.length) {
+        bookGrid.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+        resultCount.textContent = 'No books found.';
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      bookGrid.classList.remove('hidden');
+
+      list.forEach((book) => {
+        const card = createBookCard(book);
+        bookGrid.appendChild(card);
+      });
+
+      resultCount.textContent =
+        list.length === 1 ? '1 book found' : `${list.length} books found`;
+    }
+
+    function initLibrary() {
+      badgeBookCount.textContent =
+        ALL_BOOKS.length === 1
+          ? '1 manual'
+          : `${ALL_BOOKS.length} manuals`;
+
+      renderBooks(ALL_BOOKS);
+
+      searchInput.addEventListener('input', (e) => {
+        const value = e.target.value.trim();
+        const filtered = filterBooks(value);
+        renderBooks(filtered);
+      });
+    }
+
+    // Initialize everything once DOM + auth are ready
+    document.addEventListener('DOMContentLoaded', () => {
+      loadAuthState();
+      initLibrary();
+    });
+  </script>
+</body>
+</html>
