@@ -1,17 +1,29 @@
 ﻿{
   "auth": {
     "identityProviders": {
-      "azureActiveDirectoryB2C": {
+      "azureActiveDirectory": {
         "registration": {
-          "clientIdSettingName": "AADB2C_PROVIDER_CLIENT_ID",
-          "clientSecretSettingName": "AADB2C_PROVIDER_CLIENT_SECRET",
-          "openIdIssuer": "https://RoofVaultUsers.ciamlogin.com/08994c9e-5d60-44c4-8f4c-a1c7afe1aa93/v2.0/"
+          "clientId": "Pc3f95c65-1e20-43b3-a1aa-6c693f58a65c",
+          "clientSecretSettingName": "AAD_CLIENT_SECRET",
+          "openIdIssuer": "https://login.microsoftonline.com/7cabcb45-ad35-4319-8d40-137f881f0d98/v2.0"
         }
       }
     }
   },
-
   "routes": [
-    { "route": "/api/*", "allowedRoles": [ "anonymous" ] }
+    {
+      "route": "/login",
+      "redirect": "/.auth/login/aad?post_login_redirect_uri=/",
+      "statusCode": 302
+    },
+    {
+      "route": "/logout",
+      "redirect": "/.auth/logout?post_logout_redirect_uri=/",
+      "statusCode": 302
+    },
+    {
+      "route": "/api/*",
+      "allowedRoles": [ "anonymous" ]
+    }
   ]
 }
