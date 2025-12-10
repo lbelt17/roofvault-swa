@@ -409,6 +409,17 @@ Ready.
     const loginBtn = document.getElementById('login-btn');
     const logoutBtn = document.getElementById('logout-btn');
     const userEmail = document.getElementById('user-email');
+    // Owners get full access (free forever)
+    const OWNER_EMAILS = [
+      'msaulnier@cmcflorida.com',
+      'joesorrentinollc@gmail.com',
+      'jbelt@beltengineering.com',
+      'lbelt17@outlook.com'
+    ];
+
+    // Global flags
+    window.isLoggedIn = false;
+    window.subscriptionTier = 'free'; // 'free' | 'owner' (later: 'pro', etc.)
 
     if (!loginBtn || !logoutBtn || !userEmail) return;
 
@@ -442,29 +453,41 @@ Ready.
         const data = await res.json();
         const cp = data && data.clientPrincipal;
 
-        if (cp) {
+               if (cp) {
           loginBtn.style.display = 'none';
           logoutBtn.style.display = 'inline-flex';
           userEmail.textContent = cp.userDetails || '';
 
+          const email = (cp.userDetails || '').toLowerCase();
+          if (OWNER_EMAILS.includes(email)) {
+            window.subscriptionTier = 'owner';
+          } else {
+            window.subscriptionTier = 'free';
+          }
+
           window.isLoggedIn = true;
           updateExamAccess(true);
-        } else {
+
+                } else {
           loginBtn.style.display = 'inline-flex';
           logoutBtn.style.display = 'none';
           userEmail.textContent = '';
 
           window.isLoggedIn = false;
+          window.subscriptionTier = 'free';
           updateExamAccess(false);
+
         }
-      } catch (e) {
+           } catch (e) {
         loginBtn.style.display = 'inline-flex';
         logoutBtn.style.display = 'none';
         userEmail.textContent = '';
 
         window.isLoggedIn = false;
+        window.subscriptionTier = 'free';
         updateExamAccess(false);
       }
+
     }
 
     loginBtn.addEventListener('click', function () {
