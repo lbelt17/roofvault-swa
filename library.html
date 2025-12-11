@@ -704,9 +704,8 @@ label[for="bookSelect"] {
     const btnLogout = document.getElementById('btnLogout');
     const btnBackHome = document.getElementById('btnBackHome');
 
-    
-    async function loadAuthState() {
-      try {
+   async function loadAuthState() {
+  try {
     const res = await fetch('/api/auth-me', { credentials: 'include' });
     if (!res.ok) throw new Error('No auth info');
 
@@ -716,23 +715,31 @@ label[for="bookSelect"] {
     window.isLoggedIn = !!data.isLoggedIn;
     window.subscriptionTier = data.subscriptionTier || 'free';
 
-    // Update UI labels
+    // If not logged in
     if (!data.isLoggedIn) {
       userEmailLabel.textContent = 'Not signed in';
       subscriptionLabel.textContent = 'Free (guest)';
       subscriptionLabel.classList.add('hidden');
       btnLogin.classList.remove('hidden');
       btnLogout.classList.add('hidden');
-    } else {
-      userEmailLabel.textContent = data.email || '';
-      subscriptionLabel.textContent = data.subscriptionTier || 'free';
-      subscriptionLabel.classList.remove('hidden');
-      btnLogin.classList.add('hidden');
-      btnLogout.classList.remove('hidden');
+      return;
     }
+
+    // Logged in user
+    userEmailLabel.textContent = data.email || '';
+
+    // Show correct subscription label
+    subscriptionLabel.textContent =
+      data.subscriptionTier === 'owner' ? 'Owner Access' : 'Free Tier';
+
+    subscriptionLabel.classList.remove('hidden');
+    btnLogin.classList.add('hidden');
+    btnLogout.classList.remove('hidden');
+
   } catch (err) {
     console.error('loadAuthState error:', err);
-    // Fallback – treat as logged out free user
+
+    // Fallback – treat as logged out
     window.isLoggedIn = false;
     window.subscriptionTier = 'free';
     userEmailLabel.textContent = 'Not signed in';
