@@ -704,66 +704,92 @@ label[for="bookSelect"] {
     const btnLogout = document.getElementById('btnLogout');
     const btnBackHome = document.getElementById('btnBackHome');
 
+    
     async function loadAuthState() {
       try {
-        const res = await fetch('/.auth/me');
-        if (!res.ok) throw new Error('No auth info');
-        const data = await res.json();
+    const res = await fetch('/api/auth-me', { credentials: 'include' });
+    if (!res.ok) throw new Error('No auth info');
 
-        const principal =
-          data?.clientPrincipal || (Array.isArray(data) ? data[0]?.clientPrincipal : null);
+    const data = await res.json();
 
-        if (!principal) {
-          // Not logged in
-          window.isLoggedIn = false;
-          window.subscriptionTier = 'free';
-          userEmailLabel.textContent = 'Not signed in';
-          subscriptionLabel.classList.add('hidden');
-          btnLogin.classList.remove('hidden');
-          btnLogout.classList.add('hidden');
-          return;
-        }
+    // Update global flags
+    window.isLoggedIn = !!data.isLoggedIn;
+    window.subscriptionTier = data.subscriptionTier || 'free';
 
-        const email =
-          principal.userDetails ||
-          principal.userId ||
-          'Signed in';
-
-        const isOwner = OWNER_EMAILS.includes(email.toLowerCase());
-        window.isLoggedIn = true;
-        window.subscriptionTier = isOwner ? 'owner' : 'free';
-
-        userEmailLabel.textContent = email;
-
-        subscriptionLabel.textContent =
-          window.subscriptionTier === 'owner' ? 'Owner Access' : 'Free Tier';
-        subscriptionLabel.classList.remove('hidden');
-
-        btnLogin.classList.add('hidden');
-        btnLogout.classList.remove('hidden');
-      } catch (err) {
-        // Treat as logged out
-        window.isLoggedIn = false;
-        window.subscriptionTier = 'free';
-        userEmailLabel.textContent = 'Not signed in';
-        subscriptionLabel.classList.add('hidden');
-        btnLogin.classList.remove('hidden');
-        btnLogout.classList.add('hidden');
-      }
+    // Update UI labels
+    if (!data.isLoggedIn) {
+      userEmailLabel.textContent = 'Not signed in';
+      subscriptionLabel.textContent = 'Free (guest)';
+      subscriptionLabel.classList.add('hidden');
+      btnLogin.classList.remove('hidden');
+      btnLogout.classList.add('hidden');
+    } else {
+      userEmailLabel.textContent = data.email || '';
+      subscriptionLabel.textContent = data.subscriptionTier || 'free';
+      subscriptionLabel.classList.remove('hidden');
+      btnLogin.classList.add('hidden');
+      btnLogout.classList.remove('hidden');
     }
+  } catch (err) {
+    console.error('loadAuthState error:', err);
+    // Fallback – treat as logged out free user
+    window.isLoggedIn = false;
+    window.subscriptionTier = 'free';
+    userEmailLabel.textContent = 'Not signed in';
+    subscriptionLabel.textContent = 'Free (guest)';
+    subscriptionLabel.classList.add('hidden');
+    btnLogin.classList.remove('hidden');
+    btnLogout.classList.add('hidden');
+  }
+}
 
-    btnLogin.addEventListener('click', () => {
-      window.location.href = '/login';
-    });
 
-    btnLogout.addEventListener('click', () => {
-      window.location.href = '/.auth/logout';
-    });
+try {
 
-    btnBackHome.addEventListener('click', () => {
-      // This assumes index.html is the root page
-      window.location.href = '/';
-    });
+         const email =
+  principal.userDetails ||
+  principal.userId ||
+  'Signed in';
+
+const isOwner =
+  email && email.toLowerCase && OWNER_EMAILS.includes(email.toLowerCase());
+
+window.isLoggedIn = true;
+window.subscriptionTier = isOwner ? 'owner' : 'free';
+
+userEmailLabel.textContent = email;
+
+subscriptionLabel.textContent =
+  window.subscriptionTier === 'owner' ? 'Owner Access' : 'Free Tier';
+subscriptionLabel.classList.remove('hidden');
+
+btnLogin.classList.add('hidden');
+btnLogout.classList.remove('hidden');
+
+} catch (err) {
+  console.error('loadAuthState error:', err);
+
+  // Treat as logged out
+  window.isLoggedIn = false;
+  window.subscriptionTier = 'free';
+  userEmailLabel.textContent = 'Not signed in';
+  subscriptionLabel.textContent = 'Free (guest)';
+  subscriptionLabel.classList.add('hidden');
+  btnLogin.classList.remove('hidden');
+  btnLogout.classList.add('hidden');
+}
+
+btnLogin.addEventListener('click', () => {
+  window.location.href = '/login';
+});
+
+btnLogout.addEventListener('click', () => {
+  window.location.href = '/.auth/logout';
+});
+
+btnBackHome.addEventListener('click', () => {
+  window.location.href = '/';
+});
 
     
   
