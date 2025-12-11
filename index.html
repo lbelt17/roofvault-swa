@@ -1,17 +1,5 @@
 ﻿<!doctype html>
 <html lang="en">
-<style>
-  /* Hide the left-side auth strip on the exam page */
-  .auth-bar {
-    display: none;
-  }
-</style>
-
-
-
-
-
-
 <head>
   <meta charset="utf-8" />
   <title>RoofVault – Practice Exams</title>
@@ -39,12 +27,110 @@
       background: radial-gradient(circle at top, #1c2333 0, #05060a 55%, #020308 100%);
       color: var(--text-main);
       display: flex;
+      flex-direction: column;     /* stack header + card */
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       min-height: 100vh;
       margin: 0;
       padding: 16px;
     }
+
+    /* ---------- Top auth/navigation bar (like Library) ---------- */
+
+    header {
+      width: 100%;
+      padding: 8px 4px 0;
+    }
+
+    .nav {
+      max-width: 980px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .logo-pill {
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 0, #46cdff 0, #008dff 45%, #0046b3 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      color: #02111c;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.65);
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+
+    .brand-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+    }
+
+    .user-label {
+      color: var(--text-muted);
+    }
+
+    .tier-pill {
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(15, 19, 30, 0.95);
+      border: 1px solid rgba(120, 135, 170, 0.65);
+      color: var(--text-muted);
+    }
+
+    .btn {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(120, 135, 170, 0.75);
+      background: rgba(15, 19, 30, 0.95);
+      color: var(--text-main);
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-text {
+      border-color: transparent;
+      background: transparent;
+      color: var(--text-muted);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    /* ---------- Exam card layout (unchanged) ---------- */
 
     .wrap {
       width: min(980px, 100vw - 24px);
@@ -56,16 +142,7 @@
         0 0 0 1px rgba(255,255,255,0.02);
       border: 1px solid rgba(70, 80, 110, 0.35);
       backdrop-filter: blur(10px);
-    }
-
-    .auth-bar {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-      font-size: 0.85rem;
-      color: var(--text-muted);
+      margin-top: 10px;
     }
 
     .header {
@@ -310,51 +387,49 @@
       .wrap {
         padding: 18px 16px 14px;
       }
+      .nav {
+        flex-direction: column;
+        align-items: flex-start;
+      }
     }
   </style>
 </head>
-<body>
 
-<!-- AUTH STATUS BAR -->
-<header>
-  <div class="nav">
-    <div class="nav-left">
-      <div class="logo-pill">RV</div>
-      <div class="brand-text">
-        <div class="brand-title">RoofVault Practice Exams</div>
-        <div class="brand-subtitle">Generate book-specific exams grounded in your RoofDocs index.</div>
+<body>
+  <!-- Top auth bar (matches Library behavior) -->
+  <header>
+    <div class="nav">
+      <div class="nav-left">
+        <div class="logo-pill">RV</div>
+        <div class="brand-text">
+          <div class="brand-title">RoofVault Practice Exams</div>
+          <div class="brand-subtitle">
+            Generate book-specific exams grounded in your RoofDocs index.
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-right">
+        <span id="userEmailLabel" class="user-label">Not signed in</span>
+        <span id="subscriptionLabel" class="tier-pill hidden"></span>
+
+        <button id="btnLogin" class="btn btn-secondary">
+          <span>🔓 Login / Sign up</span>
+        </button>
+
+        <button id="btnLogout" class="btn btn-secondary hidden">
+          <span>🚪 Logout</span>
+        </button>
+
+        <button id="btnBackHome" class="btn btn-text">
+          ⬅ Back to Library
+        </button>
       </div>
     </div>
+  </header>
 
-    <div class="nav-right">
-      <span id="userEmailLabel" class="user-label">Not signed in</span>
-      <span id="subscriptionLabel" class="tier-pill hidden"></span>
-
-      <button id="btnLogin" class="btn btn-secondary">
-        <span>🔓 Login</span>
-      </button>
-
-      <button id="btnLogout" class="btn btn-secondary hidden">
-        <span>🚪 Logout</span>
-      </button>
-
-      <button id="btnBackHome" class="btn btn-text">
-        ⬅ Back to Exams
-      </button>
-    </div>
-  </div>
-</header>
-
-
-<style>
-  .hidden { display: none; }
-</style>
-
-
+  <!-- Exam card -->
   <div class="wrap">
-    <!-- Auth bar -->
-
-
     <!-- Header -->
     <div class="header">
       <div class="header-main">
@@ -410,16 +485,16 @@
           <span class="icon">💬</span>
           <span>Open RoofVault Chat</span>
         </button>
-      
-      <button id="btnLibrary" class="btn-outline" type="button">
-  <span class="icon">📚</span>
-  <span>Open RoofVault Library</span>
-</button>
-</div>
+
+        <button id="btnLibrary" class="btn-outline" type="button">
+          <span class="icon">📚</span>
+          <span>Open RoofVault Library</span>
+        </button>
+      </div>
 
       <div id="qList">
         <div class="q-empty">
-          Your generated practice questions will appear here.  
+          Your generated practice questions will appear here.
           Pick a book above, then click <strong>“Generate 25Q Practice Exam”</strong>.
         </div>
       </div>
@@ -435,185 +510,123 @@ Ready.
     </div>
   </div>
 
-  <!-- Existing logic (don’t touch these paths so your pipeline keeps working) -->
+  <!-- Existing logic (unchanged) -->
   <script src="/interactive-exam.js?v=4"></script>
   <script src="/books.js?v=4"></script>
   <script src="/gen-exam.js?v=4"></script>
 
-  <!-- Simple script: wire Chat button to rvchat.html -->
- <!-- Wire Chat button to rvchat.html -->
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  loadAuthState();   // ✅ ADD THIS LINE
-
-  var chatBtn = document.getElementById('btnOpenChat');
-  if (chatBtn) {
-    chatBtn.addEventListener('click', function () {
-      window.location.href = 'rvchat.html';
-    });
-  }
-});
-</script>
-
-<!-- Wire Library button to roofvault-library.html -->
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    var libBtn = document.getElementById('btnLibrary');
-    if (libBtn) {
-      libBtn.addEventListener('click', function () {
-        window.location.href = 'library.html';
-      });
-    }
-  });
-</script>
-<script>
-async function loadAuthState() {
-  try {
-    const res = await fetch('/api/auth-me', { credentials: 'include' });
-    if (!res.ok) throw new Error('No auth info');
-
-    const data = await res.json();
-
-   const userEmailLabel = document.getElementById('userEmailLabel');
-const subscriptionLabel = document.getElementById('subscriptionLabel');
-const btnLogin = document.getElementById('btnLogin');
-const btnLogout = document.getElementById('btnLogout');
-const btnBackHome = document.getElementById('btnBackHome');
-
-
-    window.isLoggedIn = !!data.isLoggedIn;
-    window.subscriptionTier = data.subscriptionTier || 'free';
-
-    if (!data.isLoggedIn) {
-      userEmailLabel.textContent = 'Not signed in';
-      subscriptionLabel.textContent = 'Free (guest)';
-      subscriptionLabel.classList.add('hidden');
-      btnLogin.classList.remove('hidden');
-      btnLogout.classList.add('hidden');
-      return;
-    }
-
-    userEmailLabel.textContent = data.email || '';
-    subscriptionLabel.textContent =
-      data.subscriptionTier === 'owner' ? 'Owner Access' : 'Free Tier';
-
-    subscriptionLabel.classList.remove('hidden');
-    btnLogin.classList.add('hidden');
-    btnLogout.classList.remove('hidden');
-
-  } catch (err) {
-    console.error('loadAuthState error:', err);
-
-    const userEmailLabel = document.getElementById('user-email');
-    const subscriptionLabel = document.getElementById('subscription-label');
-    const btnLogin = document.getElementById('login-btn');
-    const btnLogout = document.getElementById('logout-btn');
-
-    window.isLoggedIn = false;
-    window.subscriptionTier = 'free';
-
-    userEmailLabel.textContent = 'Not signed in';
-    subscriptionLabel.textContent = 'Free (guest)';
-    subscriptionLabel.classList.add('hidden');
-    btnLogin.classList.remove('hidden');
-    btnLogout.classList.add('hidden');
-  }
-}
-</script>
-
-
-<script>
-  (function () {
-    const loginBtn = document.getElementById('login-btn');
-    const logoutBtn = document.getElementById('logout-btn');
-    const userEmail = document.getElementById('user-email');
-   
-
-    // Global flags
-    window.isLoggedIn = false;
-    window.subscriptionTier = 'free'; // 'free' | 'owner' (later: 'pro', etc.)
-
-    if (!loginBtn || !logoutBtn || !userEmail) return;
-
-    // Global flag any script can check
-    window.isLoggedIn = false;
-
-    // Turn the Generate 25Q button on/off + lock icon
+  <!-- Auth + navigation wiring -->
+  <script>
     function updateExamAccess(isLoggedIn) {
-  const genBtn = document.getElementById('btnGenExam50ByBook');
-  if (!genBtn) return;
+      const genBtn = document.getElementById('btnGenExam50ByBook');
+      if (!genBtn) return;
 
-  if (isLoggedIn) {
-    genBtn.disabled = false;
-    genBtn.title = 'Generate a 25-question practice exam.';
-    genBtn.textContent = '🔓 Generate 25Q Practice Exam';
-    genBtn.style.cursor = 'pointer';
-  } else {
-    genBtn.disabled = true;
-    genBtn.title = 'Please log in to generate exams.';
-    genBtn.textContent = '🔒 Generate 25Q Practice Exam';
-    genBtn.style.cursor = 'not-allowed';
-  }
-}
+      if (isLoggedIn) {
+        genBtn.disabled = false;
+        genBtn.title = 'Generate a 25-question practice exam.';
+        genBtn.textContent = 'Generate 25Q Practice Exam';
+        genBtn.style.cursor = 'pointer';
+      } else {
+        genBtn.disabled = true;
+        genBtn.title = 'Please log in to generate exams.';
+        genBtn.textContent = '🔒 Generate 25Q Practice Exam';
+        genBtn.style.cursor = 'not-allowed';
+      }
+    }
 
+    async function loadAuthState() {
+      const userEmailLabel = document.getElementById('userEmailLabel');
+      const subscriptionLabel = document.getElementById('subscriptionLabel');
+      const btnLogin = document.getElementById('btnLogin');
+      const btnLogout = document.getElementById('btnLogout');
 
-    async function refreshAuthState() {
       try {
-        const res = await fetch('/.auth/me', { credentials: 'include' });
-        if (!res.ok) throw new Error('not logged in');
+        const res = await fetch('/api/auth-me', { credentials: 'include' });
+        if (!res.ok) throw new Error('No auth info');
 
         const data = await res.json();
-        const cp = data && data.clientPrincipal;
 
-               if (cp) {
-          loginBtn.style.display = 'none';
-          logoutBtn.style.display = 'inline-flex';
-          userEmail.textContent = cp.userDetails || '';
+        window.isLoggedIn = !!data.isLoggedIn;
+        window.subscriptionTier = data.subscriptionTier || 'free';
 
-          const email = (cp.userDetails || '').toLowerCase();
-          if (OWNER_EMAILS.includes(email)) {
-            window.subscriptionTier = 'owner';
-          } else {
-            window.subscriptionTier = 'free';
-          }
-
-          window.isLoggedIn = true;
-          updateExamAccess(true);
-
-                } else {
-          loginBtn.style.display = 'inline-flex';
-          logoutBtn.style.display = 'none';
-          userEmail.textContent = '';
-
-          window.isLoggedIn = false;
-          window.subscriptionTier = 'free';
+        if (!data.isLoggedIn) {
+          userEmailLabel.textContent = 'Not signed in';
+          subscriptionLabel.textContent = 'Free (guest)';
+          subscriptionLabel.classList.add('hidden');
+          btnLogin.classList.remove('hidden');
+          btnLogout.classList.add('hidden');
           updateExamAccess(false);
-
+          return;
         }
-           } catch (e) {
-        loginBtn.style.display = 'inline-flex';
-        logoutBtn.style.display = 'none';
-        userEmail.textContent = '';
+
+        userEmailLabel.textContent = data.email || '';
+        subscriptionLabel.textContent =
+          data.subscriptionTier === 'owner' ? 'Owner Access' : 'Free Tier';
+
+        subscriptionLabel.classList.remove('hidden');
+        btnLogin.classList.add('hidden');
+        btnLogout.classList.remove('hidden');
+        updateExamAccess(true);
+
+      } catch (err) {
+        console.error('loadAuthState error:', err);
 
         window.isLoggedIn = false;
         window.subscriptionTier = 'free';
+        userEmailLabel.textContent = 'Not signed in';
+        subscriptionLabel.textContent = 'Free (guest)';
+        subscriptionLabel.classList.add('hidden');
+        btnLogin.classList.remove('hidden');
+        btnLogout.classList.add('hidden');
         updateExamAccess(false);
       }
-
     }
 
-    loginBtn.addEventListener('click', function () {
-      window.location.href = '/login';
+    document.addEventListener('DOMContentLoaded', function () {
+      // Wire chat button
+      const chatBtn = document.getElementById('btnOpenChat');
+      if (chatBtn) {
+        chatBtn.addEventListener('click', function () {
+          window.location.href = 'rvchat.html';
+        });
+      }
+
+      // Wire library button
+      const libBtn = document.getElementById('btnLibrary');
+      if (libBtn) {
+        libBtn.addEventListener('click', function () {
+          window.location.href = 'library.html';
+        });
+      }
+
+      // Auth buttons
+      const btnLogin = document.getElementById('btnLogin');
+      const btnLogout = document.getElementById('btnLogout');
+      const btnBackHome = document.getElementById('btnBackHome');
+
+      if (btnLogin) {
+        btnLogin.addEventListener('click', function () {
+          window.location.href = '/login';
+        });
+      }
+
+      if (btnLogout) {
+        btnLogout.addEventListener('click', function () {
+          window.location.href =
+            '/.auth/logout?post_logout_redirect_uri=/index.html';
+        });
+      }
+
+      if (btnBackHome) {
+        btnBackHome.addEventListener('click', function () {
+          window.location.href = 'library.html';
+        });
+      }
+
+      // Default: locked until we know auth state
+      updateExamAccess(false);
+      loadAuthState();
     });
-
-    logoutBtn.addEventListener('click', function () {
-      window.location.href =
-        '/.auth/logout?post_logout_redirect_uri=/';
-    });
-
-    refreshAuthState();
-  })();
-</script>
-
+  </script>
 </body>
 </html>
