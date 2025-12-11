@@ -316,12 +316,35 @@
 <body>
 
 <!-- AUTH STATUS BAR -->
-<div id="auth-bar" style="display:flex; justify-content:flex-end; gap:10px; align-items:center; padding:10px;">
-  <span id="user-email">Not signed in</span>
-  <span id="subscription-label" class="hidden">Free (guest)</span>
-  <button id="login-btn">Log in / Sign up</button>
-  <button id="logout-btn" class="hidden">Logout</button>
-</div>
+<header>
+  <div class="nav">
+    <div class="nav-left">
+      <div class="logo-pill">RV</div>
+      <div class="brand-text">
+        <div class="brand-title">RoofVault Practice Exams</div>
+        <div class="brand-subtitle">Generate book-specific exams grounded in your RoofDocs index.</div>
+      </div>
+    </div>
+
+    <div class="nav-right">
+      <span id="userEmailLabel" class="user-label">Not signed in</span>
+      <span id="subscriptionLabel" class="tier-pill hidden"></span>
+
+      <button id="btnLogin" class="btn btn-secondary">
+        <span>🔓 Login</span>
+      </button>
+
+      <button id="btnLogout" class="btn btn-secondary hidden">
+        <span>🚪 Logout</span>
+      </button>
+
+      <button id="btnBackHome" class="btn btn-text">
+        ⬅ Back to Exams
+      </button>
+    </div>
+  </div>
+</header>
+
 
 <style>
   .hidden { display: none; }
@@ -451,10 +474,12 @@ async function loadAuthState() {
 
     const data = await res.json();
 
-    const userEmailLabel = document.getElementById('user-email');
-    const subscriptionLabel = document.getElementById('subscription-label');
-    const btnLogin = document.getElementById('login-btn');
-    const btnLogout = document.getElementById('logout-btn');
+   const userEmailLabel = document.getElementById('userEmailLabel');
+const subscriptionLabel = document.getElementById('subscriptionLabel');
+const btnLogin = document.getElementById('btnLogin');
+const btnLogout = document.getElementById('btnLogout');
+const btnBackHome = document.getElementById('btnBackHome');
+
 
     window.isLoggedIn = !!data.isLoggedIn;
     window.subscriptionTier = data.subscriptionTier || 'free';
