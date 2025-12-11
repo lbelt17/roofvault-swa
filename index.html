@@ -302,6 +302,20 @@
   </style>
 </head>
 <body>
+
+<!-- AUTH STATUS BAR -->
+<div id="auth-bar" style="display:flex; justify-content:flex-end; gap:10px; align-items:center; padding:10px;">
+  <span id="user-email">Not signed in</span>
+  <span id="subscription-label" class="hidden">Free (guest)</span>
+  <button id="login-btn">Log in / Sign up</button>
+  <button id="logout-btn" class="hidden">Logout</button>
+</div>
+
+<style>
+  .hidden { display: none; }
+</style>
+
+
   <div class="wrap">
     <!-- Auth bar -->
     <div class="auth-bar">
@@ -398,26 +412,18 @@ Ready.
   <!-- Simple script: wire Chat button to rvchat.html -->
  <!-- Wire Chat button to rvchat.html -->
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    var chatBtn = document.getElementById('btnOpenChat');
-    if (chatBtn) {
-      chatBtn.addEventListener('click', function () {
-        window.location.href = 'rvchat.html';
-      });
-    }
-  });
+document.addEventListener('DOMContentLoaded', function () {
+  loadAuthState();   // ✅ ADD THIS LINE
+
+  var chatBtn = document.getElementById('btnOpenChat');
+  if (chatBtn) {
+    chatBtn.addEventListener('click', function () {
+      window.location.href = 'rvchat.html';
+    });
+  }
+});
 </script>
-<!-- Wire Chat button to rvchat.html -->
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    var chatBtn = document.getElementById('btnOpenChat');
-    if (chatBtn) {
-      chatBtn.addEventListener('click', function () {
-        window.location.href = 'rvchat.html';
-      });
-    }
-  });
-</script>
+
 <!-- Wire Library button to roofvault-library.html -->
 <script>
   document.addEventListener('DOMContentLoaded', function () {
@@ -428,6 +434,58 @@ Ready.
       });
     }
   });
+</script>
+<script>
+async function loadAuthState() {
+  try {
+    const res = await fetch('/api/auth-me', { credentials: 'include' });
+    if (!res.ok) throw new Error('No auth info');
+
+    const data = await res.json();
+
+    const userEmailLabel = document.getElementById('user-email');
+    const subscriptionLabel = document.getElementById('subscription-label');
+    const btnLogin = document.getElementById('login-btn');
+    const btnLogout = document.getElementById('logout-btn');
+
+    window.isLoggedIn = !!data.isLoggedIn;
+    window.subscriptionTier = data.subscriptionTier || 'free';
+
+    if (!data.isLoggedIn) {
+      userEmailLabel.textContent = 'Not signed in';
+      subscriptionLabel.textContent = 'Free (guest)';
+      subscriptionLabel.classList.add('hidden');
+      btnLogin.classList.remove('hidden');
+      btnLogout.classList.add('hidden');
+      return;
+    }
+
+    userEmailLabel.textContent = data.email || '';
+    subscriptionLabel.textContent =
+      data.subscriptionTier === 'owner' ? 'Owner Access' : 'Free Tier';
+
+    subscriptionLabel.classList.remove('hidden');
+    btnLogin.classList.add('hidden');
+    btnLogout.classList.remove('hidden');
+
+  } catch (err) {
+    console.error('loadAuthState error:', err);
+
+    const userEmailLabel = document.getElementById('user-email');
+    const subscriptionLabel = document.getElementById('subscription-label');
+    const btnLogin = document.getElementById('login-btn');
+    const btnLogout = document.getElementById('logout-btn');
+
+    window.isLoggedIn = false;
+    window.subscriptionTier = 'free';
+
+    userEmailLabel.textContent = 'Not signed in';
+    subscriptionLabel.textContent = 'Free (guest)';
+    subscriptionLabel.classList.add('hidden');
+    btnLogin.classList.remove('hidden');
+    btnLogout.classList.add('hidden');
+  }
+}
 </script>
 
 
