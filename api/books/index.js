@@ -4,42 +4,105 @@
  *   SEARCH_ENDPOINT=https://roofvaultsearch.search.windows.net
  *   SEARCH_API_KEY=xxxxx
  *   SEARCH_INDEX=azureblob-index
- *
- * Strategy:
- * 1) Try GET /docs?$select=<field>&$top=1000&search=*
- *    for these fields in order:
- *      - docName
- *      - documentName
- *      - fileName
- *      - metadata_storage_name   <-- common for Azure Blob indexer
- *      - metadata_storage_path
- * 2) First field that yields values wins.
- * 3) If still empty, inspect schema and pick the first retrievable string field,
- *    then try again with $select.
  */
 const https = require("https");
-const { URL } = require("url"); // <-- IMPORTANT: avoids build/runtime issues
+const { URL } = require("url");
 
-function groupFromName(rawName) {
-  let name = (rawName || "").trim();
+function safeDecodeURIComponent(s) {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return s;
+  }
+}
 
-  // drop .pdf if present
-  name = name.replace(/\.pdf$/i, "");
+function baseNameFromValue(raw) {
+  let s = String(raw || "").trim();
+  if (!s) return "";
 
-  // strip Part/Pt suffixes like: " Part1", "_Part_01", " - Part 2 of 10", " pt-3"
-  name = name.replace(
-    /(\s*[-–—_]\s*|\s+)(part|pt)\s*[_-]?\s*\d+\s*(of\s*\d+)?\s*$/i,
+  // If it's a URL, keep only pathname
+  // If it's a path, keep only last segment
+  s = s.split("?")[0].split("#")[0];
+
+  // Normalize slashes
+  s = s.replace(/\\/g, "/");
+
+  // Take last segment
+  if (s.includes("/")) s = s.split("/").pop();
+
+  // Decode %20 etc
+  s = safeDecodeURIComponent(s);
+
+  return s.trim();
+}
+
+function normalizeSpaces(s) {
+  return String(s || "")
+    .replace(/[_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Remove common "part" suffix patterns:
+ * - "... Pt1-1"
+ * - "... Pt1.10.1-1"
+ * - "... Part 3 of 10"
+ * - "... - Part_02"
+ * - "... pt-3"
+ */
+function stripPartSuffix(name) {
+  let s = name;
+
+  // Remove extension first
+  s = s.replace(/\.pdf$/i, "").trim();
+
+  // Common trailing tokens like: " - Pt1.10.1-1", "_Pt2-3", " Part 2 of 10"
+  // (We keep this aggressive but only at END of string.)
+  s = s.replace(
+    /(\s*[-–—_]\s*|\s+)(part|pt|section|sec|vol|volume|book)\s*[_-]?\s*\d+(\.\d+)*([_-]?\d+(\.\d+)*)*(\s*(of|\/)\s*\d+)?\s*$/i,
     ""
   );
 
-  const displayTitle = name.replace(/\s+/g, " ").trim();
+  // Also strip patterns like "-p3", "_p3", " p3" at end (some scans do this)
+  s = s.replace(/(\s*[-–—_]\s*|\s+)p\s*\d+\s*$/i, "");
 
-  const bookGroupId = displayTitle
+  return s.trim();
+}
+
+function makeDisplayTitle(raw) {
+  let s = normalizeSpaces(raw);
+
+  // A little cleanup for common junk
+  s = s.replace(/\s*-\s*/g, " - "); // normalize hyphen spacing
+  s = s.replace(/\(\s*/g, "(").replace(/\s*\)/g, ")");
+
+  // Remove double dashes
+  s = s.replace(/\s*-\s*-\s*/g, " - ");
+
+  return s.trim();
+}
+
+function makeGroupId(displayTitle) {
+  return displayTitle
     .toLowerCase()
     .replace(/['"]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+function groupFromName(rawValue) {
+  // 1) get basename (handles path fields)
+  const base = baseNameFromValue(rawValue);
+
+  // 2) remove part suffix + normalize
+  const noPart = stripPartSuffix(base);
+
+  // 3) final prettify
+  const displayTitle = makeDisplayTitle(noPart);
+
+  const bookGroupId = makeGroupId(displayTitle);
 
   return { bookGroupId, displayTitle };
 }
@@ -60,7 +123,7 @@ function getJson(url, headers) {
         res.on("end", () => {
           try {
             resolve({ status: res.statusCode, body: JSON.parse(buf || "{}") });
-          } catch (e) {
+          } catch {
             resolve({ status: res.statusCode, body: { raw: buf } });
           }
         });
@@ -85,8 +148,7 @@ async function trySelect(endpoint, key, index, field) {
       .map((x) => (x && x[field]) || null)
       .filter(Boolean);
 
-    const uniq = Array.from(new Set(vals)).sort((a, b) => a.localeCompare(b));
-    return uniq;
+    return Array.from(new Set(vals)).sort((a, b) => String(a).localeCompare(String(b)));
   }
   return [];
 }
@@ -101,7 +163,6 @@ module.exports = async function (context, req) {
       throw new Error("Missing SEARCH_ENDPOINT / SEARCH_API_KEY / SEARCH_INDEX");
     }
 
-    // 1) Try common fields in order
     const candidates = [
       "docName",
       "documentName",
@@ -122,7 +183,7 @@ module.exports = async function (context, req) {
       }
     }
 
-    // 2) If still empty, inspect schema and try first retrievable string field
+    // If still empty, inspect schema and try a likely retrievable string field
     if (!values.length) {
       const schemaUrl = `${endpoint}/indexes/${encodeURIComponent(index)}?api-version=2023-11-01`;
       const { status, body } = await getJson(schemaUrl, { "api-key": key });
@@ -147,7 +208,7 @@ module.exports = async function (context, req) {
       }
     }
 
-    // 3) Group the raw values into unified books
+    // Group into unified books
     const groups = new Map();
 
     for (const raw of values) {
@@ -155,31 +216,28 @@ module.exports = async function (context, req) {
       if (!bookGroupId) continue;
 
       if (!groups.has(bookGroupId)) {
-        groups.set(bookGroupId, {
-          bookGroupId,
-          displayTitle,
-          parts: []
-        });
+        groups.set(bookGroupId, { bookGroupId, displayTitle, parts: [] });
       }
       groups.get(bookGroupId).parts.push(raw);
     }
 
-    const groupedBooks = Array.from(groups.values()).sort((a, b) =>
+    const books = Array.from(groups.values()).sort((a, b) =>
       a.displayTitle.localeCompare(b.displayTitle)
     );
 
-    for (const g of groupedBooks) {
-      g.parts = Array.from(new Set(g.parts)).sort((a, b) => a.localeCompare(b));
+    for (const b of books) {
+      b.parts = Array.from(new Set(b.parts)).sort((x, y) => String(x).localeCompare(String(y)));
     }
 
     context.res = {
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*"
+      },
       body: {
         field: picked || "metadata_storage_name",
-        // keep old output temporarily so your frontend doesn't break yet
-        values,
-        // new grouped output
-        books: groupedBooks
+        values, // keep old output so frontend doesn't break
+        books   // new grouped output (clean dropdown)
       }
     };
   } catch (e) {
