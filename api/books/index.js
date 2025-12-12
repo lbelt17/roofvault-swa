@@ -18,6 +18,7 @@
  *    then try again with $select.
  */
 const https = require("https");
+const { URL } = require("url"); // <-- IMPORTANT: avoids build/runtime issues
 
 function groupFromName(rawName) {
   let name = (rawName || "").trim();
@@ -57,8 +58,11 @@ function getJson(url, headers) {
         let buf = "";
         res.on("data", (d) => (buf += d));
         res.on("end", () => {
-          try { resolve({ status: res.statusCode, body: JSON.parse(buf || "{}") }); }
-          catch (e) { resolve({ status: res.statusCode, body: { raw: buf } }); }
+          try {
+            resolve({ status: res.statusCode, body: JSON.parse(buf || "{}") });
+          } catch (e) {
+            resolve({ status: res.statusCode, body: { raw: buf } });
+          }
         });
       }
     );
@@ -73,12 +77,15 @@ async function trySelect(endpoint, key, index, field) {
     `${endpoint}/indexes/${encodeURIComponent(index)}/docs` +
     `?api-version=${apiVersion}&search=*` +
     `&$select=${encodeURIComponent(field)}&$top=1000`;
+
   const { status, body } = await getJson(url, { "api-key": key });
+
   if (status >= 200 && status < 300 && body && Array.isArray(body.value)) {
     const vals = body.value
-      .map(x => (x && x[field]) || null)
+      .map((x) => (x && x[field]) || null)
       .filter(Boolean);
-    const uniq = Array.from(new Set(vals)).sort((a,b)=>a.localeCompare(b));
+
+    const uniq = Array.from(new Set(vals)).sort((a, b) => a.localeCompare(b));
     return uniq;
   }
   return [];
@@ -87,9 +94,12 @@ async function trySelect(endpoint, key, index, field) {
 module.exports = async function (context, req) {
   try {
     const endpoint = process.env.SEARCH_ENDPOINT;
-    const key      = process.env.SEARCH_API_KEY;
-    const index    = process.env.SEARCH_INDEX || "azureblob-index";
-    if (!endpoint || !key || !index) throw new Error("Missing SEARCH_ENDPOINT / SEARCH_API_KEY / SEARCH_INDEX");
+    const key = process.env.SEARCH_API_KEY;
+    const index = process.env.SEARCH_INDEX || "azureblob-index";
+
+    if (!endpoint || !key || !index) {
+      throw new Error("Missing SEARCH_ENDPOINT / SEARCH_API_KEY / SEARCH_INDEX");
+    }
 
     // 1) Try common fields in order
     const candidates = [
@@ -102,70 +112,81 @@ module.exports = async function (context, req) {
 
     let picked = null;
     let values = [];
+
     for (const f of candidates) {
       const list = await trySelect(endpoint, key, index, f);
-      if (list.length) { picked = f; values = list; break; }
+      if (list.length) {
+        picked = f;
+        values = list;
+        break;
+      }
     }
 
     // 2) If still empty, inspect schema and try first retrievable string field
     if (!values.length) {
       const schemaUrl = `${endpoint}/indexes/${encodeURIComponent(index)}?api-version=2023-11-01`;
       const { status, body } = await getJson(schemaUrl, { "api-key": key });
+
       if (status >= 200 && status < 300 && body && Array.isArray(body.fields)) {
-        const field = body.fields.find(f =>
-          (f.type === "Edm.String") &&
-          (f.retrievable !== false) &&
-          // prefer something that looks like a name/path
-          /name|file|doc|path|title/i.test(f.name)
-        ) || body.fields.find(f => f.type === "Edm.String" && f.retrievable !== false);
+        const field =
+          body.fields.find(
+            (f) =>
+              f.type === "Edm.String" &&
+              f.retrievable !== false &&
+              /name|file|doc|path|title/i.test(f.name)
+          ) ||
+          body.fields.find((f) => f.type === "Edm.String" && f.retrievable !== false);
 
         if (field && field.name) {
           const list = await trySelect(endpoint, key, index, field.name);
-          if (list.length) { picked = field.name; values = list; }
+          if (list.length) {
+            picked = field.name;
+            values = list;
+          }
         }
       }
     }
 
-    // Group the raw values into unified books
-const groups = new Map();
+    // 3) Group the raw values into unified books
+    const groups = new Map();
 
-for (const raw of values) {
-  const { bookGroupId, displayTitle } = groupFromName(raw);
-  if (!bookGroupId) continue;
+    for (const raw of values) {
+      const { bookGroupId, displayTitle } = groupFromName(raw);
+      if (!bookGroupId) continue;
 
-  if (!groups.has(bookGroupId)) {
-    groups.set(bookGroupId, {
-      bookGroupId,
-      displayTitle,
-      parts: []
-    });
-  }
-  groups.get(bookGroupId).parts.push(raw);
-}
+      if (!groups.has(bookGroupId)) {
+        groups.set(bookGroupId, {
+          bookGroupId,
+          displayTitle,
+          parts: []
+        });
+      }
+      groups.get(bookGroupId).parts.push(raw);
+    }
 
-// Sort groups by displayTitle
-const groupedBooks = Array.from(groups.values()).sort((a, b) =>
-  a.displayTitle.localeCompare(b.displayTitle)
-);
+    const groupedBooks = Array.from(groups.values()).sort((a, b) =>
+      a.displayTitle.localeCompare(b.displayTitle)
+    );
 
-// Sort parts inside each group
-for (const g of groupedBooks) {
-  g.parts = Array.from(new Set(g.parts)).sort((a, b) => a.localeCompare(b));
-}
+    for (const g of groupedBooks) {
+      g.parts = Array.from(new Set(g.parts)).sort((a, b) => a.localeCompare(b));
+    }
 
-context.res = {
-  headers: { "Content-Type": "application/json" },
-  body: {
-    field: picked || "metadata_storage_name",
-    books: groupedBooks
-  }
-};
-
+    context.res = {
+      headers: { "Content-Type": "application/json" },
+      body: {
+        field: picked || "metadata_storage_name",
+        // keep old output temporarily so your frontend doesn't break yet
+        values,
+        // new grouped output
+        books: groupedBooks
+      }
+    };
   } catch (e) {
     context.res = {
       status: 500,
       headers: { "Content-Type": "application/json" },
-      body: { ok:false, error: String(e && e.message || e) }
+      body: { ok: false, error: String((e && e.message) || e) }
     };
   }
 };
