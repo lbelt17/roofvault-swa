@@ -410,7 +410,7 @@
       </div>
 
       <div class="nav-right">
-        <span id="userEmailLabel" class="user-label">Not signed in</span>
+        <span id="userEmailLabel" class="user-label">Free User</span>
         <span id="subscriptionLabel" class="tier-pill hidden"></span>
 
         <button id="btnLogin" class="btn btn-secondary">
@@ -547,21 +547,29 @@ Ready.
         const data = await res.json();
 
         window.isLoggedIn = !!data.isLoggedIn;
-        window.subscriptionTier = data.subscriptionTier || 'free';
+window.plan = data.plan || 'free';
+window.roles = data.roles || [];
 
-        if (!data.isLoggedIn) {
-          userEmailLabel.textContent = 'Not signed in';
-          subscriptionLabel.textContent = 'Free (guest)';
-          subscriptionLabel.classList.add('hidden');
-          btnLogin.classList.remove('hidden');
-          btnLogout.classList.add('hidden');
-          updateExamAccess(false);
-          return;
-        }
+if (!data.isLoggedIn) {
+  // Logged out = Free User
+  userEmailLabel.textContent = 'Free User';
+  subscriptionLabel.classList.add('hidden');
+  btnLogin.classList.remove('hidden');
+  btnLogout.classList.add('hidden');
+  updateExamAccess(false);
+  return;
+}
+
 
         userEmailLabel.textContent = data.email || '';
-        subscriptionLabel.textContent =
-          data.subscriptionTier === 'owner' ? 'Owner Access' : 'Free Tier';
+
+if (window.roles.includes('owner')) {
+  subscriptionLabel.textContent = 'Owner Access';
+} else if (window.plan === 'premium') {
+  subscriptionLabel.textContent = 'Premium';
+} else {
+  subscriptionLabel.textContent = 'Free User';
+}
 
         subscriptionLabel.classList.remove('hidden');
         btnLogin.classList.add('hidden');
