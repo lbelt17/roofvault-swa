@@ -712,25 +712,31 @@ label[for="bookSelect"] {
     const data = await res.json();
 
     // Update global flags
-    window.isLoggedIn = !!data.isLoggedIn;
-    window.subscriptionTier = data.subscriptionTier || 'free';
+window.isLoggedIn = !!data.isLoggedIn;
+window.plan = data.plan || 'free';
+window.roles = data.roles || [];
 
-    // If not logged in
-    if (!data.isLoggedIn) {
-      userEmailLabel.textContent = 'Not signed in';
-      subscriptionLabel.textContent = 'Free (guest)';
-      subscriptionLabel.classList.add('hidden');
-      btnLogin.classList.remove('hidden');
-      btnLogout.classList.add('hidden');
-      return;
-    }
+// If not logged in → Free User
+if (!data.isLoggedIn) {
+  userEmailLabel.textContent = 'Free User';
+  subscriptionLabel.classList.add('hidden');
+  btnLogin.classList.remove('hidden');
+  btnLogout.classList.add('hidden');
+  return;
+}
+
 
     // Logged in user
     userEmailLabel.textContent = data.email || '';
 
-    // Show correct subscription label
-    subscriptionLabel.textContent =
-      data.subscriptionTier === 'owner' ? 'Owner Access' : 'Free Tier';
+if (window.roles.includes('owner')) {
+  subscriptionLabel.textContent = 'Owner Access';
+} else if (window.plan === 'premium') {
+  subscriptionLabel.textContent = 'Premium';
+} else {
+  subscriptionLabel.textContent = 'Free User';
+}
+
 
     subscriptionLabel.classList.remove('hidden');
     btnLogin.classList.add('hidden');
