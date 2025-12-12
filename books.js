@@ -1,4 +1,4 @@
-﻿// books.js — searchable book dropdown for RoofVault
+﻿// books.js — searchable book dropdown for RoofVault (grouped-books compatible)
 (function () {
   function $(id) {
     return document.getElementById(id);
@@ -18,81 +18,122 @@
     return n;
   }
 
-  let ALL_BOOKS = []; // full list from API
+  let ALL_BOOKS = [];     // full list from API
   let CURRENT_BOOKS = []; // filtered list
-// Optional: metadata for nicer citations on the quiz screen
-// Fill in years as you confirm them from each book.
-const BOOK_METADATA = {
-  // example key: whatever value we use for metadata_storage_name for this book
-  // You can add more entries over time.
-  "Roofing-Design-and-Practice-Part1.pdf": {
-    title: "Roofing Design and Practice – Part One",
-    year: "????" // <-- replace with real year when you know it
-  },
-  "Roofing-Design-and-Practice-Part2.pdf": {
-    title: "Roofing Design and Practice – Part Two",
-    year: "????"
-  }
-  // Add more books here as needed
-};
 
-// Helper so other scripts (interactive-exam.js) can look this up
-window.getBookMetadata = function (bookValue) {
-  if (!bookValue) return null;
-  return BOOK_METADATA[String(bookValue)] || null;
-};
+  // Optional: metadata for nicer citations on the quiz screen
+  // Key should match the "value" you send to the API (bookGroupId in grouped mode OR filename in legacy mode)
+  const BOOK_METADATA = {
+    // Example legacy filename keys:
+    "Roofing-Design-and-Practice-Part1.pdf": {
+      title: "Roofing Design and Practice – Part One",
+      year: "????"
+    },
+    "Roofing-Design-and-Practice-Part2.pdf": {
+      title: "Roofing Design and Practice – Part Two",
+      year: "????"
+    }
 
-  // Exposed helper used by other scripts (gen-exam, rvchat)
+    // Example grouped key (bookGroupId):
+    // "roofing-design-and-practice": { title:"Roofing Design and Practice", year:"2020" }
+  };
+
+  // Helper so other scripts can look this up
+  window.getBookMetadata = function (bookValue) {
+    if (!bookValue) return null;
+    return BOOK_METADATA[String(bookValue)] || null;
+  };
+
+  // Exposed helper used by other scripts (interactive-exam.js, gen-exam, rvchat)
   window.getSelectedBook = function () {
     const sel = $("bookSelect");
     if (!sel) return null;
+
     const value = sel.value;
     if (!value) return null;
 
     const found =
-      CURRENT_BOOKS.find((b) => String(b.value) === value) ||
-      ALL_BOOKS.find((b) => String(b.value) === value);
+      CURRENT_BOOKS.find((b) => String(b.value) === String(value)) ||
+      ALL_BOOKS.find((b) => String(b.value) === String(value));
 
+    // Fallback if not found
     if (!found) {
       return {
         value,
         label: sel.options[sel.selectedIndex]?.text || value,
-        field: "metadata_storage_name"
+        field: "metadata_storage_name",
+        parts: []
       };
     }
 
     return {
       value: found.value,
       label: found.label || found.value,
-      field: found.field || "metadata_storage_name"
+      field: found.field || "metadata_storage_name",
+      parts: Array.isArray(found.parts) ? found.parts : []
     };
   };
 
-     // Load books from /api/books (shape: { field, values:[string,...] })
+  // Load books from /api/books
+  // Supports BOTH shapes:
+  // 1) Grouped: { books:[{ bookGroupId, displayTitle, parts:[...] }] }
+  // 2) Legacy:  { field, values:[string,...] }
   async function fetchBooks() {
     const res = await fetch("/api/books", { method: "GET" });
     if (!res.ok) throw new Error("HTTP " + res.status);
 
     const json = await res.json();
 
+    // ✅ NEW grouped shape
+    if (Array.isArray(json.books)) {
+      const items = json.books
+        .map((b) => {
+          const bookGroupId = String(b.bookGroupId || "").trim();
+          const displayTitle = String(b.displayTitle || b.bookGroupId || "").trim();
+          const parts = Array.isArray(b.parts) ? b.parts.slice() : [];
+
+          if (!bookGroupId && !displayTitle) return null;
+
+          return {
+            value: bookGroupId || displayTitle, // what we store/send to API
+            label: displayTitle || bookGroupId, // what user sees
+            parts,
+            field: "bookGroupId"
+          };
+        })
+        .filter(Boolean);
+
+      if (!items.length) {
+        const diag = $("diag");
+        if (diag) {
+          diag.textContent =
+            "No grouped books parsed from /api/books. Raw response:\n" +
+            JSON.stringify(json, null, 2);
+        }
+      }
+
+      return items;
+    }
+
+    // ✅ Legacy shape
     const field = json.field || "metadata_storage_name";
     const vals = Array.isArray(json.values) ? json.values : [];
 
     const items = vals.map((v) => {
       const label = String(v || "").trim();
       return {
-        value: label,          // this is what we send to /api/exam
-        label: label,          // shown in the dropdown
-        field: field           // passed as filterField
+        value: label, // what we send to /api/exam
+        label: label, // shown in dropdown
+        parts: [],    // none in legacy mode
+        field: field
       };
     });
 
-    // Optional: if nothing parsed, show raw response in DIAGNOSTICS
     if (!items.length) {
-      const diag = document.getElementById("diag");
+      const diag = $("diag");
       if (diag) {
         diag.textContent =
-          "No books parsed from /api/books. Raw response: " +
+          "No books parsed from /api/books. Raw response:\n" +
           JSON.stringify(json, null, 2);
       }
     }
@@ -100,18 +141,13 @@ window.getBookMetadata = function (bookValue) {
     return items;
   }
 
-
-
   function renderUI(mount) {
     mount.innerHTML = "";
 
     const wrapper = el("div");
 
     // Label
-    const label = el("label", {
-      for: "bookSelect",
-      text: "Book"
-    });
+    const label = el("label", { for: "bookSelect", text: "Book" });
     label.style.display = "block";
     label.style.marginBottom = "4px";
 
@@ -196,15 +232,15 @@ window.getBookMetadata = function (bookValue) {
     } catch (e) {
       console.error("Failed to load books", e);
       select.innerHTML = "";
-      const opt = el("option", {
-        value: "",
-        text: "Error loading books"
-      });
-      select.appendChild(opt);
+      select.appendChild(
+        el("option", { value: "", text: "Error loading books" })
+      );
+      const diag = $("diag");
+      if (diag) diag.textContent = "Failed to load books: " + String(e?.message || e);
       return;
     }
 
-    // Live filter on keyup (case-insensitive)
+    // Live filter on input (case-insensitive)
     search.addEventListener("input", () => {
       const filtered = applyFilter(search.value);
       populateSelect(select, filtered);
