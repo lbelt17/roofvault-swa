@@ -1,90 +1,93 @@
 // /api/auth-me.js
-// Azure Function: returns logged-in user info + subscription tier
+// Azure Function: returns logged-in user info + plan (free/premium) + roles (owner)
 
 const { TableClient } = require("@azure/data-tables");
 
 module.exports = async function (context, req) {
   try {
-    // 1. Get user info from Static Web Apps auth
+    // 1) Get user info from Static Web Apps auth
     const principalHeader = req.headers["x-ms-client-principal"];
 
+    // Default response shape (always consistent)
+    const baseBody = {
+      isLoggedIn: false,
+      email: null,
+      plan: "free",      // free | premium
+      roles: [],         // ex: ["authenticated"] or ["authenticated","owner"]
+    };
+
     if (!principalHeader) {
-      context.res = {
-        status: 200,
-        body: {
-          isLoggedIn: false,
-          email: null,
-          subscriptionTier: "free",
-        },
-      };
+      context.res = { status: 200, body: baseBody };
       return;
     }
 
     const decoded = JSON.parse(
       Buffer.from(principalHeader, "base64").toString("utf8")
     );
-    const email = decoded.userDetails || null;
+
+    const email = (decoded.userDetails || "").trim().toLowerCase();
 
     if (!email) {
-      context.res = {
-        status: 200,
-        body: {
-          isLoggedIn: false,
-          email: null,
-          subscriptionTier: "free",
-        },
-      };
+      context.res = { status: 200, body: baseBody };
       return;
     }
 
-    // 2. Hard-coded owners (only place owners live now)
+    // 2) Hard-coded owners (admin override)
     const OWNER_EMAILS = [
       "msaulnier@cncflorida.com",
       "joesorentino10@gmail.com",
       "jbelt@beltengineering.com",
       "lbelt17@outlook.com",
-    ];
+    ].map((e) => e.toLowerCase());
 
-    if (OWNER_EMAILS.includes(email.toLowerCase())) {
-      context.res = {
-        status: 200,
-        body: {
-          isLoggedIn: true,
-          email,
-          subscriptionTier: "owner",
-        },
-      };
+    // Logged in baseline
+    const body = {
+      ...baseBody,
+      isLoggedIn: true,
+      email,
+      roles: ["authenticated"],
+    };
+
+    // Owner override
+    if (OWNER_EMAILS.includes(email)) {
+      body.roles.push("owner");
+      body.plan = "premium"; // owner gets premium access automatically
+      context.res = { status: 200, body };
       return;
     }
 
-    // 3. Connect to Azure Table Storage
+    // 3) Pull plan from Azure Table Storage (optional; defaults to free)
+    // Table schema expectation:
+    // PartitionKey = "users"
+    // RowKey       = <email>
+    // plan         = "premium" or "free"   (we will write this later)
     const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
     const tableName = "Users";
     const partitionKey = "users";
 
-    const client = TableClient.fromConnectionString(connectionString, tableName);
+    if (connectionString) {
+      try {
+        const client = TableClient.fromConnectionString(connectionString, tableName);
+        const entity = await client.getEntity(partitionKey, email);
 
-    let subscriptionTier = "free";
+        // Accept either entity.plan OR legacy entity.subscriptionTier
+        const plan =
+          (entity && (entity.plan || entity.subscriptionTier) || "")
+            .toString()
+            .trim()
+            .toLowerCase();
 
-    try {
-      const entity = await client.getEntity(partitionKey, email);
-      if (entity && entity.subscriptionTier) {
-        subscriptionTier = entity.subscriptionTier;
+        if (plan === "premium") body.plan = "premium";
+        // If anything else, keep "free"
+      } catch (err) {
+        // Not found is fine; we keep free
+        context.log("auth-me: no table entry for user, defaulting to free");
       }
-    } catch (err) {
-      // If entity not found or other error, keep default "free"
-      context.log("auth-me: no table entry for user, defaulting to free");
+    } else {
+      context.log("auth-me: missing AZURE_STORAGE_CONNECTION_STRING, defaulting to free");
     }
 
-    // 4. Return final result
-    context.res = {
-      status: 200,
-      body: {
-        isLoggedIn: true,
-        email,
-        subscriptionTier,
-      },
-    };
+    context.res = { status: 200, body };
   } catch (err) {
     context.log("auth-me error:", err);
     context.res = {
@@ -92,7 +95,8 @@ module.exports = async function (context, req) {
       body: {
         isLoggedIn: false,
         email: null,
-        subscriptionTier: "free",
+        plan: "free",
+        roles: [],
         error: "Auth server error",
       },
     };
