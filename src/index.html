@@ -32,20 +32,13 @@
     .card h3{margin:0 0 8px;font-size:16px}
     .chip{display:inline-flex;gap:6px;align-items:center;background:var(--chip);border:1px solid var(--border);border-radius:999px;padding:6px 10px;color:var(--muted);font-size:12px}
 
-    .q{border-top:1px dashed #e2e8f3;margin-top:10px;padding-top:10px}
-    .stem{font-weight:600;margin-bottom:6px}
-    .choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:8px 0}
-    .choice{background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px;text-align:left}
-    .answer{color:var(--ok);font-weight:700;border-color:#b9e4c8;background:#f2fbf6}
-    .bad{color:var(--err);border-color:#f5c2bf;background:#fff6f5}
     .muted{color:var(--muted)}
     .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .mono{font-family:ui-monospace,Consolas,Menlo,monospace;font-size:12px}
-    .right{margin-left:auto}
-    .pill{padding:4px 8px;border-radius:999px;background:#f4f7ff;border:1px solid var(--ring)}
     .hidden{display:none}
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <h1>RoofVault AI — Training Tool</h1>
@@ -81,6 +74,7 @@
           <div id="summaryBlock" class="muted">No summary yet.</div>
         </div>
       </div>
+
       <div class="col-4">
         <div class="card">
           <h3>Sources & Controls</h3>
@@ -99,12 +93,88 @@
     </div>
   </div>
 
-  <!-- Load scripts -->
-  <script src="books.js"></script>
-  <script src="exam.js"></script>
-
+  <!-- ===== Grouped Book Dropdown Loader (THIS is the fix) ===== -->
   <script>
-    // Minimal stubs used by existing buttons
+    (function(){
+      async function loadBooks(){
+        const mount = document.getElementById("bookMount");
+        if (!mount) return;
+        mount.innerHTML = "";
+
+        const res = await fetch("/api/books");
+        const data = await res.json(); // { field, values, books }
+        const field = data.field || null;
+
+        // Prefer grouped books; fallback to legacy values
+        const items = (Array.isArray(data.books) && data.books.length)
+          ? data.books.map(b => ({
+              value: b.bookGroupId,
+              label: b.displayTitle,
+              parts: Array.isArray(b.parts) ? b.parts : []
+            }))
+          : (Array.isArray(data.values) ? data.values : []).map(v => ({
+              value: v,
+              label: v,
+              parts: [v]
+            }));
+
+        const label = document.createElement("label");
+        label.textContent = "Book";
+        label.style.display = "flex";
+        label.style.flexDirection = "column";
+        label.style.gap = "6px";
+
+        const sel = document.createElement("select");
+        sel.id = "bookSelect";
+        sel.style.minWidth = "260px";
+
+        const optAll = document.createElement("option");
+        optAll.value = "";
+        optAll.textContent = "(All Books)";
+        optAll.dataset.parts = "[]";
+        sel.appendChild(optAll);
+
+        items.forEach(item=>{
+          const o = document.createElement("option");
+          o.value = item.value;                 // group id (or raw filename fallback)
+          o.textContent = item.label;           // clean title shown
+          o.dataset.parts = JSON.stringify(item.parts || []);
+          sel.appendChild(o);
+        });
+
+        const meta = document.createElement("div");
+        meta.className = "muted";
+        meta.style.fontSize = "12px";
+        meta.textContent = field ? `field: ${field}` : "field: ?";
+
+        label.appendChild(sel);
+        label.appendChild(meta);
+        mount.appendChild(label);
+
+        // Expose selection for other scripts
+        window.getSelectedBook = () => {
+          const opt = sel.options[sel.selectedIndex];
+          let parts = [];
+          try { parts = JSON.parse(opt?.dataset?.parts || "[]"); } catch (e) {}
+          return {
+            value: sel.value,                        // bookGroupId
+            label: opt?.textContent || sel.value,    // display title
+            field,
+            parts                                   // list of real part filenames
+          };
+        };
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", loadBooks);
+      } else {
+        loadBooks();
+      }
+    })();
+  </script>
+
+  <!-- ===== Minimal page logic (keeps your buttons working) ===== -->
+  <script>
     const statusEl = document.getElementById('status');
     const modelEl  = document.getElementById('model');
     const qList    = document.getElementById('qList');
@@ -113,527 +183,84 @@
     const kwEl     = document.getElementById('kw');
 
     const setStatus = (t) => statusEl.textContent = t || 'Ready';
-    const showDiag = (o) => { try { diagEl.textContent = typeof o==='string'?o:JSON.stringify(o,null,2);} catch{diagEl.textContent=String(o);} };
+    const showDiag = (o) => {
+      try { diagEl.textContent = typeof o==='string' ? o : JSON.stringify(o,null,2); }
+      catch { diagEl.textContent = String(o); }
+    };
 
     const basePayload = () => ({ keywords:(kwEl.value||'').trim() });
 
     async function call(path, body){
       const opt = body ? { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)} : {};
-      const res = await fetch(path,opt); const txt = await res.text();
+      const res = await fetch(path,opt);
+      const txt = await res.text();
       try { return { ok:res.ok, status:res.status, data:JSON.parse(txt) }; }
       catch { return { ok:res.ok, status:res.status, data:txt }; }
     }
 
-    async function doPing(){ setStatus('Pinging…'); const r=await call('/api/ping'); setStatus(\`HTTP \${r.status}\`); showDiag(r); }
-    async function doGen(n){ setStatus(\`Generating \${n}…\`); const r=await call('/api/generate-questions',{...basePayload(), count:n}); setStatus(\`HTTP \${r.status}\`); showDiag(r);
-      if (r.ok && r.data?.items){ window.renderQuestions?.(r.data.items); if (r.data.modelDeployment) modelEl.textContent=r.data.modelDeployment; } }
+    async function doGen(n){
+      setStatus(`Generating ${n}…`);
+      const r = await call('/api/generate-questions', { ...basePayload(), count:n });
+      setStatus(`HTTP ${r.status}`);
+      showDiag(r);
+      if (r.ok && r.data?.items){
+        // If you have a renderer elsewhere, it can hook in; otherwise show raw
+        if (window.renderQuestions) window.renderQuestions(r.data.items);
+        else qList.textContent = JSON.stringify(r.data.items, null, 2);
+        if (r.data.modelDeployment) modelEl.textContent = r.data.modelDeployment;
+      }
+    }
 
-    document.getElementById('btnPing').onclick = doPing;
-    document.getElementById('btnGen5').onclick = ()=>doGen(5);
-    // exam.js will wire #btnGenExam50ByBook
+    document.getElementById('btnGen5').onclick = () => doGen(5);
+
+    // Used by inline onclick attributes
+    window.pingInline = async function(){
+      try{
+        showDiag("Calling /api/ping …");
+        const r = await call('/api/ping');
+        setStatus(`HTTP ${r.status}`);
+        showDiag(r);
+      }catch(e){
+        showDiag({ ok:false, error:String(e && e.message || e) });
+      }
+      return false;
+    };
+
+    // This sends the SELECTED GROUP ID for now.
+    // Next step (after you say done): we will change /api/exam to use parts[].
+    window.examInline = async function(){
+      try{
+        const pick = (window.getSelectedBook && window.getSelectedBook()) || {};
+        const book = pick.value || ""; // currently bookGroupId
+        setStatus("Generating exam…");
+        showDiag({ note:"Calling /api/exam", pick });
+
+        const r = await call('/api/exam', { book, keywords:(kwEl.value||"").trim() });
+        setStatus(`HTTP ${r.status}`);
+        showDiag(r);
+
+        // If your exam renderer expects ExamText, keep it compatible
+        if (r.ok && r.data?.items && Array.isArray(r.data.items)) {
+          window.ExamText = "## Exam Output\n" + r.data.items.join("\n\n");
+          if (window.renderInteractiveExam) window.renderInteractiveExam();
+        }
+      }catch(e){
+        showDiag({ ok:false, error:String(e && e.message || e) });
+      }
+      return false;
+    };
+
+    // visual confirmation
+    try { if (diagEl) diagEl.textContent = "JS loaded"; } catch(e){}
   </script>
+
+  <!-- Keep your interactive exam widget mounts/scripts if you use them -->
   <div id="interactive-exam"></div>
   <script src="/frontend/render-bridge.js"></script>
   <script src="/frontend/interactive-exam.js"></script>
   <script src="/frontend/exam-sample.js"></script>
   <script src="/frontend/app.js"></script>
   <script src="/frontend/ping.js"></script>
-  <script>
-    // Visual confirmation that our JS is actually loaded on THIS page
-    try {
-      var d = document.getElementById('diag');
-      if (d) d.textContent = 'JS loaded';
-    } catch (e) {}
-  </script>
-  <script>
-  (function(){
-    function $(id){ return document.getElementById(id); }
-    function put(o){
-      var d = $("diag");
-      try { d && (d.textContent = (typeof o==="string" ? o : JSON.stringify(o,null,2))); }
-      catch(e){ d && (d.textContent = String(o)); }
-    }
-    function selectedBook(){
-      // Prefer your helper if present
-      if (window.getSelectedBook) {
-        try { var pick = window.getSelectedBook(); if (pick && pick.value) return pick.value; } catch(_){}
-      }
-      // Fall back to common patterns
-      var sel = document.getElementById("bookSelect") || document.querySelector("select[name=book], select[data-role=book]");
-      if (sel && sel.value) return sel.value;
-      // Last resort: any option marked selected
-      var opt = document.querySelector("option[selected]");
-      if (opt && opt.value) return opt.value;
-      return "Unknown.pdf";
-    }
 
-    // 10s timeout helper
-    async function fetchWithTimeout(url, options, ms){
-      const ctrl = new AbortController();
-      const t = setTimeout(()=>ctrl.abort(new Error("Request timeout")), ms||10000);
-      try { return await fetch(url, Object.assign({signal:ctrl.signal}, options||{})); }
-      finally { clearTimeout(t); }
-    }
-
-    // Fallback exam that always renders in the widget
-    function fallbackExam(book){
-      return `## Exam Output
-1. MCQ: Sanity question for ${book||"Document"}. Choose B.
-A. A
-B. B
-C. C
-D. D
-Answer: B
-Why: Fallback.
-Cites: Preview
-
-2. T/F: This should be True.
-Answer: True
-Why: Fallback.
-Cites: Preview
-
-3. Short Answer: Type TEST.
-Answer: TEST
-Why: Fallback.
-Cites: Preview`;
-    }
-
-    // Expose handlers that we wire via onclick attributes (no race conditions)
-    window.pingInline = async function(){
-      try{
-        put("Calling /api/ping …");
-        const res  = await fetchWithTimeout("/api/ping?ts="+Date.now(), { method:"GET" }, 10000);
-        const text = await res.text();
-        let data; try { data = JSON.parse(text); } catch { data = { raw:text }; }
-        put({ status:res.status, body:data });
-      }catch(e){
-        put({ error: String(e && e.message || e) });
-      }
-      return false;
-    };
-
-    window.examInline = async function(){
-      var book = selectedBook();
-      put("Calling /api/exam …");
-      try{
-        const res  = await fetchWithTimeout("/api/exam", {
-          method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify({ book })
-        }, 10000);
-
-        const text = await res.text();
-        let data; try { data = JSON.parse(text); } catch { data = { error:text }; }
-
-        // Normalize payload: accept {items:[]}, {docs:[]}, or {body:{…}}
-        var payload = (Array.isArray(data?.items) || Array.isArray(data?.docs)) ? data : (data?.body || data);
-
-        if (Array.isArray(payload.items) && payload.items.length){
-          window.ExamText = "## Exam Output\n" + payload.items.join("\\n\\n");
-        } else if (Array.isArray(payload.docs) && payload.docs.length){
-          window.ExamText = fallbackExam(book);
-        } else {
-          window.ExamText = fallbackExam(book);
-        }
-
-        // Render via the widget if present
-        if (window.renderInteractiveExam) window.renderInteractiveExam();
-
-        // Show diagnostics too
-        put({ status: res.status, keys: Object.keys(payload), counts: {
-          items: Array.isArray(payload.items) ? payload.items.length : 0,
-          docs:  Array.isArray(payload.docs)  ? payload.docs.length  : 0
-        }});
-      }catch(e){
-        // Timeout / network → fallback but still render something
-        window.ExamText = fallbackExam(book);
-        if (window.renderInteractiveExam) window.renderInteractiveExam();
-        put({ error: String(e && e.message || e) });
-      }
-      return false;
-    };
-
-    // Confirm our inline JS is active
-    var d = $("diag"); if (d) d.textContent = "JS inline handlers loaded";
-  })();
-  </script>
-'
-@"
-
-if ($h -notmatch 'JS inline handlers loaded') {
-  $h = $h -replace '', $inline
-}
-
-Set-Content -Encoding UTF8 .\src\index.html $h
-
-# 3) Commit & push
-git add .\src\index.html .\src\index.backup.debug-wire.html
-git commit -m "hotfix(ui): wire Ping/Exam buttons inline + immediate fallback rendering"
-git push origin main
-# 0) Backup your current page
-Copy-Item .\src\index.html .\src\index.backup.inline-pack.html -Force
-
-# 1) Load current file
-$src = Get-Content .\src\index.html -Raw
-
-# 2) Remove any broken /frontend script tags to stop 404s
-$src = $src -replace '<script[^>]+/frontend/[^>]+></script>', ''
-
-# 3) Ensure a mount for the widget exists
-if ($src -notmatch 'id="interactive-exam"') {
-  $src = $src -replace '', @"
-  <div id="interactive-exam"></div>
-
-"@
-}
-
-# 4) Inject self-contained inline JS pack right before 
-$inline = @'
-  <!-- ===== RoofVault Inline JS Pack (no external files) ===== -->
-  <script>
-  (function(){
-    // ----------------- tiny utils -----------------
-    function $(id){ return document.getElementById(id); }
-    function putDiag(o){
-      var d = $("diag");
-      if(!d) return;
-      try { d.textContent = (typeof o==="string") ? o : JSON.stringify(o,null,2); }
-      catch(e){ d.textContent = String(o); }
-    }
-
-    // ----------------- INTERACTIVE EXAM WIDGET -----------------
-    // Minimal, self-contained parser + renderer using window.ExamText ("## Exam Output ...")
-    (function(){
-      const css = ".exam-wrap{max-width:860px;margin:24px auto;padding:0 16px;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:#0f172a}.row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.h1{font-size:24px;font-weight:800;letter-spacing:-.01em}.btn{border-radius:10px;padding:8px 12px;font-weight:600;font-size:14px;border:1px solid #e5e7eb;background:#fff;cursor:pointer}.btn:hover{background:#f8fafc}.btn-solid{background:#0f172a;color:#fff;border-color:#0f172a}.btn-solid:hover{background:#111827}.badge{display:inline-flex;align-items:center;border:1px solid #e5e7eb;border-radius:999px;padding:2px 8px;font-size:12px;background:#fff;color:#334155;margin-right:6px}.card{border:1px solid #e5e7eb;border-radius:16px;padding:16px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.03)}.card+.card{margin-top:12px}.qtitle{font-size:16px;font-weight:700;margin:6px 0 0}.choice{display:block;width:100%;text-align:left;border:1px solid #e5e7eb;background:#fff;border-radius:12px;padding:10px 12px;margin-top:8px;cursor:pointer}.choice:hover{background:#f8fafc}.choice.selected{outline:2px solid #60a5fa;background:#eff6ff}.choice.locked.correct{outline:2px solid #34d399;background:#ecfdf5}.choice.locked.incorrect.selected{outline:2px solid #f87171;background:#fef2f2}.score{display:flex;align-items:center;justify-content:space-between;border:1px solid #e5e7eb;border-radius:16px;padding:10px 12px;background:#fff}.bar{height:8px;width:50%;background:#f1f5f9;border-radius:999px;overflow:hidden}.fill{height:100%;background:#0f172a}.input{width:100%;border:1px solid #e5e7eb;border-radius:12px;padding:10px 12px;font-size:14px}.meta{margin-top:10px;font-size:12px;color:#475569}pre.small{margin-top:8px;background:#f8fafc;border:1px solid #e5e7eb;padding:8px;border-radius:10px;font-size:12px;overflow:auto}";
-      const sty = document.createElement("style"); sty.textContent = css; document.head.appendChild(sty);
-
-      function normalize(s){return (s||"").toLowerCase().replace(/[^\p{L}\p{N}]+/gu," ").trim();}
-      function parseCites(line){const m=line&&line.match(/Cites:\s*(.*)$/i);return m?m[1].split(/,|;|\|/).map(s=>s.trim()).filter(Boolean):undefined;}
-      function parseAnswer(line){const m=line&&line.match(/Answer:\s*(.*)$/i);return m?m[1].trim():"";}
-      function parseWhy(line){const m=line&&line.match(/Why:\s*(.*)$/i);return m?m[1].trim():undefined;}
-
-      function parseExam(raw){
-        const text=(raw||"").replace(/^##\s*Exam\s*Output\s*/i,"").trim();
-        const chunks=text.split(/\n(?=\d+\.\s)/).map(c=>c.trim()).filter(Boolean);
-        const out=[];
-        for(const chunk of chunks){
-          const head=chunk.match(/^(\d+)\.\s*(MCQ|T\/?F|True\/?False|Short\s*Answer)\s*:\s*(.*)$/is);
-          if(!head) continue;
-          const id=Number(head[1]); const kind=String(head[2]).toUpperCase(); const prompt=head[3].trim();
-          const rest=chunk.replace(head[0],"").trim(); const lines=rest.split(/\n/).map(s=>s.trim()).filter(Boolean);
-          let choices=[], ansLine="", whyLine, citesLine;
-
-          // capture packed A-D lines
-          const packed=rest.match(/(?:^|\n)\s*(A\.)[\s\S]*?(?:\n\s*B\.)[\s\S]*?(?:\n\s*C\.)[\s\S]*?(?:\n\s*D\.)[\s\S]*/i);
-          if(packed){
-            const pcs=packed[0].split(/\n/).map(s=>s.trim()).filter(Boolean).join("\n")
-                        .match(/(?:A\.|B\.|C\.|D\.)\s*[^A-D]+(?=A\.|B\.|C\.|D\.|$)/g);
-            if(pcs) choices=pcs.map(s=>s.trim());
-          }
-          if(choices.length===0){ for(const l of lines){ if(/^[A-D]\.\s+/i.test(l)) choices.push(l); } }
-          for(const l of lines){ if(/^Answer:/i.test(l)) ansLine=l; else if(/^Why:/i.test(l)) whyLine=l; else if(/^Cites:/i.test(l)) citesLine=l; }
-
-          const explanation=parseWhy(whyLine), cites=parseCites(citesLine);
-          if(kind.startsWith("MCQ")){
-            const ans=parseAnswer(ansLine); let idx=-1;
-            if(/^[A-D]$/i.test(ans)) idx={A:0,B:1,C:2,D:3}[ans.toUpperCase()];
-            else if(ans){ const norm=normalize(ans); idx=choices.findIndex(c=>normalize(c.replace(/^[A-D]\.\s*/,""))===norm); }
-            out.push({id, kind:"MCQ", prompt, choices, correct: Math.max(0, idx), explanation, cites});
-          } else if(kind.startsWith("T") || kind.includes("FALSE")){
-            out.push({id, kind:"TF", prompt, correctBool:/^true$/i.test(parseAnswer(ansLine)||""), explanation, cites});
-          } else {
-            out.push({id, kind:"SA", prompt, correctText:parseAnswer(ansLine)||"", explanation, cites});
-          }
-        }
-        return out.sort((a,b)=>a.id-b.id);
-      }
-
-      function el(tag, attrs={}, ...kids){
-        const n=document.createElement(tag);
-        for(const [k,v] of Object.entries(attrs||{})){
-          if(k==="class") n.className=v;
-          else if(k==="style" && v && typeof v==="object") Object.assign(n.style,v);
-          else if(k.startsWith("on")&&typeof v==="function") n.addEventListener(k.slice(2).toLowerCase(),v);
-          else n.setAttribute(k, v);
-        }
-        for(const c of kids){ if(c==null) continue; n.append(c.nodeType?c:document.createTextNode(String(c))); }
-        return n;
-      }
-
-      window.renderInteractiveExam = function(){
-        const mount = document.getElementById("interactive-exam"); if(!mount) return;
-        const wrapper = document.createElement("div"); wrapper.className="exam-wrap"; mount.innerHTML=""; mount.appendChild(wrapper);
-        const questions = parseExam(window.ExamText||"");
-        const state = new Map();
-
-        function score(){ let ok=0; for(const q of questions){ const s=state.get(q.id)||{};
-          if(q.kind==="MCQ" && s.choice===q.correct) ok++;
-          if(q.kind==="TF"  && s.tf===q.correctBool) ok++;
-          if(q.kind==="SA"  && s.sa && normalize(s.sa)===normalize(q.correctText)) ok++;
-        } return ok; }
-
-        function rerender(){
-          wrapper.innerHTML="";
-          const top = el("div",{class:"row"},
-            el("div",{class:"h1"},"Interactive Exam"),
-            el("div",{},
-              el("button",{class:"btn", onclick:()=>{state.clear(); rerender();}},"Reset"),
-              el("button",{class:"btn btn-solid", style:{marginLeft:"8px"}, onclick:()=>{questions.forEach(q=>{const s=state.get(q.id)||{}; s.revealed=true; state.set(q.id,s);}); rerender();}},"Check All")
-            )
-          );
-          const s=score(), total=questions.length, pct= total? Math.round((s/total)*100):0;
-          const scorebar = el("div",{class:"score"},
-            el("div",{},"Score: ", el("strong",{},String(s)), ` / ${total} (${pct}%)`),
-            el("div",{class:"bar"}, el("div",{class:"fill", style:{width:`${pct}%`}}))
-          );
-          wrapper.append(top, scorebar);
-
-          if(!questions.length){
-            wrapper.append(el("div",{class:"card"},
-              el("div",{style:{fontSize:"14px",color:"#334155"}},
-                "No questions yet. Click Generate Exam."
-              )
-            ));
-            return;
-          }
-
-          for(const q of questions){
-            const s=state.get(q.id)||{}; const lock=!!s.revealed;
-            let isCorrect=false;
-            if(q.kind==="MCQ") isCorrect=(s.choice===q.correct);
-            if(q.kind==="TF")  isCorrect=(s.tf===q.correctBool);
-            if(q.kind==="SA")  isCorrect=(s.sa && normalize(s.sa)===normalize(q.correctText));
-
-            const badges = el("div",{},
-              el("span",{class:"badge"}, q.kind==="MCQ"?"Multiple Choice":q.kind==="TF"?"True/False":"Short Answer"),
-              lock ? el("span",{class:"badge"}, isCorrect?"Correct":"Incorrect") : null
-            );
-            const title = el("div",{class:"qtitle"}, `${q.id}. ${q.prompt}`);
-            const right = el("div",{style:{whiteSpace:"nowrap"}},
-              el("button",{class:"btn", onclick:()=>{state.set(q.id,{}); rerender();}},"Clear"),
-              el("button",{class:"btn", style:{marginLeft:"8px"}, onclick:()=>{state.set(q.id,{...(state.get(q.id)||{}), revealed:true}); rerender();}},"Check")
-            );
-            const head = el("div",{style:{display:"flex",justifyContent:"space-between",gap:"12px"}}, el("div",{},badges,title), right);
-            const card = el("div",{class:"card"}, head);
-
-            if(q.kind==="MCQ"){
-              for(let i=0;i<q.choices.length;i++){
-                const body=q.choices[i].replace(/^[A-D]\.\s*/i,"");
-                const btn=el("button",{
-                  class:"choice"+(s.choice===i?" selected":"")+(lock?" locked":"")+(lock&&i===q.correct?" correct":"")+(lock && s.choice===i && i!==q.correct?" incorrect":""),
-                  disabled:lock,
-                  onclick:()=>{state.set(q.id,{...(state.get(q.id)||{}), choice:i}); rerender();}
-                }, body);
-                card.append(btn);
-              }
-            } else if(q.kind==="TF"){
-              card.append(
-                el("div",{style:{display:"flex",gap:"8px",marginTop:"8px"}},
-                  el("button",{class:"btn"+(s.tf===true && !lock?" btn-solid":""), disabled:lock, onclick:()=>{state.set(q.id,{...(state.get(q.id)||{}), tf:true}); rerender();}},"True"),
-                  el("button",{class:"btn"+(s.tf===false&& !lock?" btn-solid":""),disabled:lock, onclick:()=>{state.set(q.id,{...(state.get(q.id)||{}), tf:false}); rerender();}},"False")
-                )
-              );
-            } else {
-              const input=el("input",{class:"input",type:"text",placeholder:"Type your answer",disabled:lock,value:s.sa||""});
-              input.addEventListener("input",(e)=>{state.set(q.id,{...(state.get(q.id)||{}), sa:e.target.value});});
-              const check=el("button",{class:"btn",onclick:()=>{state.set(q.id,{...(state.get(q.id)||{}), revealed:true}); rerender();}},"Check");
-              card.append(el("div",{style:{display:"flex",gap:"8px",marginTop:"8px"}}, input, check));
-            }
-
-            if(lock){
-              const ok=isCorrect; const ans = q.kind==="MCQ" ? q.choices[q.correct].replace(/^[A-D]\.\s*/,"") : q.kind==="TF" ? (q.correctBool?"True":"False") : q.correctText;
-              card.append(el("div",{style:{marginTop:"8px",color:ok?"#059669":"#dc2626",fontWeight:"600"}}, ok?"✅ Correct!":"❌ Not quite."));
-              const ansBox=el("div",{style:{marginTop:"8px",fontSize:"14px"}}, el("div",{}, el("strong",{},"Answer:")," ", ans));
-              if(q.explanation) ansBox.append(el("div",{style:{marginTop:"6px"}}, el("strong",{},"Why:")," ", q.explanation));
-              if(q.cites && q.cites.length) card.append(ansBox, el("div",{class:"meta"}, el("strong",{},"Cites:")," ", q.cites.join(", ")));
-              else card.append(ansBox);
-            } else {
-              card.append(el("div",{style:{marginTop:"8px"}}, el("button",{class:"btn",onclick:()=>{state.set(q.id,{...(state.get(q.id)||{}), revealed:true}); rerender();}},"Reveal answer")));
-            }
-
-            wrapper.append(card);
-          }
-        }
-        rerender();
-      };
-    })();
-
-    // ----------------- NETWORK HELPERS + FALLBACK -----------------
-    async function fetchWithTimeout(url, options, ms){
-      const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(new Error("Request timeout")), ms||10000);
-      try { return await fetch(url, Object.assign({signal:ctrl.signal}, options||{})); }
-      finally { clearTimeout(t); }
-    }
-    function fallbackExam(book){
-      return `## Exam Output
-1. MCQ: Sanity question for ${book||"Document"}. Choose B.
-A. A
-B. B
-C. C
-D. D
-Answer: B
-Why: Fallback.
-Cites: Preview
-
-2. T/F: This should be True.
-Answer: True
-Why: Fallback.
-Cites: Preview
-
-3. Short Answer: Type TEST.
-Answer: TEST
-Why: Fallback.
-Cites: Preview`;
-    }
-    function selectedBook(){
-      try { if (window.getSelectedBook){ const p=window.getSelectedBook(); if(p&&p.value) return p.value; } } catch(_){}
-      const sel=document.getElementById("bookSelect")||document.querySelector("select[name=book],select[data-role=book]");
-      if(sel && sel.value) return sel.value;
-      const opt=document.querySelector("option[selected]"); if(opt && opt.value) return opt.value;
-      return "Unknown.pdf";
-    }
-
-    // ----------------- INLINE BUTTON HANDLERS -----------------
-    window.pingInline = async function(){
-      putDiag("Calling /api/ping …");
-      try {
-        const res = await fetchWithTimeout("/api/ping?ts="+Date.now(), { method:"GET" }, 10000);
-        const text = await res.text(); let data; try{ data=JSON.parse(text);}catch{ data={ raw:text }; }
-        putDiag({ status: res.status, body: data });
-      } catch(e) {
-        putDiag({ error: String(e && e.message || e) });
-      }
-      return false;
-    };
-
-    window.examInline = async function(){
-      const book = selectedBook();
-      putDiag("Calling /api/exam …");
-      try {
-        const res = await fetchWithTimeout("/api/exam", {
-          method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify({ book })
-        }, 10000);
-        const text = await res.text();
-        let data; try{ data=JSON.parse(text);}catch{ data={ error:text }; }
-
-        const payload = (Array.isArray(data?.items) || Array.isArray(data?.docs)) ? data : (data?.body || data);
-        if (Array.isArray(payload?.items) && payload.items.length){
-          window.ExamText = "## Exam Output\n" + payload.items.join("\\n\\n");
-        } else if (Array.isArray(payload?.docs) && payload.docs.length){
-          window.ExamText = fallbackExam(book);
-        } else {
-          window.ExamText = fallbackExam(book);
-        }
-        if (window.renderInteractiveExam) window.renderInteractiveExam();
-        putDiag({ status: (res.status||200), keys: Object.keys(payload||{}), counts: {
-          items: Array.isArray(payload?.items)?payload.items.length:0,
-          docs:  Array.isArray(payload?.docs)?payload.docs.length:0
-        }});
-      } catch(e) {
-        window.ExamText = fallbackExam(book);
-        if (window.renderInteractiveExam) window.renderInteractiveExam();
-        putDiag({ error: String(e && e.message || e) });
-      }
-      return false;
-    };
-
-    // Wire onclicks directly (no race)
-    var pingBtn = $("btnPing"); if (pingBtn) pingBtn.setAttribute("onclick","return pingInline();");
-    var genBtn  = $("btnGenExam50ByBook"); if (genBtn) genBtn.setAttribute("onclick","return examInline();");
-
-    // Show that this pack is live
-    putDiag("JS inline pack loaded");
-  })();
-  </script>
-  <!-- ===== /Inline JS Pack ===== -->
-
-</html>
-
-
-
-
-
-  <script>
-  (function(){
-    function $(id){ return document.getElementById(id); }
-    function put(o){ var d=$("diag"); if(!d) return; try{ d.textContent=(typeof o==="string")?o:JSON.stringify(o,null,2);}catch(e){ d.textContent=String(o); } }
-    function fallback(book, tag){ return `## Exam Output
-1. MCQ: Fallback for ${book}. Choose B.
-A. A
-B. B
-C. C
-D. D
-Answer: B
-Why: ${tag||"No API response"}.
-Cites: Fallback
-
-2. T/F: This is True.
-Answer: True
-Why: ${tag||"Fallback"}.
-Cites: Fallback
-
-3. Short Answer: Type TEST.
-Answer: TEST
-Why: ${tag||"Fallback"}.
-Cites: Fallback`; }
-    async function fetchRace(url, opts, ms){
-      const timer = new Promise(r=>setTimeout(()=>r({__timeout:true}), ms||10000));
-      try { return await Promise.race([ fetch(url, opts||{}), timer ]); } catch(e){ return {__error:String(e&&e.message||e)}; }
-    }
-    function renderExamText(txt){
-      window.ExamText = txt;
-      if (window.renderInteractiveExam) window.renderInteractiveExam();
-      else { var q=$("qList"); if(q){ q.classList.add("mono"); q.textContent=txt; } }
-    }
-
-    // FORCE-WIRE Generate -> /api/exam2 (with timeout + HTML detection)
-    window.__rvForceHandler = "v3";
-    const gen = $("btnGenExam50ByBook");
-    if (gen) {
-      gen.onclick = async function(){
-        const pick=(window.getSelectedBook&&window.getSelectedBook())||{value:"Unknown.pdf"};
-        const book=pick.value||"Unknown.pdf";
-        put("Calling /api/exam2 … (force-handler "+window.__rvForceHandler+")");
-
-        const res = await fetchRace("/api/exam2", {
-          method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify({ book })
-        }, 10000);
-
-        if (res && res.__timeout){ renderExamText(fallback(book,"Timeout 10s")); put({error:"Timeout (10s)",route:"/api/exam2"}); return false; }
-        if (!res || res.__error){ renderExamText(fallback(book,"Network error")); put({error:(res&&res.__error)||"Network",route:"/api/exam2"}); return false; }
-
-        const text = await res.text();
-        if (/^(\s*<|\s*\(function)/.test(text)){ renderExamText(fallback(book,"Server returned HTML instead of JSON")); put({status:res.status,note:"HTML response detected"}); return false; }
-
-        let data; try{ data=JSON.parse(text);}catch{ data={error:text}; }
-        const items = Array.isArray(data?.items)?data.items:[];
-        if (!items.length){ renderExamText(fallback(book,"No items in JSON")); put({status:res.status,note:"No items[]",body:data}); return false; }
-
-        renderExamText("## Exam Output\n"+items.join("\n\n"));
-        put({status:res.status,count:items.length,route:"/api/exam2"});
-        return false;
-      };
-    }
-
-    // Force-wire Ping too (to confirm version)
-    const ping = $("btnPing");
-    if (ping){
-      ping.onclick = async function(){
-        put("Calling /api/ping … (force-handler "+window.__rvForceHandler+")");
-        const res = await fetchRace("/api/ping?ts="+Date.now(), {method:"GET"}, 8000);
-        const text = (res && !res.__timeout && !res.__error) ? await res.text() : "";
-        let data; try{ data = text ? JSON.parse(text) : null; }catch{ data={ raw:text }; }
-        put({ status:(res&&res.status)||(res&&res.__timeout&&"timeout")||"error", body:data||res });
-        return false;
-      };
-    }
-
-    // Tell us it's live
-    put("Force handler loaded: v3");
-  })();
-  </script>
 </body>
+</html>
