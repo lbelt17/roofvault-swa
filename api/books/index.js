@@ -19,6 +19,30 @@
  */
 const https = require("https");
 
+function groupFromName(rawName) {
+  let name = (rawName || "").trim();
+
+  // drop .pdf if present
+  name = name.replace(/\.pdf$/i, "");
+
+  // strip Part/Pt suffixes like: " Part1", "_Part_01", " - Part 2 of 10", " pt-3"
+  name = name.replace(
+    /(\s*[-–—_]\s*|\s+)(part|pt)\s*[_-]?\s*\d+\s*(of\s*\d+)?\s*$/i,
+    ""
+  );
+
+  const displayTitle = name.replace(/\s+/g, " ").trim();
+
+  const bookGroupId = displayTitle
+    .toLowerCase()
+    .replace(/['"]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  return { bookGroupId, displayTitle };
+}
+
 function getJson(url, headers) {
   return new Promise((resolve, reject) => {
     const u = new URL(url);
@@ -102,10 +126,41 @@ module.exports = async function (context, req) {
       }
     }
 
-    context.res = {
-      headers: { "Content-Type": "application/json" },
-      body: { field: picked || "metadata_storage_name", values }
-    };
+    // Group the raw values into unified books
+const groups = new Map();
+
+for (const raw of values) {
+  const { bookGroupId, displayTitle } = groupFromName(raw);
+  if (!bookGroupId) continue;
+
+  if (!groups.has(bookGroupId)) {
+    groups.set(bookGroupId, {
+      bookGroupId,
+      displayTitle,
+      parts: []
+    });
+  }
+  groups.get(bookGroupId).parts.push(raw);
+}
+
+// Sort groups by displayTitle
+const groupedBooks = Array.from(groups.values()).sort((a, b) =>
+  a.displayTitle.localeCompare(b.displayTitle)
+);
+
+// Sort parts inside each group
+for (const g of groupedBooks) {
+  g.parts = Array.from(new Set(g.parts)).sort((a, b) => a.localeCompare(b));
+}
+
+context.res = {
+  headers: { "Content-Type": "application/json" },
+  body: {
+    field: picked || "metadata_storage_name",
+    books: groupedBooks
+  }
+};
+
   } catch (e) {
     context.res = {
       status: 500,
