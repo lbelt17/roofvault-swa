@@ -94,60 +94,59 @@ function makeGroupId(displayTitle) {
 }
 
 function groupFromName(rawValue) {
-  // 1) Get basename (handles paths)
   const base = baseNameFromValue(rawValue);
 
-  // 2) Remove extension (.pdf, .docx, etc)
-  let s = String(base || "").replace(/\.[^.]+$/i, "").trim();
+  // Strip extension
+  let s = String(base || "").replace(/\.[^.]+$/i, "");
 
-  // 3) Normalize ALL common dash variants to "-"
-  //    (en dash, em dash, non-breaking hyphen, minus sign, etc.)
-  s = s.replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212]/g, "-");
+  // Normalize dashes
+  s = s.replace(/[–—]/g, "-").trim();
 
-  // =========================================================
-  // CASE A: "... manual <vol> <sep> <part>"
-  // sep can be "-", " - ", "_", or multiple spaces
+  // ======================================================
+  // PRIMARY CASE: "... manual <volume>-<part>"
   // Examples:
-  // "Architectural sheet metal manual 1-12"
-  // "Architectural sheet metal manual 1 - 12"
-  // "Architectural sheet metal manual 1_12"
-  // =========================================================
-  let m = s.match(/^(.*?\bmanual)\s*(\d+)\s*[-_\s]+\s*(\d+)\s*$/i);
+  //  "Architectural sheet metal manual 1-11"
+  //  "Architectural sheet metal manual 1 - 12"
+  // ======================================================
+  let m = s.match(/^(.*?\bmanual)\s*(\d+)\s*-\s*(\d+)\s*$/i);
   if (m) {
-    const title = normalizeSpaces(`${m[1]} ${m[2]}`); // "manual 1"
-    const part = m[3];                               // "12"
+    const volume = m[2];      // ALWAYS volume
+    const part = m[3];        // ALWAYS part
 
+    const title = normalizeSpaces(`${m[1]} ${volume}`);
     const displayTitle = makeDisplayTitle(title);
     const bookGroupId = makeGroupId(displayTitle);
 
     return { bookGroupId, displayTitle, partLabel: part };
   }
 
-  // =========================================================
-  // CASE B: "... manual <vol><part>" (no separator)
-  // "manual 112" -> vol=1, part=12
-  // "manual 11"  -> vol=1, part=1
-  // =========================================================
-  m = s.match(/^(.*?\bmanual)\s*(\d{2,})\s*$/i);
+  // ======================================================
+  // SECONDARY CASE: "... manual <volume><part>" (11, 12, 13)
+  // We FORCE volume = first digit, rest = part
+  // ======================================================
+  m = s.match(/^(.*?\bmanual)\s*(\d{2,})$/i);
   if (m) {
     const digits = m[2];
-    const vol = digits.slice(0, 1);
+    const volume = digits.charAt(0);
     const part = digits.slice(1);
 
-    const title = normalizeSpaces(`${m[1]} ${vol}`); // "manual 1"
+    const title = normalizeSpaces(`${m[1]} ${volume}`);
     const displayTitle = makeDisplayTitle(title);
     const bookGroupId = makeGroupId(displayTitle);
 
     return { bookGroupId, displayTitle, partLabel: part };
   }
 
-  // Default fallback
-  const noPart = stripPartSuffix(s);
+  // ======================================================
+  // Fallback
+  // ======================================================
+  const noPart = stripPartSuffix(base);
   const displayTitle = makeDisplayTitle(noPart);
   const bookGroupId = makeGroupId(displayTitle);
 
   return { bookGroupId, displayTitle };
 }
+
 
 
 
