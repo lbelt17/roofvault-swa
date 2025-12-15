@@ -94,40 +94,42 @@ function makeGroupId(displayTitle) {
 }
 
 function groupFromName(rawValue) {
-  // 1) get basename (handles path fields)
+  // 1) Get basename (handles paths)
   const base = baseNameFromValue(rawValue);
 
-  // remove extension like .pdf, .docx, etc
+  // 2) Remove extension (.pdf, .docx, etc)
   let s = String(base || "").replace(/\.[^.]+$/i, "");
 
-  // normalize fancy dashes to "-"
+  // 3) Normalize fancy dashes
   s = s.replace(/[–—]/g, "-").trim();
 
-  // ----------------------------
+  // =========================================================
   // CASE A: "… manual <vol> - <part>"
   // Examples:
   // "Architectural sheet metal manual 1-11"
   // "Architectural sheet metal manual 1 - 11"
-  // ----------------------------
+  // =========================================================
   let m = s.match(/^(.*?\bmanual)\s*(\d+)\s*-\s*(\d+)\s*$/i);
   if (m) {
-    const title = normalizeSpaces(`${m[1]} ${m[2]}`); // keep "manual 1"
-    const part = m[3];
+    const title = normalizeSpaces(`${m[1]} ${m[2]}`); // "manual 1"
+    const part = m[3];                               // "11"
 
     const displayTitle = makeDisplayTitle(title);
     const bookGroupId = makeGroupId(displayTitle);
 
-    return { bookGroupId, displayTitle, partLabel: part };
+    return {
+      bookGroupId,
+      displayTitle,
+      partLabel: part
+    };
   }
 
-  // ----------------------------
+  // =========================================================
   // CASE B: "… manual <vol><part>" (no dash)
-  // This is what your API is showing now: manual 11, 12, 13...
-  // We interpret: first digit = volume, remaining digits = part
   // Examples:
-  // "… manual 11" -> vol=1 part=1
-  // "… manual 112" -> vol=1 part=12
-  // ----------------------------
+  // "Architectural sheet metal manual 11"  -> vol=1, part=1
+  // "Architectural sheet metal manual 112" -> vol=1, part=12
+  // =========================================================
   m = s.match(/^(.*?\bmanual)\s*(\d{2,})\s*$/i);
   if (m) {
     const digits = m[2];
@@ -138,15 +140,23 @@ function groupFromName(rawValue) {
     const displayTitle = makeDisplayTitle(title);
     const bookGroupId = makeGroupId(displayTitle);
 
-    return { bookGroupId, displayTitle, partLabel: part };
+    return {
+      bookGroupId,
+      displayTitle,
+      partLabel: part
+    };
   }
 
-  // default behavior
-  const noPart = stripPartSuffix(base);
+  // =========================================================
+  // DEFAULT FALLBACK
+  // =========================================================
+  const noPart = stripPartSuffix(s);
   const displayTitle = makeDisplayTitle(noPart);
   const bookGroupId = makeGroupId(displayTitle);
+
   return { bookGroupId, displayTitle };
 }
+
 
 
 
