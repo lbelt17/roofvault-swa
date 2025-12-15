@@ -97,26 +97,32 @@ function groupFromName(rawValue) {
   // 1) get basename (handles path fields)
   const base = baseNameFromValue(rawValue);
 
-  // remove extension like .pdf, .docx, etc
+  // remove extension (.pdf, .docx, etc)
   const baseNoExt = String(base || "").replace(/\.[^.]+$/i, "");
 
-  // normalize fancy dashes to a normal hyphen
-  const s = baseNoExt.replace(/[–—]/g, "-");
+  // normalize fancy dashes to "-"
+  const s = baseNoExt.replace(/[–—]/g, "-").trim();
 
-  // SPECIAL CASE:
-  // "Architectural sheet metal manual 1-11"
-  // "Architectural sheet metal manual 1 - 11"
-  // etc.
-  //
-  // Capture:
-  //   m[1] = "Architectural sheet metal manual"   (prefix up to the word manual)
-  //   m[2] = "1"                                  (volume)
-  //   m[3] = "11"                                 (part)
-  const m = s.match(/^(.*?\bmanual)\s*(\d+)\s*-\s*(\d+)\s*$/i);
-
+  // CASE A: "... manual 1-11" or "... manual 1 - 11"
+  //   title = "... manual 1"
+  //   part  = "11"
+  let m = s.match(/^(.*?\bmanual)\s*(\d+)\s*-\s*(\d+)\s*$/i);
   if (m) {
-    const title = normalizeSpaces(`${m[1]} ${m[2]}`); // <-- keeps ONLY volume in title
+    const title = normalizeSpaces(`${m[1]} ${m[2]}`); // keep the "manual 1"
     const part = m[3];
+
+    const displayTitle = makeDisplayTitle(title);
+    const bookGroupId = makeGroupId(displayTitle);
+
+    return { bookGroupId, displayTitle, partLabel: part };
+  }
+
+  // CASE B: "... manual 11" (no dash)  ✅ THIS is what your API is showing right now
+  // We treat trailing number as a "part", and group under "... manual"
+  m = s.match(/^(.*?\bmanual)\s*(\d+)\s*$/i);
+  if (m) {
+    const title = normalizeSpaces(m[1]); // just "... manual"
+    const part = m[2];
 
     const displayTitle = makeDisplayTitle(title);
     const bookGroupId = makeGroupId(displayTitle);
@@ -128,9 +134,9 @@ function groupFromName(rawValue) {
   const noPart = stripPartSuffix(base);
   const displayTitle = makeDisplayTitle(noPart);
   const bookGroupId = makeGroupId(displayTitle);
-
   return { bookGroupId, displayTitle };
 }
+
 
 
 function getJson(url, headers) {
