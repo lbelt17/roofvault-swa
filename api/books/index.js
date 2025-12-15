@@ -98,28 +98,37 @@ function groupFromName(rawValue) {
   const base = baseNameFromValue(rawValue);
 
   // remove extension like .pdf, .docx, etc
-  const baseNoExt = String(base || "").replace(/\.[^.]+$/i, "").trim();
+  const baseNoExt = String(base || "").replace(/\.[^.]+$/i, "");
+
+  // normalize fancy dashes to a normal hyphen
+  const s = baseNoExt.replace(/[–—]/g, "-");
 
   // SPECIAL CASE:
   // "Architectural sheet metal manual 1-11"
   // "Architectural sheet metal manual 1 - 11"
-  // (also supports en-dash/em-dash)
+  // etc.
+  //
   // Capture:
-  //   m[1] = "Architectural sheet metal manual 1"
-  //   m[2] = "11"
-  const m = baseNoExt.match(/^(.*?\bmanual\s*\d+)\s*[-–—]\s*(\d+)\s*$/i);
+  //   m[1] = "Architectural sheet metal manual"   (prefix up to the word manual)
+  //   m[2] = "1"                                  (volume)
+  //   m[3] = "11"                                 (part)
+  const m = s.match(/^(.*?\bmanual)\s*(\d+)\s*-\s*(\d+)\s*$/i);
 
   if (m) {
-    const title = normalizeSpaces(m[1]);
+    const title = normalizeSpaces(`${m[1]} ${m[2]}`); // <-- keeps ONLY volume in title
+    const part = m[3];
+
     const displayTitle = makeDisplayTitle(title);
     const bookGroupId = makeGroupId(displayTitle);
-    return { bookGroupId, displayTitle, partLabel: m[2] };
+
+    return { bookGroupId, displayTitle, partLabel: part };
   }
 
-  // DEFAULT behavior (your existing logic)
+  // default behavior
   const noPart = stripPartSuffix(base);
   const displayTitle = makeDisplayTitle(noPart);
   const bookGroupId = makeGroupId(displayTitle);
+
   return { bookGroupId, displayTitle };
 }
 
