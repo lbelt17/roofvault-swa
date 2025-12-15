@@ -98,36 +98,31 @@ function groupFromName(rawValue) {
   const base = baseNameFromValue(rawValue);
 
   // remove extension like .pdf, .docx, etc
-  const baseNoExt = String(base || "").replace(/\.[^.]+$/i, "");
+  const baseNoExt = String(base || "").replace(/\.[^.]+$/i, "").trim();
 
   // SPECIAL CASE:
   // "Architectural sheet metal manual 1-11"
   // "Architectural sheet metal manual 1 - 11"
-  // "Architectural sheet metal manual 1 -11"
-  // "Architectural sheet metal manual 1- 11"
-  //
+  // (also supports en-dash/em-dash)
   // Capture:
   //   m[1] = "Architectural sheet metal manual 1"
   //   m[2] = "11"
-  const m = baseNoExt.match(/^(.*?\bmanual\s*\d+)\s*-\s*(\d+)\s*$/i);
+  const m = baseNoExt.match(/^(.*?\bmanual\s*\d+)\s*[-–—]\s*(\d+)\s*$/i);
 
   if (m) {
     const title = normalizeSpaces(m[1]);
-    const part = m[2];
-
     const displayTitle = makeDisplayTitle(title);
     const bookGroupId = makeGroupId(displayTitle);
-
-    return { bookGroupId, displayTitle, partLabel: part };
+    return { bookGroupId, displayTitle, partLabel: m[2] };
   }
 
-  // default behavior
+  // DEFAULT behavior (your existing logic)
   const noPart = stripPartSuffix(base);
   const displayTitle = makeDisplayTitle(noPart);
   const bookGroupId = makeGroupId(displayTitle);
-
   return { bookGroupId, displayTitle };
 }
+
 
 function getJson(url, headers) {
   return new Promise((resolve, reject) => {
