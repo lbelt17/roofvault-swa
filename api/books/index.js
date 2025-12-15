@@ -236,6 +236,7 @@ module.exports = async function (context, req) {
         "Access-Control-Allow-Origin": "*"
       },
       body: {
+        _ver: "books-v2",
         field: picked || "metadata_storage_name",
         values, // keep old output so frontend doesn't break
         books   // new grouped output (clean dropdown)
