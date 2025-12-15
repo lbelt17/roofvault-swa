@@ -96,6 +96,19 @@ function makeGroupId(displayTitle) {
 function groupFromName(rawValue) {
   // 1) get basename (handles path fields)
   const base = baseNameFromValue(rawValue);
+  // SPECIAL CASE: "… manual <vol> - <partNo>"
+  // e.g. "Architectural sheet metal manual 1 - 11"
+  let m = base.match(/^(.*\bmanual\s*\d+)\s*-\s*(\d+)\s*$/i);
+  if (m) {
+    const title = normalizeSpaces(m[1]);
+    const displayTitle = makeDisplayTitle(title);
+    const bookGroupId = makeGroupId(displayTitle);
+    return {
+      bookGroupId,
+      displayTitle,
+      partLabel: m[2]
+    };
+  }
 
   // 2) remove part suffix + normalize
   const noPart = stripPartSuffix(base);
