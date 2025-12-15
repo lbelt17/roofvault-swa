@@ -134,13 +134,25 @@
         optAll.dataset.parts = "[]";
         sel.appendChild(optAll);
 
-        items.forEach(item=>{
-          const o = document.createElement("option");
-          o.value = item.value;                 // group id (or raw filename fallback)
-          o.textContent = item.label;           // clean title shown
-          o.dataset.parts = JSON.stringify(item.parts || []);
-          sel.appendChild(o);
-        });
+       items.forEach(item => {
+  const o = document.createElement("option");
+
+  // Use grouped ID if present, otherwise fallback
+  o.value = item.bookGroupId || item.value || item.label;
+
+  // Show part count when grouped
+  const partCount = Array.isArray(item.parts) ? item.parts.length : 0;
+  o.textContent =
+    partCount > 1
+      ? `${item.label} (${partCount} parts)`
+      : item.label;
+
+  // Preserve parts for exam logic
+  o.dataset.parts = JSON.stringify(item.parts || []);
+
+  sel.appendChild(o);
+});
+
 
         const meta = document.createElement("div");
         meta.className = "muted";
