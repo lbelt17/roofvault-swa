@@ -96,20 +96,43 @@ function makeGroupId(displayTitle) {
 function groupFromName(rawValue) {
   // 1) get basename (handles path fields)
   const base = baseNameFromValue(rawValue);
-  const baseNoExt = base.replace(/\.[^.]+$/i, ""); // removes .pdf, .docx, etc
-  // SPECIAL CASE: "… manual <vol> - <partNo>"
-  // e.g. "Architectural sheet metal manual 1 - 11"
-let m = baseNoExt.match(/^(.*\bmanual\s*\d+)\s*-\s*(\d+)\s*$/i);
+
+  // remove extension like .pdf, .docx, etc
+  const baseNoExt = String(base || "").replace(/\.[^.]+$/i, "");
+
+  // SPECIAL CASE: "... manual <vol>-<partNo>" OR "... manual <vol> - <partNo>"
+  // Examples:
+  // "Architectural sheet metal manual 1-11"
+  // "Architectural sheet metal manual 1 - 11"
+  let m = baseNoExt.match(
+    /^(.*\bmanual\s*\d+)\s*-\s*(\d+)$|^(.*\bmanual\s*\d+)-(\d+)$/i
+  );
+
   if (m) {
-    const title = normalizeSpaces(m[1]);
+    const title = normalizeSpaces(m[1] || m[3]);
+    const part = m[2] || m[4];
+
     const displayTitle = makeDisplayTitle(title);
     const bookGroupId = makeGroupId(displayTitle);
+
     return {
       bookGroupId,
       displayTitle,
-      partLabel: m[2]
+      partLabel: part
     };
   }
+
+  // 2) remove part suffix + normalize (default behavior)
+  const noPart = stripPartSuffix(base);
+
+  // 3) final prettify
+  const displayTitle = makeDisplayTitle(noPart);
+
+  const bookGroupId = makeGroupId(displayTitle);
+
+  return { bookGroupId, displayTitle };
+}
+
 
   // 2) remove part suffix + normalize
   const noPart = stripPartSuffix(base);
