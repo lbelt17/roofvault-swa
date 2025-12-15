@@ -1,4 +1,5 @@
-﻿/**
+﻿// force redeploy
+/**
  * /api/books — list distinct document names by SELECTing likely fields.
  * Env:
  *   SEARCH_ENDPOINT=https://roofvaultsearch.search.windows.net
