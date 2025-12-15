@@ -100,46 +100,30 @@ function groupFromName(rawValue) {
   // remove extension like .pdf, .docx, etc
   const baseNoExt = String(base || "").replace(/\.[^.]+$/i, "");
 
-  // SPECIAL CASE: "... manual <vol>-<partNo>" OR "... manual <vol> - <partNo>"
-  // Examples:
+  // SPECIAL CASE:
   // "Architectural sheet metal manual 1-11"
   // "Architectural sheet metal manual 1 - 11"
-  let m = baseNoExt.match(
-    /^(.*\bmanual\s*\d+)\s*-\s*(\d+)$|^(.*\bmanual\s*\d+)-(\d+)$/i
-  );
+  // "Architectural sheet metal manual 1 -11"
+  // "Architectural sheet metal manual 1- 11"
+  //
+  // Capture:
+  //   m[1] = "Architectural sheet metal manual 1"
+  //   m[2] = "11"
+  const m = baseNoExt.match(/^(.*?\bmanual\s*\d+)\s*-\s*(\d+)\s*$/i);
 
   if (m) {
-    const title = normalizeSpaces(m[1] || m[3]);
-    const part = m[2] || m[4];
+    const title = normalizeSpaces(m[1]);
+    const part = m[2];
 
     const displayTitle = makeDisplayTitle(title);
     const bookGroupId = makeGroupId(displayTitle);
 
-    return {
-      bookGroupId,
-      displayTitle,
-      partLabel: part
-    };
+    return { bookGroupId, displayTitle, partLabel: part };
   }
 
-  // 2) remove part suffix + normalize (default behavior)
+  // default behavior
   const noPart = stripPartSuffix(base);
-
-  // 3) final prettify
   const displayTitle = makeDisplayTitle(noPart);
-
-  const bookGroupId = makeGroupId(displayTitle);
-
-  return { bookGroupId, displayTitle };
-}
-
-
-  // 2) remove part suffix + normalize
-  const noPart = stripPartSuffix(base);
-
-  // 3) final prettify
-  const displayTitle = makeDisplayTitle(noPart);
-
   const bookGroupId = makeGroupId(displayTitle);
 
   return { bookGroupId, displayTitle };
