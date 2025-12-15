@@ -98,37 +98,35 @@ function groupFromName(rawValue) {
   const base = baseNameFromValue(rawValue);
 
   // 2) Remove extension (.pdf, .docx, etc)
-  let s = String(base || "").replace(/\.[^.]+$/i, "");
+  let s = String(base || "").replace(/\.[^.]+$/i, "").trim();
 
-  // 3) Normalize fancy dashes
-  s = s.replace(/[–—]/g, "-").trim();
+  // 3) Normalize ALL common dash variants to "-"
+  //    (en dash, em dash, non-breaking hyphen, minus sign, etc.)
+  s = s.replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212]/g, "-");
 
   // =========================================================
-  // CASE A: "… manual <vol> - <part>"
+  // CASE A: "... manual <vol> <sep> <part>"
+  // sep can be "-", " - ", "_", or multiple spaces
   // Examples:
-  // "Architectural sheet metal manual 1-11"
-  // "Architectural sheet metal manual 1 - 11"
+  // "Architectural sheet metal manual 1-12"
+  // "Architectural sheet metal manual 1 - 12"
+  // "Architectural sheet metal manual 1_12"
   // =========================================================
-  let m = s.match(/^(.*?\bmanual)\s*(\d+)\s*-\s*(\d+)\s*$/i);
+  let m = s.match(/^(.*?\bmanual)\s*(\d+)\s*[-_\s]+\s*(\d+)\s*$/i);
   if (m) {
     const title = normalizeSpaces(`${m[1]} ${m[2]}`); // "manual 1"
-    const part = m[3];                               // "11"
+    const part = m[3];                               // "12"
 
     const displayTitle = makeDisplayTitle(title);
     const bookGroupId = makeGroupId(displayTitle);
 
-    return {
-      bookGroupId,
-      displayTitle,
-      partLabel: part
-    };
+    return { bookGroupId, displayTitle, partLabel: part };
   }
 
   // =========================================================
-  // CASE B: "… manual <vol><part>" (no dash)
-  // Examples:
-  // "Architectural sheet metal manual 11"  -> vol=1, part=1
-  // "Architectural sheet metal manual 112" -> vol=1, part=12
+  // CASE B: "... manual <vol><part>" (no separator)
+  // "manual 112" -> vol=1, part=12
+  // "manual 11"  -> vol=1, part=1
   // =========================================================
   m = s.match(/^(.*?\bmanual)\s*(\d{2,})\s*$/i);
   if (m) {
@@ -140,22 +138,17 @@ function groupFromName(rawValue) {
     const displayTitle = makeDisplayTitle(title);
     const bookGroupId = makeGroupId(displayTitle);
 
-    return {
-      bookGroupId,
-      displayTitle,
-      partLabel: part
-    };
+    return { bookGroupId, displayTitle, partLabel: part };
   }
 
-  // =========================================================
-  // DEFAULT FALLBACK
-  // =========================================================
+  // Default fallback
   const noPart = stripPartSuffix(s);
   const displayTitle = makeDisplayTitle(noPart);
   const bookGroupId = makeGroupId(displayTitle);
 
   return { bookGroupId, displayTitle };
 }
+
 
 
 
