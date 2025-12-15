@@ -96,9 +96,10 @@ function makeGroupId(displayTitle) {
 function groupFromName(rawValue) {
   // 1) get basename (handles path fields)
   const base = baseNameFromValue(rawValue);
+  const baseNoExt = base.replace(/\.[^.]+$/i, ""); // removes .pdf, .docx, etc
   // SPECIAL CASE: "… manual <vol> - <partNo>"
   // e.g. "Architectural sheet metal manual 1 - 11"
-  let m = base.match(/^(.*\bmanual\s*\d+)\s*-\s*(\d+)\s*$/i);
+let m = baseNoExt.match(/^(.*\bmanual\s*\d+)\s*-\s*(\d+)\s*$/i);
   if (m) {
     const title = normalizeSpaces(m[1]);
     const displayTitle = makeDisplayTitle(title);
