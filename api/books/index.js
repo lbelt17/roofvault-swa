@@ -97,18 +97,21 @@ function groupFromName(rawValue) {
   // 1) get basename (handles path fields)
   const base = baseNameFromValue(rawValue);
 
-  // remove extension (.pdf, .docx, etc)
-  const baseNoExt = String(base || "").replace(/\.[^.]+$/i, "");
+  // remove extension like .pdf, .docx, etc
+  let s = String(base || "").replace(/\.[^.]+$/i, "");
 
   // normalize fancy dashes to "-"
-  const s = baseNoExt.replace(/[–—]/g, "-").trim();
+  s = s.replace(/[–—]/g, "-").trim();
 
-  // CASE A: "... manual 1-11" or "... manual 1 - 11"
-  //   title = "... manual 1"
-  //   part  = "11"
+  // ----------------------------
+  // CASE A: "… manual <vol> - <part>"
+  // Examples:
+  // "Architectural sheet metal manual 1-11"
+  // "Architectural sheet metal manual 1 - 11"
+  // ----------------------------
   let m = s.match(/^(.*?\bmanual)\s*(\d+)\s*-\s*(\d+)\s*$/i);
   if (m) {
-    const title = normalizeSpaces(`${m[1]} ${m[2]}`); // keep the "manual 1"
+    const title = normalizeSpaces(`${m[1]} ${m[2]}`); // keep "manual 1"
     const part = m[3];
 
     const displayTitle = makeDisplayTitle(title);
@@ -117,13 +120,21 @@ function groupFromName(rawValue) {
     return { bookGroupId, displayTitle, partLabel: part };
   }
 
-  // CASE B: "... manual 11" (no dash)  ✅ THIS is what your API is showing right now
-  // We treat trailing number as a "part", and group under "... manual"
-  m = s.match(/^(.*?\bmanual)\s*(\d+)\s*$/i);
+  // ----------------------------
+  // CASE B: "… manual <vol><part>" (no dash)
+  // This is what your API is showing now: manual 11, 12, 13...
+  // We interpret: first digit = volume, remaining digits = part
+  // Examples:
+  // "… manual 11" -> vol=1 part=1
+  // "… manual 112" -> vol=1 part=12
+  // ----------------------------
+  m = s.match(/^(.*?\bmanual)\s*(\d{2,})\s*$/i);
   if (m) {
-    const title = normalizeSpaces(m[1]); // just "... manual"
-    const part = m[2];
+    const digits = m[2];
+    const vol = digits.slice(0, 1);
+    const part = digits.slice(1);
 
+    const title = normalizeSpaces(`${m[1]} ${vol}`); // "manual 1"
     const displayTitle = makeDisplayTitle(title);
     const bookGroupId = makeGroupId(displayTitle);
 
@@ -136,6 +147,7 @@ function groupFromName(rawValue) {
   const bookGroupId = makeGroupId(displayTitle);
   return { bookGroupId, displayTitle };
 }
+
 
 
 
