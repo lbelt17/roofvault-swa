@@ -4,7 +4,7 @@
  * Env:
  *   SEARCH_ENDPOINT=https://roofvaultsearch.search.windows.net
  *   SEARCH_API_KEY=xxxxx
- *   SEARCH_INDEX=azureblob-index
+ *   SEARCH_INDEX=azureblob-index-fixed
  */
 const https = require("https");
 const { URL } = require("url");
