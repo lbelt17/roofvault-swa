@@ -1,11 +1,12 @@
 ﻿// force redeploy
 /**
- * /api/books — list distinct document names by SELECTing likely fields.
+ * /api/books — list distinct document names by selecting likely fields.
  * Env:
  *   SEARCH_ENDPOINT=https://roofvaultsearch.search.windows.net
  *   SEARCH_API_KEY=xxxxx
- *   SEARCH_INDEX=azureblob-index-fixed
+ *   SEARCH_INDEX=azureblob-index-meta   (default)
  */
+
 const https = require("https");
 const { URL } = require("url");
 
@@ -21,17 +22,16 @@ function baseNameFromValue(raw) {
   let s = String(raw || "").trim();
   if (!s) return "";
 
-  // If it's a URL, keep only pathname
-  // If it's a path, keep only last segment
+  // remove query/hash if URL
   s = s.split("?")[0].split("#")[0];
 
-  // Normalize slashes
+  // normalize slashes
   s = s.replace(/\\/g, "/");
 
-  // Take last segment
+  // keep only last segment if path-like
   if (s.includes("/")) s = s.split("/").pop();
 
-  // Decode %20 etc
+  // decode %20 etc
   s = safeDecodeURIComponent(s);
 
   return s.trim();
@@ -45,27 +45,27 @@ function normalizeSpaces(s) {
 }
 
 /**
- * Remove common "part" suffix patterns:
+ * Remove common part-ish suffix patterns AT END of string:
  * - "... Pt1-1"
  * - "... Pt1.10.1-1"
  * - "... Part 3 of 10"
  * - "... - Part_02"
  * - "... pt-3"
+ * - "... - pt.4"
  */
 function stripPartSuffix(name) {
-  let s = name;
+  let s = String(name || "");
 
-  // Remove extension first
+  // remove .pdf if present
   s = s.replace(/\.pdf$/i, "").trim();
 
-  // Common trailing tokens like: " - Pt1.10.1-1", "_Pt2-3", " Part 2 of 10"
-  // (We keep this aggressive but only at END of string.)
+  // strip trailing "... Part 3", "... Pt 2-1", "... vol 2", etc
   s = s.replace(
     /(\s*[-–—_]\s*|\s+)(part|pt|section|sec|vol|volume|book)\s*[_-]?\s*\d+(\.\d+)*([_-]?\d+(\.\d+)*)*(\s*(of|\/)\s*\d+)?\s*$/i,
     ""
   );
 
-  // Also strip patterns like "-p3", "_p3", " p3" at end (some scans do this)
+  // also strip " p3" / "-p3" style
   s = s.replace(/(\s*[-–—_]\s*|\s+)p\s*\d+\s*$/i, "");
 
   return s.trim();
@@ -74,18 +74,18 @@ function stripPartSuffix(name) {
 function makeDisplayTitle(raw) {
   let s = normalizeSpaces(raw);
 
-  // A little cleanup for common junk
-  s = s.replace(/\s*-\s*/g, " - "); // normalize hyphen spacing
+  // normalize hyphen spacing
+  s = s.replace(/\s*-\s*/g, " - ");
   s = s.replace(/\(\s*/g, "(").replace(/\s*\)/g, ")");
 
-  // Remove double dashes
+  // remove weird double dashes
   s = s.replace(/\s*-\s*-\s*/g, " - ");
 
   return s.trim();
 }
 
 function makeGroupId(displayTitle) {
-  return displayTitle
+  return String(displayTitle || "")
     .toLowerCase()
     .replace(/['"]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
@@ -93,25 +93,30 @@ function makeGroupId(displayTitle) {
     .replace(/^-|-$/g, "");
 }
 
+/**
+ * Try to detect parts for specific naming patterns, otherwise fallback.
+ * Returns:
+ *  - bookGroupId
+ *  - displayTitle (the rolled-up book title)
+ *  - partLabel (optional)
+ */
 function groupFromName(rawValue) {
   const base = baseNameFromValue(rawValue);
 
-  // Strip extension
+  // strip extension (any)
   let s = String(base || "").replace(/\.[^.]+$/i, "");
-
-  // Normalize dashes
   s = s.replace(/[–—]/g, "-").trim();
 
-  // ======================================================
-  // PRIMARY CASE: "... manual <volume>-<part>"
-  // Examples:
-  //  "Architectural sheet metal manual 1-11"
-  //  "Architectural sheet metal manual 1 - 12"
-  // ======================================================
+  // ------------------------------------------------------
+  // PRIMARY: "... manual <volume>-<part>"
+  // "Architectural sheet metal manual 1-11"
+  // group -> "Architectural sheet metal manual 1"
+  // partLabel -> "11"
+  // ------------------------------------------------------
   let m = s.match(/^(.*?\bmanual)\s*(\d+)\s*-\s*(\d+)\s*$/i);
   if (m) {
-    const volume = m[2];      // ALWAYS volume
-    const part = m[3];        // ALWAYS part
+    const volume = m[2];
+    const part = m[3];
 
     const title = normalizeSpaces(`${m[1]} ${volume}`);
     const displayTitle = makeDisplayTitle(title);
@@ -120,10 +125,11 @@ function groupFromName(rawValue) {
     return { bookGroupId, displayTitle, partLabel: part };
   }
 
-  // ======================================================
-  // SECONDARY CASE: "... manual <volume><part>" (11, 12, 13)
-  // We FORCE volume = first digit, rest = part
-  // ======================================================
+  // ------------------------------------------------------
+  // SECONDARY: "... manual <digits>" like 11,12,13
+  // force volume = first digit, remainder = part
+  // "manual 12" -> volume 1, part 2
+  // ------------------------------------------------------
   m = s.match(/^(.*?\bmanual)\s*(\d{2,})$/i);
   if (m) {
     const digits = m[2];
@@ -137,21 +143,25 @@ function groupFromName(rawValue) {
     return { bookGroupId, displayTitle, partLabel: part };
   }
 
-  // ======================================================
-  // Fallback
-  // ======================================================
+  // ------------------------------------------------------
+  // GENERAL: "... PartX" / "... PtX" / "... - pt.3" etc
+  // We keep partLabel if we can detect it,
+  // but we ALWAYS roll up the displayTitle.
+  // ------------------------------------------------------
+  let partLabel = null;
+  const partMatch = s.match(
+    /(?:^|[-–—_\s])(part|pt)\s*[_-]?\s*(\d+(\.\d+)?([_-]?\d+(\.\d+)?)*)\s*$/i
+  );
+  if (partMatch) {
+    partLabel = String(partMatch[2] || "").trim();
+  }
+
   const noPart = stripPartSuffix(base);
   const displayTitle = makeDisplayTitle(noPart);
   const bookGroupId = makeGroupId(displayTitle);
 
-  return { bookGroupId, displayTitle };
+  return { bookGroupId, displayTitle, partLabel: partLabel || undefined };
 }
-
-
-
-
-
-
 
 function getJson(url, headers) {
   return new Promise((resolve, reject) => {
@@ -161,7 +171,7 @@ function getJson(url, headers) {
         hostname: u.hostname,
         path: u.pathname + u.search,
         method: "GET",
-        headers: { "Content-Type": "application/json", ...headers }
+        headers: { "Content-Type": "application/json", ...headers },
       },
       (res) => {
         let buf = "";
@@ -185,7 +195,7 @@ async function trySelect(endpoint, key, index, field) {
   const url =
     `${endpoint}/indexes/${encodeURIComponent(index)}/docs` +
     `?api-version=${apiVersion}&search=*` +
-    `&$select=${encodeURIComponent(field)}&$top=1000`;
+    `&$select=${encodeURIComponent(field)}&$top=5000`;
 
   const { status, body } = await getJson(url, { "api-key": key });
 
@@ -194,7 +204,9 @@ async function trySelect(endpoint, key, index, field) {
       .map((x) => (x && x[field]) || null)
       .filter(Boolean);
 
-    return Array.from(new Set(vals)).sort((a, b) => String(a).localeCompare(String(b)));
+    return Array.from(new Set(vals)).sort((a, b) =>
+      String(a).localeCompare(String(b))
+    );
   }
   return [];
 }
@@ -203,18 +215,21 @@ module.exports = async function (context, req) {
   try {
     const endpoint = process.env.SEARCH_ENDPOINT;
     const key = process.env.SEARCH_API_KEY;
-    const index = process.env.SEARCH_INDEX || "azureblob-index-fixed";
+
+    // ✅ default to your new working index
+    const index = process.env.SEARCH_INDEX || "azureblob-index-meta";
 
     if (!endpoint || !key || !index) {
       throw new Error("Missing SEARCH_ENDPOINT / SEARCH_API_KEY / SEARCH_INDEX");
     }
 
+    // ✅ prefer metadata_storage_name (best for clean dropdown)
     const candidates = [
+      "metadata_storage_name",
       "docName",
       "documentName",
       "fileName",
-      "metadata_storage_name",
-      "metadata_storage_path"
+      "metadata_storage_path",
     ];
 
     let picked = null;
@@ -229,9 +244,11 @@ module.exports = async function (context, req) {
       }
     }
 
-    // If still empty, inspect schema and try a likely retrievable string field
+    // If still empty: inspect schema for a retrievable string field
     if (!values.length) {
-      const schemaUrl = `${endpoint}/indexes/${encodeURIComponent(index)}?api-version=2023-11-01`;
+      const schemaUrl = `${endpoint}/indexes/${encodeURIComponent(
+        index
+      )}?api-version=2023-11-01`;
       const { status, body } = await getJson(schemaUrl, { "api-key": key });
 
       if (status >= 200 && status < 300 && body && Array.isArray(body.fields)) {
@@ -241,8 +258,7 @@ module.exports = async function (context, req) {
               f.type === "Edm.String" &&
               f.retrievable !== false &&
               /name|file|doc|path|title/i.test(f.name)
-          ) ||
-          body.fields.find((f) => f.type === "Edm.String" && f.retrievable !== false);
+          ) || body.fields.find((f) => f.type === "Edm.String" && f.retrievable !== false);
 
         if (field && field.name) {
           const list = await trySelect(endpoint, key, index, field.name);
@@ -254,44 +270,63 @@ module.exports = async function (context, req) {
       }
     }
 
-    // Group into unified books
+    // ✅ Group into unified books
     const groups = new Map();
 
     for (const raw of values) {
-      const { bookGroupId, displayTitle } = groupFromName(raw);
+      const { bookGroupId, displayTitle, partLabel } = groupFromName(raw);
       if (!bookGroupId) continue;
 
       if (!groups.has(bookGroupId)) {
-        groups.set(bookGroupId, { bookGroupId, displayTitle, parts: [] });
+        groups.set(bookGroupId, {
+          bookGroupId,
+          displayTitle,
+          parts: [],
+        });
       }
-      groups.get(bookGroupId).parts.push(raw);
+
+      groups.get(bookGroupId).parts.push({
+        raw,
+        fileName: baseNameFromValue(raw),
+        partLabel: partLabel || null,
+      });
     }
 
     const books = Array.from(groups.values()).sort((a, b) =>
       a.displayTitle.localeCompare(b.displayTitle)
     );
 
+    // de-dupe parts
     for (const b of books) {
-      b.parts = Array.from(new Set(b.parts)).sort((x, y) => String(x).localeCompare(String(y)));
+      const seen = new Set();
+      b.parts = b.parts
+        .filter((p) => {
+          const k = String(p.raw);
+          if (seen.has(k)) return false;
+          seen.add(k);
+          return true;
+        })
+        .sort((x, y) => String(x.fileName).localeCompare(String(y.fileName)));
     }
 
     context.res = {
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*"
+        "Access-Control-Allow-Origin": "*",
       },
       body: {
         _ver: "books-v2",
+        indexUsed: index,
         field: picked || "metadata_storage_name",
         values, // keep old output so frontend doesn't break
-        books   // new grouped output (clean dropdown)
-      }
+        books,  // new grouped output (clean dropdown)
+      },
     };
   } catch (e) {
     context.res = {
       status: 500,
       headers: { "Content-Type": "application/json" },
-      body: { ok: false, error: String((e && e.message) || e) }
+      body: { ok: false, error: String((e && e.message) || e) },
     };
   }
 };
