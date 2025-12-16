@@ -1,9 +1,13 @@
-﻿// books.js — RoofVault book dropdown (GROUPED)
+﻿// books.js — RoofVault book dropdown (GROUPED + SEARCH BAR)
 // - Prefers /api/books -> json.books[] (grouped)
 // - Falls back to json.values[] (raw)
-// - Only renders if #bookMount exists (so it won't inject randomly)
+// - Renders a search input ABOVE the <select>
+// - Stores selection in localStorage and emits `rv:bookChanged`
 
 (function () {
+  const API_URL = "/api/books";
+  const STORAGE_KEY = "rv:selectedBook";
+
   function $(id) {
     return document.getElementById(id);
   }
@@ -13,22 +17,47 @@
     Object.entries(attrs).forEach(([k, v]) => {
       if (k === "class") n.className = v;
       else if (k === "text") n.textContent = v;
+      else if (k === "value") n.value = v;
+      else if (k === "placeholder") n.placeholder = v;
       else n.setAttribute(k, v);
     });
     (Array.isArray(children) ? children : [children]).forEach((c) => {
       if (c == null) return;
-      n.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+      if (typeof c === "string") n.appendChild(document.createTextNode(c));
+      else n.appendChild(c);
     });
     return n;
   }
 
-  // Persist selection across pages
-  const STORAGE_KEY = "rv_selected_book_v2";
+  async function fetchBooks() {
+    const res = await fetch(API_URL, { cache: "no-store" });
+    if (!res.ok) throw new Error(`Failed to load books: ${res.status}`);
+    return await res.json();
+  }
 
-  function saveSelection(obj) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
-    } catch {}
+  function buildGroupedOptions(json) {
+    const books = Array.isArray(json?.books) ? json.books : [];
+    // Each book: { bookGroupId, displayTitle, parts: [...] }
+    return books
+      .filter((b) => b && b.displayTitle)
+      .map((b) => ({
+        label: b.displayTitle,
+        bookGroupId: b.bookGroupId || b.displayTitle,
+        parts: Array.isArray(b.parts) ? b.parts : [],
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }
+
+  function buildFallbackOptions(json) {
+    const values = Array.isArray(json?.values) ? json.values : [];
+    return values
+      .filter(Boolean)
+      .map((v) => ({
+        label: String(v),
+        bookGroupId: String(v),
+        parts: [v],
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
   }
 
   function loadSelection() {
@@ -40,85 +69,106 @@
     }
   }
 
-  async function fetchBooks() {
-    const r = await fetch("/api/books", { cache: "no-store" });
-    if (!r.ok) throw new Error("Failed to load /api/books");
-    return r.json();
-  }
-
-  function buildGroupedOptions(json) {
-    const books = Array.isArray(json.books) ? json.books : [];
-    // books[] items look like:
-    // { bookGroupId, displayTitle, parts:[ {raw,fileName,partLabel}, ... ] }
-    return books
-      .filter((b) => b && b.bookGroupId && b.displayTitle)
-      .sort((a, b) => String(a.displayTitle).localeCompare(String(b.displayTitle)));
-  }
-
-  function buildFallbackOptions(json) {
-    const vals = Array.isArray(json.values) ? json.values : [];
-    return vals
-      .filter(Boolean)
-      .map((v) => ({
-        bookGroupId: String(v),
-        displayTitle: String(v),
-        parts: [{ raw: String(v), fileName: String(v), partLabel: null }],
-      }))
-      .sort((a, b) => String(a.displayTitle).localeCompare(String(b.displayTitle)));
+  function saveSelection(sel) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(sel));
+    } catch {}
   }
 
   function renderDropdown(mount, options) {
-    // Clear mount
     mount.innerHTML = "";
 
     const label = el("div", { class: "rv-book-label", text: "Select a book" });
 
-    const select = el("select", { id: "rvBookSelect", class: "rv-book-select" }, [
-      el("option", { value: "", text: "Select a book..." }),
-    ]);
-
-    options.forEach((b) => {
-      select.appendChild(el("option", { value: b.bookGroupId, text: b.displayTitle }));
+    // ✅ Search bar ABOVE the dropdown
+    const search = el("input", {
+      class: "rv-book-search",
+      placeholder: "Search books...",
+      value: "",
+      type: "text",
     });
 
-    // Restore previous selection if present
-    const saved = loadSelection();
-    if (saved && saved.bookGroupId) {
-      const exists = options.some((o) => o.bookGroupId === saved.bookGroupId);
-      if (exists) select.value = saved.bookGroupId;
+    const select = el("select", { class: "rv-book-select" });
+    const placeholder = el("option", { text: "Select a book...", value: "" });
+    placeholder.disabled = false;
+    placeholder.selected = true;
+    select.appendChild(placeholder);
+
+    function fillSelect(filtered) {
+      // keep the first placeholder option, clear the rest
+      while (select.options.length > 1) select.remove(1);
+
+      for (const opt of filtered) {
+        const o = document.createElement("option");
+        o.value = opt.bookGroupId;
+        o.textContent = opt.label;
+        // store parts on option (stringified)
+        o.dataset.parts = JSON.stringify(opt.parts || []);
+        select.appendChild(o);
+      }
     }
 
-    select.addEventListener("change", () => {
-      const id = select.value;
-      const picked = options.find((o) => o.bookGroupId === id) || null;
+    fillSelect(options);
 
-      if (!picked) {
-        saveSelection(null);
-        return;
+    // restore prior selection if it exists
+    const prev = loadSelection();
+    if (prev && prev.bookGroupId) {
+      // only set if it exists in current list
+      const match = options.find((o) => o.bookGroupId === prev.bookGroupId);
+      if (match) {
+        select.value = prev.bookGroupId;
+        // also sync search box (optional)
+        search.value = "";
+      }
+    }
+
+    // filter behavior
+    search.addEventListener("input", () => {
+      const q = (search.value || "").trim().toLowerCase();
+      if (!q) return fillSelect(options);
+
+      const filtered = options.filter((o) =>
+        (o.label || "").toLowerCase().includes(q)
+      );
+      fillSelect(filtered);
+    });
+
+    select.addEventListener("change", () => {
+      const selectedId = select.value;
+      if (!selectedId) return;
+
+      const selectedOption = select.selectedOptions?.[0];
+      let parts = [];
+      try {
+        parts = JSON.parse(selectedOption?.dataset?.parts || "[]");
+      } catch {
+        parts = [];
       }
 
-      // This is the IMPORTANT part:
-      // - displayTitle = clean book name (one line)
-      // - parts[] = all underlying blob filenames/paths that belong to it
-      saveSelection({
-        bookGroupId: picked.bookGroupId,
-        displayTitle: picked.displayTitle,
-        parts: picked.parts || [],
-      });
+      const picked = options.find((o) => o.bookGroupId === selectedId);
 
-      // Optional: fire a custom event so other scripts (exam/chat/library) can react
+      const selection = {
+        bookGroupId: selectedId,
+        displayTitle: picked?.label || selectedOption?.textContent || selectedId,
+        parts: picked?.parts || parts || [],
+      };
+
+      saveSelection(selection);
+
+      // Emit event for exam/chat/library to react
       window.dispatchEvent(
-        new CustomEvent("rv:bookChanged", { detail: loadSelection() })
+        new CustomEvent("rv:bookChanged", { detail: selection })
       );
     });
 
     mount.appendChild(label);
+    mount.appendChild(search);
     mount.appendChild(select);
   }
 
   async function init() {
     const mount = $("bookMount");
-    if (!mount) return; // do nothing unless the page has a mount
+    if (!mount) return; // don't inject on pages without mount
 
     try {
       const json = await fetchBooks();
