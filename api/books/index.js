@@ -63,27 +63,48 @@ function stripPartSuffix(name) {
   // normalize fancy dashes
   s = s.replace(/[–—]/g, "-").trim();
 
-  // 1) If we have "pt/part ... - 2009" keep the year, remove the pt token
-  // Example: "NRCA ... pt.1-1 - 2009" -> "NRCA ... 2009"
+  // ------------------------------------------------------------
+  // 1) If we have trailing pt/part + numbers + YEAR, keep YEAR
+  // Examples:
+  // "NRCA ... pt.1-1 - 2009" -> "NRCA ... - 2009"
+  // "NRCA ... Pt1.10 1 1 - 2009" -> "NRCA ... - 2009"
+  // ------------------------------------------------------------
   s = s.replace(
-    /\s*[-_ ]*\b(pt|part)\b\s*[.\-_ ]*\s*\d+(?:[.\-_]\d+)*\s*[-_ ]*-\s*(\d{4})\s*$/i,
+    /\s*[-_ ]*\b(pt|part)\.?\s*[-_ ]*\d+(?:[.\-_ ]+\d+)*\s*[-_ ]*-\s*(\d{4})\s*$/i,
     " - $2"
   );
 
-  // 2) Remove trailing "Part.1", "Part-2-", "Pt 3", "pt.1-1", "Part 3 of 10", etc (END only)
+  // ------------------------------------------------------------
+  // 2) Remove trailing Part/Pt/etc at END (supports Part10 too)
+  // Examples:
+  // " ... Part1", " ... Part 1", " ... -Part_02", " ... pt.1-1",
+  // " ... Part 3 of 10", " ... Pt 2/6"
+  // ------------------------------------------------------------
   s = s.replace(
-    /(\s*[-_ ]*\s*)\b(part|pt|section|sec|vol|volume|book)\b\s*[.\-_ ]*\s*\d+(?:[.\-_]\d+)*(?:\s*(of|\/)\s*\d+)?\s*[-_ ]*$/i,
+    /(\s*[-_ ]*)\b(part|pt|section|sec|vol|volume|book)\.?\s*[-_ ]*\d+(?:[.\-_ ]+\d+)*(?:\s*(of|\/)\s*\d+)?\s*[-_ ]*$/i,
     ""
   );
 
-  // 3) Also strip patterns like "-p3", "_p3", " p3" at end
-  s = s.replace(/(\s*[-–—_]\s*|\s+)p\s*\d+\s*$/i, "");
+  // ------------------------------------------------------------
+  // 3) If title contains "edition", strip trailing "1 - 1" style
+  // Examples:
+  // "The Slate Roof Bible 3rd edition 1 - 1" -> "... 3rd edition"
+  // ------------------------------------------------------------
+  if (/\bedition\b/i.test(s)) {
+    s = s.replace(/\s*[-_ ]*\d+\s*-\s*\d+\s*$/i, "");
+  }
+
+  // ------------------------------------------------------------
+  // 4) Also strip "-p3" / "_p3" / " p3" at end
+  // ------------------------------------------------------------
+  s = s.replace(/(\s*[-_]\s*|\s+)\bp\s*\d+\s*$/i, "");
 
   // clean trailing separators
   s = s.replace(/[-_ ]+$/g, "").trim();
 
-  return s.trim();
+  return s;
 }
+
 
 
 
