@@ -203,7 +203,7 @@ module.exports = async function (context, req) {
   try {
     const endpoint = process.env.SEARCH_ENDPOINT;
     const key = process.env.SEARCH_API_KEY;
-    const index = process.env.SEARCH_INDEX || "azureblob-index";
+    const index = process.env.SEARCH_INDEX || "azureblob-index-fixed";
 
     if (!endpoint || !key || !index) {
       throw new Error("Missing SEARCH_ENDPOINT / SEARCH_API_KEY / SEARCH_INDEX");
