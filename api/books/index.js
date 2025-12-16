@@ -57,53 +57,71 @@ function stripPartSuffix(name) {
   let s = String(name || "").trim();
   if (!s) return "";
 
-  // remove ".pdf" if present
+  // 0) remove ".pdf"
   s = s.replace(/\.pdf$/i, "").trim();
 
-  // normalize fancy dashes
-  s = s.replace(/[–—]/g, "-").trim();
+  // 1) normalize whitespace
+  s = s.replace(/\s+/g, " ").trim();
 
-  // ------------------------------------------------------------
-  // 1) If we have trailing pt/part + numbers + YEAR, keep YEAR
-  // Examples:
-  // "NRCA ... pt.1-1 - 2009" -> "NRCA ... - 2009"
-  // "NRCA ... Pt1.10 1 1 - 2009" -> "NRCA ... - 2009"
-  // ------------------------------------------------------------
-  s = s.replace(
-    /\s*[-_ ]*\b(pt|part)\.?\s*[-_ ]*\d+(?:[.\-_ ]+\d+)*\s*[-_ ]*-\s*(\d{4})\s*$/i,
-    " - $2"
-  );
+  // 2) normalize all dash types to a single " - " separator
+  //    (prevents " - -" and weird spacing)
+  s = s.replace(/[–—]/g, "-");
+  s = s.replace(/\s*-\s*/g, " - ");
+  s = s.replace(/(?:\s-\s){2,}/g, " - "); // collapse repeats
+  s = s.replace(/\s*\|\s*/g, " | ");      // optional: tidy pipes if any
 
-  // ------------------------------------------------------------
-  // 2) Remove trailing Part/Pt/etc at END (supports Part10 too)
-  // Examples:
-  // " ... Part1", " ... Part 1", " ... -Part_02", " ... pt.1-1",
-  // " ... Part 3 of 10", " ... Pt 2/6"
-  // ------------------------------------------------------------
-  s = s.replace(
-    /(\s*[-_ ]*)\b(part|pt|section|sec|vol|volume|book)\.?\s*[-_ ]*\d+(?:[.\-_ ]+\d+)*(?:\s*(of|\/)\s*\d+)?\s*[-_ ]*$/i,
-    ""
-  );
+  // Helper: remove one trailing pattern repeatedly (some files have stacked suffixes)
+  const stripOnce = (re) => {
+    const before = s;
+    s = s.replace(re, "").trim();
+    return s !== before;
+  };
 
-  // ------------------------------------------------------------
-  // 3) If title contains "edition", strip trailing "1 - 1" style
-  // Examples:
-  // "The Slate Roof Bible 3rd edition 1 - 1" -> "... 3rd edition"
-  // ------------------------------------------------------------
-  if (/\bedition\b/i.test(s)) {
-    s = s.replace(/\s*[-_ ]*\d+\s*-\s*\d+\s*$/i, "");
+  // 3) Remove trailing Part/Pt patterns that FAIL in your current code:
+  //    - "Part1", "Part10" (no space)
+  //    - "Part 1", "Part 1 of 10", "Part1 of 10"
+  //    - "Pt1", "Pt.1", "pt.1-1", "pt 1.10 1 1"
+  //    - Also works when preceded by " - " or just a space.
+  const patterns = [
+    // a) " ... Part10", " ... Part 10", " ... Pt10", " ... Pt.10"
+    /(?:\s-\s|\s+)(?:part|pt)\.?\s*\d+(?:[.\-_]\d+)*\s*$/i,
+
+    // b) " ... Part10 of 12", " ... Part 10/12"
+    /(?:\s-\s|\s+)(?:part|pt)\.?\s*\d+(?:[.\-_]\d+)*(?:\s*(?:of|\/)\s*\d+)\s*$/i,
+
+    // c) " ... pt.1-1 - 2009" or " ... pt1.1 - 2009"  => keep year, remove pt token chunk
+    /(?:\s-\s|\s+)(?:part|pt)\.?\s*\d+(?:[.\-_]\d+)*\s*-\s*(\d{4})\s*$/i,
+
+    // d) " ... Pt1.10 1 1" / " ... pt 1.10 2 3" (pt token + extra trailing numbers)
+    /(?:\s-\s|\s+)(?:pt)\.?\s*\d+(?:[.\-_]\d+)*(?:\s+\d+)+\s*$/i,
+
+    // e) " ... -p3" / "_p3" / " p3" at end
+    /(?:\s-\s|\s+|[_-])p\s*\d+\s*$/i,
+  ];
+
+  // Apply patterns until nothing changes (covers stacked suffixes)
+  let changed = true;
+  while (changed) {
+    changed = false;
+
+    // Special: pattern (c) needs to preserve the year
+    const before = s;
+    s = s.replace(patterns[2], " - $1").trim();
+    if (s !== before) changed = true;
+
+    for (let i = 0; i < patterns.length; i++) {
+      if (i === 2) continue; // already handled above
+      if (stripOnce(patterns[i])) changed = true;
+    }
   }
 
-  // ------------------------------------------------------------
-  // 4) Also strip "-p3" / "_p3" / " p3" at end
-  // ------------------------------------------------------------
-  s = s.replace(/(\s*[-_]\s*|\s+)\bp\s*\d+\s*$/i, "");
-
-  // clean trailing separators
+  // 4) clean trailing separators
+  s = s.replace(/(?:\s-\s)+$/g, "").trim();
   s = s.replace(/[-_ ]+$/g, "").trim();
 
   return s;
 }
+
 
 
 
