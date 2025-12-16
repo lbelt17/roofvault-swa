@@ -55,21 +55,36 @@ function normalizeSpaces(s) {
  */
 function stripPartSuffix(name) {
   let s = String(name || "").trim();
+  if (!s) return "";
 
-  // remove .pdf
+  // remove ".pdf" if present
   s = s.replace(/\.pdf$/i, "").trim();
 
-  // strip trailing part/pt/section/etc INCLUDING dot formats
+  // normalize fancy dashes
+  s = s.replace(/[–—]/g, "-").trim();
+
+  // 1) If we have "pt/part ... - 2009" keep the year, remove the pt token
+  // Example: "NRCA ... pt.1-1 - 2009" -> "NRCA ... 2009"
   s = s.replace(
-    /(\s*[-–—_]\s*|\s+)(part|pt|section|sec|vol|volume|book)\s*[._-]?\s*\d+(\.\d+)*([._-]?\d+(\.\d+)*)*(\s*(of|\/)\s*\d+)?\s*$/i,
+    /\s*[-_ ]*\b(pt|part)\b\s*[.\-_ ]*\s*\d+(?:[.\-_]\d+)*\s*[-_ ]*-\s*(\d{4})\s*$/i,
+    " - $2"
+  );
+
+  // 2) Remove trailing "Part.1", "Part-2-", "Pt 3", "pt.1-1", "Part 3 of 10", etc (END only)
+  s = s.replace(
+    /(\s*[-_ ]*\s*)\b(part|pt|section|sec|vol|volume|book)\b\s*[.\-_ ]*\s*\d+(?:[.\-_]\d+)*(?:\s*(of|\/)\s*\d+)?\s*[-_ ]*$/i,
     ""
   );
 
-  // strip trailing p3 / p.3 / -p3 styles
-  s = s.replace(/(\s*[-–—_]\s*|\s+)p[._]?\d+\s*$/i, "");
+  // 3) Also strip patterns like "-p3", "_p3", " p3" at end
+  s = s.replace(/(\s*[-–—_]\s*|\s+)p\s*\d+\s*$/i, "");
+
+  // clean trailing separators
+  s = s.replace(/[-_ ]+$/g, "").trim();
 
   return s.trim();
 }
+
 
 
 function makeDisplayTitle(raw) {
