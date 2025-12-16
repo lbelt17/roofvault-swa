@@ -1,13 +1,7 @@
-﻿// books.js — RoofVault book dropdown (GROUPED + SEARCH BAR)
-// - Prefers /api/books -> json.books[] (grouped)
-// - Falls back to json.values[] (raw)
-// - Renders a search input ABOVE the <select>
-// - Stores selection in localStorage and emits `rv:bookChanged`
+﻿// books.js — RoofVault grouped book dropdown + search
+// Uses /api/books -> body.books[] when available (grouped), fallback to body.values[] (raw)
 
 (function () {
-  const API_URL = "/api/books";
-  const STORAGE_KEY = "rv:selectedBook";
-
   function $(id) {
     return document.getElementById(id);
   }
@@ -17,62 +11,67 @@
     Object.entries(attrs).forEach(([k, v]) => {
       if (k === "class") n.className = v;
       else if (k === "text") n.textContent = v;
-      else if (k === "value") n.value = v;
-      else if (k === "placeholder") n.placeholder = v;
       else n.setAttribute(k, v);
     });
     (Array.isArray(children) ? children : [children]).forEach((c) => {
       if (c == null) return;
-      if (typeof c === "string") n.appendChild(document.createTextNode(c));
-      else n.appendChild(c);
+      n.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
     });
     return n;
   }
 
   async function fetchBooks() {
-    const res = await fetch(API_URL, { cache: "no-store" });
-    if (!res.ok) throw new Error(`Failed to load books: ${res.status}`);
+    const res = await fetch("/api/books", { cache: "no-store" });
+    if (!res.ok) throw new Error(`books api failed: ${res.status}`);
     return await res.json();
   }
 
+  // If filename is like "NRCA - Roofing - Manual - Metal - Panel - ... - Part1"
+  // collapse the excessive " - " separators into spaces, but keep a nice "ORG - Title" prefix.
+  function cleanDisplayTitle(s) {
+    s = String(s || "").trim();
+
+    // If there are a TON of " - " separators, it's usually "word - word - word - ..."
+    const dashCount = (s.match(/\s-\s/g) || []).length;
+    if (dashCount >= 6) {
+      s = s.replace(/\s-\s/g, " ");
+      s = s.replace(/\s+/g, " ").trim();
+    }
+
+    // Restore a clean "PREFIX - rest" for common org prefixes
+    const m = s.match(/^(NRCA|IIBEC|ASTM|ANSI|ASCE|FM|RCI|SMACNA|NCCER|EDCO)\s+(.*)$/i);
+    if (m) {
+      const prefix = m[1].toUpperCase();
+      const rest = (m[2] || "").trim();
+      if (rest) s = `${prefix} - ${rest}`;
+      else s = prefix;
+    }
+
+    return s;
+  }
+
   function buildGroupedOptions(json) {
-    const books = Array.isArray(json?.books) ? json.books : [];
-    // Each book: { bookGroupId, displayTitle, parts: [...] }
+    const books = Array.isArray(json.books) ? json.books : [];
+    // Expect: { bookGroupId, displayTitle, parts[] }
     return books
-      .filter((b) => b && b.displayTitle)
       .map((b) => ({
-        label: b.displayTitle,
-        bookGroupId: b.bookGroupId || b.displayTitle,
-        parts: Array.isArray(b.parts) ? b.parts : [],
+        bookGroupId: b.bookGroupId,
+        displayTitle: cleanDisplayTitle(b.displayTitle),
+        parts: Array.isArray(b.parts) ? b.parts : []
       }))
-      .sort((a, b) => a.label.localeCompare(b.label));
+      .filter((b) => b.bookGroupId && b.displayTitle);
   }
 
   function buildFallbackOptions(json) {
-    const values = Array.isArray(json?.values) ? json.values : [];
-    return values
-      .filter(Boolean)
+    const vals = Array.isArray(json.values) ? json.values : [];
+    // raw filenames, no grouping
+    return vals
       .map((v) => ({
-        label: String(v),
         bookGroupId: String(v),
-        parts: [v],
+        displayTitle: cleanDisplayTitle(String(v)),
+        parts: [String(v)]
       }))
-      .sort((a, b) => a.label.localeCompare(b.label));
-  }
-
-  function loadSelection() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  }
-
-  function saveSelection(sel) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(sel));
-    } catch {}
+      .filter((b) => b.bookGroupId && b.displayTitle);
   }
 
   function renderDropdown(mount, options) {
@@ -80,85 +79,53 @@
 
     const label = el("div", { class: "rv-book-label", text: "Select a book" });
 
-    // ✅ Search bar ABOVE the dropdown
+    // Search bar (this is the one you wanted back)
     const search = el("input", {
       class: "rv-book-search",
-      placeholder: "Search books...",
-      value: "",
       type: "text",
+      placeholder: "Search books…",
+      autocomplete: "off"
     });
 
-    const select = el("select", { class: "rv-book-select" });
-    const placeholder = el("option", { text: "Select a book...", value: "" });
-    placeholder.disabled = false;
-    placeholder.selected = true;
-    select.appendChild(placeholder);
+    const select = el("select", { class: "rv-book-select" }, [
+      el("option", { value: "", text: "Select a book…" })
+    ]);
 
-    function fillSelect(filtered) {
-      // keep the first placeholder option, clear the rest
-      while (select.options.length > 1) select.remove(1);
-
-      for (const opt of filtered) {
-        const o = document.createElement("option");
-        o.value = opt.bookGroupId;
-        o.textContent = opt.label;
-        // store parts on option (stringified)
-        o.dataset.parts = JSON.stringify(opt.parts || []);
-        select.appendChild(o);
-      }
+    function fill(list) {
+      // keep first option, reset rest
+      select.length = 1;
+      list.forEach((b) => {
+        select.appendChild(el("option", { value: b.bookGroupId, text: b.displayTitle }));
+      });
     }
 
-    fillSelect(options);
+    fill(options);
 
-    // restore prior selection if it exists
-    const prev = loadSelection();
-    if (prev && prev.bookGroupId) {
-      // only set if it exists in current list
-      const match = options.find((o) => o.bookGroupId === prev.bookGroupId);
-      if (match) {
-        select.value = prev.bookGroupId;
-        // also sync search box (optional)
-        search.value = "";
-      }
-    }
+    // Quick index for lookup on selection
+    const byId = new Map(options.map((b) => [b.bookGroupId, b]));
 
-    // filter behavior
+    // Filter dropdown based on search
     search.addEventListener("input", () => {
-      const q = (search.value || "").trim().toLowerCase();
-      if (!q) return fillSelect(options);
-
-      const filtered = options.filter((o) =>
-        (o.label || "").toLowerCase().includes(q)
-      );
-      fillSelect(filtered);
+      const q = search.value.trim().toLowerCase();
+      if (!q) return fill(options);
+      fill(options.filter((b) => b.displayTitle.toLowerCase().includes(q)));
     });
 
     select.addEventListener("change", () => {
-      const selectedId = select.value;
-      if (!selectedId) return;
+      const picked = byId.get(select.value);
+      const selection = picked
+        ? {
+            bookGroupId: picked.bookGroupId,
+            displayTitle: picked.displayTitle,
+            parts: picked.parts || []
+          }
+        : { bookGroupId: "", displayTitle: "", parts: [] };
 
-      const selectedOption = select.selectedOptions?.[0];
-      let parts = [];
-      try {
-        parts = JSON.parse(selectedOption?.dataset?.parts || "[]");
-      } catch {
-        parts = [];
-      }
+      // Save for other pages/scripts
+      window.__rvBookSelection = selection;
 
-      const picked = options.find((o) => o.bookGroupId === selectedId);
-
-      const selection = {
-        bookGroupId: selectedId,
-        displayTitle: picked?.label || selectedOption?.textContent || selectedId,
-        parts: picked?.parts || parts || [],
-      };
-
-      saveSelection(selection);
-
-      // Emit event for exam/chat/library to react
-      window.dispatchEvent(
-        new CustomEvent("rv:bookChanged", { detail: selection })
-      );
+      // Notify exam/chat/library scripts
+      window.dispatchEvent(new CustomEvent("rv:bookChanged", { detail: selection }));
     });
 
     mount.appendChild(label);
@@ -168,7 +135,7 @@
 
   async function init() {
     const mount = $("bookMount");
-    if (!mount) return; // don't inject on pages without mount
+    if (!mount) return; // only render where the page includes #bookMount
 
     try {
       const json = await fetchBooks();
@@ -178,12 +145,9 @@
     } catch (e) {
       mount.innerHTML = "";
       mount.appendChild(
-        el("div", {
-          class: "rv-book-error",
-          text: "Book list failed to load. Refresh and try again.",
-        })
+        el("div", { class: "rv-book-error", text: "Book list failed to load. Refresh and try again." })
       );
-      // console.error(e);
+      console.error(e);
     }
   }
 
