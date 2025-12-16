@@ -54,22 +54,23 @@ function normalizeSpaces(s) {
  * - "... - pt.4"
  */
 function stripPartSuffix(name) {
-  let s = String(name || "");
+  let s = String(name || "").trim();
 
-  // remove .pdf if present
+  // remove .pdf
   s = s.replace(/\.pdf$/i, "").trim();
 
-  // strip trailing "... Part 3", "... Pt 2-1", "... vol 2", etc
+  // strip trailing part/pt/section/etc INCLUDING dot formats
   s = s.replace(
-    /(\s*[-–—_]\s*|\s+)(part|pt|section|sec|vol|volume|book)\s*[_-]?\s*\d+(\.\d+)*([_-]?\d+(\.\d+)*)*(\s*(of|\/)\s*\d+)?\s*$/i,
+    /(\s*[-–—_]\s*|\s+)(part|pt|section|sec|vol|volume|book)\s*[._-]?\s*\d+(\.\d+)*([._-]?\d+(\.\d+)*)*(\s*(of|\/)\s*\d+)?\s*$/i,
     ""
   );
 
-  // also strip " p3" / "-p3" style
-  s = s.replace(/(\s*[-–—_]\s*|\s+)p\s*\d+\s*$/i, "");
+  // strip trailing p3 / p.3 / -p3 styles
+  s = s.replace(/(\s*[-–—_]\s*|\s+)p[._]?\d+\s*$/i, "");
 
   return s.trim();
 }
+
 
 function makeDisplayTitle(raw) {
   let s = normalizeSpaces(raw);
