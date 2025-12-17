@@ -1,11 +1,30 @@
-﻿// gen-exam.js — generate a 25-question practice exam for the selected book
+﻿// gen-exam.js — RoofVault practice exam generator (25Q, grouped books, backend-ready for "no repeats")
 (function () {
-  const QUESTION_COUNT = 25;
+  "use strict";
 
+  const QUESTION_COUNT = 25;
+  const API_URL = "/api/exam";
+
+  // ---------- DOM helpers ----------
   function $(id) {
     return document.getElementById(id);
   }
 
+  function el(tag, attrs = {}, children = []) {
+    const n = document.createElement(tag);
+    Object.entries(attrs).forEach(([k, v]) => {
+      if (k === "class") n.className = v;
+      else if (k === "text") n.textContent = v;
+      else n.setAttribute(k, v);
+    });
+    (Array.isArray(children) ? children : [children]).forEach((c) => {
+      if (c == null) return;
+      n.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+    });
+    return n;
+  }
+
+  // ---------- Status + diagnostics ----------
   const statusEl = $("status");
   const diagEl = $("diag");
 
@@ -16,59 +35,53 @@
   function showDiag(o) {
     if (!diagEl) return;
     try {
-      diagEl.textContent =
-        typeof o === "string" ? o : JSON.stringify(o, null, 2);
+      diagEl.textContent = typeof o === "string" ? o : JSON.stringify(o, null, 2);
     } catch {
       diagEl.textContent = String(o);
     }
   }
 
-  // Ensure the output area and button exist so the exam can render safely
+  // ---------- Ensure UI exists (ONLY where #bookMount exists) ----------
   function ensureUI() {
+    const bookMount = $("bookMount");
+    if (!bookMount) return null; // do not inject on pages without the book selector mount
+
     let qList = $("qList");
     if (!qList) {
-      qList = document.createElement("div");
-      qList.id = "qList";
+      qList = el("div", { id: "qList" });
       qList.style.minHeight = "240px";
       qList.style.border = "1px solid #2a2f3a";
       qList.style.borderRadius = "12px";
       qList.style.padding = "14px";
       qList.style.background = "#0c0f14";
-
-      const bm = $("bookMount");
-      if (bm && bm.parentNode) {
-        bm.parentNode.appendChild(qList);
-      } else {
-        document.body.appendChild(qList);
-      }
+      qList.style.marginTop = "10px";
+      bookMount.parentNode?.appendChild(qList);
     }
-let btn = $("btnGenExam50ByBook");
-if (!btn) {
-  const holder = document.createElement("div");
-  holder.style.margin = "10px 0";
 
-  btn = document.createElement("button");
-  btn.id = "btnGenExam50ByBook";
-  btn.textContent = "Generate 25Q Practice Exam";
+    let btn = $("btnGenExam25ByBook");
+    if (!btn) {
+      const holder = el("div", { id: "examBtnHolder" });
+      holder.style.margin = "10px 0";
 
-  // Lock by default unless logged in
-  btn.disabled = true;
-  btn.title = "Please log in to generate exams.";
+      btn = el("button", { id: "btnGenExam25ByBook", text: `Generate ${QUESTION_COUNT}Q Practice Exam` });
 
-  btn.style.padding = "10px 14px";
-  btn.style.borderRadius = "8px";
-  btn.style.border = "none";
-  btn.style.cursor = "pointer";
-  btn.style.background = "linear-gradient(180deg,#2aa9ff,#0ec0ff)";
-  btn.style.color = "#071018";
-  btn.style.fontWeight = "700";
+      // locked by default; we'll enable once auth is confirmed
+      btn.disabled = true;
+      btn.title = "Please log in to generate exams.";
 
+      btn.style.padding = "10px 14px";
+      btn.style.borderRadius = "8px";
+      btn.style.border = "none";
+      btn.style.cursor = "pointer";
+      btn.style.background = "linear-gradient(180deg,#2aa9ff,#0ec0ff)";
+      btn.style.color = "#071018";
+      btn.style.fontWeight = "700";
 
       holder.appendChild(btn);
 
-      const bm2 = $("bookMount");
-      if (bm2 && bm2.parentNode) {
-        bm2.parentNode.insertBefore(holder, qList.nextSibling);
+      // put button right after the dropdown mount, before questions list
+      if (bookMount.parentNode) {
+        bookMount.parentNode.insertBefore(holder, qList);
       } else {
         document.body.insertBefore(holder, document.body.firstChild);
       }
@@ -77,64 +90,109 @@ if (!btn) {
     return { qList, btn };
   }
 
-  // 🔍 Helper: is this the IIBEC RWC Study Guide book?
-  function isRwcStudyGuide(pick) {
-    if (!pick) return false;
-    const name = (pick.label || pick.text || pick.value || "").toLowerCase();
-    // Relaxed match in case you tweak naming
+  // ---------- Auth: enable button only if logged in ----------
+  async function getAuthState() {
+    // Try your existing auth function first, then SWA /.auth/me fallback
+    const tries = ["/api/auth-me", "/.auth/me"];
+
+    for (const url of tries) {
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) continue;
+        const json = await res.json();
+
+        // /api/auth-me often returns { isAuthenticated: true, ... }
+        if (json && typeof json.isAuthenticated === "boolean") return json;
+
+        // /.auth/me returns { clientPrincipal: {...} } or an array depending on SWA version
+        if (Array.isArray(json) && json[0]?.clientPrincipal) {
+          return { isAuthenticated: true, clientPrincipal: json[0].clientPrincipal };
+        }
+        if (json?.clientPrincipal) {
+          return { isAuthenticated: true, clientPrincipal: json.clientPrincipal };
+        }
+      } catch {
+        // ignore and try next
+      }
+    }
+    return { isAuthenticated: false };
+  }
+
+  async function refreshButtonAuth(btn) {
+    const auth = await getAuthState();
+    if (auth?.isAuthenticated) {
+      btn.disabled = false;
+      btn.title = "";
+      return true;
+    } else {
+      btn.disabled = true;
+      btn.title = "Please log in to generate exams.";
+      return false;
+    }
+  }
+
+  // ---------- Selection: prefer grouped selection from books.js ----------
+  function getSelection() {
+    // Preferred: books.js sets window.__rvBookSelection = { bookGroupId, displayTitle, parts[] }
+    const s = window.__rvBookSelection;
+    if (s && s.bookGroupId && (s.displayTitle || s.bookGroupId)) {
+      return {
+        bookGroupId: String(s.bookGroupId),
+        displayTitle: String(s.displayTitle || s.bookGroupId),
+        parts: Array.isArray(s.parts) ? s.parts.map(String) : []
+      };
+    }
+
+    // Fallback: legacy selector API
+    if (typeof window.getSelectedBook === "function") {
+      const pick = window.getSelectedBook();
+      if (!pick) return null;
+
+      const label = pick.label || pick.text || pick.value || "Selected book";
+      const value = pick.value || pick.label || pick.text;
+
+      return {
+        bookGroupId: String(value),
+        displayTitle: String(label),
+        parts: [String(value)]
+      };
+    }
+
+    return null;
+  }
+
+  // ---------- RWC multi-select helper ----------
+  function isRwcStudyGuide(selection) {
+    const name = String(selection?.displayTitle || selection?.bookGroupId || "").toLowerCase();
     return name.includes("rwc") && name.includes("study") && name.includes("guide");
   }
 
-  // 🔧 Helper: for RWC Study Guide ONLY, mark "choose two / pick two" questions as multi-select
-  function markRwcMultiSelect(items, pick) {
-    if (!Array.isArray(items) || !isRwcStudyGuide(pick)) return items;
+  function markRwcMultiSelect(items, selection) {
+    if (!Array.isArray(items) || !isRwcStudyGuide(selection)) return items;
 
     const multiRegex = /(choose\s*two|pick\s*two|pick\s*2)/i;
-
     return items.map((item) => {
-      // Try a few common property names for the question text
-      const qText =
-        (item.question ??
-          item.prompt ??
-          item.q ??
-          item.text ??
-          "") + "";
-
+      const qText = String(item.question ?? item.prompt ?? item.q ?? item.text ?? "");
       if (multiRegex.test(qText)) {
         return {
           ...item,
-          // These flags can be used by renderQuiz() to show checkboxes, etc.
           type: item.type || "multi",
           multi: true,
           expectedSelections: item.expectedSelections || 2
         };
       }
-
       return item;
     });
   }
 
-  // 🧹 Normalize + filter questions to reduce hallucinations and enforce book-only semantics
-  function normalizeAndFilterItems(rawItems, pick) {
+  // ---------- Normalize/filter (keep your safety heuristics) ----------
+  function normalizeAndFilterItems(rawItems, selection) {
     const items = Array.isArray(rawItems) ? rawItems.slice() : [];
     const removed = [];
 
-    // Resolve metadata for this book so we can attach a consistent citation
-    let meta = null;
-    try {
-      if (window.getBookMetadata && pick && pick.value != null) {
-        meta = window.getBookMetadata(pick.value);
-      }
-    } catch (e) {
-      console.warn("Error reading BOOK_METADATA:", e);
-    }
+    const defaultSourceTitle = selection?.displayTitle || "Selected book";
+    const defaultSourceYear = "Year not specified";
 
-    const defaultSourceTitle =
-      (meta && meta.title) || pick.label || pick.text || "Selected book";
-    const defaultSourceYear =
-      (meta && meta.year) || "Year not specified";
-
-    // Heuristic for market-share style questions we want to be very strict about
     const MARKET_REGEX =
       /(market share|% of the market|percent of roofs|dominates\s+the\s+market|portion of the market)/i;
 
@@ -143,69 +201,42 @@ if (!btn) {
 
       const sourceStatus = String(item.sourceStatus || "").toUpperCase();
       const fromBook =
-        item.fromBook === true ||
-        sourceStatus === "FROM_BOOK" ||
-        sourceStatus === "IN_BOOK";
+        item.fromBook === true || sourceStatus === "FROM_BOOK" || sourceStatus === "IN_BOOK";
 
-      // 🚫 1) If backend explicitly said this is NOT in the book, drop it
-      if (
-        sourceStatus === "NOT_IN_BOOK" ||
-        sourceStatus === "OUT_OF_SCOPE" ||
-        sourceStatus === "UNKNOWN"
-      ) {
-        removed.push({
-          reason: sourceStatus,
-          question: item.question || ""
-        });
+      if (sourceStatus === "NOT_IN_BOOK" || sourceStatus === "OUT_OF_SCOPE" || sourceStatus === "UNKNOWN") {
+        removed.push({ reason: sourceStatus, question: item.question || "" });
         return false;
       }
 
-      // Text we use to check for risky/statistical language
-      const qText =
-        ((item.question ||
-          item.prompt ||
-          item.text ||
-          "") + "").trim();
-      const expText = ((item.explanation || "") + "").trim();
+      const qText = String(item.question || item.prompt || item.text || "").trim();
+      const expText = String(item.explanation || "").trim();
 
-      // 🚫 2) Drop market-share style questions unless backend explicitly marks them as "from book"
       if (MARKET_REGEX.test(qText) || MARKET_REGEX.test(expText)) {
         if (!fromBook) {
-          removed.push({
-            reason: "market-share-heuristic",
-            question: qText
-          });
+          removed.push({ reason: "market-share-heuristic", question: qText });
           return false;
         }
       }
 
-      // ✅ 3) Attach default source/citation fields if missing
       if (!item.sourceTitle) item.sourceTitle = defaultSourceTitle;
       if (!item.sourceYear) item.sourceYear = defaultSourceYear;
 
-      // If backend provided a page or section, build a short cite
       if (!item.cite) {
-        if (item.page) {
-          item.cite = `p. ${item.page}`;
-        } else if (item.section) {
-          item.cite = `Section ${item.section}`;
-        }
+        if (item.page) item.cite = `p. ${item.page}`;
+        else if (item.section) item.cite = `Section ${item.section}`;
       }
 
       return true;
     });
 
     if (removed.length && diagEl) {
-      showDiag({
-        removedCount: removed.length,
-        removed
-      });
+      showDiag({ removedCount: removed.length, removed });
     }
 
     return cleaned;
   }
 
-  // Fetch with timeout + retry
+  // ---------- Fetch with timeout + retry ----------
   async function safeFetch(url, opts = {}, timeoutMs = 45000, retries = 1) {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), timeoutMs);
@@ -223,49 +254,69 @@ if (!btn) {
     }
   }
 
+  // ---------- Main generator ----------
   async function genExam() {
-    const { qList } = ensureUI();
+    const ui = ensureUI();
+    if (!ui) return;
 
-    if (!window.getSelectedBook) {
-      showDiag("Book selector not ready.");
+    const { qList, btn } = ui;
+
+    // Make sure auth is still valid right now
+    const authed = await refreshButtonAuth(btn);
+    if (!authed) {
+      showDiag("Not logged in. Please log in first.");
       setStatus("Error");
       return;
     }
 
-    const pick = window.getSelectedBook();
-    if (!pick) {
-      showDiag("No book selected");
+    const selection = getSelection();
+    if (!selection) {
+      showDiag("No book selected (selector not ready or nothing chosen).");
       setStatus("Error");
       return;
     }
 
-    const bookName = pick.label || pick.text || pick.value || "selected book";
+    // If parts[] is empty (shouldn't be), fall back to bookGroupId as the single part
+    const parts = Array.isArray(selection.parts) && selection.parts.length
+      ? selection.parts
+      : [selection.bookGroupId];
+
+    const bookTitle = selection.displayTitle || selection.bookGroupId;
 
     try {
-      const btn = $("btnGenExam50ByBook");
-      if (btn) {
-        btn.disabled = true;
-        btn.classList.add("busy");
-      }
+      btn.disabled = true;
+      btn.classList.add("busy");
 
       setStatus(`Generating ${QUESTION_COUNT}-question exam…`);
       qList.classList.add("mono");
-      qList.textContent = `⏳ Generating a ${QUESTION_COUNT}-question practice exam for "${bookName}" from /api/exam (book-only mode)…`;
+      qList.textContent =
+        `⏳ Generating a ${QUESTION_COUNT}-question practice exam for "${bookTitle}"\n` +
+        `Using ONLY this book (all parts) • Backend will enforce "no repeats" per user.\n\n` +
+        `Calling ${API_URL}…`;
 
-      // Each click calls the API again → fresh 25Q set each time
+      // IMPORTANT:
+      // - bookGroupId identifies the grouped book the user selected
+      // - parts is the exact list of blob filenames (Part 01, Part 02, etc.)
+      // Backend should:
+      //  1) look up seen questions for (userId + bookGroupId) from TRVExamSeen
+      //  2) avoid repeats
+      //  3) save new questions as seen
+      const payload = {
+        bookGroupId: selection.bookGroupId,
+        displayTitle: selection.displayTitle,
+        parts,
+        count: QUESTION_COUNT,
+        mode: "BOOK_ONLY",
+        // just a small nudge to encourage variety across clicks:
+        attemptNonce: `${Date.now()}-${Math.random().toString(16).slice(2)}`
+      };
+
       const res = await safeFetch(
-        "/api/exam",
+        API_URL,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            book: pick.value, // which file to use (from dropdown)
-            filterField: pick.field, // whatever your API expects
-            count: QUESTION_COUNT, // 25 questions, not 50
-            // Hint for backend: be strict about using ONLY this document
-            mode: "BOOK_ONLY",
-            bookLabel: bookName
-          })
+          body: JSON.stringify(payload)
         },
         45000,
         1
@@ -286,37 +337,29 @@ if (!btn) {
         return;
       }
 
-      let items = Array.isArray(data.items) ? data.items : [];
+      let items = Array.isArray(data.items) ? data.items : (Array.isArray(data.questions) ? data.questions : []);
 
-      if (items.length === 0) {
-        showDiag({
-          status: res.status,
-          body: data,
-          hint: "API responded but no items[] returned"
-        });
+      if (!items.length) {
+        showDiag({ status: res.status, body: data, hint: "API responded but no items/questions returned" });
         qList.textContent = "(No questions returned)";
         setStatus("Error");
         return;
       }
 
-      // 🧹 Normalize + filter questionable items (market share, NOT_IN_BOOK, etc.)
-      items = normalizeAndFilterItems(items, pick);
-
+      items = normalizeAndFilterItems(items, selection);
       if (!items.length) {
         showDiag({
           status: res.status,
           hint: "All generated questions were filtered out as unsafe or out-of-book."
         });
         qList.textContent =
-          "(Questions were generated but filtered out — no safe, in-book questions available. Try another book or adjust the exam settings.)";
+          "(Questions were generated but filtered out — no safe, in-book questions available. Try another book.)";
         setStatus("Error");
         return;
       }
 
-      // 🔑 RWC-only tweak: mark "choose two / pick two" questions as multi-select
-      items = markRwcMultiSelect(items, pick);
+      items = markRwcMultiSelect(items, selection);
 
-      // If you have a fancy quiz renderer, use it; otherwise dump JSON
       if (typeof window.renderQuiz === "function") {
         qList.classList.remove("mono");
         qList.textContent = "";
@@ -328,21 +371,18 @@ if (!btn) {
 
       setStatus(`Ready • ${items.length} questions generated`);
     } catch (e) {
-      const msg =
-        e && e.name === "AbortError"
-          ? "timeout"
-          : e?.message || String(e);
-
+      const msg = e?.name === "AbortError" ? "timeout" : (e?.message || String(e));
       showDiag({ error: msg, hint: "Request aborted or network error" });
 
-      const { qList: qList2 } = ensureUI();
-      qList2.textContent = `{ "error": "${msg}" }`;
+      const ui2 = ensureUI();
+      if (ui2?.qList) ui2.qList.textContent = `{ "error": "${msg}" }`;
       setStatus("Error");
     } finally {
-      const btn = $("btnGenExam50ByBook");
-      if (btn) {
-        btn.disabled = false;
-        btn.classList.remove("busy");
+      // Re-check auth; only re-enable if still logged in
+      const ui3 = ensureUI();
+      if (ui3?.btn) {
+        await refreshButtonAuth(ui3.btn);
+        ui3.btn.classList.remove("busy");
       }
       setTimeout(() => setStatus("Ready"), 900);
     }
@@ -351,23 +391,25 @@ if (!btn) {
   // Expose manual trigger for Console debugging
   window.__genExam = genExam;
 
-  // Wire the button once DOM + UI are ready
-  function wire(attempt = 0) {
-    const maxAttempts = 25; // ~5s with 200ms backoff
-    const { btn } = ensureUI();
-    if (btn) {
-      try {
-        btn.onclick = genExam;
-      } catch {}
-      return;
-    }
-    if (attempt < maxAttempts) {
-      setTimeout(() => wire(attempt + 1), 200);
-    }
+  // Wire once DOM is ready; also update auth state when book changes
+  async function wire() {
+    const ui = ensureUI();
+    if (!ui) return;
+
+    ui.btn.onclick = genExam;
+
+    // initial auth check
+    await refreshButtonAuth(ui.btn);
+
+    // when user selects a different book, keep button state accurate
+    window.addEventListener("rv:bookChanged", async () => {
+      const ui2 = ensureUI();
+      if (ui2?.btn) await refreshButtonAuth(ui2.btn);
+    });
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => wire());
+    document.addEventListener("DOMContentLoaded", wire);
   } else {
     wire();
   }
