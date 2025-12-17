@@ -77,7 +77,7 @@
       btn.style.fontWeight = "700";
 
       holder.appendChild(btn);
-      bookMount.parentNode?.insertBefore(holder, qList);
+      bookMount.parentNode.appendChild(holder);
     }
 
     return { qList, btn };
