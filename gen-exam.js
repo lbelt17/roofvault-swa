@@ -44,8 +44,12 @@
   // ================== UI ==================
   function ensureUI() {
     const bookMount = $("bookMount");
-    if (!bookMount) return null;
+    if (!bookMount) {
+      showDiag("❌ Missing #bookMount on this page.");
+      return null;
+    }
 
+    // Ensure qList exists (your HTML already has it, but we keep this safe)
     let qList = $("qList");
     if (!qList) {
       qList = el("div", { id: "qList" });
@@ -58,49 +62,36 @@
       bookMount.parentNode?.appendChild(qList);
     }
 
-    let btn = $("btnGenExam25ByBook");
+    // IMPORTANT: We do NOT create the button. We require the HTML button to exist.
+    const btn = $("btnGenExam25ByBook");
     if (!btn) {
-      const holder = el("div");
-      btn = el("button", {
-        id: "btnGenExam25ByBook",
-        text: `Generate ${QUESTION_COUNT}Q Practice Exam`
-      });
-
-      btn.disabled = true;
-      btn.title = "Please log in to generate exams.";
-      btn.style.padding = "10px 14px";
-      btn.style.borderRadius = "8px";
-      btn.style.border = "none";
-      btn.style.cursor = "pointer";
-      btn.style.background = "linear-gradient(180deg,#2aa9ff,#0ec0ff)";
-      btn.style.color = "#071018";
-      btn.style.fontWeight = "700";
-
-      holder.appendChild(btn);
-      bookMount.parentNode.appendChild(holder);
+      showDiag("❌ Missing #btnGenExam25ByBook in index.html. Add id to your existing button.");
+      return null;
     }
 
-    return { qList, btn };
+    return { bookMount, qList, btn };
   }
 
   // ================== AUTH ==================
-    async function refreshButtonAuth(btn) {
+  async function refreshButtonAuth(btn) {
     try {
-      if (typeof getAuthState !== "function") {
-        // Don’t silently fail
+      if (typeof window.getAuthState !== "function") {
         btn.disabled = true;
         btn.title = "Auth system not loaded (getAuthState missing).";
-        showDiag({ error: "getAuthState is not defined on this page." });
+        showDiag({
+          error: "getAuthState is not defined on this page.",
+          fix: "Make sure your auth script is loaded before gen-exam.js"
+        });
         return false;
       }
 
-      const auth = await getAuthState();
+      const auth = await window.getAuthState();
       const ok = !!auth?.isAuthenticated;
 
       btn.disabled = !ok;
       btn.title = ok ? "" : "Please log in to generate exams.";
 
-      if (!ok) showDiag({ auth });
+      if (!ok) showDiag({ message: "Not logged in.", auth });
       return ok;
     } catch (e) {
       btn.disabled = true;
@@ -110,6 +101,24 @@
     }
   }
 
+  // ================== BOOK SELECTION ==================
+  // Your app must provide a "selected book" object with:
+  // { bookGroupId, displayTitle, parts?: [] }
+  // We try a few common locations; if none exist we show a clear error.
+  function getBookSelection() {
+    // Preferred: you expose a custom selection function (recommended)
+    if (typeof window.getSelectedBook === "function") return window.getSelectedBook();
+    if (typeof window.getBookSelection === "function") return window.getBookSelection();
+
+    // Common: selection stored globally by books.js / interactive-exam.js
+    if (window.__rvSelectedBook) return window.__rvSelectedBook;
+    if (window.rvSelectedBook) return window.rvSelectedBook;
+
+    // If someone accidentally relied on native window.getSelection(), it won't have bookGroupId.
+    // We DO NOT call it here.
+
+    return null;
+  }
 
   // ================== HELPERS ==================
   function markRwcMultiSelect(items, selection) {
@@ -128,10 +137,12 @@
 
   function normalizeAndFilterItems(items, selection) {
     if (!Array.isArray(items)) return [];
-    return items.filter(Boolean).map((q) => ({
-      ...q,
-      sourceTitle: q.sourceTitle || selection.displayTitle
-    }));
+    return items
+      .filter(Boolean)
+      .map((q) => ({
+        ...q,
+        sourceTitle: q.sourceTitle || selection.displayTitle
+      }));
   }
 
   async function safeFetch(url, opts = {}, timeoutMs = 45000) {
@@ -151,19 +162,25 @@
 
     const { qList, btn } = ui;
 
+    // Auth gate
     const authed = await refreshButtonAuth(btn);
-    if (!authed) {
-      showDiag("Not logged in.");
+    if (!authed) return;
+
+    // Book selection
+    const selection = getBookSelection();
+    if (!selection || !selection.bookGroupId) {
+      showDiag({
+        error: "No valid book selection found for exam generation.",
+        fix: "Expose window.__rvSelectedBook (or window.getSelectedBook()) with {bookGroupId, displayTitle, parts?}.",
+        hint: "Your dropdown is working, but gen-exam.js needs a JS object representing the selected book."
+      });
       return;
     }
 
-    const selection = getSelection();
-    if (!selection) {
-      showDiag("No book selected.");
-      return;
-    }
-
-    const parts = selection.parts.length ? selection.parts : [selection.bookGroupId];
+    const parts =
+      Array.isArray(selection.parts) && selection.parts.length
+        ? selection.parts
+        : [selection.bookGroupId];
 
     try {
       btn.disabled = true;
@@ -185,13 +202,25 @@
         body: JSON.stringify(payload)
       });
 
+      // If API returns non-200, show body for debugging
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        showDiag({
+          error: "API request failed",
+          status: res.status,
+          statusText: res.statusText,
+          body: txt
+        });
+        setStatus("Error");
+        return;
+      }
+
       const data = await res.json();
 
       let items = Array.isArray(data.items) ? data.items : data.questions;
       items = normalizeAndFilterItems(items, selection);
       items = markRwcMultiSelect(items, selection);
 
-      qList.classList.remove("mono");
       qList.textContent = "";
 
       if (typeof window.renderQuiz === "function") {
@@ -201,8 +230,9 @@
       }
 
       setStatus(`Ready • ${items.length} questions`);
+      showDiag("✅ Exam generated.");
     } catch (e) {
-      showDiag(e.message || String(e));
+      showDiag({ error: "genExam failed", message: e?.message || String(e) });
       setStatus("Error");
     } finally {
       btn.disabled = false;
@@ -213,51 +243,20 @@
   // ================== WIRING ==================
   window.__genExam = genExam;
 
-  function isExamButton(target) {
-    if (!target) return false;
-
-    // Most reliable: the id we expect
-    const byId = target.closest && target.closest("#btnGenExam25ByBook");
-    if (byId) return true;
-
-    // Fallback: sometimes HTML uses a different id, but same label
-    const btn = target.closest && target.closest("button");
-    if (!btn) return false;
-
-    const txt = (btn.textContent || "").toLowerCase();
-    return txt.includes("generate 25q") && txt.includes("practice exam");
-  }
-
   async function wire() {
     const ui = ensureUI();
-    if (!ui?.btn) return;
+    if (!ui) return;
 
-    // Prove the script is actually running on this page
-    showDiag("✅ gen-exam.js loaded. Waiting for click…");
+    // Confirm file loaded
+    showDiag("✅ gen-exam.js loaded. Click Generate to test.");
 
-    // Make sure the button is clickable even if auth wiring is weird
+    // Direct click wiring (simple + reliable)
     ui.btn.onclick = () => genExam();
 
-    // Auth enable/disable
+    // Initialize auth state
     await refreshButtonAuth(ui.btn);
 
-    // Event delegation: catches clicks even if the button is replaced/re-rendered
-    if (!window.__rvExamDelegatedClick) {
-      window.__rvExamDelegatedClick = true;
-
-      document.addEventListener(
-        "click",
-        (e) => {
-          if (isExamButton(e.target)) {
-            showDiag("🖱️ CLICK DETECTED → calling genExam()");
-            genExam();
-          }
-        },
-        true // capture phase so nothing can swallow it
-      );
-    }
-
-    // Keep auth accurate when book changes
+    // If your app triggers book change events, keep auth state accurate
     window.addEventListener("rv:bookChanged", async () => {
       const ui2 = ensureUI();
       if (ui2?.btn) await refreshButtonAuth(ui2.btn);
