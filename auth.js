@@ -13,7 +13,8 @@
 
   function normalizeClientPrincipal(cp) {
     const roles = Array.isArray(cp?.userRoles) ? cp.userRoles : [];
-    const isAuthenticated = !!cp && roles.length > 0 && !roles.includes("anonymous");
+    const isAuthenticated = !!cp && roles.includes("authenticated");
+
 
     return {
       isAuthenticated,
