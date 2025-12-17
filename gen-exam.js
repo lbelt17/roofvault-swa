@@ -84,30 +84,32 @@
   }
 
   // ================== AUTH ==================
-  async function refreshButtonAuth(btn) {
-    const auth = await getAuthState();
-    if (auth?.isAuthenticated) {
-      btn.disabled = false;
-      btn.title = "";
-      return true;
+    async function refreshButtonAuth(btn) {
+    try {
+      if (typeof getAuthState !== "function") {
+        // Don’t silently fail
+        btn.disabled = true;
+        btn.title = "Auth system not loaded (getAuthState missing).";
+        showDiag({ error: "getAuthState is not defined on this page." });
+        return false;
+      }
+
+      const auth = await getAuthState();
+      const ok = !!auth?.isAuthenticated;
+
+      btn.disabled = !ok;
+      btn.title = ok ? "" : "Please log in to generate exams.";
+
+      if (!ok) showDiag({ auth });
+      return ok;
+    } catch (e) {
+      btn.disabled = true;
+      btn.title = "Auth check failed.";
+      showDiag({ error: "refreshButtonAuth failed", message: e?.message || String(e) });
+      return false;
     }
-    btn.disabled = true;
-    btn.title = "Please log in to generate exams.";
-    return false;
   }
 
-  // ================== SELECTION ==================
-  function getSelection() {
-    const s = window.__rvBookSelection;
-    if (s?.bookGroupId) {
-      return {
-        bookGroupId: String(s.bookGroupId),
-        displayTitle: String(s.displayTitle || s.bookGroupId),
-        parts: Array.isArray(s.parts) ? s.parts.map(String) : []
-      };
-    }
-    return null;
-  }
 
   // ================== HELPERS ==================
   function markRwcMultiSelect(items, selection) {
@@ -211,22 +213,27 @@
   // ================== WIRING ==================
   window.__genExam = genExam;
 
-  async function wire() {
+    async function wire() {
     const ui = ensureUI();
-    if (ui?.btn) {
-      await refreshButtonAuth(ui.btn);
-      ui.btn.onclick = genExam;
-    }
+    if (!ui?.btn) return;
 
+    // ALWAYS wire click first so it can’t “do nothing”
+    ui.btn.addEventListener("click", (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      genExam();
+    });
+
+    // Then attempt auth enable/disable
+    await refreshButtonAuth(ui.btn);
+
+    // Keep auth accurate when book changes
     window.addEventListener("rv:bookChanged", async () => {
       const ui2 = ensureUI();
       if (ui2?.btn) await refreshButtonAuth(ui2.btn);
     });
-  }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", wire);
-  } else {
-    wire();
+    // Helpful debug ping
+    showDiag("Exam button wired. Click it, then check diag output if it errors.");
   }
 })();
