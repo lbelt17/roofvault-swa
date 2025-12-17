@@ -213,27 +213,60 @@
   // ================== WIRING ==================
   window.__genExam = genExam;
 
-    async function wire() {
+  function isExamButton(target) {
+    if (!target) return false;
+
+    // Most reliable: the id we expect
+    const byId = target.closest && target.closest("#btnGenExam25ByBook");
+    if (byId) return true;
+
+    // Fallback: sometimes HTML uses a different id, but same label
+    const btn = target.closest && target.closest("button");
+    if (!btn) return false;
+
+    const txt = (btn.textContent || "").toLowerCase();
+    return txt.includes("generate 25q") && txt.includes("practice exam");
+  }
+
+  async function wire() {
     const ui = ensureUI();
     if (!ui?.btn) return;
 
-    // ALWAYS wire click first so it can’t “do nothing”
-    ui.btn.addEventListener("click", (ev) => {
-      ev.preventDefault();
-      ev.stopPropagation();
-      genExam();
-    });
+    // Prove the script is actually running on this page
+    showDiag("✅ gen-exam.js loaded. Waiting for click…");
 
-    // Then attempt auth enable/disable
+    // Make sure the button is clickable even if auth wiring is weird
+    ui.btn.onclick = () => genExam();
+
+    // Auth enable/disable
     await refreshButtonAuth(ui.btn);
+
+    // Event delegation: catches clicks even if the button is replaced/re-rendered
+    if (!window.__rvExamDelegatedClick) {
+      window.__rvExamDelegatedClick = true;
+
+      document.addEventListener(
+        "click",
+        (e) => {
+          if (isExamButton(e.target)) {
+            showDiag("🖱️ CLICK DETECTED → calling genExam()");
+            genExam();
+          }
+        },
+        true // capture phase so nothing can swallow it
+      );
+    }
 
     // Keep auth accurate when book changes
     window.addEventListener("rv:bookChanged", async () => {
       const ui2 = ensureUI();
       if (ui2?.btn) await refreshButtonAuth(ui2.btn);
     });
+  }
 
-    // Helpful debug ping
-    showDiag("Exam button wired. Click it, then check diag output if it errors.");
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", wire);
+  } else {
+    wire();
   }
 })();
