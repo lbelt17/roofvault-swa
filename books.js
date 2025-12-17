@@ -125,18 +125,26 @@
     });
 
     select.addEventListener("change", () => {
-      const picked = byId.get(select.value);
-      const selection = picked
-        ? {
-            bookGroupId: picked.bookGroupId,
-            displayTitle: picked.displayTitle,
-            parts: picked.parts || []
-          }
-        : { bookGroupId: "", displayTitle: "", parts: [] };
+  const picked = byId.get(select.value);
 
-      window.__rvBookSelection = selection;
-      window.dispatchEvent(new CustomEvent("rv:bookChanged", { detail: selection }));
-    });
+  const selection = picked
+    ? {
+        bookGroupId: picked.bookGroupId,
+        displayTitle: picked.displayTitle,
+        parts: picked.parts || []
+      }
+    : { bookGroupId: "", displayTitle: "", parts: [] };
+
+  // ✅ Make gen-exam.js happy (permanent contract)
+  window.__rvSelectedBook = selection;
+
+  // (optional) keep your existing variable too, if other code uses it
+  window.__rvBookSelection = selection;
+
+  // ✅ notify listeners
+  window.dispatchEvent(new CustomEvent("rv:bookChanged", { detail: selection }));
+});
+
 
     mount.appendChild(label);
     mount.appendChild(search);
