@@ -574,25 +574,22 @@ module.exports = async function (context, req) {
       return Array.isArray(parsed.items) ? parsed.items : [];
     }
 
-    async function generateBatchWithRetry(n) {
-      for (let attempt = 0; attempt < 6; attempt++) {
-        try {
-          return await generateBatch(n);
-        } catch (e) {
-          const msg = String(e?.message || e);
+    // Simple retry wrapper — ONE retry only (prevents SWA timeout)
+async function generateBatchWithRetry(n) {
+  try {
+    return await generateBatch(n);
+  } catch (e) {
+    const msg = String(e?.message || e);
 
-          if (msg.includes("OPENAI_HTTP_429") || msg.includes("RateLimitReached")) {
-            const m = msg.match(/retry after\s+(\d+)\s+seconds/i);
-            const waitSec = m ? parseInt(m[1], 10) : 10;
-            await sleep((waitSec + 1) * 1000);
-            continue;
-          }
-
-          throw e;
-        }
-      }
-      throw new Error("Exceeded retry attempts due to OpenAI rate limiting");
+    // If rate-limited once, retry ONE time immediately
+    if (msg.includes("OPENAI_HTTP_429") || msg.includes("RateLimitReached")) {
+      return await generateBatch(n);
     }
+
+    // Otherwise fail fast
+    throw e;
+  }
+}
 
     // Build mostly-unseen set
     const picked = [];
