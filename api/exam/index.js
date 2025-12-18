@@ -411,9 +411,11 @@ const searchPayload = {
 
 // HARD CAP: prevent huge prompts from triggering 429/timeouts when generating 25Q
 const MAX_SOURCE_CHARS = 18000; // safe for S0 tier
-if (combined && combined.length > MAX_SOURCE_CHARS) {
-  combined = combined.slice(0, MAX_SOURCE_CHARS);
-}
+
+const combinedCapped =
+  typeof combined === "string" && combined.length > MAX_SOURCE_CHARS
+    ? combined.slice(0, MAX_SOURCE_CHARS)
+    : (combined || "");
 
 // OpenAI request setup
 const isAzure = /azure\.com/i.test(AOAI_ENDPOINT);
@@ -472,6 +474,7 @@ const schema = {
   required: ["items"],
   additionalProperties: false
 };
+
 
 
     async function generateBatch(batchCount) {

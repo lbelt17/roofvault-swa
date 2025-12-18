@@ -1,7 +1,15 @@
-﻿const fetchFn = (global && global.fetch) ? global.fetch : null;
+﻿"use strict";
+
+// Use Node 18+ built-in fetch (Azure Functions v4 Node 18 supports this)
+const fetchFn =
+  (typeof fetch === "function")
+    ? fetch
+    : (typeof globalThis !== "undefined" && typeof globalThis.fetch === "function")
+      ? globalThis.fetch
+      : null;
 
 // send helper for Azure Functions
-function send(context, code, body){
+function send(context, code, body) {
   context.res = {
     status: code,
     headers: { "Content-Type": "application/json" },
@@ -10,9 +18,10 @@ function send(context, code, body){
 }
 
 module.exports = async function (context, req) {
-  if (!((global && global.fetch))) {
-    return { status: 500, body: { error: 'global.fetch not available in Functions runtime' } };
+  if (!fetchFn) {
+    return send(context, 500, { error: "fetch not available in Functions runtime" });
   }
+
   // CORS preflight
   if (req.method === "OPTIONS") {
     context.res = {
@@ -27,13 +36,15 @@ module.exports = async function (context, req) {
   }
 
   const env = process.env;
-  const SEARCH_ENDPOINT = (env.SEARCH_ENDPOINT || "").replace(/^https?:\/\//,'');
-  const SEARCH_INDEX    = env.SEARCH_INDEX;
-  const SEARCH_API_KEY  = env.SEARCH_API_KEY;
 
-  const OPENAI_ENDPOINT    = (env.AZURE_OPENAI_ENDPOINT || env.AOAI_ENDPOINT || env.OPENAI_ENDPOINT || "").replace(/\/+$/,"");
-  const OPENAI_API_KEY     = (env.AZURE_OPENAI_API_KEY || env.AOAI_API_KEY || env.OPENAI_API_KEY);
-  const OPENAI_DEPLOYMENT  = (env.AZURE_OPENAI_DEPLOYMENT || env.AOAI_DEPLOYMENT_TURBO || env.AOAI_DEPLOYMENT || env.OPENAI_DEPLOYMENT);
+  // Expect SEARCH_ENDPOINT like: https://<service>.search.windows.net OR <service>.search.windows.net
+  const SEARCH_ENDPOINT = (env.SEARCH_ENDPOINT || "").replace(/^https?:\/\//, "").replace(/\/+$/, "");
+  const SEARCH_INDEX = env.SEARCH_INDEX;
+  const SEARCH_API_KEY = env.SEARCH_API_KEY;
+
+  const OPENAI_ENDPOINT = (env.AZURE_OPENAI_ENDPOINT || env.AOAI_ENDPOINT || env.OPENAI_ENDPOINT || "").replace(/\/+$/, "");
+  const OPENAI_API_KEY = (env.AZURE_OPENAI_API_KEY || env.AOAI_API_KEY || env.OPENAI_API_KEY);
+  const OPENAI_DEPLOYMENT = (env.AZURE_OPENAI_DEPLOYMENT || env.AOAI_DEPLOYMENT_TURBO || env.AOAI_DEPLOYMENT || env.OPENAI_DEPLOYMENT);
   const OPENAI_API_VERSION = (env.OPENAI_API_VERSION || "2024-08-01-preview");
 
   const body = (req.body && typeof req.body === "object") ? req.body : {};
@@ -42,12 +53,14 @@ module.exports = async function (context, req) {
   const topK = Math.max(3, Math.min(10, Number(body.topK || 5)));
 
   if (!book) return send(context, 400, { error: "Missing 'book'." });
-  if (!SEARCH_ENDPOINT || !SEARCH_INDEX || !SEARCH_API_KEY) return send(context, 500, { error:"Search env missing." });
-  if (!OPENAI_ENDPOINT || !OPENAI_API_KEY || !OPENAI_DEPLOYMENT) return send(context, 500, { error:"OpenAI env missing." });
+  if (!SEARCH_ENDPOINT || !SEARCH_INDEX || !SEARCH_API_KEY) return send(context, 500, { error: "Search env missing." });
+  if (!OPENAI_ENDPOINT || !OPENAI_API_KEY || !OPENAI_DEPLOYMENT) return send(context, 500, { error: "OpenAI env missing." });
 
-  try{
+  try {
     // 1) Pull content from Azure AI Search
-    const filter = `${filterField} eq '${book.replace(/'/g, "''")}'`;
+    const safeBook = book.replace(/'/g, "''");
+    const filter = `${filterField} eq '${safeBook}'`;
+
     const searchUrl = `https://${SEARCH_ENDPOINT}/indexes/${encodeURIComponent(SEARCH_INDEX)}/docs/search?api-version=2023-11-01`;
     const sPayload = {
       search: "*",
@@ -59,11 +72,12 @@ module.exports = async function (context, req) {
 
     const sRes = await fetchFn(searchUrl, {
       method: "POST",
-      headers: { "Content-Type":"application/json", "api-key": SEARCH_API_KEY },
+      headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
       body: JSON.stringify(sPayload)
     });
+
     const sTxt = await sRes.text();
-    if (!sRes.ok) return send(context, 500, { error:`Search HTTP ${sRes.status}`, raw: sTxt });
+    if (!sRes.ok) return send(context, 500, { error: `Search HTTP ${sRes.status}`, raw: sTxt });
 
     const sJson = JSON.parse(sTxt);
     const hits = Array.isArray(sJson.value) ? sJson.value : [];
@@ -74,7 +88,7 @@ module.exports = async function (context, req) {
         outline: [],
         summary: "",
         sources: hits.map(h => ({ file: h.metadata_storage_name, where: "not enough text" })),
-        _diag: { hits: hits.length, sampleLen: (combined||"").length }
+        _diag: { hits: hits.length, sampleLen: (combined || "").length }
       });
     }
 
@@ -83,37 +97,6 @@ module.exports = async function (context, req) {
       "You produce structured study aids for roofing publications.",
       "Return STRICT JSON only."
     ].join("\n");
-
-    const schema = {
-      type: "object",
-      properties: {
-        outline: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              title: { type:"string" },
-              bullets: { type:"array", items:{ type:"string" } }
-            },
-            required:["title","bullets"], additionalProperties:false
-          }
-        },
-        summary: { type:"string" },
-        sources: {
-          type:"array",
-          items: {
-            type:"object",
-            properties:{
-              file:{ type:"string" },
-              where:{ type:"string" }
-            },
-            required:["file","where"], additionalProperties:false
-          }
-        }
-      },
-      required:["outline","summary","sources"],
-      additionalProperties:false
-    };
 
     const user = [
       `BOOK: ${book}`,
@@ -131,29 +114,35 @@ module.exports = async function (context, req) {
     const payload = {
       temperature: 0.2,
       messages: [
-        { role:"system", content: system },
-        { role:"user", content: user }
+        { role: "system", content: system },
+        { role: "user", content: user }
       ],
-      response_format: { type:"json_object" } }
+      response_format: { type: "json_object" }
     };
 
     const mRes = await fetchFn(chatUrl, {
-      method:"POST",
-      headers:{ "Content-Type":"application/json", "api-key": OPENAI_API_KEY },
+      method: "POST",
+      headers: { "Content-Type": "application/json", "api-key": OPENAI_API_KEY },
       body: JSON.stringify(payload)
     });
+
     const mTxt = await mRes.text();
-    if (!mRes.ok) return send(context, 500, { error:`OpenAI HTTP ${mRes.status}`, raw: mTxt });
+    if (!mRes.ok) return send(context, 500, { error: `OpenAI HTTP ${mRes.status}`, raw: mTxt });
 
-    let mJson; try { mJson = JSON.parse(mTxt); } catch { return send(context, 500, { error:"Model non-JSON", raw:mTxt }); }
+    let mJson;
+    try { mJson = JSON.parse(mTxt); }
+    catch { return send(context, 500, { error: "Model non-JSON", raw: mTxt }); }
+
     const content = mJson?.choices?.[0]?.message?.content;
-    if (!content) return send(context, 500, { error:"No content from model", raw:mJson });
+    if (!content) return send(context, 500, { error: "No content from model", raw: mJson });
 
-    let parsed; try { parsed = JSON.parse(content); } catch { return send(context, 500, { error:"Content not valid JSON", raw: content }); }
+    let parsed;
+    try { parsed = JSON.parse(content); }
+    catch { return send(context, 500, { error: "Content not valid JSON", raw: content }); }
 
     // Ensure file names exist
     const defaultFile = hits[0]?.metadata_storage_name || book;
-    (parsed.sources || []).forEach(s => { if (!s.file) s.file = defaultFile; });
+    (parsed.sources || []).forEach(s => { if (s && !s.file) s.file = defaultFile; });
 
     return send(context, 200, {
       outline: parsed.outline || [],
@@ -162,11 +151,6 @@ module.exports = async function (context, req) {
       _diag: { hits: hits.length, sampleLen: combined.length }
     });
   } catch (e) {
-    return send(context, 500, { error: String(e?.message||e), stack: String(e?.stack||"") });
+    return send(context, 500, { error: String(e?.message || e), stack: String(e?.stack || "") });
   }
 };
-
-
-
-
-
