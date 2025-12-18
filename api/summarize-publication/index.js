@@ -5,11 +5,12 @@ module.exports = async function (context, req) {
     return context.res = { status: 500, body: { error: 'global.fetch not available in Functions runtime' } };
   }
   try {
-    const body = (req.body && typeof req.body === "object") ? req.body : {};
-    const fileName = String(body.fileName || "").trim();
-    if (!fileName) {
-      return context.res = { status: 400, body: { error: "fileName required" } };
-    }
+    const bookGroupId = String(body.bookGroupId || "").trim();
+const fileName = String(body.fileName || "").trim(); // fallback only
+    if (!bookGroupId && !fileName) {
+  return (context.res = { status: 400, body: { error: "bookGroupId required" } });
+}
+
 
     // Env
     const rawEndpoint = process.env.SEARCH_ENDPOINT || "";
@@ -31,9 +32,11 @@ module.exports = async function (context, req) {
       search: "*",
       queryType: "simple",
       searchMode: "any",
-      filter: `metadata_storage_name eq '${safeName}'`,
-      top: 1000,
-      select: "metadata_storage_name,content"
+      filter: bookGroupId
+  ? `bookGroupId eq '${bookGroupId.replace(/'/g, "''")}'`
+  : `metadata_storage_name eq '${fileName.replace(/'/g, "''")}'`,
+      top: 5000,
+      select: "bookGroupId,chunkId,metadata_storage_name,content"
     };
 
     const res = await fetchFn(url, {
