@@ -145,15 +145,22 @@
       }));
   }
 
-  async function safeFetch(url, opts = {}, timeoutMs = 45000) {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), timeoutMs);
-    try {
-      return await fetch(url, { ...opts, signal: ctrl.signal });
-    } finally {
-      clearTimeout(t);
+  async function safeFetch(url, opts = {}, timeoutMs = 120000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, { ...opts, signal: ctrl.signal });
+  } catch (err) {
+    if (err.name === "AbortError") {
+      throw new Error("Request timed out while generating exam");
     }
+    throw err;
+  } finally {
+    clearTimeout(t);
   }
+}
+
 
   // ================== MAIN ==================
   async function genExam() {
