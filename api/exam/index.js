@@ -319,27 +319,37 @@ module.exports = async function (context, req) {
       deployment: DEPLOYMENT || "(none)"
     };
 
-    if (!SEARCH_ENDPOINT || !SEARCH_API_KEY || !SEARCH_INDEX) {
-      return send(500, { error: "Missing SEARCH_* env vars", _env: env2 });
-    }
-    if (!AOAI_ENDPOINT || !AOAI_KEY || !DEPLOYMENT) {
-      return send(500, { error: "Missing OpenAI/Azure OpenAI env (endpoint/key/deployment)", _env: env2 });
-    }
+    const SEARCH_INDEX_CONTENT = process.env.SEARCH_INDEX_CONTENT || "";
 
-    // Pull book content from Search
-    const searchUrl = `${SEARCH_ENDPOINT.replace(/\/+$/, "")}/indexes/${encodeURIComponent(
-      SEARCH_INDEX
-    )}/docs/search?api-version=2023-11-01`;
+if (!SEARCH_ENDPOINT || !SEARCH_API_KEY || !SEARCH_INDEX_CONTENT) {
+  return send(500, {
+    error: "Missing SEARCH_* env vars (content index required)",
+    _env: env2
+  });
+}
 
-    const filter = book ? `${filterField} eq '${book.replace(/'/g, "''")}'` : null;
+if (!AOAI_ENDPOINT || !AOAI_KEY || !DEPLOYMENT) {
+  return send(500, {
+    error: "Missing OpenAI/Azure OpenAI env (endpoint/key/deployment)",
+    _env: env2
+  });
+}
 
-    const searchPayload = {
-      search: "*",
-      queryType: "simple",
-      select: "id,metadata_storage_name,metadata_storage_path,content",
-      top: 8,
-      ...(filter ? { filter } : {})
-    };
+// Pull book content from CONTENT index (not meta)
+const searchUrl = `${SEARCH_ENDPOINT.replace(/\/+$/, "")}/indexes/${encodeURIComponent(
+  SEARCH_INDEX_CONTENT
+)}/docs/search?api-version=2023-11-01`;
+
+const filter = book ? `${filterField} eq '${book.replace(/'/g, "''")}'` : null;
+
+const searchPayload = {
+  search: "*",
+  queryType: "simple",
+  select: "bookGroupId,chunkId,metadata_storage_name,content",
+  top: 5000,
+  ...(filter ? { filter } : {})
+};
+
 
     const sRes = await fetch(searchUrl, {
       method: "POST",
