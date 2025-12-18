@@ -217,6 +217,9 @@ module.exports = async function (context, req) {
     };
   };
 
+  // DEBUG flag (shows real backend error when DEBUG_EXAM=1)
+  const DEBUG = String(process.env.DEBUG_EXAM || "").toLowerCase() === "1";
+
   try {
     const body = (req && req.body) || {};
     const book = (body.book || "").trim();
