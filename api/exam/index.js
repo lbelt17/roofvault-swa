@@ -221,23 +221,32 @@ module.exports = async function (context, req) {
   const DEBUG = String(process.env.DEBUG_EXAM || "").toLowerCase() === "1";
 
   try {
-    const body = (req && req.body) || {};
-    const book = (body.book || "").trim();
-    const filterField = (body.filterField || "metadata_storage_name").trim();
-    const requestedCount = clampInt(body.count, 1, MAX_COUNT, DEFAULT_COUNT);
+  const body = (req && req.body) || {};
 
-    // user + book “bucket”
-    const userId = getUserId(req);
-    const pk = safePartitionKey(`${userId}||${book || "(no-book)"}`);
+  const book = (body.book || "").trim();
+  const bookGroupId = (body.bookGroupId || "").trim();
+  const filterField = (body.filterField || "metadata_storage_name").trim();
 
-    const tableClient = await getTableClient();
-    const seen = await loadSeenIds(tableClient, pk);
+  const parts = Array.isArray(body.parts)
+    ? body.parts.map((s) => String(s || "").trim()).filter(Boolean)
+    : [];
 
-    const envDiag = {
-      userBucket: pk,
-      seenCount: seen.size,
-      tableEnabled: !!tableClient
-    };
+  const requestedCount = clampInt(body.count, 1, MAX_COUNT, DEFAULT_COUNT);
+
+  // user + book “bucket”
+  const userId = getUserId(req);
+  const bucketLabel = bookGroupId || book || "(no-book)";
+  const pk = safePartitionKey(`${userId}||${bucketLabel}`);
+
+  const tableClient = await getTableClient();
+  const seen = await loadSeenIds(tableClient, pk);
+
+  const envDiag = {
+    userBucket: pk,
+    seenCount: seen.size,
+    tableEnabled: !!tableClient
+  };
+
 
     // ======= RWC STATIC PATH =======
     if (isRwcStudyGuide(book) && Array.isArray(RWC_BANK) && RWC_BANK.length) {
@@ -345,7 +354,18 @@ const searchUrl = `${SEARCH_ENDPOINT.replace(/\/+$/, "")}/indexes/${encodeURICom
   SEARCH_INDEX_CONTENT
 )}/docs/search?api-version=2023-11-01`;
 
-const filter = book ? `${filterField} eq '${book.replace(/'/g, "''")}'` : null;
+let filter = null;
+
+if (parts.length) {
+  // Pull content from ALL selected parts (exact filename match)
+  const ors = parts.map((p) => `${filterField} eq '${p.replace(/'/g, "''")}'`);
+  filter = `(${ors.join(" or ")})`;
+} else if (bookGroupId) {
+  // Future-proof: allows grouped retrieval by bookGroupId
+  filter = `bookGroupId eq '${bookGroupId.replace(/'/g, "''")}'`;
+} else if (book) {
+  filter = `${filterField} eq '${book.replace(/'/g, "''")}'`;
+}
 
 const searchPayload = {
   search: "*",
@@ -354,6 +374,7 @@ const searchPayload = {
   top: 5000,
   ...(filter ? { filter } : {})
 };
+
 
 
     const sRes = await fetch(searchUrl, {
