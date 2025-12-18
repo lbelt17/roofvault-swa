@@ -305,12 +305,14 @@ module.exports = async function (context, req) {
       process.env.AZURE_OPENAI_API_KEY ||
       process.env.OPENAI_API_KEY ||
       process.env.AOAI_KEY;
-    const DEPLOYMENT =
-      process.env.AZURE_OPENAI_DEPLOYMENT ||
-      process.env.OPENAI_DEPLOYMENT ||
-      process.env.AOAI_DEPLOYMENT_TURBO ||
-      process.env.DEFAULT_MODEL ||
-      process.env.OPENAI_GPT4O_MINI;
+const DEPLOYMENT =
+  process.env.EXAM_OPENAI_DEPLOYMENT ||
+  process.env.AZURE_OPENAI_DEPLOYMENT ||
+  process.env.OPENAI_DEPLOYMENT ||
+  process.env.AOAI_DEPLOYMENT_TURBO ||
+  process.env.DEFAULT_MODEL ||
+  process.env.OPENAI_GPT4O_MINI;
+
 
     const env2 = {
       searchEndpoint: (SEARCH_ENDPOINT || "").replace(/https?:\/\//, "").split("/")[0],
