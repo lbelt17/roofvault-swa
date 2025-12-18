@@ -403,71 +403,76 @@ const searchPayload = {
     const combined = texts.join("\n\n").slice(0, 120000);
 
     if (combined.length < 1000) {
-      return send(500, {
-        error: "Not enough source text to generate questions.",
-        _diag: { ...env2, searchHits: hits.length, combinedLen: combined.length }
-      });
-    }
+  return send(500, {
+    error: "Not enough source text to generate questions.",
+    _diag: { ...env2, searchHits: hits.length, combinedLen: combined.length }
+  });
+}
 
-    // OpenAI request setup
-    const isAzure = /azure\.com/i.test(AOAI_ENDPOINT);
-    const apiVersion = process.env.AZURE_OPENAI_API_VERSION || "2024-08-01-preview";
-    const chatUrl = isAzure
-      ? `${AOAI_ENDPOINT.replace(/\/+$/, "")}/openai/deployments/${encodeURIComponent(
-          DEPLOYMENT
-        )}/chat/completions?api-version=${apiVersion}`
-      : `${AOAI_ENDPOINT.replace(/\/+$/, "")}/v1/chat/completions`;
+// HARD CAP: prevent huge prompts from triggering 429/timeouts when generating 25Q
+const MAX_SOURCE_CHARS = 18000; // safe for S0 tier
+if (combined && combined.length > MAX_SOURCE_CHARS) {
+  combined = combined.slice(0, MAX_SOURCE_CHARS);
+}
 
-    const headers = { "Content-Type": "application/json" };
-    if (isAzure) headers["api-key"] = AOAI_KEY;
-    else headers["Authorization"] = `Bearer ${AOAI_KEY}`;
+// OpenAI request setup
+const isAzure = /azure\.com/i.test(AOAI_ENDPOINT);
+const apiVersion = process.env.AZURE_OPENAI_API_VERSION || "2024-08-01-preview";
+const chatUrl = isAzure
+  ? `${AOAI_ENDPOINT.replace(/\/+$/, "")}/openai/deployments/${encodeURIComponent(
+      DEPLOYMENT
+    )}/chat/completions?api-version=${apiVersion}`
+  : `${AOAI_ENDPOINT.replace(/\/+$/, "")}/v1/chat/completions`;
 
-    // We request extra so we can filter repeats.
-    // Don't over-generate. Over-generating is what makes count=25 flaky/timeout.
+const headers = { "Content-Type": "application/json" };
+if (isAzure) headers["api-key"] = AOAI_KEY;
+else headers["Authorization"] = `Bearer ${AOAI_KEY}`;
+
+// Don't over-generate.
 const want = Math.min(MAX_COUNT, requestedCount);
 
+const sys =
+  "You are an expert item-writer for roofing/structures exams. " +
+  "Write strictly factual, unambiguous multiple-choice questions from the provided source text. " +
+  "Each question must be answerable from the source; do not invent facts. " +
+  "Output ONLY valid JSON matching the schema provided.";
 
-    const sys =
-      "You are an expert item-writer for roofing/structures exams. " +
-      "Write strictly factual, unambiguous multiple-choice questions from the provided source text. " +
-      "Each question must be answerable from the source; do not invent facts. " +
-      "Output ONLY valid JSON matching the schema provided.";
-
-    const schema = {
-      type: "object",
-      properties: {
-        items: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              id: { type: "string" },
-              type: { const: "mcq" },
-              question: { type: "string" },
-              options: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: { id: { type: "string" }, text: { type: "string" } },
-                  required: ["id", "text"],
-                  additionalProperties: false
-                },
-                minItems: 4,
-                maxItems: 4
-              },
-              answer: { type: "string" },
-              cite: { type: "string" },
-              explanation: { type: "string" }
+const schema = {
+  type: "object",
+  properties: {
+    items: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          type: { const: "mcq" },
+          question: { type: "string" },
+          options: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: { id: { type: "string" }, text: { type: "string" } },
+              required: ["id", "text"],
+              additionalProperties: false
             },
-            required: ["id", "type", "question", "options", "answer", "cite", "explanation"],
-            additionalProperties: false
+            minItems: 4,
+            maxItems: 4
           },
-          minItems: 1
-        }
+          answer: { type: "string" },
+          cite: { type: "string" },
+          explanation: { type: "string" }
+        },
+        required: ["id", "type", "question", "options", "answer", "cite", "explanation"],
+        additionalProperties: false
       },
-      required: ["items"],
-      additionalProperties: false
-    };
+      minItems: 1
+    }
+  },
+  required: ["items"],
+  additionalProperties: false
+};
+
 
     async function generateBatch(batchCount) {
       const user = [
