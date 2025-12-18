@@ -527,16 +527,30 @@ const want = Math.min(MAX_COUNT, requestedCount);
     }
 
     // Try to build a "mostly unseen" set
-    const picked = [];
-    const pickedIds = new Set();
+const picked = [];
+const pickedIds = new Set();
+const seenPool = [];
 
-    let attempts = 0;
-    while (picked.length < requestedCount && attempts < MAX_GENERATION_ATTEMPTS) {
-  attempts++;
+// --- HARD FIX: parallel + bounded generation to avoid SWA timeout ---
+const BATCH_SIZE = 5;
+const MAX_TOTAL = Math.min(MAX_COUNT, requestedCount); // never over-generate
 
- // Keep each model call small so count=25 won't timeout
-const batchCount = Math.min(5, want);
-  const rawItems = await generateBatch(batchCount);
+// How many batches we need total
+const batches = Math.ceil(MAX_TOTAL / BATCH_SIZE);
+
+// Run batches IN PARALLEL (critical)
+const jobs = [];
+for (let i = 0; i < batches; i++) {
+  const n = Math.min(BATCH_SIZE, MAX_TOTAL - i * BATCH_SIZE);
+  if (n > 0) jobs.push(generateBatch(n));
+}
+
+const results = await Promise.allSettled(jobs);
+
+// First pass: prefer unseen
+for (const r of results) {
+  if (r.status !== "fulfilled") continue;
+  const rawItems = Array.isArray(r.value) ? r.value : [];
 
   for (const it of rawItems) {
     if (!it || typeof it !== "object") continue;
@@ -552,12 +566,24 @@ const batchCount = Math.min(5, want);
 
     const item = { ...it, id, type: "mcq" };
 
-    picked.push(item);
-    pickedIds.add(id);
-
-    if (picked.length >= requestedCount) break;
+    if (!seen.has(id) && picked.length < requestedCount) {
+      picked.push(item);
+      pickedIds.add(id);
+    } else {
+      seenPool.push(item);
+    }
   }
 }
+
+// Second pass: fill from repeats if needed
+for (const it of seenPool) {
+  if (picked.length >= requestedCount) break;
+  if (!pickedIds.has(it.id)) {
+    picked.push(it);
+    pickedIds.add(it.id);
+  }
+}
+
 
 
     // If still short, allow repeats to fill from last generated batch (or regenerate once more and allow repeats)
