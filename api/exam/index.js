@@ -531,26 +531,43 @@ const picked = [];
 const pickedIds = new Set();
 const seenPool = [];
 
-// --- HARD FIX: parallel + bounded generation to avoid SWA timeout ---
+// --- HARD FIX: small sequential batches + 429 backoff (reliable on S0) ---
 const BATCH_SIZE = 5;
 const MAX_TOTAL = Math.min(MAX_COUNT, requestedCount); // never over-generate
 
-// How many batches we need total
 const batches = Math.ceil(MAX_TOTAL / BATCH_SIZE);
 
-// Run batches IN PARALLEL (critical)
-const jobs = [];
-for (let i = 0; i < batches; i++) {
-  const n = Math.min(BATCH_SIZE, MAX_TOTAL - i * BATCH_SIZE);
-  if (n > 0) jobs.push(generateBatch(n));
+async function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
 }
 
-const results = await Promise.allSettled(jobs);
+async function generateBatchWithRetry(n) {
+  for (let attempt = 0; attempt < 6; attempt++) {
+    try {
+      return await generateBatch(n);
+    } catch (e) {
+      const msg = String(e?.message || e);
 
-// First pass: prefer unseen
-for (const r of results) {
-  if (r.status !== "fulfilled") continue;
-  const rawItems = Array.isArray(r.value) ? r.value : [];
+      // Azure OpenAI rate limit
+      if (msg.includes("OPENAI_HTTP_429") || msg.includes("RateLimitReached")) {
+        const m = msg.match(/retry after\s+(\d+)\s+seconds/i);
+        const waitSec = m ? parseInt(m[1], 10) : 10;
+        await sleep((waitSec + 1) * 1000); // +1s safety
+        continue;
+      }
+
+      throw e; // non-429 errors bubble up
+    }
+  }
+  throw new Error("Exceeded retry attempts due to OpenAI rate limiting");
+}
+
+// Run sequentially to stay under token rate limits
+for (let i = 0; i < batches; i++) {
+  const n = Math.min(BATCH_SIZE, MAX_TOTAL - i * BATCH_SIZE);
+  if (n <= 0) break;
+
+  const rawItems = await generateBatchWithRetry(n);
 
   for (const it of rawItems) {
     if (!it || typeof it !== "object") continue;
@@ -558,10 +575,7 @@ for (const r of results) {
     const qText = it.question || it.prompt || it.text || "";
     if (!qText) continue;
 
-    const id =
-      (it.id && String(it.id).trim()) ||
-      stableIdFromText(qText);
-
+    const id = (it.id && String(it.id).trim()) || stableIdFromText(qText);
     if (pickedIds.has(id)) continue;
 
     const item = { ...it, id, type: "mcq" };
@@ -572,8 +586,13 @@ for (const r of results) {
     } else {
       seenPool.push(item);
     }
+
+    if (picked.length >= requestedCount) break;
   }
+
+  if (picked.length >= requestedCount) break;
 }
+
 
 // Second pass: fill from repeats if needed
 for (const it of seenPool) {
