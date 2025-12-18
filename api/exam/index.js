@@ -599,35 +599,43 @@ module.exports = async function (context, req) {
     const pickedIds = new Set();
     const repeatPool = [];
 
-    const batches = Math.ceil(requestedCount / BATCH_SIZE);
+    // Keep generating until we have enough (or we hit a safe cap)
+const MAX_BATCH_RUNS = 12; // safety cap to avoid infinite loops
+let runs = 0;
 
-    for (let i = 0; i < batches; i++) {
-      const n = Math.min(BATCH_SIZE, requestedCount - picked.length);
-      if (n <= 0) break;
+while (picked.length < requestedCount && runs < MAX_BATCH_RUNS) {
+  runs++;
 
-      const rawItems = await generateBatchWithRetry(n);
+  const need = requestedCount - picked.length;
+  const n = Math.min(BATCH_SIZE, need);
+  if (n <= 0) break;
 
-      for (const it of rawItems) {
-        if (!it || typeof it !== "object") continue;
+  const rawItems = await generateBatchWithRetry(n);
 
-        const qText = it.question || it.prompt || it.text || "";
-        if (!qText) continue;
+  // If the model returned nothing, don't spin forever
+  if (!Array.isArray(rawItems) || rawItems.length === 0) break;
 
-        const id = (it.id && String(it.id).trim()) || stableIdFromText(qText);
-        if (pickedIds.has(id)) continue;
+  for (const it of rawItems) {
+    if (!it || typeof it !== "object") continue;
 
-        const item = { ...it, id, type: "mcq" };
+    const qText = it.question || it.prompt || it.text || "";
+    if (!qText) continue;
 
-        if (!seen.has(id) && picked.length < requestedCount) {
-          picked.push(item);
-          pickedIds.add(id);
-        } else {
-          repeatPool.push(item);
-        }
+    const id = (it.id && String(it.id).trim()) || stableIdFromText(qText);
+    if (pickedIds.has(id)) continue;
 
-        if (picked.length >= requestedCount) break;
-      }
+    const item = { ...it, id, type: "mcq" };
+
+    if (!seen.has(id) && picked.length < requestedCount) {
+      picked.push(item);
+      pickedIds.add(id);
+    } else {
+      repeatPool.push(item);
     }
+
+    if (picked.length >= requestedCount) break;
+  }
+}
 
     // Fill with repeats if needed
     for (const it of repeatPool) {
@@ -651,7 +659,7 @@ module.exports = async function (context, req) {
         mode: "ai-seen-tracking",
         requested: requestedCount,
         returned: Math.min(picked.length, requestedCount),
-        batches,
+        runs,
         ...env2,
         ...envDiag
       }
