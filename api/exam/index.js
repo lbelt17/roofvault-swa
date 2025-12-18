@@ -1,24 +1,39 @@
 ﻿const crypto = require("crypto");
 const { TableClient } = require("@azure/data-tables");
 
-const RWC_BANK = require("./rwc-question-bank-full").questions;
+// RWC bank (optional)
+let RWC_BANK = null;
+try {
+  RWC_BANK = require("./rwc-question-bank-full")?.questions || null;
+} catch {
+  RWC_BANK = null;
+}
 
 /**
  * /api/exam
- * POST { book: string, filterField: string, count?: number }
- * Returns: { items:[...], modelDeployment, _diag }
+ * POST:
+ *   { parts: [fileName...], count?: 25 }
+ *   OR { bookGroupId: "...", count?: 25 }
+ *   OR { book: "...", filterField?: "metadata_storage_name", count?: 25 }
  *
- * NEW BEHAVIOR:
- * - Tracks seen question IDs in Azure Table Storage (per user + per book).
- * - On each Generate click, it tries to return NEW questions first.
- * - If not enough unseen exist, it will gracefully allow repeats to fill the request.
+ * Returns:
+ *   { items:[...], modelDeployment, _diag }
+ *
+ * Notes:
+ * - Uses SEARCH_INDEX_CONTENT only (your content index).
+ * - Table Storage seen tracking per user+bucket.
+ * - GET is a healthcheck (never runs AI).
  */
 
 // ======= CONFIG =======
 const MAX_COUNT = 50;
 const DEFAULT_COUNT = 25;
-const GENERATE_MULTIPLIER = 2; // request extra so we can filter repeats
-const MAX_GENERATION_ATTEMPTS = 2;
+
+// Keep each OpenAI call small to avoid timeouts + S0 rate limits
+const BATCH_SIZE = 5;
+
+// Caps the search text we send to OpenAI (critical for stability)
+const MAX_SOURCE_CHARS = 18000;
 
 // ======= HELPERS =======
 function clampInt(n, min, max, fallback) {
@@ -34,17 +49,14 @@ function stableIdFromText(s) {
 }
 
 function safeRowKey(s) {
-  // RowKey can contain lots of chars but keep it sane
   return String(s || "").slice(0, 512);
 }
 
 function safePartitionKey(s) {
-  // PartitionKey best kept smaller; avoid crazy long keys
   return String(s || "").slice(0, 200);
 }
 
 function parseClientPrincipal(req) {
-  // SWA auth user info
   const hdr =
     req?.headers?.["x-ms-client-principal"] ||
     req?.headers?.["X-MS-CLIENT-PRINCIPAL"];
@@ -60,17 +72,18 @@ function parseClientPrincipal(req) {
 function getUserId(req) {
   const cp = parseClientPrincipal(req);
 
-  // Prefer stable IDs when logged in:
-  // cp.userId exists for AAD/AAD B2C, cp.userDetails often has email/UPN
   const userId =
     cp?.userId ||
     cp?.userDetails ||
-    cp?.claims?.find?.((c) => c.typ === "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.val ||
+    cp?.claims?.find?.(
+      (c) =>
+        c.typ ===
+        "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+    )?.val ||
     cp?.claims?.find?.((c) => c.typ === "emails")?.val;
 
   if (userId) return String(userId);
 
-  // Anonymous fallback (won’t persist across devices, but prevents repeats within same browser sometimes)
   const anon =
     req?.headers?.["x-forwarded-for"] ||
     req?.headers?.["X-Forwarded-For"] ||
@@ -83,13 +96,17 @@ function isRwcStudyGuide(book) {
   return lower.includes("rwc") && lower.includes("study") && lower.includes("guide");
 }
 
-// Helper to hard-fix Q103 + Q104 from the RWC guide
+// Hard patch for RWC Q103/Q104
 function patchRwcQuestion(q) {
   if (!q || typeof q !== "object") return q;
 
   if (q.number === 103) {
     const options = [
-      { id: "A", text: "in a concrete construction joint with minimal movement, embedded in concrete on both sides as a waterstop" },
+      {
+        id: "A",
+        text:
+          "in a concrete construction joint with minimal movement, embedded in concrete on both sides as a waterstop"
+      },
       { id: "B", text: "at control joints in gypsum board partitions" },
       { id: "C", text: "at expansion joints in metal roof panels" },
       { id: "D", text: "as an exterior surface seal on masonry veneer" }
@@ -149,8 +166,6 @@ async function getTableClient() {
 }
 
 async function loadSeenIds(tableClient, pk) {
-  // We store each seen question as an entity:
-  // PartitionKey = pk (user|book), RowKey = questionId
   const seen = new Set();
   if (!tableClient) return seen;
 
@@ -163,9 +178,9 @@ async function loadSeenIds(tableClient, pk) {
       if (e?.rowKey) seen.add(String(e.rowKey));
     }
   } catch (e) {
-    // If table is empty or perms are weird, don’t break exam gen
     console.warn("loadSeenIds failed:", e?.message || e);
   }
+
   return seen;
 }
 
@@ -178,14 +193,9 @@ async function markSeen(tableClient, pk, questionIds) {
     const rowKey = safeRowKey(qid);
     if (!rowKey) continue;
 
-    const entity = {
-      partitionKey: pk,
-      rowKey,
-      servedAt: now
-    };
+    const entity = { partitionKey: pk, rowKey, servedAt: now };
 
     try {
-      // upsert = safe if user clicks twice quickly
       await tableClient.upsertEntity(entity, "Merge");
       wrote++;
     } catch (e) {
@@ -199,12 +209,14 @@ async function safeFetch(url, opts = {}, timeoutMs = 45000) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    const res = await fetch(url, { ...opts, signal: ctrl.signal });
-    clearTimeout(t);
-    return res;
+    return await fetch(url, { ...opts, signal: ctrl.signal });
   } finally {
     clearTimeout(t);
   }
+}
+
+async function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
 }
 
 // ======= MAIN FUNCTION =======
@@ -212,46 +224,79 @@ module.exports = async function (context, req) {
   const send = (status, obj) => {
     context.res = {
       status,
-      headers: { "Content-Type": "application/json; charset=utf-8" },
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type, Accept",
+        "Access-Control-Allow-Methods": "GET,POST,OPTIONS"
+      },
       body: JSON.stringify(obj ?? {})
     };
   };
 
-  // DEBUG flag (shows real backend error when DEBUG_EXAM=1)
+  // CORS preflight
+  if ((req?.method || "").toUpperCase() === "OPTIONS") {
+    context.res = {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Accept"
+      }
+    };
+    return;
+  }
+
+  // Healthcheck (never runs search/model)
+  if ((req?.method || "").toUpperCase() === "GET") {
+    return send(200, {
+      ok: true,
+      route: "exam",
+      usage:
+        "POST JSON: {parts:[...],count:25} OR {bookGroupId:'...',count:25} OR {book:'...',filterField:'metadata_storage_name',count:25}"
+    });
+  }
+
+  // Debug flag (exposes stack)
   const DEBUG = String(process.env.DEBUG_EXAM || "").toLowerCase() === "1";
 
   try {
-  const body = (req && req.body) || {};
+    const body = (req && req.body) || {};
 
-  const book = (body.book || "").trim();
-  const bookGroupId = (body.bookGroupId || "").trim();
-  const filterField = (body.filterField || "metadata_storage_name").trim();
+    const book = String(body.book || "").trim();
+    const bookGroupId = String(body.bookGroupId || "").trim();
+    const filterField = String(body.filterField || "metadata_storage_name").trim();
 
-  const parts = Array.isArray(body.parts)
-    ? body.parts.map((s) => String(s || "").trim()).filter(Boolean)
-    : [];
+    const parts = Array.isArray(body.parts)
+      ? body.parts.map((s) => String(s || "").trim()).filter(Boolean)
+      : [];
 
-  const requestedCount = clampInt(body.count, 1, MAX_COUNT, DEFAULT_COUNT);
+    const requestedCount = clampInt(body.count, 1, MAX_COUNT, DEFAULT_COUNT);
 
-  // user + book “bucket”
-  const userId = getUserId(req);
-  const bucketLabel = bookGroupId || book || "(no-book)";
-  const pk = safePartitionKey(`${userId}||${bucketLabel}`);
+    // Require a selection (prevents accidental “search everything”)
+    if (!parts.length && !bookGroupId && !book) {
+      return send(400, {
+        error: "Missing selection. Provide parts[] or bookGroupId or book."
+      });
+    }
 
-  const tableClient = await getTableClient();
-  const seen = await loadSeenIds(tableClient, pk);
+    // user + bucket
+    const userId = getUserId(req);
+    const bucketLabel = bookGroupId || book || (parts.length ? "parts" : "(no-book)");
+    const pk = safePartitionKey(`${userId}||${bucketLabel}`);
 
-  const envDiag = {
-    userBucket: pk,
-    seenCount: seen.size,
-    tableEnabled: !!tableClient
-  };
+    const tableClient = await getTableClient();
+    const seen = await loadSeenIds(tableClient, pk);
 
+    const envDiag = {
+      userBucket: pk,
+      seenCount: seen.size,
+      tableEnabled: !!tableClient
+    };
 
     // ======= RWC STATIC PATH =======
     if (isRwcStudyGuide(book) && Array.isArray(RWC_BANK) && RWC_BANK.length) {
       const patchedAll = RWC_BANK.map(patchRwcQuestion);
-
       const bankMcqOnly = patchedAll.filter((q) => {
         if (!q) return false;
         if (!Array.isArray(q.options) || q.options.length < 2) return false;
@@ -259,13 +304,12 @@ module.exports = async function (context, req) {
         return true;
       });
 
-      // Ensure stable IDs
       const normalized = bankMcqOnly.map((q) => {
-        const id = q.id || stableIdFromText(q.question || q.prompt || q.text || `${q.number || ""}`);
+        const id =
+          q.id || stableIdFromText(q.question || q.prompt || q.text || `${q.number || ""}`);
         return { ...q, id };
       });
 
-      // Prefer unseen first
       const shuffled = fisherYatesShuffle(normalized);
       const unseenFirst = [];
       const seenPool = [];
@@ -280,13 +324,11 @@ module.exports = async function (context, req) {
         if (picked.length >= requestedCount) break;
         picked.push(q);
       }
-      // If not enough unseen, allow repeats to fill
       for (const q of seenPool) {
         if (picked.length >= requestedCount) break;
         picked.push(q);
       }
 
-      // Write only the ones we served (including repeats is fine; upsert makes it idempotent)
       await markSeen(tableClient, pk, picked.map((q) => q.id));
 
       return send(200, {
@@ -304,80 +346,76 @@ module.exports = async function (context, req) {
     }
 
     // ======= AI PATH =======
-    // --- env
     const SEARCH_ENDPOINT = process.env.SEARCH_ENDPOINT;
     const SEARCH_API_KEY = process.env.SEARCH_API_KEY;
-    const SEARCH_INDEX = process.env.SEARCH_INDEX;
+
+    // IMPORTANT: use CONTENT index only
+    const SEARCH_INDEX_CONTENT = process.env.SEARCH_INDEX_CONTENT;
 
     const AOAI_ENDPOINT =
       process.env.AZURE_OPENAI_ENDPOINT ||
       process.env.OPENAI_ENDPOINT ||
       process.env.AOAI_ENDPOINT;
+
     const AOAI_KEY =
       process.env.AZURE_OPENAI_API_KEY ||
       process.env.OPENAI_API_KEY ||
       process.env.AOAI_KEY;
-const DEPLOYMENT =
-  process.env.EXAM_OPENAI_DEPLOYMENT ||
-  process.env.AZURE_OPENAI_DEPLOYMENT ||
-  process.env.OPENAI_DEPLOYMENT ||
-  process.env.AOAI_DEPLOYMENT_TURBO ||
-  process.env.DEFAULT_MODEL ||
-  process.env.OPENAI_GPT4O_MINI;
 
+    const DEPLOYMENT =
+      process.env.EXAM_OPENAI_DEPLOYMENT ||
+      process.env.AZURE_OPENAI_DEPLOYMENT ||
+      process.env.OPENAI_DEPLOYMENT ||
+      process.env.AOAI_DEPLOYMENT_TURBO ||
+      process.env.DEFAULT_MODEL ||
+      process.env.OPENAI_GPT4O_MINI;
 
     const env2 = {
       searchEndpoint: (SEARCH_ENDPOINT || "").replace(/https?:\/\//, "").split("/")[0],
-      searchIndex: SEARCH_INDEX,
+      searchIndexContent: SEARCH_INDEX_CONTENT || "(none)",
       aoaiEndpointHost: (AOAI_ENDPOINT || "").replace(/https?:\/\//, "").split("/")[0],
       deployment: DEPLOYMENT || "(none)"
     };
 
-    const SEARCH_INDEX_CONTENT = process.env.SEARCH_INDEX_CONTENT || "";
+    if (!SEARCH_ENDPOINT || !SEARCH_API_KEY || !SEARCH_INDEX_CONTENT) {
+      return send(500, {
+        error: "Missing SEARCH_* env vars (content index required)",
+        _env: env2
+      });
+    }
 
-if (!SEARCH_ENDPOINT || !SEARCH_API_KEY || !SEARCH_INDEX_CONTENT) {
-  return send(500, {
-    error: "Missing SEARCH_* env vars (content index required)",
-    _env: env2
-  });
-}
+    if (!AOAI_ENDPOINT || !AOAI_KEY || !DEPLOYMENT) {
+      return send(500, {
+        error: "Missing OpenAI/Azure OpenAI env (endpoint/key/deployment)",
+        _env: env2
+      });
+    }
 
-if (!AOAI_ENDPOINT || !AOAI_KEY || !DEPLOYMENT) {
-  return send(500, {
-    error: "Missing OpenAI/Azure OpenAI env (endpoint/key/deployment)",
-    _env: env2
-  });
-}
+    // Pull content from CONTENT index
+    const searchUrl = `${SEARCH_ENDPOINT.replace(/\/+$/, "")}/indexes/${encodeURIComponent(
+      SEARCH_INDEX_CONTENT
+    )}/docs/search?api-version=2023-11-01`;
 
-// Pull book content from CONTENT index (not meta)
-const searchUrl = `${SEARCH_ENDPOINT.replace(/\/+$/, "")}/indexes/${encodeURIComponent(
-  SEARCH_INDEX_CONTENT
-)}/docs/search?api-version=2023-11-01`;
+    let filter = null;
 
-let filter = null;
+    if (parts.length) {
+      const ors = parts.map((p) => `${filterField} eq '${p.replace(/'/g, "''")}'`);
+      filter = `(${ors.join(" or ")})`;
+    } else if (bookGroupId) {
+      filter = `bookGroupId eq '${bookGroupId.replace(/'/g, "''")}'`;
+    } else if (book) {
+      filter = `${filterField} eq '${book.replace(/'/g, "''")}'`;
+    }
 
-if (parts.length) {
-  // Pull content from ALL selected parts (exact filename match)
-  const ors = parts.map((p) => `${filterField} eq '${p.replace(/'/g, "''")}'`);
-  filter = `(${ors.join(" or ")})`;
-} else if (bookGroupId) {
-  // Future-proof: allows grouped retrieval by bookGroupId
-  filter = `bookGroupId eq '${bookGroupId.replace(/'/g, "''")}'`;
-} else if (book) {
-  filter = `${filterField} eq '${book.replace(/'/g, "''")}'`;
-}
+    const searchPayload = {
+      search: "*",
+      queryType: "simple",
+      select: "bookGroupId,chunkId,metadata_storage_name,content",
+      top: 5000,
+      ...(filter ? { filter } : {})
+    };
 
-const searchPayload = {
-  search: "*",
-  queryType: "simple",
-  select: "bookGroupId,chunkId,metadata_storage_name,content",
-  top: 5000,
-  ...(filter ? { filter } : {})
-};
-
-
-
-    const sRes = await fetch(searchUrl, {
+    const sRes = await safeFetch(searchUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
       body: JSON.stringify(searchPayload)
@@ -394,88 +432,91 @@ const searchPayload = {
     try {
       sJson = JSON.parse(sTxt);
     } catch {
-      return send(500, { error: "Search returned non-JSON", raw: sTxt.slice(0, 2000), _env: env2 });
+      return send(500, {
+        error: "Search returned non-JSON",
+        raw: sTxt.slice(0, 2000),
+        _env: env2
+      });
     }
 
     const hits = Array.isArray(sJson.value) ? sJson.value : [];
-    const texts = hits.map((h) => h.content || "").filter(Boolean);
-    const citeName = book || hits[0]?.metadata_storage_name || "<mixed sources>";
+    const texts = hits.map((h) => h?.content || "").filter(Boolean);
+
+    const citeName =
+      (parts.length === 1 ? parts[0] : null) ||
+      book ||
+      hits[0]?.metadata_storage_name ||
+      "<mixed sources>";
+
     const combined = texts.join("\n\n").slice(0, 120000);
 
     if (combined.length < 1000) {
-  return send(500, {
-    error: "Not enough source text to generate questions.",
-    _diag: { ...env2, searchHits: hits.length, combinedLen: combined.length }
-  });
-}
-
-// HARD CAP: prevent huge prompts from triggering 429/timeouts when generating 25Q
-const MAX_SOURCE_CHARS = 18000; // safe for S0 tier
-
-const combinedCapped =
-  typeof combined === "string" && combined.length > MAX_SOURCE_CHARS
-    ? combined.slice(0, MAX_SOURCE_CHARS)
-    : (combined || "");
-
-// OpenAI request setup
-const isAzure = /azure\.com/i.test(AOAI_ENDPOINT);
-const apiVersion = process.env.AZURE_OPENAI_API_VERSION || "2024-08-01-preview";
-const chatUrl = isAzure
-  ? `${AOAI_ENDPOINT.replace(/\/+$/, "")}/openai/deployments/${encodeURIComponent(
-      DEPLOYMENT
-    )}/chat/completions?api-version=${apiVersion}`
-  : `${AOAI_ENDPOINT.replace(/\/+$/, "")}/v1/chat/completions`;
-
-const headers = { "Content-Type": "application/json" };
-if (isAzure) headers["api-key"] = AOAI_KEY;
-else headers["Authorization"] = `Bearer ${AOAI_KEY}`;
-
-// Don't over-generate.
-const want = Math.min(MAX_COUNT, requestedCount);
-
-const sys =
-  "You are an expert item-writer for roofing/structures exams. " +
-  "Write strictly factual, unambiguous multiple-choice questions from the provided source text. " +
-  "Each question must be answerable from the source; do not invent facts. " +
-  "Output ONLY valid JSON matching the schema provided.";
-
-const schema = {
-  type: "object",
-  properties: {
-    items: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          id: { type: "string" },
-          type: { const: "mcq" },
-          question: { type: "string" },
-          options: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: { id: { type: "string" }, text: { type: "string" } },
-              required: ["id", "text"],
-              additionalProperties: false
-            },
-            minItems: 4,
-            maxItems: 4
-          },
-          answer: { type: "string" },
-          cite: { type: "string" },
-          explanation: { type: "string" }
-        },
-        required: ["id", "type", "question", "options", "answer", "cite", "explanation"],
-        additionalProperties: false
-      },
-      minItems: 1
+      return send(500, {
+        error: "Not enough source text to generate questions.",
+        _diag: { ...env2, ...envDiag, searchHits: hits.length, combinedLen: combined.length }
+      });
     }
-  },
-  required: ["items"],
-  additionalProperties: false
-};
 
+    const combinedCapped =
+      typeof combined === "string" && combined.length > MAX_SOURCE_CHARS
+        ? combined.slice(0, MAX_SOURCE_CHARS)
+        : combined;
 
+    // OpenAI request setup
+    const isAzure = /azure\.com/i.test(AOAI_ENDPOINT);
+    const apiVersion = process.env.AZURE_OPENAI_API_VERSION || "2024-08-01-preview";
+
+    const chatUrl = isAzure
+      ? `${AOAI_ENDPOINT.replace(/\/+$/, "")}/openai/deployments/${encodeURIComponent(
+          DEPLOYMENT
+        )}/chat/completions?api-version=${apiVersion}`
+      : `${AOAI_ENDPOINT.replace(/\/+$/, "")}/v1/chat/completions`;
+
+    const headers = { "Content-Type": "application/json" };
+    if (isAzure) headers["api-key"] = AOAI_KEY;
+    else headers["Authorization"] = `Bearer ${AOAI_KEY}`;
+
+    const sys =
+      "You are an expert item-writer for roofing/structures exams. " +
+      "Write strictly factual, unambiguous multiple-choice questions from the provided source text. " +
+      "Each question must be answerable from the source; do not invent facts. " +
+      "Output ONLY valid JSON matching the schema provided.";
+
+    const schema = {
+      type: "object",
+      properties: {
+        items: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              type: { const: "mcq" },
+              question: { type: "string" },
+              options: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: { id: { type: "string" }, text: { type: "string" } },
+                  required: ["id", "text"],
+                  additionalProperties: false
+                },
+                minItems: 4,
+                maxItems: 4
+              },
+              answer: { type: "string" },
+              cite: { type: "string" },
+              explanation: { type: "string" }
+            },
+            required: ["id", "type", "question", "options", "answer", "cite", "explanation"],
+            additionalProperties: false
+          },
+          minItems: 1
+        }
+      },
+      required: ["items"],
+      additionalProperties: false
+    };
 
     async function generateBatch(batchCount) {
       const user = [
@@ -487,7 +528,7 @@ const schema = {
         `- Include a concise explanation (1–2 sentences) based ONLY on the source.`,
         "",
         "SOURCE (verbatim, may include OCR noise):",
-        combined
+        combinedCapped
       ].join("\n");
 
       const payload = {
@@ -530,105 +571,70 @@ const schema = {
         throw new Error("CONTENT_NOT_VALID_JSON");
       }
 
-      const items = Array.isArray(parsed.items) ? parsed.items : [];
-      return items;
+      return Array.isArray(parsed.items) ? parsed.items : [];
     }
 
-    // Try to build a "mostly unseen" set
-const picked = [];
-const pickedIds = new Set();
-const seenPool = [];
+    async function generateBatchWithRetry(n) {
+      for (let attempt = 0; attempt < 6; attempt++) {
+        try {
+          return await generateBatch(n);
+        } catch (e) {
+          const msg = String(e?.message || e);
 
-// --- HARD FIX: small sequential batches + 429 backoff (reliable on S0) ---
-const BATCH_SIZE = 5;
-const MAX_TOTAL = Math.min(MAX_COUNT, requestedCount); // never over-generate
+          if (msg.includes("OPENAI_HTTP_429") || msg.includes("RateLimitReached")) {
+            const m = msg.match(/retry after\s+(\d+)\s+seconds/i);
+            const waitSec = m ? parseInt(m[1], 10) : 10;
+            await sleep((waitSec + 1) * 1000);
+            continue;
+          }
 
-const batches = Math.ceil(MAX_TOTAL / BATCH_SIZE);
-
-async function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
-}
-
-async function generateBatchWithRetry(n) {
-  for (let attempt = 0; attempt < 6; attempt++) {
-    try {
-      return await generateBatch(n);
-    } catch (e) {
-      const msg = String(e?.message || e);
-
-      // Azure OpenAI rate limit
-      if (msg.includes("OPENAI_HTTP_429") || msg.includes("RateLimitReached")) {
-        const m = msg.match(/retry after\s+(\d+)\s+seconds/i);
-        const waitSec = m ? parseInt(m[1], 10) : 10;
-        await sleep((waitSec + 1) * 1000); // +1s safety
-        continue;
+          throw e;
+        }
       }
-
-      throw e; // non-429 errors bubble up
-    }
-  }
-  throw new Error("Exceeded retry attempts due to OpenAI rate limiting");
-}
-
-// Run sequentially to stay under token rate limits
-for (let i = 0; i < batches; i++) {
-  const n = Math.min(BATCH_SIZE, MAX_TOTAL - i * BATCH_SIZE);
-  if (n <= 0) break;
-
-  const rawItems = await generateBatchWithRetry(n);
-
-  for (const it of rawItems) {
-    if (!it || typeof it !== "object") continue;
-
-    const qText = it.question || it.prompt || it.text || "";
-    if (!qText) continue;
-
-    const id = (it.id && String(it.id).trim()) || stableIdFromText(qText);
-    if (pickedIds.has(id)) continue;
-
-    const item = { ...it, id, type: "mcq" };
-
-    if (!seen.has(id) && picked.length < requestedCount) {
-      picked.push(item);
-      pickedIds.add(id);
-    } else {
-      seenPool.push(item);
+      throw new Error("Exceeded retry attempts due to OpenAI rate limiting");
     }
 
-    if (picked.length >= requestedCount) break;
-  }
+    // Build mostly-unseen set
+    const picked = [];
+    const pickedIds = new Set();
+    const repeatPool = [];
 
-  if (picked.length >= requestedCount) break;
-}
+    const batches = Math.ceil(requestedCount / BATCH_SIZE);
 
+    for (let i = 0; i < batches; i++) {
+      const n = Math.min(BATCH_SIZE, requestedCount - picked.length);
+      if (n <= 0) break;
 
-// Second pass: fill from repeats if needed
-for (const it of seenPool) {
-  if (picked.length >= requestedCount) break;
-  if (!pickedIds.has(it.id)) {
-    picked.push(it);
-    pickedIds.add(it.id);
-  }
-}
+      const rawItems = await generateBatchWithRetry(n);
 
-
-
-    // If still short, allow repeats to fill from last generated batch (or regenerate once more and allow repeats)
-    if (picked.length < requestedCount) {
-      const batch = await generateBatch(Math.min(MAX_COUNT, want));
-      for (const it of batch) {
-        if (picked.length >= requestedCount) break;
+      for (const it of rawItems) {
         if (!it || typeof it !== "object") continue;
 
         const qText = it.question || it.prompt || it.text || "";
+        if (!qText) continue;
+
         const id = (it.id && String(it.id).trim()) || stableIdFromText(qText);
+        if (pickedIds.has(id)) continue;
+
         const item = { ...it, id, type: "mcq" };
 
-        if (pickedIds.has(item.id)) continue;
+        if (!seen.has(id) && picked.length < requestedCount) {
+          picked.push(item);
+          pickedIds.add(id);
+        } else {
+          repeatPool.push(item);
+        }
 
-        // allow repeats now
-        picked.push(item);
-        pickedIds.add(item.id);
+        if (picked.length >= requestedCount) break;
+      }
+    }
+
+    // Fill with repeats if needed
+    for (const it of repeatPool) {
+      if (picked.length >= requestedCount) break;
+      if (!pickedIds.has(it.id)) {
+        picked.push(it);
+        pickedIds.add(it.id);
       }
     }
 
@@ -636,7 +642,6 @@ for (const it of seenPool) {
       return send(500, { error: "Model returned no usable items", _diag: { ...env2, ...envDiag } });
     }
 
-    // Mark served questions as seen
     await markSeen(tableClient, pk, picked.map((q) => q.id));
 
     return send(200, {
@@ -646,21 +651,19 @@ for (const it of seenPool) {
         mode: "ai-seen-tracking",
         requested: requestedCount,
         returned: Math.min(picked.length, requestedCount),
-        attempts,
+        batches,
         ...env2,
         ...envDiag
       }
     });
   } catch (err) {
-  const msg = err?.message || String(err);
-  const stack = err?.stack || null;
+    const msg = err?.message || String(err);
+    const stack = err?.stack || null;
 
-  return send(500, {
-    error: "Backend call failure",
-    message: msg,
-    ...(String(process.env.DEBUG_EXAM || "").toLowerCase() === "1"
-      ? { stack }
-      : {})
-  });
-}
+    return send(500, {
+      error: "Backend call failure",
+      message: msg,
+      ...(DEBUG ? { stack } : {})
+    });
+  }
 };
