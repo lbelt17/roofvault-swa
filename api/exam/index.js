@@ -530,31 +530,32 @@ const searchPayload = {
 
     let attempts = 0;
     while (picked.length < requestedCount && attempts < MAX_GENERATION_ATTEMPTS) {
-      attempts++;
+  attempts++;
 
-      const batchCount = Math.min(MAX_COUNT, want);
-      const rawItems = await generateBatch(batchCount);
+  const batchCount = Math.min(MAX_COUNT, want);
+  const rawItems = await generateBatch(batchCount);
 
-      // Normalize IDs (if model gives dupes/missing)
-      for (const it of rawItems) {
-        if (!it || typeof it !== "object") continue;
+  for (const it of rawItems) {
+    if (!it || typeof it !== "object") continue;
 
-        const qText = it.question || it.prompt || it.text || "";
-        const id = (it.id && String(it.id).trim()) || stableIdFromText(qText);
+    const qText = it.question || it.prompt || it.text || "";
+    if (!qText) continue;
 
-        const item = { ...it, id, type: "mcq" };
+    const id =
+      (it.id && String(it.id).trim()) ||
+      stableIdFromText(qText);
 
-        // Skip if already picked in this response
-        if (pickedIds.has(item.id)) continue;
+    if (pickedIds.has(id)) continue;
 
-        // Prefer unseen first
-        if (!seen.has(item.id)) {
-          picked.push(item);
-          pickedIds.add(item.id);
-          if (picked.length >= requestedCount) break;
-        }
-      }
-    }
+    const item = { ...it, id, type: "mcq" };
+
+    picked.push(item);
+    pickedIds.add(id);
+
+    if (picked.length >= requestedCount) break;
+  }
+}
+
 
     // If still short, allow repeats to fill from last generated batch (or regenerate once more and allow repeats)
     if (picked.length < requestedCount) {
