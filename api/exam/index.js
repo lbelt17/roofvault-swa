@@ -573,14 +573,16 @@ const searchPayload = {
         ...envDiag
       }
     });
-  } catch (e) {
-    return (context.res = {
-      status: 500,
-      headers: { "Content-Type": "application/json; charset=utf-8" },
-      body: JSON.stringify({
-        error: String(e?.message || e),
-        stack: String(e?.stack || "")
-      })
-    });
-  }
+  } catch (err) {
+  const msg = err?.message || String(err);
+  const stack = err?.stack || null;
+
+  return send(500, {
+    error: "Backend call failure",
+    message: msg,
+    ...(String(process.env.DEBUG_EXAM || "").toLowerCase() === "1"
+      ? { stack }
+      : {})
+  });
+}
 };
