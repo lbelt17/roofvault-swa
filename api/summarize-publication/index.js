@@ -14,7 +14,7 @@ module.exports = async function (context, req) {
     // Env
     const rawEndpoint = process.env.SEARCH_ENDPOINT || "";
     const endpointHost = rawEndpoint.replace(/^https?:\/\//, "").replace(/\/+$/, "");
-    const indexName = process.env.SEARCH_INDEX;
+    const indexName = process.env.SEARCH_INDEX_CONTENT || process.env.SEARCH_INDEX;
     const apiKey    = process.env.SEARCH_API_KEY;
 
     if (!endpointHost || !indexName || !apiKey) {
