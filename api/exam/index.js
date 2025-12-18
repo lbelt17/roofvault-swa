@@ -423,7 +423,9 @@ const searchPayload = {
     else headers["Authorization"] = `Bearer ${AOAI_KEY}`;
 
     // We request extra so we can filter repeats.
-    const want = Math.min(MAX_COUNT, Math.max(requestedCount, requestedCount * GENERATE_MULTIPLIER));
+    // Don't over-generate. Over-generating is what makes count=25 flaky/timeout.
+const want = Math.min(MAX_COUNT, requestedCount);
+
 
     const sys =
       "You are an expert item-writer for roofing/structures exams. " +
