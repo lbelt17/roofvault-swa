@@ -534,7 +534,8 @@ const want = Math.min(MAX_COUNT, requestedCount);
     while (picked.length < requestedCount && attempts < MAX_GENERATION_ATTEMPTS) {
   attempts++;
 
-  const batchCount = Math.min(MAX_COUNT, want);
+ // Keep each model call small so count=25 won't timeout
+const batchCount = Math.min(5, want);
   const rawItems = await generateBatch(batchCount);
 
   for (const it of rawItems) {
