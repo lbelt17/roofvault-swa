@@ -101,10 +101,22 @@ function extractKeyword(baseTitle) {
   return last.length >= 3 ? last : s;
 }
 
-function asText(val) {
-  if (val == null) return "";
+  if (typeof val === "string") {
+    const s = val.trim();
 
-  if (typeof val === "string") return val;
+    // If the string itself is JSON (common when content is stored as '["...","..."]')
+    if ((s.startsWith("[") && s.endsWith("]")) || (s.startsWith("{") && s.endsWith("}"))) {
+      try {
+        const parsed = JSON.parse(s);
+        return asText(parsed); // recurse to handle arrays/objects
+      } catch {
+        // fall through and return raw string
+      }
+    }
+
+    return val;
+  }
+
 
   // Array of strings / objects
   if (Array.isArray(val)) {
@@ -126,8 +138,51 @@ function asText(val) {
       .filter(Boolean);
     return parts.join("\n");
   }
+function asText(val) {
+  if (val == null) return "";
 
-  // Object — stringify (handles cases where Search returns complex types)
+  // String
+  if (typeof val === "string") {
+    const s = val.trim();
+
+    // If the string itself is JSON (e.g. '["a","b"]' or '{"text":"..."}')
+    if (
+      (s.startsWith("[") && s.endsWith("]")) ||
+      (s.startsWith("{") && s.endsWith("}"))
+    ) {
+      try {
+        const parsed = JSON.parse(s);
+        return asText(parsed); // recurse to handle arrays/objects
+      } catch {
+        // If it isn't valid JSON, just treat it as normal text
+      }
+    }
+
+    return val;
+  }
+
+  // Array (strings/objects)
+  if (Array.isArray(val)) {
+    const parts = val
+      .map((x) => {
+        if (typeof x === "string") return x;
+        if (x == null) return "";
+        if (typeof x === "object") {
+          if (typeof x.text === "string") return x.text;
+          if (typeof x.value === "string") return x.value;
+        }
+        try {
+          return JSON.stringify(x);
+        } catch {
+          return String(x);
+        }
+      })
+      .filter(Boolean);
+
+    return parts.join("\n");
+  }
+
+  // Object
   if (typeof val === "object") {
     if (typeof val.text === "string") return val.text;
     if (typeof val.value === "string") return val.value;
@@ -138,11 +193,10 @@ function asText(val) {
     }
   }
 
+  // Number/boolean/etc
   return String(val);
 }
 
-function pickText(doc) {
-  if (!doc) return "";
 
   // Prefer "content" first (your index sampleKeys shows it exists)
   const primary = asText(doc.content);
@@ -165,7 +219,7 @@ function pickText(doc) {
   }
 
   return "";
-}
+
 
 function compactSources(hits) {
   let out = "";
