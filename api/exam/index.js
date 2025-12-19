@@ -1,9 +1,9 @@
 ﻿// api/exam/index.js
-// RoofVault /api/exam — single-call exam generation (SWA-friendly)
+// RoofVault /api/exam — SIMPLE + RELIABLE (SWA-friendly)
+// - Uses Azure AI Search TEXT QUERY (like /api/searchtest) — no fragile filters
 // - ONE Azure OpenAI call total
-// - Azure AI Search via REST
-// - Deterministic filtering for multi-part books using startswith(name, '... - Part')
-// - ALWAYS sets context.res
+// - Hard caps prompt size
+// - Always returns JSON + diagnostics
 
 const crypto = require("crypto");
 
@@ -11,18 +11,12 @@ const crypto = require("crypto");
 const DEFAULT_COUNT = 25;
 const MAX_COUNT = 50;
 
-const SEARCH_TOP = 40;
-const MAX_SOURCE_CHARS = 14000;
-const AOAI_TIMEOUT_MS = 28000;
-const SEARCH_TIMEOUT_MS = 8000;
+const SEARCH_TOP = 50;               // how many chunks to pull
+const MAX_SOURCE_CHARS = 16000;      // cap the total source text fed to AOAI
+const SEARCH_TIMEOUT_MS = 10000;
+const AOAI_TIMEOUT_MS = 30000;
 
-// ======= HELPERS =======
-function clampInt(n, min, max, fallback) {
-  const v = parseInt(n, 10);
-  if (Number.isFinite(v)) return Math.min(Math.max(v, min), max);
-  return fallback;
-}
-
+// ======= RESPONSE HELPERS =======
 function send(context, status, obj, extraHeaders = {}) {
   context.res = {
     status,
@@ -38,10 +32,19 @@ function send(context, status, obj, extraHeaders = {}) {
   return context.res;
 }
 
-function escODataString(s) {
-  return String(s).replace(/'/g, "''");
+function clampInt(n, min, max, fallback) {
+  const v = parseInt(n, 10);
+  if (Number.isFinite(v)) return Math.min(Math.max(v, min), max);
+  return fallback;
 }
 
+function safeString(x, fallback = "") {
+  if (typeof x === "string") return x;
+  if (x == null) return fallback;
+  return String(x);
+}
+
+// ======= FETCH JSON WITH TIMEOUT =======
 async function fetchJson(url, options, timeoutMs) {
   const ac = new AbortController();
   const t = setTimeout(() => ac.abort(), timeoutMs);
@@ -60,14 +63,9 @@ async function fetchJson(url, options, timeoutMs) {
   }
 }
 
-function safeString(x, fallback = "") {
-  if (typeof x === "string") return x;
-  if (x == null) return fallback;
-  return String(x);
-}
-
+// ======= SOURCE PACKING =======
 function compactSources(hits) {
-  // hits: docs with content + name
+  // Expect docs with { content, metadata_storage_name }
   let out = "";
   for (const h of hits) {
     const cite = safeString(h.metadata_storage_name || h.cite || "source");
@@ -87,43 +85,53 @@ function tryParseJsonStrict(s) {
   const last = s.lastIndexOf("}");
   if (first >= 0 && last > first) {
     const candidate = s.slice(first, last + 1);
-    try {
-      return JSON.parse(candidate);
-    } catch {
-      // ignore
-    }
+    try { return JSON.parse(candidate); } catch { /* ignore */ }
   }
-  try {
-    return JSON.parse(s);
-  } catch {
-    return null;
-  }
+  try { return JSON.parse(s); } catch { return null; }
 }
 
-// ======= FILTER BUILDERS =======
-
-// Convert: "IIBEC - RoofDecks A-Z Hogan - Part 01" -> "IIBEC - RoofDecks A-Z Hogan - Part"
-function normalizePartPrefix(name) {
-  return String(name)
+// ======= QUERY NORMALIZATION =======
+function baseFromPartName(partName) {
+  // "IIBEC - RoofDecks A-Z Hogan - Part 01" -> "IIBEC - RoofDecks A-Z Hogan"
+  return String(partName || "")
     .trim()
-    .replace(/\s*-\s*Part\s*\d+\s*$/i, " - Part")
-    .replace(/\s*Part\s*\d+\s*$/i, " Part"); // fallback variant
+    .replace(/\s*-\s*Part\s*\d+\s*$/i, "")
+    .trim();
 }
 
-// Deterministic: match all parts for the book using startswith() on the real field: `name`
-function buildFilterFromParts(parts) {
-  // Exact match against the real indexed field: metadata_storage_name
-  // Uses search.in for an OR list.
-  const list = parts.map((p) => escODataString(String(p).trim())).join(",");
-  return `search.in(metadata_storage_name, '${list}', ',')`;
+function deriveSearchQuery(body) {
+  // Priority:
+  // 1) parts[] -> base title
+  // 2) book -> book string
+  // 3) bookGroupId -> string (fallback; still text search)
+  if (Array.isArray(body.parts) && body.parts.length) {
+    const base = baseFromPartName(body.parts[0]);
+    return base || "*";
+  }
+  if (body.book) return String(body.book);
+  if (body.bookGroupId) return String(body.bookGroupId);
+  return "*";
 }
-
 
 // ======= MAIN =======
 module.exports = async function (context, req) {
   try {
     if (req.method === "OPTIONS") return send(context, 204, "");
-    if (req.method === "GET") return send(context, 200, { ok: true, name: "exam", time: new Date().toISOString() });
+    if (req.method === "GET") {
+      return send(context, 200, { ok: true, name: "exam", time: new Date().toISOString() });
+    }
+
+    const body = req.body || {};
+    const count = clampInt(body.count, 1, MAX_COUNT, DEFAULT_COUNT);
+
+    // Require a selector (parts/book/bookGroupId)
+    const hasParts = Array.isArray(body.parts) && body.parts.length > 0;
+    const hasBook = !!body.book;
+    const hasGroup = !!body.bookGroupId;
+
+    if (!hasParts && !hasBook && !hasGroup) {
+      return send(context, 400, { error: "Provide {parts:[...]} or {book:\"...\"} or {bookGroupId:\"...\"}" });
+    }
 
     // ---- env ----
     const SEARCH_ENDPOINT = process.env.SEARCH_ENDPOINT;
@@ -142,48 +150,17 @@ module.exports = async function (context, req) {
       return send(context, 500, { error: "Missing AOAI_ENDPOINT or AOAI_API_KEY" });
     }
 
-    // ---- input ----
-    const body = req.body || {};
-    const count = clampInt(body.count, 1, MAX_COUNT, DEFAULT_COUNT);
+    // ---- search (TEXT QUERY; no filter) ----
+    const searchQuery = deriveSearchQuery(body);
 
-    const parts = Array.isArray(body.parts) ? body.parts.filter(Boolean) : null;
-    const bookGroupId = body.bookGroupId ? String(body.bookGroupId) : null;
-
-    // Back-compat support: { book:"...", filterField:"name" }
-    const book = body.book ? String(body.book) : null;
-    const filterField = body.filterField ? String(body.filterField) : null;
-
-    if ((!parts || parts.length === 0) && !bookGroupId && !book) {
-      return send(context, 400, { error: "Provide {parts:[...]} or {bookGroupId:\"...\"} or {book:\"...\", filterField:\"...\"}" });
-    }
-
-    // ---- build filter ----
-    let filter = null;
-
-    if (parts && parts.length) {
-      filter = buildFilterFromParts(parts);
-      if (!filter) return send(context, 400, { error: "Invalid parts[]", parts });
-    } else if (book) {
-      // If you call with book explicitly, you must tell us which field to match
-      // e.g. {"book":"IIBEC - RoofDecks A-Z Hogan - Part 01","filterField":"name"}
-      const ff = filterField || "name";
-      filter = `${ff} eq '${escODataString(book)}'`;
-    } else {
-      const field = process.env.SEARCH_BOOKGROUP_FIELD || "bookGroupId";
-      filter = `${field} eq '${escODataString(bookGroupId)}'`;
-    }
-
-    // ---- search ----
     const searchUrl =
       `${SEARCH_ENDPOINT.replace(/\/+$/, "")}` +
       `/indexes/${encodeURIComponent(SEARCH_INDEX_CONTENT)}` +
       `/docs/search?api-version=2023-11-01`;
 
     const searchBody = {
-      search: "*",
+      search: searchQuery,
       top: SEARCH_TOP,
-      filter,
-      // IMPORTANT: use fields that exist in your content index (per /api/searchtest)
       select: "content,metadata_storage_name"
     };
 
@@ -191,35 +168,46 @@ module.exports = async function (context, req) {
       searchUrl,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
+        headers: {
+          "Content-Type": "application/json",
+          "api-key": SEARCH_API_KEY
+        },
         body: JSON.stringify(searchBody)
       },
       SEARCH_TIMEOUT_MS
     );
 
     if (!sres.ok) {
-      return send(context, 502, { error: "Search request failed", status: sres.status, detail: sres.data, filter });
+      return send(context, 502, {
+        error: "Search request failed",
+        status: sres.status,
+        detail: sres.data,
+        _diag: { searchQuery, index: SEARCH_INDEX_CONTENT }
+      });
     }
 
     const hits = (sres.data && (sres.data.value || sres.data.values)) || [];
     const sources = compactSources(hits);
 
     if (!sources) {
-      return send(context, 404, { error: "No searchable content returned for selection", filter });
+      return send(context, 404, {
+        error: "No searchable content returned for selection",
+        _diag: { searchQuery, hits: hits.length, index: SEARCH_INDEX_CONTENT }
+      });
     }
 
-    // ---- AOAI single call ----
+    // ---- AOAI (ONE CALL) ----
     const reqId = crypto.randomUUID ? crypto.randomUUID() : crypto.randomBytes(16).toString("hex");
 
     const system =
-      "You are an exam generator. Return only valid JSON. " +
-      "Generate multiple-choice questions (MCQ) that are answerable from the provided sources. " +
+      "You are an exam generator. Return ONLY valid JSON. " +
+      "Generate multiple-choice questions (MCQ) answerable from the provided sources. " +
       "Each question must have 4 options labeled A-D, one correct answer, and a short explanation. " +
-      "Do not invent facts not present in sources.";
+      "Do not invent facts not present in the sources.";
 
     const user =
       `Create exactly ${count} MCQs.\n` +
-      `Return JSON with this shape:\n` +
+      `Return JSON with this exact shape:\n` +
       `{"items":[{"id":"1","type":"mcq","question":"...","options":[{"id":"A","text":"..."},{"id":"B","text":"..."},{"id":"C","text":"..."},{"id":"D","text":"..."}],"answer":"A","cite":"<one of the [source] labels>","explanation":"..."}]}\n\n` +
       `SOURCES:\n${sources}`;
 
@@ -243,14 +231,19 @@ module.exports = async function (context, req) {
             { role: "user", content: user }
           ],
           temperature: 0.2,
-          max_tokens: 2500
+          max_tokens: 2800
         })
       },
       AOAI_TIMEOUT_MS
     );
 
     if (!ares.ok) {
-      return send(context, 502, { error: "AOAI request failed", status: ares.status, detail: ares.data, requestId: reqId });
+      return send(context, 502, {
+        error: "AOAI request failed",
+        status: ares.status,
+        detail: ares.data,
+        _diag: { requestId: reqId, deployment: AOAI_DEPLOYMENT }
+      });
     }
 
     const content =
@@ -262,7 +255,11 @@ module.exports = async function (context, req) {
 
     const parsed = tryParseJsonStrict(content);
     if (!parsed || !Array.isArray(parsed.items)) {
-      return send(context, 500, { error: "Model returned non-JSON or wrong shape", requestId: reqId, raw: content });
+      return send(context, 500, {
+        error: "Model returned non-JSON or wrong shape",
+        raw: content,
+        _diag: { requestId: reqId }
+      });
     }
 
     const items = parsed.items.slice(0, count).map((q, i) => ({
@@ -281,24 +278,32 @@ module.exports = async function (context, req) {
     }));
 
     if (items.length !== count) {
-      return send(context, 500, { error: "Model did not return required count", requested: count, returned: items.length, requestId: reqId });
+      return send(context, 500, {
+        error: "Model did not return required count",
+        requested: count,
+        returned: items.length,
+        _diag: { requestId: reqId }
+      });
     }
 
     return send(context, 200, {
       items,
       modelDeployment: AOAI_DEPLOYMENT,
       _diag: {
-        mode: "single-call",
+        mode: "text-search-single-call",
         requested: count,
         returned: items.length,
-        searchIndexContent: SEARCH_INDEX_CONTENT,
-        searchTop: SEARCH_TOP,
+        searchQuery,
+        hits: hits.length,
         sourceChars: sources.length,
-        aoaiRequestId: reqId,
-        filter
+        searchIndexContent: SEARCH_INDEX_CONTENT,
+        aoaiRequestId: reqId
       }
     });
   } catch (e) {
-    return send(context, 500, { error: "Unhandled exception", detail: e && e.message ? e.message : String(e) });
+    return send(context, 500, {
+      error: "Unhandled exception",
+      detail: e && e.message ? e.message : String(e)
+    });
   }
 };
