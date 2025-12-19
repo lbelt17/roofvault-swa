@@ -1,6 +1,6 @@
 ﻿// api/exam/index.js
 // RoofVault /api/exam — FAST single-call exam generation (SWA-friendly)
-// - ONE Azure OpenAI call total (asks for exactly count questions in one shot)
+// - ONE Azure OpenAI call total
 // - Azure AI Search via REST (no @azure/search-documents dependency)
 // - Hard caps to keep prompt small + fast
 // - ALWAYS sets context.res (prevents empty 200 text/plain)
@@ -11,10 +11,10 @@ const crypto = require("crypto");
 const DEFAULT_COUNT = 25;
 const MAX_COUNT = 50;
 
-const SEARCH_TOP = 40;            // number of chunks to fetch from Search
-const MAX_SOURCE_CHARS = 14000;   // total chars of source text fed to AOAI
-const AOAI_TIMEOUT_MS = 28000;    // outbound AOAI timeout (keep total < SWA max)
-const SEARCH_TIMEOUT_MS = 8000;   // outbound Search timeout
+const SEARCH_TOP = 40;
+const MAX_SOURCE_CHARS = 14000;
+const AOAI_TIMEOUT_MS = 28000;
+const SEARCH_TIMEOUT_MS = 8000;
 
 // ======= HELPERS =======
 function clampInt(n, min, max, fallback) {
@@ -60,29 +60,26 @@ async function fetchJson(url, options, timeoutMs) {
   }
 }
 
-function normalizePartToBaseName(name) {
-  // Removes " - Part 01" / " - Part 1" / " Part 01" patterns at the end
-  return String(name)
-    .replace(/\s*-\s*Part\s*\d+\s*$/i, "")
-    .replace(/\s*Part\s*\d+\s*$/i, "")
-    .trim();
+function safeString(x, fallback = "") {
+  if (typeof x === "string") return x;
+  if (x == null) return fallback;
+  return String(x);
 }
 
-function buildFilterFromParts(parts) {
-  // Your content index "metadata_storage_name" appears to store BASE book names
-  // (no " - Part 01"). So normalize first.
-  const bases = Array.from(
-    new Set(parts.map(normalizePartToBaseName).filter(Boolean))
-  );
+function compactSources(hits) {
+  // hits are docs with content + metadata_storage_name
+  let out = "";
+  for (const h of hits) {
+    const cite = safeString(h.metadata_storage_name || h.cite || "source");
+    const content = safeString(h.content || "");
+    if (!content) continue;
 
-  if (bases.length === 1) {
-    return `metadata_storage_name eq '${escODataString(bases[0])}'`;
+    const block = `\n\n[${cite}]\n${content.trim()}`;
+    if (out.length + block.length > MAX_SOURCE_CHARS) break;
+    out += block;
   }
-
-  const joined = bases.map((b) => escODataString(b)).join(",");
-  return `search.in(metadata_storage_name, '${joined}', ',')`;
+  return out.trim();
 }
-
 
 function tryParseJsonStrict(s) {
   if (!s) return null;
@@ -103,18 +100,33 @@ function tryParseJsonStrict(s) {
   }
 }
 
+// --- PART NAME NORMALIZATION ---
+// Your /api/books output suggests metadata_storage_name is BASE names (no " - Part 01").
+// So we normalize parts to their base book name.
+function normalizePartToBaseName(name) {
+  return String(name)
+    .replace(/\s*-\s*Part\s*\d+\s*$/i, "")
+    .replace(/\s*Part\s*\d+\s*$/i, "")
+    .trim();
+}
+
+function buildFilterFromParts(parts) {
+  const bases = Array.from(new Set(parts.map(normalizePartToBaseName).filter(Boolean)));
+
+  if (bases.length === 1) {
+    return `metadata_storage_name eq '${escODataString(bases[0])}'`;
+  }
+
+  const joined = bases.map((b) => escODataString(b)).join(",");
+  return `search.in(metadata_storage_name, '${joined}', ',')`;
+}
+
 // ======= MAIN =======
 module.exports = async function (context, req) {
   try {
-    if (req.method === "OPTIONS") {
-      return send(context, 204, "");
-    }
+    if (req.method === "OPTIONS") return send(context, 204, "");
+    if (req.method === "GET") return send(context, 200, { ok: true, name: "exam", time: new Date().toISOString() });
 
-    if (req.method === "GET") {
-      return send(context, 200, { ok: true, name: "exam", time: new Date().toISOString() });
-    }
-
-    // ---- env ----
     const SEARCH_ENDPOINT = process.env.SEARCH_ENDPOINT;
     const SEARCH_API_KEY = process.env.SEARCH_API_KEY;
     const SEARCH_INDEX_CONTENT = process.env.SEARCH_INDEX_CONTENT || "azureblob-index-content";
@@ -131,27 +143,31 @@ module.exports = async function (context, req) {
       return send(context, 500, { error: "Missing AOAI_ENDPOINT or AOAI_API_KEY" });
     }
 
-    // ---- input ----
     const body = req.body || {};
     const count = clampInt(body.count, 1, MAX_COUNT, DEFAULT_COUNT);
 
     const parts = Array.isArray(body.parts) ? body.parts.filter(Boolean) : null;
     const bookGroupId = body.bookGroupId ? String(body.bookGroupId) : null;
+    const book = body.book ? String(body.book) : null;
+    const filterField = body.filterField ? String(body.filterField) : "metadata_storage_name";
 
-    if ((!parts || parts.length === 0) && !bookGroupId) {
-      return send(context, 400, { error: "Provide {parts:[...]} or {bookGroupId:\"...\"}" });
+    // Allow either parts OR (book+filterField) OR bookGroupId
+    if ((!parts || parts.length === 0) && !bookGroupId && !book) {
+      return send(context, 400, { error: "Provide {parts:[...]} or {book:\"...\", filterField:\"...\"} or {bookGroupId:\"...\"}" });
     }
 
-    // ---- build filter ----
     let filter = null;
+
     if (parts && parts.length) {
       filter = buildFilterFromParts(parts);
+    } else if (book) {
+      // Exact match for explicit calls
+      filter = `${filterField} eq '${escODataString(book)}'`;
     } else {
       const field = process.env.SEARCH_BOOKGROUP_FIELD || "bookGroupId";
       filter = `${field} eq '${escODataString(bookGroupId)}'`;
     }
 
-    // ---- search: pull chunks across all parts ----
     const searchUrl =
       `${SEARCH_ENDPOINT.replace(/\/+$/, "")}` +
       `/indexes/${encodeURIComponent(SEARCH_INDEX_CONTENT)}` +
@@ -185,7 +201,6 @@ module.exports = async function (context, req) {
       return send(context, 404, { error: "No searchable content returned for selection", filter });
     }
 
-    // ---- AOAI: ONE call ----
     const reqId = crypto.randomUUID ? crypto.randomUUID() : crypto.randomBytes(16).toString("hex");
 
     const system =
@@ -271,7 +286,8 @@ module.exports = async function (context, req) {
         searchIndexContent: SEARCH_INDEX_CONTENT,
         searchTop: SEARCH_TOP,
         sourceChars: sources.length,
-        aoaiRequestId: reqId
+        aoaiRequestId: reqId,
+        filter
       }
     });
   } catch (e) {
