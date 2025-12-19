@@ -190,17 +190,32 @@ function pickText(doc) {
 
 function compactSources(hits) {
   let out = "";
+
   for (const h of hits) {
     const cite = safeString(h.metadata_storage_name || "source");
-    const text = pickText(h);
+    const textRaw = pickText(h);
+    const text = textRaw ? textRaw.trim() : "";
     if (!text) continue;
 
-    const block = `\n\n[${cite}]\n${text.trim()}`;
-    if (out.length + block.length > MAX_SOURCE_CHARS) break;
-    out += block;
+    const header = `\n\n[${cite}]\n`;
+    const remaining = MAX_SOURCE_CHARS - out.length;
+
+    // If we can't even fit a header, stop.
+    if (remaining <= header.length + 50) break;
+
+    // Add as much text as we can from this hit.
+    const allow = remaining - header.length;
+    const chunk = text.length > allow ? text.slice(0, allow) : text;
+
+    out += header + chunk;
+
+    // If we've filled up, stop.
+    if (out.length >= MAX_SOURCE_CHARS) break;
   }
+
   return out.trim();
 }
+
 
 function tryParseJsonLoose(s) {
   if (!s) return null;
