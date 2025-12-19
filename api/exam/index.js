@@ -1,11 +1,9 @@
 ﻿// api/exam/index.js
 // RoofVault /api/exam — SWA-friendly exam generation
-// Goals:
 // - Stable under SWA timeout
-// - Returns EXACT count or fails loudly (no silent short exams)
-// - Consistent JSON schema for UI
-// - Uses Azure AI Search REST (no @azure/search-documents)
-// - Works with multi-part books by searching on base title
+// - Returns EXACT count or fails loudly
+// - Consistent schema: options[{id,text}], answer, cite, explanation
+// - Azure AI Search via REST
 
 const crypto = require("crypto");
 
@@ -13,8 +11,9 @@ const crypto = require("crypto");
 const DEFAULT_COUNT = 25;
 const MAX_COUNT = 50;
 
-const SEARCH_TOP = 60;             // chunks to pull from Search
-const MAX_SOURCE_CHARS = 14000;    // cap total text passed to AOAI
+// Tune these to avoid truncation
+const SEARCH_TOP = 45;            // was 60; too much text increases truncation risk
+const MAX_SOURCE_CHARS = 11000;   // was 14000; keep smaller so model finishes JSON
 const SEARCH_TIMEOUT_MS = 9000;
 const AOAI_TIMEOUT_MS = 28000;
 
@@ -76,7 +75,6 @@ function baseTitleFromPartName(name) {
     .trim();
 }
 
-// Compact sources with labels so the model can cite
 function compactSources(hits) {
   let out = "";
   for (const h of hits) {
@@ -91,34 +89,49 @@ function compactSources(hits) {
   return out.trim();
 }
 
-// More robust JSON extraction (handles ```json fences or extra text)
+// Robust JSON parser:
+// - removes ``` fences
+// - extracts first {...} block
+// - parses once
+// - if result is a JSON string, parses AGAIN (your current failure case)
 function tryParseJsonLoose(s) {
   if (!s) return null;
 
-  // remove ```json fences if present
   const cleaned = String(s)
     .replace(/^```json\s*/i, "")
     .replace(/^```\s*/i, "")
     .replace(/```$/i, "")
     .trim();
 
-  // best effort: take first { ... } block
   const first = cleaned.indexOf("{");
   const last = cleaned.lastIndexOf("}");
+  let candidate = cleaned;
+
   if (first >= 0 && last > first) {
-    const candidate = cleaned.slice(first, last + 1);
+    candidate = cleaned.slice(first, last + 1);
+  }
+
+  let parsed = null;
+  try {
+    parsed = JSON.parse(candidate);
+  } catch {
     try {
-      return JSON.parse(candidate);
+      parsed = JSON.parse(cleaned);
     } catch {
-      // fall through
+      return null;
     }
   }
 
-  try {
-    return JSON.parse(cleaned);
-  } catch {
-    return null;
+  // Double-parse if the model returned a JSON-encoded string
+  if (typeof parsed === "string") {
+    try {
+      parsed = JSON.parse(parsed);
+    } catch {
+      // leave as string (will fail validation)
+    }
   }
+
+  return parsed;
 }
 
 function normalizeOptions(opt) {
@@ -132,9 +145,8 @@ function normalizeOptions(opt) {
         const str = String(s);
         const m = str.match(/^\s*([A-D])\s*[\)\.\:-]\s*(.*)$/i);
         if (m) out.push({ id: m[1].toUpperCase(), text: (m[2] || "").trim() });
-        else out.push({ id: String(out.length ? String.fromCharCode(65 + out.length) : "A"), text: str.trim() });
+        else out.push({ id: String.fromCharCode(65 + out.length), text: str.trim() });
       }
-      // pad if short
       while (out.length < 4) out.push({ id: String.fromCharCode(65 + out.length), text: "" });
       return out;
     }
@@ -147,7 +159,6 @@ function normalizeOptions(opt) {
       return out;
     }
   }
-  // default
   return [
     { id: "A", text: "" },
     { id: "B", text: "" },
@@ -165,7 +176,6 @@ function validateItems(items, count) {
   if (!Array.isArray(items)) return { ok: false, reason: "items not array" };
   if (items.length < count) return { ok: false, reason: `returned ${items.length} < requested ${count}` };
 
-  // Validate first count items
   for (let i = 0; i < count; i++) {
     const q = items[i];
     if (!q) return { ok: false, reason: "missing item" };
@@ -173,9 +183,10 @@ function validateItems(items, count) {
 
     const opts = normalizeOptions(q.options);
     const ans = safeString(q.answer).toUpperCase().trim();
-
     if (!opts || opts.length !== 4) return { ok: false, reason: "options not 4" };
     if (!isValidAnswer(ans)) return { ok: false, reason: "answer not A-D" };
+    if (!safeString(q.cite).trim()) return { ok: false, reason: "missing cite" };
+    if (!safeString(q.explanation).trim()) return { ok: false, reason: "missing explanation" };
   }
 
   return { ok: true };
@@ -187,7 +198,6 @@ module.exports = async function (context, req) {
     if (req.method === "OPTIONS") return send(context, 204, "");
     if (req.method === "GET") return send(context, 200, { ok: true, name: "exam", time: new Date().toISOString() });
 
-    // ---- env ----
     const SEARCH_ENDPOINT = process.env.SEARCH_ENDPOINT;
     const SEARCH_API_KEY = process.env.SEARCH_API_KEY;
     const SEARCH_INDEX_CONTENT = process.env.SEARCH_INDEX_CONTENT || "azureblob-index-content";
@@ -200,7 +210,6 @@ module.exports = async function (context, req) {
     if (!SEARCH_ENDPOINT || !SEARCH_API_KEY) return send(context, 500, { error: "Missing SEARCH_ENDPOINT or SEARCH_API_KEY" });
     if (!AOAI_ENDPOINT || !AOAI_API_KEY) return send(context, 500, { error: "Missing AOAI_ENDPOINT or AOAI_API_KEY" });
 
-    // ---- input ----
     const body = req.body || {};
     const count = clampInt(body.count, 1, MAX_COUNT, DEFAULT_COUNT);
 
@@ -212,32 +221,28 @@ module.exports = async function (context, req) {
       return send(context, 400, { error: "Provide {parts:[...]} or {book:\"...\"} or {bookGroupId:\"...\"}" });
     }
 
-    // ---- derive base title + search query ----
     let baseTitle = "";
     if (parts && parts.length) baseTitle = baseTitleFromPartName(parts[0]);
     else if (book) baseTitle = baseTitleFromPartName(book);
     else baseTitle = String(bookGroupId);
 
-    const searchQuery = baseTitle; // critical: matches across all parts
+    const searchQuery = baseTitle || "*";
 
-    // ---- Search request ----
     const searchUrl =
       `${SEARCH_ENDPOINT.replace(/\/+$/, "")}` +
       `/indexes/${encodeURIComponent(SEARCH_INDEX_CONTENT)}` +
       `/docs/search?api-version=2023-11-01`;
 
-    // We try a filter to constrain to files that start with the base title.
-    // If the index doesn't support filtering on metadata_storage_name, Azure will return 400,
-    // and we auto-fallback to no filter.
     const filterTry = `startswith(metadata_storage_name, '${escODataString(baseTitle)}')`;
 
     const commonSearchBody = {
-      search: searchQuery || "*",
+      search: searchQuery,
       top: SEARCH_TOP,
       select: "content,metadata_storage_name",
       queryType: "simple"
     };
 
+    // Try constrained search first; fallback if filter invalid
     let sres = await fetchJson(
       searchUrl,
       {
@@ -248,7 +253,6 @@ module.exports = async function (context, req) {
       SEARCH_TIMEOUT_MS
     );
 
-    // Fallback if filter invalid
     if (!sres.ok && sres.status === 400) {
       sres = await fetchJson(
         searchUrl,
@@ -262,12 +266,7 @@ module.exports = async function (context, req) {
     }
 
     if (!sres.ok) {
-      return send(context, 502, {
-        error: "Search request failed",
-        status: sres.status,
-        detail: sres.data,
-        _diag: { searchQuery, triedFilter: filterTry }
-      });
+      return send(context, 502, { error: "Search request failed", status: sres.status, detail: sres.data, _diag: { searchQuery, triedFilter: filterTry } });
     }
 
     const hits = (sres.data && (sres.data.value || sres.data.values)) || [];
@@ -277,14 +276,14 @@ module.exports = async function (context, req) {
       return send(context, 404, { error: "No searchable content returned for selection", _diag: { searchQuery } });
     }
 
-    // ---- AOAI: generate questions ----
     const reqId = crypto.randomUUID ? crypto.randomUUID() : crypto.randomBytes(16).toString("hex");
 
     const system =
       "You generate practice exams from provided sources.\n" +
       "Return ONLY valid JSON (no markdown, no code fences, no extra text).\n" +
       "Do not invent facts not present in the sources.\n" +
-      "Every question must be answerable from the sources.";
+      "Every question must be answerable from the sources.\n" +
+      "If you cannot comply, return: {\"items\":[]}";
 
     const schemaInstruction =
       `Return JSON exactly like:\n` +
@@ -294,7 +293,8 @@ module.exports = async function (context, req) {
       `Rules:\n` +
       `- items length MUST be exactly ${count}\n` +
       `- answer MUST be one of "A","B","C","D"\n` +
-      `- cite MUST match one of the bracketed source labels exactly (example: [IIBEC - ... Part 03])`;
+      `- cite MUST match one of the bracketed source labels exactly (example: IIBEC - ... Part 03)\n` +
+      `- No truncation. Finish the JSON.`;
 
     const user =
       `Create exactly ${count} MCQs.\n\n` +
@@ -306,7 +306,7 @@ module.exports = async function (context, req) {
       `/openai/deployments/${encodeURIComponent(AOAI_DEPLOYMENT)}` +
       `/chat/completions?api-version=${encodeURIComponent(AOAI_API_VERSION)}`;
 
-    async function callAoai(promptUser, retryTag) {
+    async function callAoai(promptUser) {
       const r = await fetchJson(
         aoaiUrl,
         {
@@ -328,49 +328,35 @@ module.exports = async function (context, req) {
         AOAI_TIMEOUT_MS
       );
 
-      if (!r.ok) {
-        return { ok: false, error: { status: r.status, detail: r.data, retryTag } };
-      }
+      if (!r.ok) return { ok: false, status: r.status, detail: r.data };
 
-      const content =
-        r.data &&
-        r.data.choices &&
-        r.data.choices[0] &&
-        r.data.choices[0].message &&
-        r.data.choices[0].message.content;
-
+      const content = r.data?.choices?.[0]?.message?.content;
       const parsed = tryParseJsonLoose(content);
       return { ok: true, parsed, raw: content };
     }
 
-    // First attempt
-    let a1 = await callAoai(user, "first");
+    // 1) attempt
+    let a1 = await callAoai(user);
     if (!a1.ok) {
-      return send(context, 502, {
-        error: "AOAI request failed",
-        ...a1.error,
-        _diag: {
-          requestId: reqId,
-          deployment: AOAI_DEPLOYMENT,
-          aoaiEndpointHost: AOAI_ENDPOINT.replace(/^https?:\/\//, "").replace(/\/.*$/, "")
-        }
-      });
+      return send(context, 502, { error: "AOAI request failed", status: a1.status, detail: a1.detail, _diag: { requestId: reqId, deployment: AOAI_DEPLOYMENT } });
     }
 
-    let items = a1.parsed && a1.parsed.items;
-
-    // If invalid / short, do ONE repair attempt
+    let parsed = a1.parsed;
+    let items = parsed && parsed.items;
     let v = validateItems(items, count);
+
+    // 2) one repair attempt if needed
     if (!v.ok) {
       const repair =
-        `Your previous response was invalid (${v.reason}).\n` +
-        `Return ONLY valid JSON matching the schema and EXACTLY ${count} items.\n\n` +
+        `Your previous output was invalid (${v.reason}).\n` +
+        `Return ONLY valid JSON and EXACTLY ${count} items. No code fences. No extra text.\n\n` +
         `${schemaInstruction}\n\n` +
         `SOURCES:\n${sources}`;
 
-      const a2 = await callAoai(repair, "repair");
+      const a2 = await callAoai(repair);
       if (a2.ok) {
-        items = a2.parsed && a2.parsed.items;
+        parsed = a2.parsed;
+        items = parsed && parsed.items;
         v = validateItems(items, count);
       }
     }
@@ -380,30 +366,19 @@ module.exports = async function (context, req) {
         error: "Model returned non-JSON or wrong/short shape",
         detail: v.reason,
         raw: a1.raw,
-        _diag: {
-          requestId: reqId,
-          deployment: AOAI_DEPLOYMENT,
-          searchQuery,
-          hits: hits.length
-        }
+        _diag: { requestId: reqId, deployment: AOAI_DEPLOYMENT, searchQuery, hits: hits.length }
       });
     }
 
-    // Normalize output to strict UI-friendly shape
-    const finalItems = items.slice(0, count).map((q, i) => {
-      const opts = normalizeOptions(q.options);
-      const ans = safeString(q.answer).toUpperCase().trim();
-
-      return {
-        id: String(i + 1),
-        type: "mcq",
-        question: safeString(q.question),
-        options: opts,
-        answer: ans,
-        cite: safeString(q.cite),
-        explanation: safeString(q.explanation)
-      };
-    });
+    const finalItems = items.slice(0, count).map((q, i) => ({
+      id: String(i + 1),
+      type: "mcq",
+      question: safeString(q.question),
+      options: normalizeOptions(q.options),
+      answer: safeString(q.answer).toUpperCase().trim(),
+      cite: safeString(q.cite).replace(/^\[|\]$/g, "").trim(),
+      explanation: safeString(q.explanation)
+    }));
 
     return send(context, 200, {
       items: finalItems,
@@ -416,13 +391,10 @@ module.exports = async function (context, req) {
         searchQuery,
         hits: hits.length,
         sourceChars: sources.length,
-        searchIndexContent: SEARCH_INDEX_CONTENT,
-        searchEndpointHost: SEARCH_ENDPOINT.replace(/^https?:\/\//, "").replace(/\/.*$/, ""),
-        aoaiEndpointHost: AOAI_ENDPOINT.replace(/^https?:\/\//, "").replace(/\/.*$/, ""),
         requestId: reqId
       }
     });
   } catch (e) {
-    return send(context, 500, { error: "Unhandled exception", detail: e && e.message ? e.message : String(e) });
+    return send(context, 500, { error: "Unhandled exception", detail: e?.message ? e.message : String(e) });
   }
 };
