@@ -1,9 +1,9 @@
 ﻿// api/exam/index.js
-// RoofVault /api/exam — FAST single-call exam generation (SWA-friendly)
+// RoofVault /api/exam — single-call exam generation (SWA-friendly)
 // - ONE Azure OpenAI call total
-// - Azure AI Search via REST (no @azure/search-documents dependency)
-// - Hard caps to keep prompt small + fast
-// - ALWAYS sets context.res (prevents empty 200 text/plain)
+// - Azure AI Search via REST
+// - Deterministic filtering for multi-part books using startswith(name, '... - Part')
+// - ALWAYS sets context.res
 
 const crypto = require("crypto");
 
@@ -67,10 +67,10 @@ function safeString(x, fallback = "") {
 }
 
 function compactSources(hits) {
-  // hits are docs with content + metadata_storage_name
+  // hits: docs with content + name
   let out = "";
   for (const h of hits) {
-    const cite = safeString(h.metadata_storage_name || h.cite || "source");
+    const cite = safeString(h.name || h.metadata_storage_name || h.cite || "source");
     const content = safeString(h.content || "");
     if (!content) continue;
 
@@ -100,30 +100,26 @@ function tryParseJsonStrict(s) {
   }
 }
 
-// --- PART NAME NORMALIZATION ---
-// Your /api/books output suggests metadata_storage_name is BASE names (no " - Part 01").
-// So we normalize parts to their base book name.
-function normalizePartToBaseName(name) {
+// ======= FILTER BUILDERS =======
+
+// Convert: "IIBEC - RoofDecks A-Z Hogan - Part 01" -> "IIBEC - RoofDecks A-Z Hogan - Part"
+function normalizePartPrefix(name) {
   return String(name)
-    .replace(/\s*-\s*Part\s*\d+\s*$/i, "")
-    .replace(/\s*Part\s*\d+\s*$/i, "")
-    .trim();
+    .trim()
+    .replace(/\s*-\s*Part\s*\d+\s*$/i, " - Part")
+    .replace(/\s*Part\s*\d+\s*$/i, " Part"); // fallback variant
 }
 
+// Deterministic: match all parts for the book using startswith() on the real field: `name`
 function buildFilterFromParts(parts) {
-  // Extract a common keyword from the parts (e.g. "Hogan")
-  // We assume all parts belong to the same book
-  const sample = String(parts[0]);
+  const sample = safeString(parts && parts[0] ? parts[0] : "").trim();
+  if (!sample) return null;
 
-  // Use the core title (strip " - Part NN")
-  const base = sample
-    .replace(/\s*-\s*Part\s*\d+\s*$/i, "")
-    .trim();
-
-  // Use Azure Search full-text match against the REAL field: "name"
-  return `search.ismatch('${escODataString(base)}', 'name')`;
+  const prefix = normalizePartPrefix(sample);
+  // NOTE: startswith() requires the field to be filterable. Your index returns `name`,
+  // and this approach avoids search.ismatch(field) (which requires searchable).
+  return `startswith(name, '${escODataString(prefix)}')`;
 }
-
 
 // ======= MAIN =======
 module.exports = async function (context, req) {
@@ -131,6 +127,7 @@ module.exports = async function (context, req) {
     if (req.method === "OPTIONS") return send(context, 204, "");
     if (req.method === "GET") return send(context, 200, { ok: true, name: "exam", time: new Date().toISOString() });
 
+    // ---- env ----
     const SEARCH_ENDPOINT = process.env.SEARCH_ENDPOINT;
     const SEARCH_API_KEY = process.env.SEARCH_API_KEY;
     const SEARCH_INDEX_CONTENT = process.env.SEARCH_INDEX_CONTENT || "azureblob-index-content";
@@ -147,31 +144,38 @@ module.exports = async function (context, req) {
       return send(context, 500, { error: "Missing AOAI_ENDPOINT or AOAI_API_KEY" });
     }
 
+    // ---- input ----
     const body = req.body || {};
     const count = clampInt(body.count, 1, MAX_COUNT, DEFAULT_COUNT);
 
     const parts = Array.isArray(body.parts) ? body.parts.filter(Boolean) : null;
     const bookGroupId = body.bookGroupId ? String(body.bookGroupId) : null;
-    const book = body.book ? String(body.book) : null;
-    const filterField = body.filterField ? String(body.filterField) : "metadata_storage_name";
 
-    // Allow either parts OR (book+filterField) OR bookGroupId
+    // Back-compat support: { book:"...", filterField:"name" }
+    const book = body.book ? String(body.book) : null;
+    const filterField = body.filterField ? String(body.filterField) : null;
+
     if ((!parts || parts.length === 0) && !bookGroupId && !book) {
-      return send(context, 400, { error: "Provide {parts:[...]} or {book:\"...\", filterField:\"...\"} or {bookGroupId:\"...\"}" });
+      return send(context, 400, { error: "Provide {parts:[...]} or {bookGroupId:\"...\"} or {book:\"...\", filterField:\"...\"}" });
     }
 
+    // ---- build filter ----
     let filter = null;
 
     if (parts && parts.length) {
       filter = buildFilterFromParts(parts);
+      if (!filter) return send(context, 400, { error: "Invalid parts[]", parts });
     } else if (book) {
-      // Exact match for explicit calls
-      filter = `${filterField} eq '${escODataString(book)}'`;
+      // If you call with book explicitly, you must tell us which field to match
+      // e.g. {"book":"IIBEC - RoofDecks A-Z Hogan - Part 01","filterField":"name"}
+      const ff = filterField || "name";
+      filter = `${ff} eq '${escODataString(book)}'`;
     } else {
       const field = process.env.SEARCH_BOOKGROUP_FIELD || "bookGroupId";
       filter = `${field} eq '${escODataString(bookGroupId)}'`;
     }
 
+    // ---- search ----
     const searchUrl =
       `${SEARCH_ENDPOINT.replace(/\/+$/, "")}` +
       `/indexes/${encodeURIComponent(SEARCH_INDEX_CONTENT)}` +
@@ -181,7 +185,8 @@ module.exports = async function (context, req) {
       search: "*",
       top: SEARCH_TOP,
       filter,
-      select: "content,metadata_storage_name"
+      // IMPORTANT: use fields that exist in your content index (per /api/searchtest)
+      select: "content,name"
     };
 
     const sres = await fetchJson(
@@ -205,6 +210,7 @@ module.exports = async function (context, req) {
       return send(context, 404, { error: "No searchable content returned for selection", filter });
     }
 
+    // ---- AOAI single call ----
     const reqId = crypto.randomUUID ? crypto.randomUUID() : crypto.randomBytes(16).toString("hex");
 
     const system =
