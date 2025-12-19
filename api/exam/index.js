@@ -491,6 +491,7 @@ module.exports = async function (context, req) {
               { role: "user", content: promptUser }
             ],
             temperature: 0.2,
+            response_format: { type: "json_object" },
             max_tokens: 1200
           })
         },
@@ -544,7 +545,7 @@ module.exports = async function (context, req) {
     let remaining = count;
     let planOffset = 0;
     while (remaining > 0) {
-      const n = remaining >= 10 ? 10 : remaining;
+      const n = remaining >= 5 ? 5 : remaining;
       plan.push({ n, idOffset: planOffset });
       remaining -= n;
       planOffset += n;
