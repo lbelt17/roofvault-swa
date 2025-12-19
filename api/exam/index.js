@@ -601,7 +601,12 @@ module.exports = async function (context, req) {
         requestId: reqId
       }
     });
-  } catch (e) {
-    return send(context, 500, { error: "Unhandled exception", detail: e?.message ? e.message : String(e) });
+    } catch (e) {
+    return send(context, 500, {
+      error: "Unhandled exception",
+      message: e?.message ? e.message : String(e),
+      stack: e?.stack ? String(e.stack).split("\n").slice(0, 12) : []
+    });
   }
 };
+
