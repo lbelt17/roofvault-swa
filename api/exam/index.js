@@ -21,7 +21,7 @@ const FILTERED_TOP = 80;     // step 2: pull chunks to feed AOAI
 const MAX_SOURCE_CHARS = 11000;
 
 const SEARCH_TIMEOUT_MS = 15000;
-const AOAI_TIMEOUT_MS = 30000;
+const AOAI_TIMEOUT_MS = 90000;
 
 // Candidate fields that might contain chunk text in your Search index
 // NOTE: We do NOT $select these blindly (Azure Search errors if field missing).
@@ -513,7 +513,7 @@ module.exports = async function (context, req) {
               { role: "user", content: promptUser }
             ],
             temperature: 0.2,
-            max_tokens: 2600
+            max_tokens: 2200
           })
         },
         AOAI_TIMEOUT_MS
