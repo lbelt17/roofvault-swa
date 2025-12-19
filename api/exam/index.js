@@ -1,12 +1,14 @@
 ﻿// api/exam/index.js
 // RoofVault /api/exam — SWA-friendly, stable, avoids unsupported filters
-// Fixes:
-// - NO startswith() in $filter (your service rejects it)
+// Fixes in THIS version:
+// - NO startswith() in $filter
 // - Two-step search:
-//   1) Resolve exact metadata_storage_name values by searching with keyword
-//   2) Filter with search.in(metadata_storage_name, '...', ',') and search using keyword (not "*")
-// - Handles text field being "content" OR "text" OR other common names
-// - Adds a repair pass if model output is invalid / truncated
+//   1) Resolve candidate metadata_storage_name values using keyword search
+//   2) Filter with search.in(metadata_storage_name, '...', ',') and search using keyword
+// - NEVER $select fields that might not exist (Azure Search throws 400)
+// - Robust text extraction from Search hits (handles string/array/object/null)
+// - Better diagnostics so we can see WHY text is empty when it happens
+// - Keeps output shape stable for your front-end
 
 const crypto = require("crypto");
 
@@ -14,14 +16,15 @@ const crypto = require("crypto");
 const DEFAULT_COUNT = 25;
 const MAX_COUNT = 50;
 
-const RESOLVE_TOP = 80;     // step 1: find matching doc names
-const FILTERED_TOP = 60;    // step 2: pull chunks to feed AOAI
+const RESOLVE_TOP = 120;     // step 1: find matching doc names
+const FILTERED_TOP = 80;     // step 2: pull chunks to feed AOAI
 const MAX_SOURCE_CHARS = 11000;
 
-const SEARCH_TIMEOUT_MS = 12000;
-const AOAI_TIMEOUT_MS = 28000;
+const SEARCH_TIMEOUT_MS = 15000;
+const AOAI_TIMEOUT_MS = 30000;
 
 // Candidate fields that might contain chunk text in your Search index
+// NOTE: We do NOT $select these blindly (Azure Search errors if field missing).
 const TEXT_FIELDS = ["content", "text", "chunk", "chunkText", "pageText", "merged_content"];
 
 // ======= HELPERS =======
@@ -51,7 +54,7 @@ function escODataString(s) {
 }
 
 function buildSearchInFilter(field, values) {
-  const joined = values.map(v => String(v)).join(",");
+  const joined = values.map((v) => String(v)).join(",");
   return `search.in(${field}, '${escODataString(joined)}', ',')`;
 }
 
@@ -62,7 +65,11 @@ async function fetchJson(url, options, timeoutMs) {
     const res = await fetch(url, { ...options, signal: ac.signal });
     const text = await res.text();
     let data = null;
-    try { data = text ? JSON.parse(text) : null; } catch { data = { _raw: text }; }
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = { _raw: text };
+    }
     return { ok: res.ok, status: res.status, data, _rawText: text };
   } finally {
     clearTimeout(t);
@@ -85,23 +92,80 @@ function baseTitleFromPartName(name) {
 function extractKeyword(baseTitle) {
   const s = String(baseTitle || "").trim();
   if (!s) return "";
-  const tokens = s.split(/\s+/).map(t => t.replace(/[^\w]+/g, "")).filter(Boolean);
+  const tokens = s
+    .split(/\s+/)
+    .map((t) => t.replace(/[^\w]+/g, ""))
+    .filter(Boolean);
   if (!tokens.length) return s;
   const last = tokens[tokens.length - 1];
   return last.length >= 3 ? last : s;
 }
 
+function asText(val) {
+  if (val == null) return "";
+
+  if (typeof val === "string") return val;
+
+  // Array of strings / objects
+  if (Array.isArray(val)) {
+    const parts = val
+      .map((x) => {
+        if (typeof x === "string") return x;
+        if (x == null) return "";
+        // If object has a "text" or "value" field, prefer it
+        if (typeof x === "object") {
+          if (typeof x.text === "string") return x.text;
+          if (typeof x.value === "string") return x.value;
+        }
+        try {
+          return JSON.stringify(x);
+        } catch {
+          return String(x);
+        }
+      })
+      .filter(Boolean);
+    return parts.join("\n");
+  }
+
+  // Object — stringify (handles cases where Search returns complex types)
+  if (typeof val === "object") {
+    if (typeof val.text === "string") return val.text;
+    if (typeof val.value === "string") return val.value;
+    try {
+      return JSON.stringify(val);
+    } catch {
+      return String(val);
+    }
+  }
+
+  return String(val);
+}
+
 function pickText(doc) {
   if (!doc) return "";
 
-  // Azure Search index uses `content`
-  if (typeof doc.content === "string" && doc.content.trim()) {
-    return doc.content;
+  // Prefer "content" first (your index sampleKeys shows it exists)
+  const primary = asText(doc.content);
+  if (primary.trim()) return primary;
+
+  // Fall back to other known field names IF they exist in the returned doc
+  for (const f of TEXT_FIELDS) {
+    if (f === "content") continue;
+    if (Object.prototype.hasOwnProperty.call(doc, f)) {
+      const v = asText(doc[f]);
+      if (v.trim()) return v;
+    }
+  }
+
+  // Some Search results include highlights — try them if present
+  // (Only if the service returned them; harmless otherwise)
+  if (doc["@search.highlights"]) {
+    const h = asText(doc["@search.highlights"]);
+    if (h.trim()) return h;
   }
 
   return "";
 }
-
 
 function compactSources(hits) {
   let out = "";
@@ -132,10 +196,14 @@ function tryParseJsonLoose(s) {
 
   if (first >= 0 && last > first) candidate = cleaned.slice(first, last + 1);
 
-  try { return JSON.parse(candidate); }
-  catch {
-    try { return JSON.parse(cleaned); }
-    catch { return null; }
+  try {
+    return JSON.parse(candidate);
+  } catch {
+    try {
+      return JSON.parse(cleaned);
+    } catch {
+      return null;
+    }
   }
 }
 
@@ -199,7 +267,8 @@ function validateItems(items, count) {
 module.exports = async function (context, req) {
   try {
     if (req.method === "OPTIONS") return send(context, 204, "");
-    if (req.method === "GET") return send(context, 200, { ok: true, name: "exam", time: new Date().toISOString() });
+    if (req.method === "GET")
+      return send(context, 200, { ok: true, name: "exam", time: new Date().toISOString() });
 
     const SEARCH_ENDPOINT = process.env.SEARCH_ENDPOINT;
     const SEARCH_API_KEY = process.env.SEARCH_API_KEY;
@@ -210,7 +279,8 @@ module.exports = async function (context, req) {
     const AOAI_DEPLOYMENT = process.env.AOAI_DEPLOYMENT || process.env.EXAM_OPENAI_DEPLOYMENT || "gpt-4o-mini";
     const AOAI_API_VERSION = process.env.AOAI_API_VERSION || process.env.OPENAI_API_VERSION || "2024-06-01";
 
-    if (!SEARCH_ENDPOINT || !SEARCH_API_KEY) return send(context, 500, { error: "Missing SEARCH_ENDPOINT or SEARCH_API_KEY" });
+    if (!SEARCH_ENDPOINT || !SEARCH_API_KEY)
+      return send(context, 500, { error: "Missing SEARCH_ENDPOINT or SEARCH_API_KEY" });
     if (!AOAI_ENDPOINT || !AOAI_API_KEY) return send(context, 500, { error: "Missing AOAI_ENDPOINT or AOAI_API_KEY" });
 
     const body = req.body || {};
@@ -231,16 +301,32 @@ module.exports = async function (context, req) {
       `/indexes/${encodeURIComponent(SEARCH_INDEX_CONTENT)}` +
       `/docs/search?api-version=2023-11-01`;
 
-    // Only select fields that DEFINITELY exist in the index.
-// Azure Search will error if you $select a field that doesn't exist.
-const selectFields = ["metadata_storage_name", "content"].join(",");
+    // Split the search runner so Resolve can safely $select only metadata_storage_name
+    async function runSearchResolve({ searchText, top }) {
+      const searchBody = {
+        search: searchText || "*",
+        top: top || RESOLVE_TOP,
+        select: "metadata_storage_name",
+        queryType: "simple"
+      };
 
+      return await fetchJson(
+        searchUrl,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
+          body: JSON.stringify(searchBody)
+        },
+        SEARCH_TIMEOUT_MS
+      );
+    }
 
-    async function runSearch({ searchText, filter, top }) {
+    async function runSearchFiltered({ searchText, filter, top }) {
+      // IMPORTANT: only $select fields we are confident exist
       const searchBody = {
         search: searchText || "*",
         top: top || FILTERED_TOP,
-        select: selectFields,
+        select: "metadata_storage_name,content",
         queryType: "simple"
       };
       if (filter) searchBody.filter = filter;
@@ -257,7 +343,7 @@ const selectFields = ["metadata_storage_name", "content"].join(",");
     }
 
     // ---- Step 1: resolve exact names by searching using keyword (NOT "*") ----
-    const resolveRes = await runSearch({ searchText: keyword, filter: null, top: RESOLVE_TOP });
+    const resolveRes = await runSearchResolve({ searchText: keyword, top: RESOLVE_TOP });
     if (!resolveRes.ok) {
       return send(context, 502, {
         error: "Search request failed (resolve)",
@@ -275,21 +361,24 @@ const selectFields = ["metadata_storage_name", "content"].join(",");
       const name = safeString(h.metadata_storage_name);
       if (!name) continue;
       if (name.toLowerCase().includes(baseLower)) keep.push(name);
-      if (keep.length >= 60) break;
+      if (keep.length >= 80) break;
     }
 
     const resolvedNames = keep.length
       ? Array.from(new Set(keep))
-      : Array.from(new Set(resolveHits.map(h => safeString(h.metadata_storage_name)).filter(Boolean)));
+      : Array.from(new Set(resolveHits.map((h) => safeString(h.metadata_storage_name)).filter(Boolean)));
 
     if (!resolvedNames.length) {
-      return send(context, 404, { error: "No searchable content returned for selection", _diag: { baseTitle, keyword, resolveHits: resolveHits.length } });
+      return send(context, 404, {
+        error: "No searchable content returned for selection",
+        _diag: { baseTitle, keyword, resolveHits: resolveHits.length }
+      });
     }
 
     // ---- Step 2: filter by those exact names, and ALSO search by keyword (NOT "*") ----
     const filter = buildSearchInFilter("metadata_storage_name", resolvedNames);
 
-    const sres = await runSearch({ searchText: keyword, filter, top: FILTERED_TOP });
+    const sres = await runSearchFiltered({ searchText: keyword, filter, top: FILTERED_TOP });
     if (!sres.ok) {
       return send(context, 502, {
         error: "Search request failed (filtered)",
@@ -303,12 +392,38 @@ const selectFields = ["metadata_storage_name", "content"].join(",");
     const sources = compactSources(hits);
 
     if (!sources) {
-      // Include a small sample of fields so we can see what Search returned
+      // Strong diagnostics: show content type/length/preview so we can pinpoint what's wrong
       const sample = hits[0] || null;
       const sampleKeys = sample ? Object.keys(sample) : [];
+      const c = sample ? sample.content : null;
+
+      const contentType = typeof c;
+      const contentLen = typeof c === "string" ? c.length : Array.isArray(c) ? c.length : null;
+
+      let contentPreview = null;
+      try {
+        contentPreview =
+          typeof c === "string"
+            ? c.slice(0, 240)
+            : c == null
+            ? null
+            : JSON.stringify(c).slice(0, 240);
+      } catch {
+        contentPreview = c == null ? null : String(c).slice(0, 240);
+      }
+
       return send(context, 404, {
         error: "No searchable content returned for selection",
-        _diag: { baseTitle, keyword, resolvedCount: resolvedNames.length, filteredHits: hits.length, sampleKeys }
+        _diag: {
+          baseTitle,
+          keyword,
+          resolvedCount: resolvedNames.length,
+          filteredHits: hits.length,
+          sampleKeys,
+          contentType,
+          contentLen,
+          contentPreview
+        }
       });
     }
 
