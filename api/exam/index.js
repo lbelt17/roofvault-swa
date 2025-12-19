@@ -60,31 +60,29 @@ async function fetchJson(url, options, timeoutMs) {
   }
 }
 
+function normalizePartToBaseName(name) {
+  // Removes " - Part 01" / " - Part 1" / " Part 01" patterns at the end
+  return String(name)
+    .replace(/\s*-\s*Part\s*\d+\s*$/i, "")
+    .replace(/\s*Part\s*\d+\s*$/i, "")
+    .trim();
+}
+
 function buildFilterFromParts(parts) {
-  // search.in(field, 'a,b,c', ',')
-  const joined = parts.map((p) => escODataString(p)).join(",");
+  // Your content index "metadata_storage_name" appears to store BASE book names
+  // (no " - Part 01"). So normalize first.
+  const bases = Array.from(
+    new Set(parts.map(normalizePartToBaseName).filter(Boolean))
+  );
+
+  if (bases.length === 1) {
+    return `metadata_storage_name eq '${escODataString(bases[0])}'`;
+  }
+
+  const joined = bases.map((b) => escODataString(b)).join(",");
   return `search.in(metadata_storage_name, '${joined}', ',')`;
 }
 
-function safeString(x, fallback = "") {
-  if (typeof x === "string") return x;
-  if (x == null) return fallback;
-  return String(x);
-}
-
-function compactSources(hits) {
-  let out = "";
-  for (const h of hits) {
-    const cite = safeString(h.metadata_storage_name || h.cite || "source");
-    const content = safeString(h.content || "");
-    if (!content) continue;
-
-    const block = `\n\n[${cite}]\n${content.trim()}`;
-    if (out.length + block.length > MAX_SOURCE_CHARS) break;
-    out += block;
-  }
-  return out.trim();
-}
 
 function tryParseJsonStrict(s) {
   if (!s) return null;
