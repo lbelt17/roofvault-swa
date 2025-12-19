@@ -70,7 +70,7 @@ function compactSources(hits) {
   // hits: docs with content + name
   let out = "";
   for (const h of hits) {
-    const cite = safeString(h.name || h.metadata_storage_name || h.cite || "source");
+    const cite = safeString(h.metadata_storage_name || h.cite || "source");
     const content = safeString(h.content || "");
     if (!content) continue;
 
@@ -112,14 +112,12 @@ function normalizePartPrefix(name) {
 
 // Deterministic: match all parts for the book using startswith() on the real field: `name`
 function buildFilterFromParts(parts) {
-  const sample = safeString(parts && parts[0] ? parts[0] : "").trim();
-  if (!sample) return null;
-
-  const prefix = normalizePartPrefix(sample);
-  // NOTE: startswith() requires the field to be filterable. Your index returns `name`,
-  // and this approach avoids search.ismatch(field) (which requires searchable).
-  return `startswith(name, '${escODataString(prefix)}')`;
+  // Exact match against the real indexed field: metadata_storage_name
+  // Uses search.in for an OR list.
+  const list = parts.map((p) => escODataString(String(p).trim())).join(",");
+  return `search.in(metadata_storage_name, '${list}', ',')`;
 }
+
 
 // ======= MAIN =======
 module.exports = async function (context, req) {
@@ -186,7 +184,7 @@ module.exports = async function (context, req) {
       top: SEARCH_TOP,
       filter,
       // IMPORTANT: use fields that exist in your content index (per /api/searchtest)
-      select: "content,name"
+      select: "content,metadata_storage_name"
     };
 
     const sres = await fetchJson(
