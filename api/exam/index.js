@@ -227,9 +227,10 @@ module.exports = async function (context, req) {
       `/indexes/${encodeURIComponent(SEARCH_INDEX_CONTENT)}` +
       `/docs/search?api-version=2023-11-01`;
 
-    // We ALWAYS include ALL possible text fields in select.
-    // If some fields don't exist, Search ignores them (it won't error).
-    const selectFields = ["metadata_storage_name", ...TEXT_FIELDS].join(",");
+    // Only select fields that DEFINITELY exist in the index.
+// Azure Search will error if you $select a field that doesn't exist.
+const selectFields = ["metadata_storage_name", "content"].join(",");
+
 
     async function runSearch({ searchText, filter, top }) {
       const searchBody = {
