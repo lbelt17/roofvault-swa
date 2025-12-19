@@ -1,10 +1,7 @@
 ﻿// api/exam/index.js
-// RoofVault /api/exam — SWA-friendly exam generation (stable)
-// - Uses Azure AI Search REST
-// - Uses robust keyword query (so "Hogan" works even if full title doesn't)
-// - Forces strict JSON output + repair pass
-// - Normalizes options + validates answer/cite/explanation
-// - Always sets context.res
+// RoofVault /api/exam — SWA-friendly, stable
+// Key fix: metadata_storage_name is NOT searchable in your index.
+// So we FILTER by metadata_storage_name (startswith) and search="*".
 
 const crypto = require("crypto");
 
@@ -67,7 +64,6 @@ function safeString(x, fallback = "") {
   return String(x);
 }
 
-// Strip " - Part 01" / " Part 01" from end
 function baseTitleFromPartName(name) {
   return String(name)
     .replace(/\s*-\s*Part\s*\d+\s*$/i, "")
@@ -75,17 +71,13 @@ function baseTitleFromPartName(name) {
     .trim();
 }
 
-// Extract a strong keyword for search (e.g., "Hogan")
 function extractKeyword(baseTitle) {
   const s = String(baseTitle || "").trim();
   if (!s) return "";
-  // Prefer last meaningful token, fallback to whole string
   const tokens = s.split(/\s+/).map(t => t.replace(/[^\w]+/g, "")).filter(Boolean);
   if (!tokens.length) return s;
   const last = tokens[tokens.length - 1];
-  // If last token is too short, fallback to whole base title
-  if (last.length < 3) return s;
-  return last;
+  return last.length >= 3 ? last : s;
 }
 
 function compactSources(hits) {
@@ -102,7 +94,6 @@ function compactSources(hits) {
   return out.trim();
 }
 
-// Robust JSON parser (handles ```json fences + JSON-string payloads)
 function tryParseJsonLoose(s) {
   if (!s) return null;
 
@@ -129,7 +120,6 @@ function tryParseJsonLoose(s) {
     }
   }
 
-  // Double-parse if model returned JSON as a quoted string
   if (typeof parsed === "string") {
     try { parsed = JSON.parse(parsed); } catch {}
   }
@@ -138,7 +128,6 @@ function tryParseJsonLoose(s) {
 
 function normalizeOptions(opt) {
   if (Array.isArray(opt) && opt.length) {
-    // ["A) ...", ...]
     if (typeof opt[0] === "string") {
       const out = [];
       for (const s of opt.slice(0, 4)) {
@@ -150,7 +139,6 @@ function normalizeOptions(opt) {
       while (out.length < 4) out.push({ id: String.fromCharCode(65 + out.length), text: "" });
       return out;
     }
-    // [{id,text}, ...]
     if (typeof opt[0] === "object") {
       const out = opt.slice(0, 4).map((o, i) => ({
         id: safeString(o.id, String.fromCharCode(65 + i)).toUpperCase(),
@@ -223,33 +211,32 @@ module.exports = async function (context, req) {
       return send(context, 400, { error: "Provide {parts:[...]} or {book:\"...\"} or {bookGroupId:\"...\"}" });
     }
 
+    // Base title and keyword (for fallback content search)
     const baseTitle =
       parts?.length ? baseTitleFromPartName(parts[0]) :
       book ? baseTitleFromPartName(book) :
       String(bookGroupId);
 
     const keyword = extractKeyword(baseTitle);
+
     const searchUrl =
       `${SEARCH_ENDPOINT.replace(/\/+$/, "")}` +
       `/indexes/${encodeURIComponent(SEARCH_INDEX_CONTENT)}` +
       `/docs/search?api-version=2023-11-01`;
 
-    // Optional filter that usually works if metadata_storage_name is filterable.
-    // If it returns 0 hits, we fallback to unfiltered.
-    const filterTry = baseTitle
-      ? `startswith(metadata_storage_name, '${escODataString(baseTitle)}')`
-      : null;
+    // PRIMARY: filter by filename prefix (works even if metadata_storage_name includes ".pdf")
+    // If parts provided, we want all parts => "<base> - Part"
+    const prefix = parts?.length ? `${baseTitle} - Part` : baseTitle;
+    const filterPrefix = `startswith(metadata_storage_name, '${escODataString(prefix)}')`;
 
-    async function runSearch(searchText, useFilter) {
+    async function runSearch({ searchText, filter }) {
       const searchBody = {
         search: searchText || "*",
         top: SEARCH_TOP,
         select: "content,metadata_storage_name",
-        // IMPORTANT: force searching in filename + content
-        searchFields: "metadata_storage_name,content",
         queryType: "simple"
       };
-      if (useFilter && filterTry) searchBody.filter = filterTry;
+      if (filter) searchBody.filter = filter;
 
       return await fetchJson(
         searchUrl,
@@ -262,24 +249,31 @@ module.exports = async function (context, req) {
       );
     }
 
-    // Search strategy:
-    // 1) keyword + filter
-    // 2) keyword without filter
-    // 3) baseTitle without filter
-    // 4) "*" without filter (last resort)
-    let sres = await runSearch(keyword, true);
-    let hits = (sres.data && (sres.data.value || sres.data.values)) || [];
-    if (sres.ok && hits.length === 0) sres = await runSearch(keyword, false), hits = (sres.data.value || sres.data.values || []);
-    if (sres.ok && hits.length === 0 && baseTitle) sres = await runSearch(baseTitle, false), hits = (sres.data.value || sres.data.values || []);
-    if (sres.ok && hits.length === 0) sres = await runSearch("*", false), hits = (sres.data.value || sres.data.values || []);
+    // Strategy:
+    // 1) search="*" + filter prefix (best)
+    // 2) fallback: search=keyword (content search) without filter
+    // 3) fallback: search="*" no filter (last resort)
+    let sres = await runSearch({ searchText: "*", filter: filterPrefix });
+    if (!sres.ok) return send(context, 502, { error: "Search request failed", status: sres.status, detail: sres.data, _diag: { baseTitle, keyword, filterPrefix } });
 
-    if (!sres.ok) {
-      return send(context, 502, { error: "Search request failed", status: sres.status, detail: sres.data, _diag: { baseTitle, keyword, filterTry } });
+    let hits = (sres.data && (sres.data.value || sres.data.values)) || [];
+    if (hits.length === 0 && keyword) {
+      sres = await runSearch({ searchText: keyword, filter: null });
+      if (!sres.ok) return send(context, 502, { error: "Search request failed", status: sres.status, detail: sres.data, _diag: { baseTitle, keyword, filterPrefix } });
+      hits = (sres.data.value || sres.data.values || []);
+    }
+    if (hits.length === 0) {
+      sres = await runSearch({ searchText: "*", filter: null });
+      if (!sres.ok) return send(context, 502, { error: "Search request failed", status: sres.status, detail: sres.data, _diag: { baseTitle, keyword, filterPrefix } });
+      hits = (sres.data.value || sres.data.values || []);
     }
 
     const sources = compactSources(hits);
     if (!sources) {
-      return send(context, 404, { error: "No searchable content returned for selection", _diag: { baseTitle, keyword, hits: hits.length } });
+      return send(context, 404, {
+        error: "No searchable content returned for selection",
+        _diag: { baseTitle, keyword, triedFilterPrefix: filterPrefix, hits: hits.length }
+      });
     }
 
     const reqId = crypto.randomUUID ? crypto.randomUUID() : crypto.randomBytes(16).toString("hex");
@@ -298,7 +292,7 @@ module.exports = async function (context, req) {
       `Rules:\n` +
       `- items length MUST be exactly ${count}\n` +
       `- answer MUST be one of "A","B","C","D"\n` +
-      `- cite MUST match one of the bracketed source labels exactly (example: IIBEC - ... Part 03)\n` +
+      `- cite MUST match one of the bracketed source labels exactly\n` +
       `- No truncation. Finish the JSON.`;
 
     const user =
@@ -340,7 +334,7 @@ module.exports = async function (context, req) {
       return { ok: true, parsed, raw: content };
     }
 
-    // 1) attempt
+    // attempt 1
     let a1 = await callAoai(user);
     if (!a1.ok) {
       return send(context, 502, { error: "AOAI request failed", status: a1.status, detail: a1.detail, _diag: { requestId: reqId, deployment: AOAI_DEPLOYMENT } });
@@ -350,7 +344,7 @@ module.exports = async function (context, req) {
     let items = parsed && parsed.items;
     let v = validateItems(items, count);
 
-    // 2) repair attempt
+    // repair attempt
     if (!v.ok) {
       const repair =
         `Your previous output was invalid (${v.reason}).\n` +
@@ -371,7 +365,7 @@ module.exports = async function (context, req) {
         error: "Model returned non-JSON or wrong/short shape",
         detail: v.reason,
         raw: a1.raw,
-        _diag: { requestId: reqId, deployment: AOAI_DEPLOYMENT, baseTitle, keyword, hits: hits.length }
+        _diag: { requestId: reqId, deployment: AOAI_DEPLOYMENT, baseTitle, keyword, hits: hits.length, filterPrefix }
       });
     }
 
@@ -390,12 +384,13 @@ module.exports = async function (context, req) {
       modelDeployment: AOAI_DEPLOYMENT,
       returned: finalItems.length,
       _diag: {
-        mode: "keyword-search-single-call",
+        mode: "filter-prefix-then-fallback-content",
         requested: count,
         returned: finalItems.length,
         baseTitle,
         keyword,
         hits: hits.length,
+        filterPrefix,
         sourceChars: sources.length,
         requestId: reqId
       }
