@@ -1,8 +1,9 @@
 ﻿// api/exam/index.js
 // RoofVault /api/exam — SIMPLE + RELIABLE (SWA-friendly)
-// - Uses Azure AI Search TEXT QUERY (like /api/searchtest) — no fragile filters
+// - Azure AI Search via REST (text search, like /api/searchtest)
 // - ONE Azure OpenAI call total
-// - Hard caps prompt size
+// - Robust env var support (handles your real SWA settings)
+// - Normalizes AOAI endpoint (prevents "wrong endpoint" 401)
 // - Always returns JSON + diagnostics
 
 const crypto = require("crypto");
@@ -11,12 +12,12 @@ const crypto = require("crypto");
 const DEFAULT_COUNT = 25;
 const MAX_COUNT = 50;
 
-const SEARCH_TOP = 50;               // how many chunks to pull
-const MAX_SOURCE_CHARS = 16000;      // cap the total source text fed to AOAI
+const SEARCH_TOP = 50;
+const MAX_SOURCE_CHARS = 16000;
 const SEARCH_TIMEOUT_MS = 10000;
 const AOAI_TIMEOUT_MS = 30000;
 
-// ======= RESPONSE HELPERS =======
+// ======= RESPONSE =======
 function send(context, status, obj, extraHeaders = {}) {
   context.res = {
     status,
@@ -42,6 +43,31 @@ function safeString(x, fallback = "") {
   if (typeof x === "string") return x;
   if (x == null) return fallback;
   return String(x);
+}
+
+// ======= ENV HELPERS =======
+function firstEnv(names) {
+  for (const n of names) {
+    const v = process.env[n];
+    if (v && String(v).trim()) return { name: n, value: String(v).trim() };
+  }
+  return { name: null, value: null };
+}
+
+function normalizeBaseUrl(u) {
+  if (!u) return null;
+  let s = String(u).trim();
+
+  // If someone pasted a full AOAI URL including /openai/..., strip back to host
+  const idx = s.toLowerCase().indexOf("/openai/");
+  if (idx !== -1) s = s.slice(0, idx);
+
+  // Ensure it has scheme for URL parsing
+  if (!/^https?:\/\//i.test(s)) s = `https://${s}`;
+
+  // Remove trailing slashes
+  s = s.replace(/\/+$/, "");
+  return s;
 }
 
 // ======= FETCH JSON WITH TIMEOUT =======
@@ -100,10 +126,6 @@ function baseFromPartName(partName) {
 }
 
 function deriveSearchQuery(body) {
-  // Priority:
-  // 1) parts[] -> base title
-  // 2) book -> book string
-  // 3) bookGroupId -> string (fallback; still text search)
   if (Array.isArray(body.parts) && body.parts.length) {
     const base = baseFromPartName(body.parts[0]);
     return base || "*";
@@ -124,7 +146,6 @@ module.exports = async function (context, req) {
     const body = req.body || {};
     const count = clampInt(body.count, 1, MAX_COUNT, DEFAULT_COUNT);
 
-    // Require a selector (parts/book/bookGroupId)
     const hasParts = Array.isArray(body.parts) && body.parts.length > 0;
     const hasBook = !!body.book;
     const hasGroup = !!body.bookGroupId;
@@ -133,29 +154,55 @@ module.exports = async function (context, req) {
       return send(context, 400, { error: "Provide {parts:[...]} or {book:\"...\"} or {bookGroupId:\"...\"}" });
     }
 
-    // ---- env ----
-    const SEARCH_ENDPOINT = process.env.SEARCH_ENDPOINT;
-    const SEARCH_API_KEY = process.env.SEARCH_API_KEY;
-    const SEARCH_INDEX_CONTENT = process.env.SEARCH_INDEX_CONTENT || "azureblob-index-content";
+    // ---- Search env ----
+    const searchEp = firstEnv(["SEARCH_ENDPOINT"]);
+    const searchKey = firstEnv(["SEARCH_API_KEY"]);
+    const searchIndex = firstEnv(["SEARCH_INDEX_CONTENT"]).value || "azureblob-index-content";
 
-    const AOAI_ENDPOINT = process.env.AOAI_ENDPOINT;
-    const AOAI_API_KEY = process.env.AOAI_API_KEY;
-    const AOAI_DEPLOYMENT = process.env.AOAI_DEPLOYMENT || "gpt-4o-mini";
-    const AOAI_API_VERSION = process.env.AOAI_API_VERSION || "2024-06-01";
+    // ---- AOAI env (ROBUST) ----
+    const aoaiEp = firstEnv(["AOAI_ENDPOINT", "AZURE_OPENAI_ENDPOINT", "OPENAI_ENDPOINT"]);
+    const aoaiKey = firstEnv([
+      "AOAI_API_KEY",
+      "AOAI_KEY",
+      "AZURE_OPENAI_API_KEY",
+      "AZURE_OPENAI_KEY",
+      "OPENAI_API_KEY",
+      "OPENAI_KEY"
+    ]);
+    const aoaiDep = firstEnv(["AOAI_DEPLOYMENT", "AZURE_OPENAI_DEPLOYMENT", "OPENAI_DEPLOYMENT"]).value || "gpt-4o-mini";
+    const aoaiVer = firstEnv(["AOAI_API_VERSION", "AZURE_OPENAI_API_VERSION", "OPENAI_API_VERSION"]).value || "2024-06-01";
 
-    if (!SEARCH_ENDPOINT || !SEARCH_API_KEY) {
-      return send(context, 500, { error: "Missing SEARCH_ENDPOINT or SEARCH_API_KEY" });
+    const SEARCH_ENDPOINT = normalizeBaseUrl(searchEp.value);
+    const AOAI_ENDPOINT = normalizeBaseUrl(aoaiEp.value);
+
+    if (!SEARCH_ENDPOINT || !searchKey.value) {
+      return send(context, 500, {
+        error: "Missing Search configuration",
+        missing: {
+          SEARCH_ENDPOINT: !SEARCH_ENDPOINT,
+          SEARCH_API_KEY: !searchKey.value
+        }
+      });
     }
-    if (!AOAI_ENDPOINT || !AOAI_API_KEY) {
-      return send(context, 500, { error: "Missing AOAI_ENDPOINT or AOAI_API_KEY" });
+
+    if (!AOAI_ENDPOINT || !aoaiKey.value) {
+      return send(context, 500, {
+        error: "Missing Azure OpenAI configuration",
+        missing: {
+          AOAI_ENDPOINT: !AOAI_ENDPOINT,
+          AOAI_KEY: !aoaiKey.value
+        },
+        hint:
+          "Your SWA environment variables likely use AZURE_OPENAI_ENDPOINT / AZURE_OPENAI_KEY (or similar). This function supports multiple names, but they must exist in SWA Configuration."
+      });
     }
 
-    // ---- search (TEXT QUERY; no filter) ----
+    // ---- Search (TEXT QUERY; no filter) ----
     const searchQuery = deriveSearchQuery(body);
 
     const searchUrl =
-      `${SEARCH_ENDPOINT.replace(/\/+$/, "")}` +
-      `/indexes/${encodeURIComponent(SEARCH_INDEX_CONTENT)}` +
+      `${SEARCH_ENDPOINT}` +
+      `/indexes/${encodeURIComponent(searchIndex)}` +
       `/docs/search?api-version=2023-11-01`;
 
     const searchBody = {
@@ -168,10 +215,7 @@ module.exports = async function (context, req) {
       searchUrl,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "api-key": SEARCH_API_KEY
-        },
+        headers: { "Content-Type": "application/json", "api-key": searchKey.value },
         body: JSON.stringify(searchBody)
       },
       SEARCH_TIMEOUT_MS
@@ -182,7 +226,7 @@ module.exports = async function (context, req) {
         error: "Search request failed",
         status: sres.status,
         detail: sres.data,
-        _diag: { searchQuery, index: SEARCH_INDEX_CONTENT }
+        _diag: { searchQuery, index: searchIndex, searchEndpointHost: new URL(SEARCH_ENDPOINT).host }
       });
     }
 
@@ -192,7 +236,7 @@ module.exports = async function (context, req) {
     if (!sources) {
       return send(context, 404, {
         error: "No searchable content returned for selection",
-        _diag: { searchQuery, hits: hits.length, index: SEARCH_INDEX_CONTENT }
+        _diag: { searchQuery, hits: hits.length, index: searchIndex }
       });
     }
 
@@ -212,9 +256,9 @@ module.exports = async function (context, req) {
       `SOURCES:\n${sources}`;
 
     const aoaiUrl =
-      `${AOAI_ENDPOINT.replace(/\/+$/, "")}` +
-      `/openai/deployments/${encodeURIComponent(AOAI_DEPLOYMENT)}` +
-      `/chat/completions?api-version=${encodeURIComponent(AOAI_API_VERSION)}`;
+      `${AOAI_ENDPOINT}` +
+      `/openai/deployments/${encodeURIComponent(aoaiDep)}` +
+      `/chat/completions?api-version=${encodeURIComponent(aoaiVer)}`;
 
     const ares = await fetchJson(
       aoaiUrl,
@@ -222,7 +266,7 @@ module.exports = async function (context, req) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "api-key": AOAI_API_KEY,
+          "api-key": aoaiKey.value,
           "x-ms-client-request-id": reqId
         },
         body: JSON.stringify({
@@ -242,7 +286,13 @@ module.exports = async function (context, req) {
         error: "AOAI request failed",
         status: ares.status,
         detail: ares.data,
-        _diag: { requestId: reqId, deployment: AOAI_DEPLOYMENT }
+        _diag: {
+          requestId: reqId,
+          deployment: aoaiDep,
+          aoaiEndpointHost: new URL(AOAI_ENDPOINT).host,
+          aoaiEndpointEnvUsed: aoaiEp.name,
+          aoaiKeyEnvUsed: aoaiKey.name
+        }
       });
     }
 
@@ -288,7 +338,7 @@ module.exports = async function (context, req) {
 
     return send(context, 200, {
       items,
-      modelDeployment: AOAI_DEPLOYMENT,
+      modelDeployment: aoaiDep,
       _diag: {
         mode: "text-search-single-call",
         requested: count,
@@ -296,7 +346,11 @@ module.exports = async function (context, req) {
         searchQuery,
         hits: hits.length,
         sourceChars: sources.length,
-        searchIndexContent: SEARCH_INDEX_CONTENT,
+        searchIndexContent: searchIndex,
+        searchEndpointHost: new URL(SEARCH_ENDPOINT).host,
+        aoaiEndpointHost: new URL(AOAI_ENDPOINT).host,
+        aoaiEndpointEnvUsed: aoaiEp.name,
+        aoaiKeyEnvUsed: aoaiKey.name,
         aoaiRequestId: reqId
       }
     });
