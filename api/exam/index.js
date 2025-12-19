@@ -7,8 +7,9 @@
 //   2) Filter with search.in(metadata_storage_name, '...', ',') and search using keyword
 // - NEVER $select fields that might not exist (Azure Search throws 400)
 // - Robust text extraction from Search hits, INCLUDING when `content` is a JSON-string like ["...","..."]
-// - Better diagnostics when no sources are produced
-// - Stable output shape for your front-end
+// - Fixes "No searchable content" caused by MAX_SOURCE_CHARS (truncates instead of skipping)
+// - Fixes AOAI truncation by batching (10 + 10 + remainder)
+// - Better diagnostics + stable output shape
 
 const crypto = require("crypto");
 
@@ -16,15 +17,13 @@ const crypto = require("crypto");
 const DEFAULT_COUNT = 25;
 const MAX_COUNT = 50;
 
-const RESOLVE_TOP = 120;     // step 1: find matching doc names
-const FILTERED_TOP = 80;     // step 2: pull chunks to feed AOAI
+const RESOLVE_TOP = 120; // step 1: find matching doc names
+const FILTERED_TOP = 80; // step 2: pull chunks to feed AOAI
 const MAX_SOURCE_CHARS = 11000;
 
 const SEARCH_TIMEOUT_MS = 15000;
 const AOAI_TIMEOUT_MS = 90000;
 
-// Candidate fields that might contain chunk text in your Search index
-// NOTE: We do NOT $select these blindly (Azure Search errors if field missing).
 const TEXT_FIELDS = ["content", "text", "chunk", "chunkText", "pageText", "merged_content"];
 
 // ======= HELPERS =======
@@ -102,32 +101,22 @@ function extractKeyword(baseTitle) {
 }
 
 // Robust conversion to plain text.
-// Handles:
-// - string
-// - JSON-string arrays/objects (e.g. '["a","b"]')
-// - arrays of strings/objects
-// - objects with .text or .value
 function asText(val) {
   if (val == null) return "";
 
-  // String
   if (typeof val === "string") {
     const s = val.trim();
-
-    // If the string itself is JSON (e.g. '["a","b"]' or '{"text":"..."}')
     if ((s.startsWith("[") && s.endsWith("]")) || (s.startsWith("{") && s.endsWith("}"))) {
       try {
         const parsed = JSON.parse(s);
-        return asText(parsed); // recurse to handle arrays/objects
+        return asText(parsed);
       } catch {
-        // If it isn't valid JSON, just treat it as normal text
+        // not valid JSON string; treat as text
       }
     }
-
     return val;
   }
 
-  // Array (strings/objects)
   if (Array.isArray(val)) {
     const parts = val
       .map((x) => {
@@ -148,7 +137,6 @@ function asText(val) {
     return parts.join("\n");
   }
 
-  // Object
   if (typeof val === "object") {
     if (typeof val.text === "string") return val.text;
     if (typeof val.value === "string") return val.value;
@@ -159,18 +147,15 @@ function asText(val) {
     }
   }
 
-  // Number/boolean/etc
   return String(val);
 }
 
 function pickText(doc) {
   if (!doc) return "";
 
-  // Prefer "content" first
   const primary = asText(doc.content);
   if (primary.trim()) return primary;
 
-  // Fall back to other known field names IF they exist in the returned doc
   for (const f of TEXT_FIELDS) {
     if (f === "content") continue;
     if (Object.prototype.hasOwnProperty.call(doc, f)) {
@@ -179,7 +164,6 @@ function pickText(doc) {
     }
   }
 
-  // Highlights (if returned by service)
   if (doc["@search.highlights"]) {
     const h = asText(doc["@search.highlights"]);
     if (h.trim()) return h;
@@ -188,34 +172,30 @@ function pickText(doc) {
   return "";
 }
 
+// IMPORTANT: truncate instead of skipping when first chunk exceeds MAX_SOURCE_CHARS
 function compactSources(hits) {
   let out = "";
 
   for (const h of hits) {
     const cite = safeString(h.metadata_storage_name || "source");
-    const textRaw = pickText(h);
-    const text = textRaw ? textRaw.trim() : "";
+    const text = (pickText(h) || "").trim();
     if (!text) continue;
 
     const header = `\n\n[${cite}]\n`;
     const remaining = MAX_SOURCE_CHARS - out.length;
 
-    // If we can't even fit a header, stop.
     if (remaining <= header.length + 50) break;
 
-    // Add as much text as we can from this hit.
     const allow = remaining - header.length;
     const chunk = text.length > allow ? text.slice(0, allow) : text;
 
     out += header + chunk;
 
-    // If we've filled up, stop.
     if (out.length >= MAX_SOURCE_CHARS) break;
   }
 
   return out.trim();
 }
-
 
 function tryParseJsonLoose(s) {
   if (!s) return null;
@@ -331,7 +311,7 @@ module.exports = async function (context, req) {
     const book = body.book ? String(body.book) : null;
 
     if ((!parts || parts.length === 0) && !book) {
-      return send(context, 400, { error: "Provide {parts:[...]} or {book:\"...\"}" });
+      return send(context, 400, { error: 'Provide {parts:[...]} or {book:"..."}' });
     }
 
     const baseTitle = parts?.length ? baseTitleFromPartName(parts[0]) : baseTitleFromPartName(book);
@@ -342,8 +322,7 @@ module.exports = async function (context, req) {
       `/indexes/${encodeURIComponent(SEARCH_INDEX_CONTENT)}` +
       `/docs/search?api-version=2023-11-01`;
 
-    // Resolve pass: ONLY select metadata_storage_name (safe)
-    async function runSearchResolve({ searchText, top }) {
+    async function runSearchResolve(searchText, top) {
       const searchBody = {
         search: searchText || "*",
         top: top || RESOLVE_TOP,
@@ -362,8 +341,7 @@ module.exports = async function (context, req) {
       );
     }
 
-    // Filtered pass: select ONLY fields we know exist (metadata_storage_name, content)
-    async function runSearchFiltered({ searchText, filter, top }) {
+    async function runSearchFiltered(searchText, filter, top) {
       const searchBody = {
         search: searchText || "*",
         top: top || FILTERED_TOP,
@@ -383,8 +361,8 @@ module.exports = async function (context, req) {
       );
     }
 
-    // ---- Step 1: resolve exact names by searching using keyword (NOT "*") ----
-    const resolveRes = await runSearchResolve({ searchText: keyword, top: RESOLVE_TOP });
+    // ---- Step 1: resolve candidate names ----
+    const resolveRes = await runSearchResolve(keyword, RESOLVE_TOP);
     if (!resolveRes.ok) {
       return send(context, 502, {
         error: "Search request failed (resolve)",
@@ -416,10 +394,10 @@ module.exports = async function (context, req) {
       });
     }
 
-    // ---- Step 2: filter by those exact names, and ALSO search by keyword (NOT "*") ----
+    // ---- Step 2: search.in(...) filter + keyword search ----
     const filter = buildSearchInFilter("metadata_storage_name", resolvedNames);
 
-    const sres = await runSearchFiltered({ searchText: keyword, filter, top: FILTERED_TOP });
+    const sres = await runSearchFiltered(keyword, filter, FILTERED_TOP);
     if (!sres.ok) {
       return send(context, 502, {
         error: "Search request failed (filtered)",
@@ -467,8 +445,9 @@ module.exports = async function (context, req) {
       });
     }
 
-    // ---- AOAI (with repair pass) ----
-    const reqId = crypto.randomUUID ? crypto.randomUUID() : crypto.randomBytes(16).toString("hex");
+    // ---- AOAI (batched to avoid truncation) ----
+    const requestId =
+      crypto.randomUUID ? crypto.randomUUID() : crypto.randomBytes(16).toString("hex");
 
     const system =
       "You generate practice exams from provided sources.\n" +
@@ -477,20 +456,19 @@ module.exports = async function (context, req) {
       "Every question must be answerable from the sources.\n" +
       'If you cannot comply, return: {"items":[]}';
 
-    const schema =
-      `Return JSON exactly like:\n` +
-      `{"items":[{"id":"1","type":"mcq","question":"...","options":[{"id":"A","text":"..."},{"id":"B","text":"..."},{"id":"C","text":"..."},{"id":"D","text":"..."}],` +
-      `"answer":"A","cite":"<one of the [source] labels>","explanation":"..."}]}\n` +
-      `Rules:\n` +
-      `- items length MUST be exactly ${count}\n` +
-      `- answer MUST be one of "A","B","C","D"\n` +
-      `- cite MUST match one of the bracketed source labels exactly\n` +
-      `- Finish the JSON (no truncation).`;
-
-    const user =
-      `Create exactly ${count} MCQs.\n\n` +
-      `${schema}\n\n` +
-      `SOURCES:\n${sources}`;
+    function makeSchema(batchCount, idOffset) {
+      return (
+        `Return JSON exactly like:\n` +
+        `{"items":[{"id":"${idOffset + 1}","type":"mcq","question":"...","options":[{"id":"A","text":"..."},{"id":"B","text":"..."},{"id":"C","text":"..."},{"id":"D","text":"..."}],` +
+        `"answer":"A","cite":"<one of the [source] labels>","explanation":"..."}]}\n` +
+        `Rules:\n` +
+        `- items length MUST be exactly ${batchCount}\n` +
+        `- id MUST be "${idOffset + 1}" to "${idOffset + batchCount}" (sequential)\n` +
+        `- answer MUST be one of "A","B","C","D"\n` +
+        `- cite MUST match one of the bracketed source labels exactly\n` +
+        `- Finish the JSON (no truncation).`
+      );
+    }
 
     const aoaiUrl =
       `${AOAI_ENDPOINT.replace(/\/+$/, "")}` +
@@ -505,7 +483,7 @@ module.exports = async function (context, req) {
           headers: {
             "Content-Type": "application/json",
             "api-key": AOAI_API_KEY,
-            "x-ms-client-request-id": reqId
+            "x-ms-client-request-id": requestId
           },
           body: JSON.stringify({
             messages: [
@@ -513,7 +491,7 @@ module.exports = async function (context, req) {
               { role: "user", content: promptUser }
             ],
             temperature: 0.2,
-            max_tokens: 2200
+            max_tokens: 1200
           })
         },
         AOAI_TIMEOUT_MS
@@ -525,45 +503,68 @@ module.exports = async function (context, req) {
       return { ok: true, parsed, raw: content };
     }
 
-    let a1 = await callAoai(user);
-    if (!a1.ok) {
-      return send(context, 502, {
-        error: "AOAI request failed",
-        status: a1.status,
-        detail: a1.detail,
-        _diag: { requestId: reqId, deployment: AOAI_DEPLOYMENT }
-      });
-    }
+    async function generateBatch(batchCount, idOffset) {
+      const schema = makeSchema(batchCount, idOffset);
 
-    let parsed = a1.parsed;
-    let items = parsed && parsed.items;
-    let v = validateItems(items, count);
-
-    if (!v.ok) {
-      const repair =
-        `Your previous output was invalid (${v.reason}).\n` +
-        `Return ONLY valid JSON and EXACTLY ${count} items. No code fences. No extra text.\n\n` +
+      const user =
+        `Create exactly ${batchCount} MCQs numbered ${idOffset + 1} to ${idOffset + batchCount}.\n\n` +
         `${schema}\n\n` +
         `SOURCES:\n${sources}`;
 
-      const a2 = await callAoai(repair);
-      if (a2.ok) {
-        parsed = a2.parsed;
-        items = parsed && parsed.items;
-        v = validateItems(items, count);
+      const a1 = await callAoai(user);
+      if (!a1.ok) return { ok: false, detail: a1.detail, raw: a1.raw };
+
+      let parsed = a1.parsed;
+      let items = parsed && parsed.items;
+      let v = validateItems(items, batchCount);
+
+      if (!v.ok) {
+        const repair =
+          `Your previous output was invalid (${v.reason}) or truncated.\n` +
+          `Return ONLY valid JSON and EXACTLY ${batchCount} items numbered ${idOffset + 1} to ${idOffset + batchCount}.\n\n` +
+          `${schema}\n\n` +
+          `SOURCES:\n${sources}`;
+
+        const a2 = await callAoai(repair);
+        if (a2.ok) {
+          parsed = a2.parsed;
+          items = parsed && parsed.items;
+          v = validateItems(items, batchCount);
+          if (v.ok) return { ok: true, items };
+        }
+
+        return { ok: false, detail: v.reason, raw: a1.raw };
       }
+
+      return { ok: true, items };
     }
 
-    if (!v.ok) {
-      return send(context, 500, {
-        error: "Model returned non-JSON or wrong/short shape",
-        detail: v.reason,
-        raw: a1.raw,
-        _diag: { requestId: reqId, deployment: AOAI_DEPLOYMENT, baseTitle, keyword, resolvedCount: resolvedNames.length }
-      });
+    // Plan: 10 + 10 + remainder
+    const plan = [];
+    let remaining = count;
+    let planOffset = 0;
+    while (remaining > 0) {
+      const n = remaining >= 10 ? 10 : remaining;
+      plan.push({ n, idOffset: planOffset });
+      remaining -= n;
+      planOffset += n;
     }
 
-    const finalItems = items.slice(0, count).map((q, i) => ({
+    let all = [];
+    for (const p of plan) {
+      const b = await generateBatch(p.n, p.idOffset);
+      if (!b.ok) {
+        return send(context, 500, {
+          error: "Model returned non-JSON or wrong/short shape",
+          detail: b.detail || "batch failed",
+          raw: b.raw,
+          _diag: { requestId: requestId, deployment: AOAI_DEPLOYMENT, baseTitle, keyword, plan }
+        });
+      }
+      all = all.concat(b.items);
+    }
+
+    const finalItems = all.slice(0, count).map((q, i) => ({
       id: String(i + 1),
       type: "mcq",
       question: safeString(q.question),
@@ -584,7 +585,8 @@ module.exports = async function (context, req) {
         resolvedCount: resolvedNames.length,
         filteredHits: hits.length,
         sourceChars: sources.length,
-        requestId: reqId
+        requestId: requestId,
+        plan
       }
     });
   } catch (e) {
