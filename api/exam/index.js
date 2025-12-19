@@ -1,14 +1,14 @@
 ﻿// api/exam/index.js
 // RoofVault /api/exam — SWA-friendly, stable, avoids unsupported filters
-// Fixes in THIS version:
+// This version fixes:
 // - NO startswith() in $filter
 // - Two-step search:
 //   1) Resolve candidate metadata_storage_name values using keyword search
 //   2) Filter with search.in(metadata_storage_name, '...', ',') and search using keyword
 // - NEVER $select fields that might not exist (Azure Search throws 400)
-// - Robust text extraction from Search hits (handles string/array/object/null)
-// - Better diagnostics so we can see WHY text is empty when it happens
-// - Keeps output shape stable for your front-end
+// - Robust text extraction from Search hits, INCLUDING when `content` is a JSON-string like ["...","..."]
+// - Better diagnostics when no sources are produced
+// - Stable output shape for your front-end
 
 const crypto = require("crypto");
 
@@ -101,43 +101,12 @@ function extractKeyword(baseTitle) {
   return last.length >= 3 ? last : s;
 }
 
-  if (typeof val === "string") {
-    const s = val.trim();
-
-    // If the string itself is JSON (common when content is stored as '["...","..."]')
-    if ((s.startsWith("[") && s.endsWith("]")) || (s.startsWith("{") && s.endsWith("}"))) {
-      try {
-        const parsed = JSON.parse(s);
-        return asText(parsed); // recurse to handle arrays/objects
-      } catch {
-        // fall through and return raw string
-      }
-    }
-
-    return val;
-  }
-
-
-  // Array of strings / objects
-  if (Array.isArray(val)) {
-    const parts = val
-      .map((x) => {
-        if (typeof x === "string") return x;
-        if (x == null) return "";
-        // If object has a "text" or "value" field, prefer it
-        if (typeof x === "object") {
-          if (typeof x.text === "string") return x.text;
-          if (typeof x.value === "string") return x.value;
-        }
-        try {
-          return JSON.stringify(x);
-        } catch {
-          return String(x);
-        }
-      })
-      .filter(Boolean);
-    return parts.join("\n");
-  }
+// Robust conversion to plain text.
+// Handles:
+// - string
+// - JSON-string arrays/objects (e.g. '["a","b"]')
+// - arrays of strings/objects
+// - objects with .text or .value
 function asText(val) {
   if (val == null) return "";
 
@@ -146,10 +115,7 @@ function asText(val) {
     const s = val.trim();
 
     // If the string itself is JSON (e.g. '["a","b"]' or '{"text":"..."}')
-    if (
-      (s.startsWith("[") && s.endsWith("]")) ||
-      (s.startsWith("{") && s.endsWith("}"))
-    ) {
+    if ((s.startsWith("[") && s.endsWith("]")) || (s.startsWith("{") && s.endsWith("}"))) {
       try {
         const parsed = JSON.parse(s);
         return asText(parsed); // recurse to handle arrays/objects
@@ -197,8 +163,10 @@ function asText(val) {
   return String(val);
 }
 
+function pickText(doc) {
+  if (!doc) return "";
 
-  // Prefer "content" first (your index sampleKeys shows it exists)
+  // Prefer "content" first
   const primary = asText(doc.content);
   if (primary.trim()) return primary;
 
@@ -211,15 +179,14 @@ function asText(val) {
     }
   }
 
-  // Some Search results include highlights — try them if present
-  // (Only if the service returned them; harmless otherwise)
+  // Highlights (if returned by service)
   if (doc["@search.highlights"]) {
     const h = asText(doc["@search.highlights"]);
     if (h.trim()) return h;
   }
 
   return "";
-
+}
 
 function compactSources(hits) {
   let out = "";
@@ -321,8 +288,9 @@ function validateItems(items, count) {
 module.exports = async function (context, req) {
   try {
     if (req.method === "OPTIONS") return send(context, 204, "");
-    if (req.method === "GET")
+    if (req.method === "GET") {
       return send(context, 200, { ok: true, name: "exam", time: new Date().toISOString() });
+    }
 
     const SEARCH_ENDPOINT = process.env.SEARCH_ENDPOINT;
     const SEARCH_API_KEY = process.env.SEARCH_API_KEY;
@@ -330,12 +298,16 @@ module.exports = async function (context, req) {
 
     const AOAI_ENDPOINT = process.env.AOAI_ENDPOINT;
     const AOAI_API_KEY = process.env.AOAI_API_KEY;
-    const AOAI_DEPLOYMENT = process.env.AOAI_DEPLOYMENT || process.env.EXAM_OPENAI_DEPLOYMENT || "gpt-4o-mini";
+    const AOAI_DEPLOYMENT =
+      process.env.AOAI_DEPLOYMENT || process.env.EXAM_OPENAI_DEPLOYMENT || "gpt-4o-mini";
     const AOAI_API_VERSION = process.env.AOAI_API_VERSION || process.env.OPENAI_API_VERSION || "2024-06-01";
 
-    if (!SEARCH_ENDPOINT || !SEARCH_API_KEY)
+    if (!SEARCH_ENDPOINT || !SEARCH_API_KEY) {
       return send(context, 500, { error: "Missing SEARCH_ENDPOINT or SEARCH_API_KEY" });
-    if (!AOAI_ENDPOINT || !AOAI_API_KEY) return send(context, 500, { error: "Missing AOAI_ENDPOINT or AOAI_API_KEY" });
+    }
+    if (!AOAI_ENDPOINT || !AOAI_API_KEY) {
+      return send(context, 500, { error: "Missing AOAI_ENDPOINT or AOAI_API_KEY" });
+    }
 
     const body = req.body || {};
     const count = clampInt(body.count, 1, MAX_COUNT, DEFAULT_COUNT);
@@ -355,7 +327,7 @@ module.exports = async function (context, req) {
       `/indexes/${encodeURIComponent(SEARCH_INDEX_CONTENT)}` +
       `/docs/search?api-version=2023-11-01`;
 
-    // Split the search runner so Resolve can safely $select only metadata_storage_name
+    // Resolve pass: ONLY select metadata_storage_name (safe)
     async function runSearchResolve({ searchText, top }) {
       const searchBody = {
         search: searchText || "*",
@@ -375,8 +347,8 @@ module.exports = async function (context, req) {
       );
     }
 
+    // Filtered pass: select ONLY fields we know exist (metadata_storage_name, content)
     async function runSearchFiltered({ searchText, filter, top }) {
-      // IMPORTANT: only $select fields we are confident exist
       const searchBody = {
         search: searchText || "*",
         top: top || FILTERED_TOP,
@@ -446,7 +418,6 @@ module.exports = async function (context, req) {
     const sources = compactSources(hits);
 
     if (!sources) {
-      // Strong diagnostics: show content type/length/preview so we can pinpoint what's wrong
       const sample = hits[0] || null;
       const sampleKeys = sample ? Object.keys(sample) : [];
       const c = sample ? sample.content : null;
@@ -489,7 +460,7 @@ module.exports = async function (context, req) {
       "Return ONLY valid JSON (no markdown, no code fences, no extra text).\n" +
       "Do not invent facts not present in the sources.\n" +
       "Every question must be answerable from the sources.\n" +
-      "If you cannot comply, return: {\"items\":[]}";
+      'If you cannot comply, return: {"items":[]}';
 
     const schema =
       `Return JSON exactly like:\n` +
@@ -601,7 +572,7 @@ module.exports = async function (context, req) {
         requestId: reqId
       }
     });
-    } catch (e) {
+  } catch (e) {
     return send(context, 500, {
       error: "Unhandled exception",
       message: e?.message ? e.message : String(e),
@@ -609,4 +580,3 @@ module.exports = async function (context, req) {
     });
   }
 };
-
