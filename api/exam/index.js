@@ -92,12 +92,16 @@ function extractKeyword(baseTitle) {
 }
 
 function pickText(doc) {
-  for (const f of TEXT_FIELDS) {
-    const v = doc && doc[f];
-    if (typeof v === "string" && v.trim()) return v;
+  if (!doc) return "";
+
+  // Azure Search index uses `content`
+  if (typeof doc.content === "string" && doc.content.trim()) {
+    return doc.content;
   }
+
   return "";
 }
+
 
 function compactSources(hits) {
   let out = "";
