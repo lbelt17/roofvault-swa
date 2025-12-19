@@ -1,4 +1,4 @@
-﻿const fetch = global.fetch || require("node-fetch");
+﻿const fetch = globalThis.fetch;
 
 module.exports = async function (context, req) {
   const out = { ok: true, checks: [] };

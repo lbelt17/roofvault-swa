@@ -1,4 +1,4 @@
-﻿const fetch = require("node-fetch");
+﻿const fetch = globalThis.fetch;
 
 const SEARCH_ENDPOINT = process.env.SEARCH_ENDPOINT;
 const SEARCH_INDEX    = process.env.SEARCH_INDEX;
