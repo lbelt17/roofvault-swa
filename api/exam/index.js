@@ -1,9 +1,10 @@
 ﻿// api/exam/index.js
-// RoofVault /api/exam — SWA-friendly exam generation
-// - Stable under SWA timeout
-// - Returns EXACT count or fails loudly
-// - Consistent schema: options[{id,text}], answer, cite, explanation
-// - Azure AI Search via REST
+// RoofVault /api/exam — SWA-friendly exam generation (stable)
+// - Uses Azure AI Search REST
+// - Uses robust keyword query (so "Hogan" works even if full title doesn't)
+// - Forces strict JSON output + repair pass
+// - Normalizes options + validates answer/cite/explanation
+// - Always sets context.res
 
 const crypto = require("crypto");
 
@@ -11,9 +12,8 @@ const crypto = require("crypto");
 const DEFAULT_COUNT = 25;
 const MAX_COUNT = 50;
 
-// Tune these to avoid truncation
-const SEARCH_TOP = 45;            // was 60; too much text increases truncation risk
-const MAX_SOURCE_CHARS = 11000;   // was 14000; keep smaller so model finishes JSON
+const SEARCH_TOP = 45;
+const MAX_SOURCE_CHARS = 11000;
 const SEARCH_TIMEOUT_MS = 9000;
 const AOAI_TIMEOUT_MS = 28000;
 
@@ -75,6 +75,19 @@ function baseTitleFromPartName(name) {
     .trim();
 }
 
+// Extract a strong keyword for search (e.g., "Hogan")
+function extractKeyword(baseTitle) {
+  const s = String(baseTitle || "").trim();
+  if (!s) return "";
+  // Prefer last meaningful token, fallback to whole string
+  const tokens = s.split(/\s+/).map(t => t.replace(/[^\w]+/g, "")).filter(Boolean);
+  if (!tokens.length) return s;
+  const last = tokens[tokens.length - 1];
+  // If last token is too short, fallback to whole base title
+  if (last.length < 3) return s;
+  return last;
+}
+
 function compactSources(hits) {
   let out = "";
   for (const h of hits) {
@@ -89,11 +102,7 @@ function compactSources(hits) {
   return out.trim();
 }
 
-// Robust JSON parser:
-// - removes ``` fences
-// - extracts first {...} block
-// - parses once
-// - if result is a JSON string, parses AGAIN (your current failure case)
+// Robust JSON parser (handles ```json fences + JSON-string payloads)
 function tryParseJsonLoose(s) {
   if (!s) return null;
 
@@ -107,9 +116,7 @@ function tryParseJsonLoose(s) {
   const last = cleaned.lastIndexOf("}");
   let candidate = cleaned;
 
-  if (first >= 0 && last > first) {
-    candidate = cleaned.slice(first, last + 1);
-  }
+  if (first >= 0 && last > first) candidate = cleaned.slice(first, last + 1);
 
   let parsed = null;
   try {
@@ -122,23 +129,16 @@ function tryParseJsonLoose(s) {
     }
   }
 
-  // Double-parse if the model returned a JSON-encoded string
+  // Double-parse if model returned JSON as a quoted string
   if (typeof parsed === "string") {
-    try {
-      parsed = JSON.parse(parsed);
-    } catch {
-      // leave as string (will fail validation)
-    }
+    try { parsed = JSON.parse(parsed); } catch {}
   }
-
   return parsed;
 }
 
 function normalizeOptions(opt) {
-  // Accept either:
-  // - ["A) ...", "B) ...", ...]
-  // - [{id:"A", text:"..."}, ...]
   if (Array.isArray(opt) && opt.length) {
+    // ["A) ...", ...]
     if (typeof opt[0] === "string") {
       const out = [];
       for (const s of opt.slice(0, 4)) {
@@ -150,6 +150,7 @@ function normalizeOptions(opt) {
       while (out.length < 4) out.push({ id: String.fromCharCode(65 + out.length), text: "" });
       return out;
     }
+    // [{id,text}, ...]
     if (typeof opt[0] === "object") {
       const out = opt.slice(0, 4).map((o, i) => ({
         id: safeString(o.id, String.fromCharCode(65 + i)).toUpperCase(),
@@ -183,6 +184,7 @@ function validateItems(items, count) {
 
     const opts = normalizeOptions(q.options);
     const ans = safeString(q.answer).toUpperCase().trim();
+
     if (!opts || opts.length !== 4) return { ok: false, reason: "options not 4" };
     if (!isValidAnswer(ans)) return { ok: false, reason: "answer not A-D" };
     if (!safeString(q.cite).trim()) return { ok: false, reason: "missing cite" };
@@ -221,59 +223,63 @@ module.exports = async function (context, req) {
       return send(context, 400, { error: "Provide {parts:[...]} or {book:\"...\"} or {bookGroupId:\"...\"}" });
     }
 
-    let baseTitle = "";
-    if (parts && parts.length) baseTitle = baseTitleFromPartName(parts[0]);
-    else if (book) baseTitle = baseTitleFromPartName(book);
-    else baseTitle = String(bookGroupId);
+    const baseTitle =
+      parts?.length ? baseTitleFromPartName(parts[0]) :
+      book ? baseTitleFromPartName(book) :
+      String(bookGroupId);
 
-    const searchQuery = baseTitle || "*";
-
+    const keyword = extractKeyword(baseTitle);
     const searchUrl =
       `${SEARCH_ENDPOINT.replace(/\/+$/, "")}` +
       `/indexes/${encodeURIComponent(SEARCH_INDEX_CONTENT)}` +
       `/docs/search?api-version=2023-11-01`;
 
-    const filterTry = `startswith(metadata_storage_name, '${escODataString(baseTitle)}')`;
+    // Optional filter that usually works if metadata_storage_name is filterable.
+    // If it returns 0 hits, we fallback to unfiltered.
+    const filterTry = baseTitle
+      ? `startswith(metadata_storage_name, '${escODataString(baseTitle)}')`
+      : null;
 
-    const commonSearchBody = {
-      search: searchQuery,
-      top: SEARCH_TOP,
-      select: "content,metadata_storage_name",
-      queryType: "simple"
-    };
+    async function runSearch(searchText, useFilter) {
+      const searchBody = {
+        search: searchText || "*",
+        top: SEARCH_TOP,
+        select: "content,metadata_storage_name",
+        // IMPORTANT: force searching in filename + content
+        searchFields: "metadata_storage_name,content",
+        queryType: "simple"
+      };
+      if (useFilter && filterTry) searchBody.filter = filterTry;
 
-    // Try constrained search first; fallback if filter invalid
-    let sres = await fetchJson(
-      searchUrl,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
-        body: JSON.stringify({ ...commonSearchBody, filter: filterTry })
-      },
-      SEARCH_TIMEOUT_MS
-    );
-
-    if (!sres.ok && sres.status === 400) {
-      sres = await fetchJson(
+      return await fetchJson(
         searchUrl,
         {
           method: "POST",
           headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
-          body: JSON.stringify({ ...commonSearchBody })
+          body: JSON.stringify(searchBody)
         },
         SEARCH_TIMEOUT_MS
       );
     }
 
+    // Search strategy:
+    // 1) keyword + filter
+    // 2) keyword without filter
+    // 3) baseTitle without filter
+    // 4) "*" without filter (last resort)
+    let sres = await runSearch(keyword, true);
+    let hits = (sres.data && (sres.data.value || sres.data.values)) || [];
+    if (sres.ok && hits.length === 0) sres = await runSearch(keyword, false), hits = (sres.data.value || sres.data.values || []);
+    if (sres.ok && hits.length === 0 && baseTitle) sres = await runSearch(baseTitle, false), hits = (sres.data.value || sres.data.values || []);
+    if (sres.ok && hits.length === 0) sres = await runSearch("*", false), hits = (sres.data.value || sres.data.values || []);
+
     if (!sres.ok) {
-      return send(context, 502, { error: "Search request failed", status: sres.status, detail: sres.data, _diag: { searchQuery, triedFilter: filterTry } });
+      return send(context, 502, { error: "Search request failed", status: sres.status, detail: sres.data, _diag: { baseTitle, keyword, filterTry } });
     }
 
-    const hits = (sres.data && (sres.data.value || sres.data.values)) || [];
     const sources = compactSources(hits);
-
     if (!sources) {
-      return send(context, 404, { error: "No searchable content returned for selection", _diag: { searchQuery } });
+      return send(context, 404, { error: "No searchable content returned for selection", _diag: { baseTitle, keyword, hits: hits.length } });
     }
 
     const reqId = crypto.randomUUID ? crypto.randomUUID() : crypto.randomBytes(16).toString("hex");
@@ -287,8 +293,7 @@ module.exports = async function (context, req) {
 
     const schemaInstruction =
       `Return JSON exactly like:\n` +
-      `{"items":[` +
-      `{"id":"1","type":"mcq","question":"...","options":[{"id":"A","text":"..."},{"id":"B","text":"..."},{"id":"C","text":"..."},{"id":"D","text":"..."}],` +
+      `{"items":[{"id":"1","type":"mcq","question":"...","options":[{"id":"A","text":"..."},{"id":"B","text":"..."},{"id":"C","text":"..."},{"id":"D","text":"..."}],` +
       `"answer":"A","cite":"<one of the [source] labels>","explanation":"..."}]}\n` +
       `Rules:\n` +
       `- items length MUST be exactly ${count}\n` +
@@ -345,7 +350,7 @@ module.exports = async function (context, req) {
     let items = parsed && parsed.items;
     let v = validateItems(items, count);
 
-    // 2) one repair attempt if needed
+    // 2) repair attempt
     if (!v.ok) {
       const repair =
         `Your previous output was invalid (${v.reason}).\n` +
@@ -366,7 +371,7 @@ module.exports = async function (context, req) {
         error: "Model returned non-JSON or wrong/short shape",
         detail: v.reason,
         raw: a1.raw,
-        _diag: { requestId: reqId, deployment: AOAI_DEPLOYMENT, searchQuery, hits: hits.length }
+        _diag: { requestId: reqId, deployment: AOAI_DEPLOYMENT, baseTitle, keyword, hits: hits.length }
       });
     }
 
@@ -385,10 +390,11 @@ module.exports = async function (context, req) {
       modelDeployment: AOAI_DEPLOYMENT,
       returned: finalItems.length,
       _diag: {
-        mode: "text-search-single-call",
+        mode: "keyword-search-single-call",
         requested: count,
         returned: finalItems.length,
-        searchQuery,
+        baseTitle,
+        keyword,
         hits: hits.length,
         sourceChars: sources.length,
         requestId: reqId
