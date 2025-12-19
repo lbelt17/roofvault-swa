@@ -1,8 +1,9 @@
 ﻿// api/exam/index.js
-// RoofVault /api/exam — FAST single-call exam generation (SWA 45s max request time)
+// RoofVault /api/exam — FAST single-call exam generation (SWA-friendly)
 // - ONE Azure OpenAI call total (asks for exactly count questions in one shot)
 // - Azure AI Search via REST (no @azure/search-documents dependency)
 // - Hard caps to keep prompt small + fast
+// - ALWAYS sets context.res (prevents empty 200 text/plain)
 
 const crypto = require("crypto");
 
@@ -10,11 +11,10 @@ const crypto = require("crypto");
 const DEFAULT_COUNT = 25;
 const MAX_COUNT = 50;
 
-// Keep prompt compact so one AOAI call can finish under SWA API max duration (~45s).
 const SEARCH_TOP = 40;            // number of chunks to fetch from Search
-const MAX_SOURCE_CHARS = 14000;   // total chars of source text we feed to AOAI
-const AOAI_TIMEOUT_MS = 28000;    // outbound AOAI request timeout (keep total < 45s)
-const SEARCH_TIMEOUT_MS = 8000;   // outbound Search request timeout
+const MAX_SOURCE_CHARS = 14000;   // total chars of source text fed to AOAI
+const AOAI_TIMEOUT_MS = 28000;    // outbound AOAI timeout (keep total < SWA max)
+const SEARCH_TIMEOUT_MS = 8000;   // outbound Search timeout
 
 // ======= HELPERS =======
 function clampInt(n, min, max, fallback) {
@@ -23,8 +23,8 @@ function clampInt(n, min, max, fallback) {
   return fallback;
 }
 
-function json(status, obj, extraHeaders = {}) {
-  return {
+function send(context, status, obj, extraHeaders = {}) {
+  context.res = {
     status,
     headers: {
       "Content-Type": "application/json; charset=utf-8",
@@ -33,12 +33,12 @@ function json(status, obj, extraHeaders = {}) {
       "Access-Control-Allow-Headers": "Content-Type, Accept",
       ...extraHeaders
     },
-    body: JSON.stringify(obj)
+    body: obj === undefined ? "" : JSON.stringify(obj)
   };
+  return context.res;
 }
 
 function escODataString(s) {
-  // OData single-quoted string escaping: ' -> ''
   return String(s).replace(/'/g, "''");
 }
 
@@ -49,7 +49,11 @@ async function fetchJson(url, options, timeoutMs) {
     const res = await fetch(url, { ...options, signal: ac.signal });
     const text = await res.text();
     let data = null;
-    try { data = text ? JSON.parse(text) : null; } catch { data = { _raw: text }; }
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = { _raw: text };
+    }
     return { ok: res.ok, status: res.status, data };
   } finally {
     clearTimeout(t);
@@ -57,9 +61,8 @@ async function fetchJson(url, options, timeoutMs) {
 }
 
 function buildFilterFromParts(parts) {
-  // Use search.in for safer OR-list filtering:
-  // search.in(metadata_storage_name, 'a,b,c', ',')
-  const joined = parts.map(p => escODataString(p)).join(",");
+  // search.in(field, 'a,b,c', ',')
+  const joined = parts.map((p) => escODataString(p)).join(",");
   return `search.in(metadata_storage_name, '${joined}', ',')`;
 }
 
@@ -70,8 +73,6 @@ function safeString(x, fallback = "") {
 }
 
 function compactSources(hits) {
-  // hits are docs with content + metadata_storage_name
-  // We produce a compact "SOURCE" string with short citations.
   let out = "";
   for (const h of hits) {
     const cite = safeString(h.metadata_storage_name || h.cite || "source");
@@ -86,22 +87,34 @@ function compactSources(hits) {
 }
 
 function tryParseJsonStrict(s) {
-  // attempt to find first { ... } block if model wraps extra text
   if (!s) return null;
   const first = s.indexOf("{");
   const last = s.lastIndexOf("}");
   if (first >= 0 && last > first) {
     const candidate = s.slice(first, last + 1);
-    try { return JSON.parse(candidate); } catch { /* ignore */ }
+    try {
+      return JSON.parse(candidate);
+    } catch {
+      // ignore
+    }
   }
-  try { return JSON.parse(s); } catch { return null; }
+  try {
+    return JSON.parse(s);
+  } catch {
+    return null;
+  }
 }
 
 // ======= MAIN =======
 module.exports = async function (context, req) {
   try {
-    if (req.method === "OPTIONS") return json(204, {});
-    if (req.method === "GET") return json(200, { ok: true, name: "exam", time: new Date().toISOString() });
+    if (req.method === "OPTIONS") {
+      return send(context, 204, "");
+    }
+
+    if (req.method === "GET") {
+      return send(context, 200, { ok: true, name: "exam", time: new Date().toISOString() });
+    }
 
     // ---- env ----
     const SEARCH_ENDPOINT = process.env.SEARCH_ENDPOINT;
@@ -114,10 +127,10 @@ module.exports = async function (context, req) {
     const AOAI_API_VERSION = process.env.AOAI_API_VERSION || "2024-06-01";
 
     if (!SEARCH_ENDPOINT || !SEARCH_API_KEY) {
-      return json(500, { error: "Missing SEARCH_ENDPOINT or SEARCH_API_KEY" });
+      return send(context, 500, { error: "Missing SEARCH_ENDPOINT or SEARCH_API_KEY" });
     }
     if (!AOAI_ENDPOINT || !AOAI_API_KEY) {
-      return json(500, { error: "Missing AOAI_ENDPOINT or AOAI_API_KEY" });
+      return send(context, 500, { error: "Missing AOAI_ENDPOINT or AOAI_API_KEY" });
     }
 
     // ---- input ----
@@ -128,7 +141,7 @@ module.exports = async function (context, req) {
     const bookGroupId = body.bookGroupId ? String(body.bookGroupId) : null;
 
     if ((!parts || parts.length === 0) && !bookGroupId) {
-      return json(400, { error: "Provide {parts:[...]} or {bookGroupId:\"...\"}" });
+      return send(context, 400, { error: "Provide {parts:[...]} or {bookGroupId:\"...\"}" });
     }
 
     // ---- build filter ----
@@ -136,14 +149,11 @@ module.exports = async function (context, req) {
     if (parts && parts.length) {
       filter = buildFilterFromParts(parts);
     } else {
-      // If you store grouping in content index, use your grouping field here.
-      // Common patterns: bookGroupId, metadata_book_group_id, etc.
-      // Adjust this one line if your field name differs.
       const field = process.env.SEARCH_BOOKGROUP_FIELD || "bookGroupId";
       filter = `${field} eq '${escODataString(bookGroupId)}'`;
     }
 
-    // ---- search: pull top chunks across all parts ----
+    // ---- search: pull chunks across all parts ----
     const searchUrl =
       `${SEARCH_ENDPOINT.replace(/\/+$/, "")}` +
       `/indexes/${encodeURIComponent(SEARCH_INDEX_CONTENT)}` +
@@ -160,27 +170,24 @@ module.exports = async function (context, req) {
       searchUrl,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "api-key": SEARCH_API_KEY
-        },
+        headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
         body: JSON.stringify(searchBody)
       },
       SEARCH_TIMEOUT_MS
     );
 
     if (!sres.ok) {
-      return json(502, { error: "Search request failed", status: sres.status, detail: sres.data });
+      return send(context, 502, { error: "Search request failed", status: sres.status, detail: sres.data, filter });
     }
 
     const hits = (sres.data && (sres.data.value || sres.data.values)) || [];
     const sources = compactSources(hits);
 
     if (!sources) {
-      return json(404, { error: "No searchable content returned for selection", filter });
+      return send(context, 404, { error: "No searchable content returned for selection", filter });
     }
 
-    // ---- AOAI: ONE call, ask for exactly count questions ----
+    // ---- AOAI: ONE call ----
     const reqId = crypto.randomUUID ? crypto.randomUUID() : crypto.randomBytes(16).toString("hex");
 
     const system =
@@ -222,12 +229,7 @@ module.exports = async function (context, req) {
     );
 
     if (!ares.ok) {
-      return json(502, {
-        error: "AOAI request failed",
-        status: ares.status,
-        detail: ares.data,
-        requestId: reqId
-      });
+      return send(context, 502, { error: "AOAI request failed", status: ares.status, detail: ares.data, requestId: reqId });
     }
 
     const content =
@@ -239,32 +241,29 @@ module.exports = async function (context, req) {
 
     const parsed = tryParseJsonStrict(content);
     if (!parsed || !Array.isArray(parsed.items)) {
-      return json(500, {
-        error: "Model returned non-JSON or wrong shape",
-        requestId: reqId,
-        raw: content
-      });
+      return send(context, 500, { error: "Model returned non-JSON or wrong shape", requestId: reqId, raw: content });
     }
 
-    // Ensure ids + clamp to exactly count
     const items = parsed.items.slice(0, count).map((q, i) => ({
       id: String(i + 1),
       type: "mcq",
       question: safeString(q.question),
-      options: Array.isArray(q.options) ? q.options.slice(0, 4).map(o => ({
-        id: safeString(o.id).toUpperCase(),
-        text: safeString(o.text)
-      })) : [],
+      options: Array.isArray(q.options)
+        ? q.options.slice(0, 4).map((o) => ({
+            id: safeString(o.id).toUpperCase(),
+            text: safeString(o.text)
+          }))
+        : [],
       answer: safeString(q.answer).toUpperCase(),
       cite: safeString(q.cite),
       explanation: safeString(q.explanation)
     }));
 
     if (items.length !== count) {
-      return json(500, { error: "Model did not return required count", requested: count, returned: items.length, requestId: reqId });
+      return send(context, 500, { error: "Model did not return required count", requested: count, returned: items.length, requestId: reqId });
     }
 
-    return json(200, {
+    return send(context, 200, {
       items,
       modelDeployment: AOAI_DEPLOYMENT,
       _diag: {
@@ -277,9 +276,7 @@ module.exports = async function (context, req) {
         aoaiRequestId: reqId
       }
     });
-
   } catch (e) {
-    // Always return JSON so you never get a silent crash from this function.
-    return json(500, { error: "Unhandled exception", detail: e && e.message ? e.message : String(e) });
+    return send(context, 500, { error: "Unhandled exception", detail: e && e.message ? e.message : String(e) });
   }
 };
