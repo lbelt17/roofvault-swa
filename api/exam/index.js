@@ -111,15 +111,19 @@ function normalizePartToBaseName(name) {
 }
 
 function buildFilterFromParts(parts) {
-  const bases = Array.from(new Set(parts.map(normalizePartToBaseName).filter(Boolean)));
+  // Extract a common keyword from the parts (e.g. "Hogan")
+  // We assume all parts belong to the same book
+  const sample = String(parts[0]);
 
-  if (bases.length === 1) {
-    return `metadata_storage_name eq '${escODataString(bases[0])}'`;
-  }
+  // Use the core title (strip " - Part NN")
+  const base = sample
+    .replace(/\s*-\s*Part\s*\d+\s*$/i, "")
+    .trim();
 
-  const joined = bases.map((b) => escODataString(b)).join(",");
-  return `search.in(metadata_storage_name, '${joined}', ',')`;
+  // Use Azure Search full-text match against the REAL field: "name"
+  return `search.ismatch('${escODataString(base)}', 'name')`;
 }
+
 
 // ======= MAIN =======
 module.exports = async function (context, req) {
