@@ -1,7 +1,11 @@
 ﻿// api/exam/index.js
-// RoofVault /api/exam — SWA-friendly, stable
-// Key fix: metadata_storage_name is NOT searchable in your index.
-// So we FILTER by metadata_storage_name (startswith) and search="*".
+// RoofVault /api/exam — SWA-friendly, stable, no unsupported filters
+// Fixes:
+// - NO startswith() (your Search returns 400: "startswith not supported")
+// - Uses a 2-step approach:
+//   1) Resolve exact metadata_storage_name values by searching content with a keyword
+//   2) Use search.in(metadata_storage_name, 'a,b,c', ',') with the exact names
+// - Includes JSON repair pass so model output doesn't break the endpoint
 
 const crypto = require("crypto");
 
@@ -9,9 +13,9 @@ const crypto = require("crypto");
 const DEFAULT_COUNT = 25;
 const MAX_COUNT = 50;
 
-const SEARCH_TOP = 45;
+const SEARCH_TOP = 60;
 const MAX_SOURCE_CHARS = 11000;
-const SEARCH_TIMEOUT_MS = 9000;
+const SEARCH_TIMEOUT_MS = 10000;
 const AOAI_TIMEOUT_MS = 28000;
 
 // ======= HELPERS =======
@@ -40,6 +44,13 @@ function escODataString(s) {
   return String(s).replace(/'/g, "''");
 }
 
+// In search.in() list argument, Azure expects a single string with delimiter.
+// We must avoid commas INSIDE values; your names won't have commas, so OK.
+function buildSearchInFilter(field, values) {
+  const joined = values.map(v => String(v)).join(",");
+  return `search.in(${field}, '${escODataString(joined)}', ',')`;
+}
+
 async function fetchJson(url, options, timeoutMs) {
   const ac = new AbortController();
   const t = setTimeout(() => ac.abort(), timeoutMs);
@@ -47,11 +58,7 @@ async function fetchJson(url, options, timeoutMs) {
     const res = await fetch(url, { ...options, signal: ac.signal });
     const text = await res.text();
     let data = null;
-    try {
-      data = text ? JSON.parse(text) : null;
-    } catch {
-      data = { _raw: text };
-    }
+    try { data = text ? JSON.parse(text) : null; } catch { data = { _raw: text }; }
     return { ok: res.ok, status: res.status, data, _rawText: text };
   } finally {
     clearTimeout(t);
@@ -110,14 +117,10 @@ function tryParseJsonLoose(s) {
   if (first >= 0 && last > first) candidate = cleaned.slice(first, last + 1);
 
   let parsed = null;
-  try {
-    parsed = JSON.parse(candidate);
-  } catch {
-    try {
-      parsed = JSON.parse(cleaned);
-    } catch {
-      return null;
-    }
+  try { parsed = JSON.parse(candidate); }
+  catch {
+    try { parsed = JSON.parse(cleaned); }
+    catch { return null; }
   }
 
   if (typeof parsed === "string") {
@@ -205,34 +208,27 @@ module.exports = async function (context, req) {
 
     const parts = Array.isArray(body.parts) ? body.parts.filter(Boolean) : null;
     const book = body.book ? String(body.book) : null;
-    const bookGroupId = body.bookGroupId ? String(body.bookGroupId) : null;
 
-    if ((!parts || parts.length === 0) && !book && !bookGroupId) {
-      return send(context, 400, { error: "Provide {parts:[...]} or {book:\"...\"} or {bookGroupId:\"...\"}" });
+    if ((!parts || parts.length === 0) && !book) {
+      return send(context, 400, { error: "Provide {parts:[...]} or {book:\"...\"}" });
     }
 
-    // Base title and keyword (for fallback content search)
     const baseTitle =
       parts?.length ? baseTitleFromPartName(parts[0]) :
       book ? baseTitleFromPartName(book) :
-      String(bookGroupId);
+      "";
 
-    const keyword = extractKeyword(baseTitle);
+    const keyword = extractKeyword(baseTitle) || baseTitle;
 
     const searchUrl =
       `${SEARCH_ENDPOINT.replace(/\/+$/, "")}` +
       `/indexes/${encodeURIComponent(SEARCH_INDEX_CONTENT)}` +
       `/docs/search?api-version=2023-11-01`;
 
-    // PRIMARY: filter by filename prefix (works even if metadata_storage_name includes ".pdf")
-    // If parts provided, we want all parts => "<base> - Part"
-    const prefix = parts?.length ? `${baseTitle} - Part` : baseTitle;
-    const filterPrefix = `startswith(metadata_storage_name, '${escODataString(prefix)}')`;
-
-    async function runSearch({ searchText, filter }) {
+    async function runSearch({ searchText, filter, top }) {
       const searchBody = {
         search: searchText || "*",
-        top: SEARCH_TOP,
+        top: top || SEARCH_TOP,
         select: "content,metadata_storage_name",
         queryType: "simple"
       };
@@ -249,33 +245,51 @@ module.exports = async function (context, req) {
       );
     }
 
-    // Strategy:
-    // 1) search="*" + filter prefix (best)
-    // 2) fallback: search=keyword (content search) without filter
-    // 3) fallback: search="*" no filter (last resort)
-    let sres = await runSearch({ searchText: "*", filter: filterPrefix });
-    if (!sres.ok) return send(context, 502, { error: "Search request failed", status: sres.status, detail: sres.data, _diag: { baseTitle, keyword, filterPrefix } });
-
-    let hits = (sres.data && (sres.data.value || sres.data.values)) || [];
-    if (hits.length === 0 && keyword) {
-      sres = await runSearch({ searchText: keyword, filter: null });
-      if (!sres.ok) return send(context, 502, { error: "Search request failed", status: sres.status, detail: sres.data, _diag: { baseTitle, keyword, filterPrefix } });
-      hits = (sres.data.value || sres.data.values || []);
-    }
-    if (hits.length === 0) {
-      sres = await runSearch({ searchText: "*", filter: null });
-      if (!sres.ok) return send(context, 502, { error: "Search request failed", status: sres.status, detail: sres.data, _diag: { baseTitle, keyword, filterPrefix } });
-      hits = (sres.data.value || sres.data.values || []);
+    // ---- Step 1: Resolve exact metadata_storage_name values to filter on ----
+    // We can't do startswith. We also can't rely on exact "Part 01" matching because
+    // your index might store ".pdf" or full blob name. So we "discover" names by searching content.
+    const resolveRes = await runSearch({ searchText: keyword, filter: null, top: 80 });
+    if (!resolveRes.ok) {
+      return send(context, 502, { error: "Search request failed (resolve)", status: resolveRes.status, detail: resolveRes.data, _diag: { baseTitle, keyword } });
     }
 
+    const resolveHits = (resolveRes.data && (resolveRes.data.value || resolveRes.data.values)) || [];
+    const want = parts?.length ? parts.map(p => baseTitleFromPartName(p)) : [baseTitle];
+
+    // We keep docs whose metadata_storage_name contains the baseTitle (case-insensitive).
+    const keep = [];
+    const baseLower = String(baseTitle).toLowerCase();
+
+    for (const h of resolveHits) {
+      const name = safeString(h.metadata_storage_name);
+      if (!name) continue;
+      if (name.toLowerCase().includes(baseLower)) keep.push(name);
+      if (keep.length >= 50) break;
+    }
+
+    // If we still found nothing, we fallback to just using whatever came back (last resort).
+    const resolvedNames = keep.length ? Array.from(new Set(keep)) : Array.from(new Set(resolveHits.map(h => safeString(h.metadata_storage_name)).filter(Boolean)));
+
+    if (!resolvedNames.length) {
+      return send(context, 404, { error: "No searchable content returned for selection", _diag: { baseTitle, keyword, resolveHits: resolveHits.length } });
+    }
+
+    // ---- Step 2: Use search.in(metadata_storage_name, ...) to pull chunks only from that book ----
+    const filter = buildSearchInFilter("metadata_storage_name", resolvedNames);
+
+    const sres = await runSearch({ searchText: "*", filter, top: SEARCH_TOP });
+    if (!sres.ok) {
+      return send(context, 502, { error: "Search request failed (filtered)", status: sres.status, detail: sres.data, _diag: { baseTitle, keyword, resolvedCount: resolvedNames.length, filter } });
+    }
+
+    const hits = (sres.data && (sres.data.value || sres.data.values)) || [];
     const sources = compactSources(hits);
+
     if (!sources) {
-      return send(context, 404, {
-        error: "No searchable content returned for selection",
-        _diag: { baseTitle, keyword, triedFilterPrefix: filterPrefix, hits: hits.length }
-      });
+      return send(context, 404, { error: "No searchable content returned for selection", _diag: { baseTitle, keyword, resolvedCount: resolvedNames.length, filteredHits: hits.length } });
     }
 
+    // ---- AOAI: call + repair ----
     const reqId = crypto.randomUUID ? crypto.randomUUID() : crypto.randomBytes(16).toString("hex");
 
     const system =
@@ -285,7 +299,7 @@ module.exports = async function (context, req) {
       "Every question must be answerable from the sources.\n" +
       "If you cannot comply, return: {\"items\":[]}";
 
-    const schemaInstruction =
+    const schema =
       `Return JSON exactly like:\n` +
       `{"items":[{"id":"1","type":"mcq","question":"...","options":[{"id":"A","text":"..."},{"id":"B","text":"..."},{"id":"C","text":"..."},{"id":"D","text":"..."}],` +
       `"answer":"A","cite":"<one of the [source] labels>","explanation":"..."}]}\n` +
@@ -293,11 +307,11 @@ module.exports = async function (context, req) {
       `- items length MUST be exactly ${count}\n` +
       `- answer MUST be one of "A","B","C","D"\n` +
       `- cite MUST match one of the bracketed source labels exactly\n` +
-      `- No truncation. Finish the JSON.`;
+      `- Finish the JSON (no truncation).`;
 
     const user =
       `Create exactly ${count} MCQs.\n\n` +
-      `${schemaInstruction}\n\n` +
+      `${schema}\n\n` +
       `SOURCES:\n${sources}`;
 
     const aoaiUrl =
@@ -334,7 +348,6 @@ module.exports = async function (context, req) {
       return { ok: true, parsed, raw: content };
     }
 
-    // attempt 1
     let a1 = await callAoai(user);
     if (!a1.ok) {
       return send(context, 502, { error: "AOAI request failed", status: a1.status, detail: a1.detail, _diag: { requestId: reqId, deployment: AOAI_DEPLOYMENT } });
@@ -344,12 +357,11 @@ module.exports = async function (context, req) {
     let items = parsed && parsed.items;
     let v = validateItems(items, count);
 
-    // repair attempt
     if (!v.ok) {
       const repair =
         `Your previous output was invalid (${v.reason}).\n` +
         `Return ONLY valid JSON and EXACTLY ${count} items. No code fences. No extra text.\n\n` +
-        `${schemaInstruction}\n\n` +
+        `${schema}\n\n` +
         `SOURCES:\n${sources}`;
 
       const a2 = await callAoai(repair);
@@ -365,7 +377,7 @@ module.exports = async function (context, req) {
         error: "Model returned non-JSON or wrong/short shape",
         detail: v.reason,
         raw: a1.raw,
-        _diag: { requestId: reqId, deployment: AOAI_DEPLOYMENT, baseTitle, keyword, hits: hits.length, filterPrefix }
+        _diag: { requestId: reqId, deployment: AOAI_DEPLOYMENT, baseTitle, keyword, resolvedCount: resolvedNames.length }
       });
     }
 
@@ -384,13 +396,11 @@ module.exports = async function (context, req) {
       modelDeployment: AOAI_DEPLOYMENT,
       returned: finalItems.length,
       _diag: {
-        mode: "filter-prefix-then-fallback-content",
-        requested: count,
-        returned: finalItems.length,
+        mode: "resolve-names-then-searchin",
         baseTitle,
         keyword,
-        hits: hits.length,
-        filterPrefix,
+        resolvedCount: resolvedNames.length,
+        filteredHits: hits.length,
         sourceChars: sources.length,
         requestId: reqId
       }
