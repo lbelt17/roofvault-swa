@@ -228,17 +228,22 @@
       });
 
       // If API returns non-200, show body for debugging
-      if (!res.ok) {
-        const txt = await res.text().catch(() => "");
-        showDiag({
-          error: "API request failed",
-          status: res.status,
-          statusText: res.statusText,
-          body: txt
-        });
-        setStatus("Error");
-        return;
-      }
+if (!res.ok) {
+  const txt = await res.text().catch(() => "");
+  showDiag({
+    error: "API request failed",
+    status: res.status,
+    statusText: res.statusText,
+    body: txt,
+    // ✅ keep these visible even when API fails
+    selection,
+    parts,
+    payload
+  });
+  setStatus("Error");
+  return;
+}
+
 
       const data = await res.json();
 
