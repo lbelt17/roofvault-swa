@@ -378,8 +378,9 @@ module.exports = async function (context, req) {
       return send(context, 500, { error: "Missing AOAI_ENDPOINT or AOAI_API_KEY" });
     }
 
-    // Azure Functions (SWA) typically provides req.body already
+        // Azure Functions (SWA) typically provides req.body already
     const body = req.body || {};
+
     const count = clampInt(body.count, 1, MAX_COUNT, DEFAULT_COUNT);
 
     const attemptNonce = safeString(body.attemptNonce || "");
@@ -394,6 +395,22 @@ module.exports = async function (context, req) {
     if (!parts.length) {
       return send(context, 400, { error: 'Provide {parts:["Book - Part 01", ...]}' });
     }
+
+    // ✅ NO-REPEAT SUPPORT (from gen-exam.js)
+    const excludeQuestionsRaw = Array.isArray(body.excludeQuestions)
+      ? body.excludeQuestions
+      : [];
+
+    const excludeQuestions = excludeQuestionsRaw
+      .map((q) =>
+        String(q || "")
+          .toLowerCase()
+          .replace(/\s+/g, " ")
+          .replace(/[^\w\s\?\.\,\-]/g, "")
+          .trim()
+      )
+      .filter(Boolean);
+
 
     const rand = seededRng(requestId);
     const quotaPlan = buildQuotas(parts, count, rand);
