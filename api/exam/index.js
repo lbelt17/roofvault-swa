@@ -1,17 +1,15 @@
 ﻿// api/exam/index.js
-// RoofVault /api/exam — multi-part guaranteed + fresh mixes
+// RoofVault /api/exam — multi-part guaranteed + fresh mixes + no-repeat support
 //
-// Fixes:
+// Fixes / Features:
 // - Uses ALL body.parts (not just parts[0])
-// - No keyword-based "baseTitle" resolution when parts are provided
 // - Pulls sources PER PART and generates questions PER PART (quota / round-robin)
-// - Seeded shuffle using attemptNonce so each generate feels fresh
+// - Seeded RNG based on attemptNonce for fresh mixes
+// - Shuffles options and remaps correct answer so answer isn't always A/B
 // - Adds `ref` to each item (same as cite label) so UI always shows correct Part
-//
-// Notes:
-// - Works with chunked Azure AI Search docs where metadata_storage_name repeats across chunks
-// - Avoids unsupported startswith() filters
-// - Uses search.in(metadata_storage_name, ...) everywhere
+// - Supports excludeQuestions[] to prevent repeats across "New 25Q" attempts
+// - Avoids TOC/meta "which chapter/section/page" style questions
+// - If unique questions exhausted returns: {"items":[],"message":"No additional unique questions remain..."}
 
 const crypto = require("crypto");
 
@@ -19,10 +17,10 @@ const crypto = require("crypto");
 const DEFAULT_COUNT = 25;
 const MAX_COUNT = 50;
 
-// How many chunks to fetch per part (tune if needed)
+// How many chunks to fetch per part
 const TOP_PER_PART = 40;
 
-// Max chars fed to the model per part and total
+// Total max chars fed to the model (split across parts)
 const MAX_SOURCE_CHARS_TOTAL = 11000;
 
 // Timeouts
@@ -31,6 +29,9 @@ const AOAI_TIMEOUT_MS = 90000;
 
 // Fields where text might live
 const TEXT_FIELDS = ["content", "text", "chunk", "chunkText", "pageText", "merged_content"];
+
+// Retry behavior to enforce "no repeats"
+const NOREPEAT_MAX_ATTEMPTS = 4;
 
 // ======= HELPERS =======
 function clampInt(n, min, max, fallback) {
@@ -234,42 +235,35 @@ function normalizeOptions(opt) {
     { id: "D", text: "" }
   ];
 }
+
 function shuffleOptionsAndRemapAnswer(item, rand) {
-  if (!item || !Array.isArray(item.options) || item.options.length !== 4) {
-    return item;
-  }
+  if (!item || !Array.isArray(item.options) || item.options.length !== 4) return item;
 
   const letters = ["A", "B", "C", "D"];
   const correctLetter = String(item.answer || "").toUpperCase();
   const correctIndex = letters.indexOf(correctLetter);
   if (correctIndex === -1) return item;
 
-  const indexed = item.options.map((opt, i) => ({
-    opt,
-    originalIndex: i
-  }));
+  const indexed = item.options.map((opt, i) => ({ opt, originalIndex: i }));
 
   for (let i = indexed.length - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1));
     [indexed[i], indexed[j]] = [indexed[j], indexed[i]];
   }
 
-  const newCorrectIndex = indexed.findIndex(
-    (x) => x.originalIndex === correctIndex
-  );
+  const newCorrectIndex = indexed.findIndex((x) => x.originalIndex === correctIndex);
 
   const newOptions = indexed.map((x, i) => ({
     id: letters[i],
-    text: String(x.opt.text || "")
+    text: String((x.opt && x.opt.text) || "")
   }));
 
   return {
     ...item,
     options: newOptions,
-    answer: letters[newCorrectIndex]
+    answer: letters[Math.max(0, newCorrectIndex)]
   };
 }
-
 
 function isValidAnswer(a) {
   const x = safeString(a).toUpperCase().trim();
@@ -297,18 +291,16 @@ function validateItems(items, count) {
   return { ok: true };
 }
 
-// Seeded shuffle for freshness
+// Seeded RNG
 function seededRng(seedStr) {
   const h = crypto.createHash("sha256").update(String(seedStr)).digest();
   let idx = 0;
   return function rand() {
-    // xorshift-ish from hash bytes
     const a = h[idx % h.length];
     const b = h[(idx + 7) % h.length];
     const c = h[(idx + 13) % h.length];
     idx++;
     const x = (a << 16) ^ (b << 8) ^ c ^ (idx * 2654435761);
-    // 0..1
     return (x >>> 0) / 4294967296;
   };
 }
@@ -326,31 +318,36 @@ function buildQuotas(parts, count, rand) {
   const uniq = Array.from(new Set(parts.map((p) => String(p).trim()).filter(Boolean)));
   if (!uniq.length) return { parts: [], quotas: [] };
 
-  // Shuffle part order each attempt
   const order = uniq.slice();
   shuffleInPlace(order, rand);
 
   const k = order.length;
 
-  // If more parts than questions, take first count parts, 1 each
   if (k >= count) {
-    return {
-      parts: order.slice(0, count),
-      quotas: order.slice(0, count).map(() => 1)
-    };
+    return { parts: order.slice(0, count), quotas: order.slice(0, count).map(() => 1) };
   }
 
-  // Otherwise distribute evenly + remainder
   const base = Math.floor(count / k);
   let rem = count - base * k;
 
   const quotas = order.map(() => base);
-  // Give remainder to first rem parts
   for (let i = 0; i < quotas.length && rem > 0; i++, rem--) quotas[i]++;
 
-  // Ensure at least 1 per part if possible
-  // (base could be 0 if count < k, handled above)
   return { parts: order, quotas };
+}
+
+function normQ(s) {
+  return String(s || "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/[^\w\s\?\.\,\-]/g, "")
+    .trim();
+}
+
+function hashQ(q) {
+  const txt = normQ(q && (q.question || q.prompt || ""));
+  const cite = normQ(q && (q.cite || q.ref || ""));
+  return crypto.createHash("sha256").update(`${txt}||${cite}`).digest("hex");
 }
 
 // ======= MAIN =======
@@ -369,7 +366,8 @@ module.exports = async function (context, req) {
     const AOAI_API_KEY = process.env.AOAI_API_KEY;
     const AOAI_DEPLOYMENT =
       process.env.AOAI_DEPLOYMENT || process.env.EXAM_OPENAI_DEPLOYMENT || "gpt-4o-mini";
-    const AOAI_API_VERSION = process.env.AOAI_API_VERSION || process.env.OPENAI_API_VERSION || "2024-06-01";
+    const AOAI_API_VERSION =
+      process.env.AOAI_API_VERSION || process.env.OPENAI_API_VERSION || "2024-06-01";
 
     if (!SEARCH_ENDPOINT || !SEARCH_API_KEY) {
       return send(context, 500, { error: "Missing SEARCH_ENDPOINT or SEARCH_API_KEY" });
@@ -378,9 +376,8 @@ module.exports = async function (context, req) {
       return send(context, 500, { error: "Missing AOAI_ENDPOINT or AOAI_API_KEY" });
     }
 
-        // Azure Functions (SWA) typically provides req.body already
+    // Request body
     const body = req.body || {};
-
     const count = clampInt(body.count, 1, MAX_COUNT, DEFAULT_COUNT);
 
     const attemptNonce = safeString(body.attemptNonce || "");
@@ -388,7 +385,7 @@ module.exports = async function (context, req) {
       (crypto.randomUUID ? crypto.randomUUID() : crypto.randomBytes(16).toString("hex")) +
       (attemptNonce ? `-${attemptNonce}` : "");
 
-    // Parts MUST be provided for multi-part behavior
+    // Parts required
     const partsRaw = Array.isArray(body.parts) ? body.parts : [];
     const parts = partsRaw.map((p) => String(p).trim()).filter(Boolean);
 
@@ -396,21 +393,10 @@ module.exports = async function (context, req) {
       return send(context, 400, { error: 'Provide {parts:["Book - Part 01", ...]}' });
     }
 
-    // ✅ NO-REPEAT SUPPORT (from gen-exam.js)
-    const excludeQuestionsRaw = Array.isArray(body.excludeQuestions)
-      ? body.excludeQuestions
-      : [];
-
-    const excludeQuestions = excludeQuestionsRaw
-      .map((q) =>
-        String(q || "")
-          .toLowerCase()
-          .replace(/\s+/g, " ")
-          .replace(/[^\w\s\?\.\,\-]/g, "")
-          .trim()
-      )
-      .filter(Boolean);
-
+    // No-repeat list from client
+    const excludeQuestionsRaw = Array.isArray(body.excludeQuestions) ? body.excludeQuestions : [];
+    const excludeQuestions = excludeQuestionsRaw.map(normQ).filter(Boolean);
+    const excludeSet = new Set(excludeQuestions);
 
     const rand = seededRng(requestId);
     const quotaPlan = buildQuotas(parts, count, rand);
@@ -420,66 +406,63 @@ module.exports = async function (context, req) {
       `/indexes/${encodeURIComponent(SEARCH_INDEX_CONTENT)}` +
       `/docs/search?api-version=2023-11-01`;
 
+    // Resolve the REAL metadata_storage_name by searching, then filter exactly
     async function runSearchForPart(partName, top) {
-  // 1) Resolve the REAL metadata_storage_name by searching (case-insensitive)
-  // This avoids exact-match failures from lowercase slugs.
-  const resolveBody = {
-    search: `"${partName}"`,
-    top: 5,
-    select: "metadata_storage_name",
-    queryType: "simple"
-  };
+      const resolveBody = {
+        search: `"${partName}"`,
+        top: 5,
+        select: "metadata_storage_name",
+        queryType: "simple"
+      };
 
-  const resolveRes = await fetchJson(
-    searchUrl,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
-      body: JSON.stringify(resolveBody)
-    },
-    SEARCH_TIMEOUT_MS
-  );
+      const resolveRes = await fetchJson(
+        searchUrl,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
+          body: JSON.stringify(resolveBody)
+        },
+        SEARCH_TIMEOUT_MS
+      );
 
-  // Default to the provided name if resolve fails
-  let resolvedName = partName;
+      let resolvedName = partName;
 
-  if (resolveRes.ok) {
-    const vals = (resolveRes.data && (resolveRes.data.value || resolveRes.data.values)) || [];
-    // Try to find a hit whose metadata_storage_name matches ignoring case
-    const targetLower = String(partName).toLowerCase();
-    const exact = vals.find((h) => String(h.metadata_storage_name || "").toLowerCase() === targetLower);
-    const first = vals[0];
+      if (resolveRes.ok) {
+        const vals = (resolveRes.data && (resolveRes.data.value || resolveRes.data.values)) || [];
+        const targetLower = String(partName).toLowerCase();
+        const exact = vals.find(
+          (h) => String(h.metadata_storage_name || "").toLowerCase() === targetLower
+        );
+        const first = vals[0];
 
-    if (exact && exact.metadata_storage_name) resolvedName = String(exact.metadata_storage_name);
-    else if (first && first.metadata_storage_name) resolvedName = String(first.metadata_storage_name);
-  }
+        if (exact && exact.metadata_storage_name) resolvedName = String(exact.metadata_storage_name);
+        else if (first && first.metadata_storage_name) resolvedName = String(first.metadata_storage_name);
+      }
 
-  // 2) Now filter EXACTLY on the resolved real name
-  const filter = buildSearchInFilter("metadata_storage_name", [resolvedName]);
+      const filter = buildSearchInFilter("metadata_storage_name", [resolvedName]);
 
-  const searchBody = {
-    search: "*",
-    top: top || TOP_PER_PART,
-    select: "metadata_storage_name,content",
-    queryType: "simple",
-    filter
-  };
+      const searchBody = {
+        search: "*",
+        top: top || TOP_PER_PART,
+        select: "metadata_storage_name,content",
+        queryType: "simple",
+        filter
+      };
 
-  return await fetchJson(
-    searchUrl,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
-      body: JSON.stringify(searchBody)
-    },
-    SEARCH_TIMEOUT_MS
-  );
-}
+      return await fetchJson(
+        searchUrl,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
+          body: JSON.stringify(searchBody)
+        },
+        SEARCH_TIMEOUT_MS
+      );
+    }
 
-
-    // Pull sources per part with a total char budget split across parts
+    // Pull sources per part with char budget split across parts
     const partCount = quotaPlan.parts.length || 1;
-    const perPartBudget = Math.max(800, Math.floor(MAX_SOURCE_CHARS_TOTAL / partCount)); // never too tiny
+    const perPartBudget = Math.max(800, Math.floor(MAX_SOURCE_CHARS_TOTAL / partCount));
 
     const partSources = [];
     const partDiag = [];
@@ -499,15 +482,9 @@ module.exports = async function (context, req) {
       const sources = compactSourcesLimit(hits, perPartBudget);
 
       partDiag.push({ partName, hits: hits.length, sourceChars: sources.length });
-
-      // If a part has no sources, we still keep it; model will cite what it can
-      partSources.push({
-        partName,
-        sources
-      });
+      partSources.push({ partName, sources });
     }
 
-    // If everything is empty, fail
     const totalChars = partSources.reduce((sum, p) => sum + (p.sources ? p.sources.length : 0), 0);
     if (totalChars < 50) {
       return send(context, 404, {
@@ -522,21 +499,16 @@ module.exports = async function (context, req) {
       "Return ONLY valid JSON (no markdown, no code fences, no extra text).\n" +
       "Do not invent facts not present in the sources.\n" +
       "Every question must be answerable from the sources.\n" +
-      'If you cannot comply, return: {"items":[]}';
-
-    function makeSchema(batchCount, idOffset) {
-      return (
-        `Return JSON exactly like:\n` +
-        `{"items":[{"id":"${idOffset + 1}","type":"mcq","question":"...","options":[{"id":"A","text":"..."},{"id":"B","text":"..."},{"id":"C","text":"..."},{"id":"D","text":"..."}],` +
-        `"answer":"A","cite":"<one of the [source] labels>","explanation":"..."}]}\n` +
-        `Rules:\n` +
-        `- items length MUST be exactly ${batchCount}\n` +
-        `- id MUST be "${idOffset + 1}" to "${idOffset + batchCount}" (sequential)\n` +
-        `- answer MUST be one of "A","B","C","D"\n` +
-        `- cite MUST match one of the bracketed source labels exactly\n` +
-        `- Finish the JSON (no truncation).`
-      );
-    }
+      "\n" +
+      "QUALITY RULES:\n" +
+      "- Do NOT write meta/navigation questions such as: 'Which chapter/section discusses...', 'In which part can you find...', 'What page...', 'Where is...', 'Which section contains...'.\n" +
+      "- Prefer practical, content-based questions: definitions, requirements, procedures, concepts, correct applications, and common pitfalls.\n" +
+      "\n" +
+      "NO-REPEAT RULE:\n" +
+      "- You will be given an EXCLUDE list of previously asked questions.\n" +
+      "- Do NOT repeat any question that is the same or substantially similar to an excluded question.\n" +
+      "- If you cannot produce enough unique questions, return a JSON object with items:[] AND include a message field explaining exhaustion.\n" +
+      'If you cannot comply, return: {"items":[],"message":"No additional unique questions remain for this book based on the current indexed content."}';
 
     const aoaiUrl =
       `${AOAI_ENDPOINT.replace(/\/+$/, "")}` +
@@ -572,41 +544,61 @@ module.exports = async function (context, req) {
       return { ok: true, parsed, raw: content };
     }
 
-    async function generateExact(batchCount, idOffset, sourcesText) {
+    function makeSchema(batchCount, idOffset) {
+      return (
+        `Return JSON exactly like:\n` +
+        `{"items":[{"id":"${idOffset + 1}","type":"mcq","question":"...","options":[{"id":"A","text":"..."},{"id":"B","text":"..."},{"id":"C","text":"..."},{"id":"D","text":"..."}],` +
+        `"answer":"A","cite":"<one of the [source] labels>","explanation":"..."}]}\n` +
+        `Rules:\n` +
+        `- items length MUST be exactly ${batchCount}\n` +
+        `- id MUST be "${idOffset + 1}" to "${idOffset + batchCount}" (sequential)\n` +
+        `- answer MUST be one of "A","B","C","D"\n` +
+        `- cite MUST match one of the bracketed source labels exactly\n` +
+        `- Finish the JSON (no truncation).`
+      );
+    }
+
+    async function generateExact(batchCount, idOffset, sourcesText, attemptNoRepeat) {
       const schema = makeSchema(batchCount, idOffset);
+
+      const excludeBlock =
+        attemptNoRepeat && excludeQuestions.length
+          ? `\n\nEXCLUDE (do NOT repeat these questions or close paraphrases):\n- ${excludeQuestions
+              .slice(-250)
+              .join("\n- ")}\n`
+          : "\n";
 
       const user =
         `Create exactly ${batchCount} MCQs numbered ${idOffset + 1} to ${idOffset + batchCount}.\n` +
-        `Use ONLY the sources below. Every question must cite the correct [source] label.\n\n` +
-        `${schema}\n\n` +
+        `Use ONLY the sources below. Every question must cite the correct [source] label.\n` +
+        `Avoid meta/navigation questions (chapters/sections/pages).\n` +
+        excludeBlock +
+        `\n${schema}\n\n` +
         `SOURCES:\n${sourcesText}`;
 
       const a1 = await callAoai(user);
       if (!a1.ok) return { ok: false, detail: a1.detail, raw: a1.raw };
 
-      let parsed = a1.parsed;
-      let items = parsed && parsed.items;
-      let v = validateItems(items, batchCount);
+      const parsed = a1.parsed;
+      const items = parsed && parsed.items;
+      const v = validateItems(items, batchCount);
 
       if (!v.ok) {
-        const repair =
-          `Your previous output was invalid (${v.reason}) or truncated.\n` +
-          `Return ONLY valid JSON and EXACTLY ${batchCount} items numbered ${idOffset + 1} to ${idOffset + batchCount}.\n\n` +
-          `${schema}\n\n` +
-          `SOURCES:\n${sourcesText}`;
-
-        const a2 = await callAoai(repair);
-        if (a2.ok) {
-          parsed = a2.parsed;
-          items = parsed && parsed.items;
-          v = validateItems(items, batchCount);
-          if (v.ok) return { ok: true, items };
-        }
-
         return { ok: false, detail: v.reason, raw: a1.raw };
       }
 
-      return { ok: true, items };
+      return { ok: true, items, message: parsed && parsed.message ? parsed.message : "" };
+    }
+
+    function filterNoRepeat(items) {
+      const out = [];
+      for (const q of items || []) {
+        const nq = normQ(q && q.question);
+        if (!nq) continue;
+        if (excludeSet.has(nq)) continue;
+        out.push(q);
+      }
+      return out;
     }
 
     // Build generation tasks per part (quota)
@@ -620,92 +612,111 @@ module.exports = async function (context, req) {
 
       const src = partSources.find((p) => p.partName === partName);
       const sourcesText = src && src.sources ? src.sources : "";
-
-      // If sources are empty, still attempt small generation; but better to skip than fail hard
-      // We'll skip if truly empty
       if (!sourcesText || sourcesText.length < 50) continue;
 
       tasks.push({ partName, n: q, idOffset });
       idOffset += q;
     }
 
-    // If tasks ended up empty due to missing sources, fall back to using all sources merged
+    // If tasks empty, fall back to merged sources
     let allGenerated = [];
     let usedMode = "per-part-quotas";
+
+    async function generateWithNoRepeat(countNeeded, sourcesText) {
+      let acc = [];
+      let attempt = 0;
+
+      while (attempt < NOREPEAT_MAX_ATTEMPTS && acc.length < countNeeded) {
+        attempt++;
+
+        const want = countNeeded - acc.length;
+        const b = await generateExact(want, 0, sourcesText, true);
+        if (!b.ok) break;
+
+        let got = Array.isArray(b.items) ? b.items : [];
+        got = filterNoRepeat(got);
+
+        // also dedupe within this run
+        const seenHashes = new Set(acc.map(hashQ));
+        for (const q of got) {
+          const h = hashQ(q);
+          if (!h || seenHashes.has(h)) continue;
+          seenHashes.add(h);
+          acc.push(q);
+          if (acc.length >= countNeeded) break;
+        }
+      }
+
+      return acc;
+    }
 
     if (!tasks.length) {
       usedMode = "merged-fallback";
       const merged = partSources.map((p) => p.sources).filter(Boolean).join("\n\n");
-      const b = await generateExact(count, 0, merged);
-      if (!b.ok) {
-        return send(context, 500, {
-          error: "Model returned invalid output",
-          detail: b.detail || "batch failed",
-          raw: b.raw,
-          _diag: { requestId, deployment: AOAI_DEPLOYMENT, usedMode, partDiag }
-        });
-      }
-      allGenerated = b.items;
+      allGenerated = await generateWithNoRepeat(count, merged);
     } else {
-      // Generate each part’s quota in mini-batches of 5 to avoid truncation
+      // Generate each part’s quota in mini-batches (up to 5) to avoid truncation
       for (const t of tasks) {
         let remaining = t.n;
-        let localOffset = t.idOffset;
 
         while (remaining > 0) {
           const n = remaining >= 5 ? 5 : remaining;
 
           const src = partSources.find((p) => p.partName === t.partName);
           const sourcesText = src && src.sources ? src.sources : "";
+          if (!sourcesText || sourcesText.length < 50) break;
 
-          const b = await generateExact(n, localOffset, sourcesText);
-          if (!b.ok) {
-            return send(context, 500, {
-              error: "Model returned invalid output",
-              detail: b.detail || "batch failed",
-              raw: b.raw,
-              _diag: { requestId, deployment: AOAI_DEPLOYMENT, usedMode, task: t, partDiag }
-            });
-          }
+          const got = await generateWithNoRepeat(n, sourcesText);
+          allGenerated = allGenerated.concat(got);
 
-          allGenerated = allGenerated.concat(b.items);
-          remaining -= n;
-          localOffset += n;
+          // if we couldn't generate any new unique items for this part, stop early
+          if (!got.length) break;
+
+          remaining -= got.length;
         }
       }
     }
 
-    // Normalize + shuffle answers + add ref
+    // If we still don't have enough unique questions, return exhaustion message
+    if (allGenerated.length < Math.min(5, count) && excludeQuestions.length) {
+      return send(context, 200, {
+        items: [],
+        message: "No additional unique questions remain for this book based on the current indexed content.",
+        modelDeployment: AOAI_DEPLOYMENT,
+        returned: 0,
+        _diag: { requestId, usedMode, count, partsUsed: quotaPlan.parts, quotas: quotaPlan.quotas, partDiag }
+      });
+    }
 
-const finalItems = allGenerated
-  .slice(0, count)
-  .map((q) => {
-    const cite = safeString(q.cite).replace(/^\[|\]$/g, "").trim();
-    return {
-      ...q,
-      options: normalizeOptions(q.options),
-      answer: safeString(q.answer).toUpperCase().trim(),
-      cite,
-      ref: cite
-    };
-  })
-  .map((q) => shuffleOptionsAndRemapAnswer(q, rand))
-  .map((q, i) => ({
-    id: String(i + 1),
-    type: "mcq",
-    question: safeString(q.question),
-    options: q.options,
-    answer: q.answer,
-    cite: q.cite,
-    ref: q.ref,
-    explanation: safeString(q.explanation)
-  }));
+    // Normalize + shuffle answers + add ref + then shuffle questions
+    const normalized = allGenerated
+      .slice(0, count)
+      .map((q) => {
+        const cite = safeString(q.cite).replace(/^\[|\]$/g, "").trim();
+        return {
+          question: safeString(q.question),
+          options: normalizeOptions(q.options),
+          answer: safeString(q.answer).toUpperCase().trim(),
+          cite,
+          ref: cite,
+          explanation: safeString(q.explanation)
+        };
+      })
+      .map((q) => shuffleOptionsAndRemapAnswer(q, rand));
 
-    // Shuffle final questions for variety (but keep ids 1..count stable after shuffle)
-    // We'll shuffle the array, then reassign ids.
-    const shuffled = finalItems.slice();
+    const shuffled = normalized.slice();
     shuffleInPlace(shuffled, rand);
-    const out = shuffled.map((q, i) => ({ ...q, id: String(i + 1) }));
+
+    const out = shuffled.map((q, i) => ({
+      id: String(i + 1),
+      type: "mcq",
+      question: q.question,
+      options: q.options,
+      answer: q.answer,
+      cite: q.cite,
+      ref: q.ref,
+      explanation: q.explanation
+    }));
 
     return send(context, 200, {
       items: out,
@@ -718,7 +729,8 @@ const finalItems = allGenerated
         partsProvided: parts.length,
         partsUsed: quotaPlan.parts,
         quotas: quotaPlan.quotas,
-        partDiag
+        partDiag,
+        excludeCount: excludeQuestions.length
       }
     });
   } catch (e) {
