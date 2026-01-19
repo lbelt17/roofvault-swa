@@ -185,9 +185,25 @@
     }
 
     const parts =
-      Array.isArray(selection.parts) && selection.parts.length
-        ? selection.parts
-        : [selection.bookGroupId];
+  Array.isArray(selection.parts) && selection.parts.length
+    ? selection.parts
+        .map((p) => {
+          if (typeof p === "string") return p;
+
+          // Try common fields used by your /api/books response
+          return (
+            p.partId ||
+            p.id ||
+            p.name ||
+            p.metadata_storage_name ||
+            p.blobName ||
+            p.ref ||
+            ""
+          );
+        })
+        .filter(Boolean)
+    : [selection.bookGroupId];
+
 
     try {
       btn.disabled = true;
