@@ -1,4 +1,4 @@
-﻿// gen-exam.js — RoofVault Practice Exam wiring (stable + "New 25Q" works)
+﻿// gen-exam.js — RoofVault Practice Exam wiring (stable + "New 25Q" works + no-repeat memory)
 // Requirements:
 // - HTML has: #bookMount, #btnGenExam25ByBook, #qList (optional), #status (optional), #diag (optional)
 // - books.js sets window.__rvSelectedBook = { bookGroupId, displayTitle, parts: [string|object] }
@@ -143,8 +143,54 @@
         .filter(Boolean);
     }
 
-    // Fallback to bookGroupId (works if backend resolves slugs; also ok for single-part if it matches)
+    // Fallback to bookGroupId
     return [String(selection?.bookGroupId || "").trim()].filter(Boolean);
+  }
+
+  // ================== NO-REPEAT MEMORY (client-side) ==================
+  function normQ(s) {
+    return String(s || "")
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .replace(/[^\w\s\?\.\,\-]/g, "")
+      .trim();
+  }
+
+  function seenKey(bookGroupId) {
+    return `rv_seen_q_v1:${String(bookGroupId || "").trim().toLowerCase()}`;
+  }
+
+  function loadSeen(bookGroupId) {
+    try {
+      const raw = localStorage.getItem(seenKey(bookGroupId));
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr.filter(Boolean) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveSeen(bookGroupId, arr) {
+    try {
+      // cap storage so it never grows forever
+      localStorage.setItem(seenKey(bookGroupId), JSON.stringify(arr.slice(-400)));
+    } catch {
+      // ignore storage errors
+    }
+  }
+
+  function addSeen(bookGroupId, items) {
+    const prev = loadSeen(bookGroupId);
+    const set = new Set(prev.map(normQ));
+
+    for (const q of items || []) {
+      const nq = normQ(q?.question || q?.prompt);
+      if (nq) set.add(nq);
+    }
+
+    const next = Array.from(set);
+    saveSeen(bookGroupId, next);
+    return next;
   }
 
   // ================== HELPERS ==================
@@ -212,6 +258,9 @@
 
     const parts = normalizeParts(selection);
 
+    // ✅ Load previously-seen questions for this book
+    const excludeQuestions = loadSeen(selection.bookGroupId);
+
     try {
       btn.disabled = true;
       btn.classList.add("busy");
@@ -221,13 +270,14 @@
         bookGroupId: selection.bookGroupId,
         displayTitle: selection.displayTitle,
         parts,
+        excludeQuestions, // ✅ send to backend
         count: QUESTION_COUNT,
         mode: "BOOK_ONLY",
         attemptNonce: `${Date.now()}-${Math.random().toString(16).slice(2)}`
       };
 
       // Helpful debug while you’re building
-      showDiag({ selection, parts, payload });
+      showDiag({ selection, parts, excludeCount: excludeQuestions.length, payload });
 
       const res = await safeFetch(API_URL, {
         method: "POST",
@@ -244,6 +294,7 @@
           body: txt,
           selection,
           parts,
+          excludeCount: excludeQuestions.length,
           payload
         });
         setStatus("Error");
@@ -255,6 +306,9 @@
       let items = Array.isArray(data.items) ? data.items : data.questions;
       items = normalizeAndFilterItems(items, selection);
       items = markRwcMultiSelect(items, selection);
+
+      // ✅ Save these questions as “seen” so next time we avoid repeats
+      addSeen(selection.bookGroupId, items);
 
       qList.textContent = "";
 
@@ -288,26 +342,25 @@
     ui.btn.onclick = () => genExam();
 
     // ✅ Dynamic "New 25Q Practice Exam" button (created after grading)
-// Works whether the button has an id or not (matches by text as fallback).
-if (!window.__rvNewExamClickWired) {
-  window.__rvNewExamClickWired = true;
+    // Works whether the button has an id or not (matches by text as fallback).
+    if (!window.__rvNewExamClickWired) {
+      window.__rvNewExamClickWired = true;
 
-  document.addEventListener("click", (e) => {
-    const t = e.target;
-    const btn = t && t.closest ? t.closest("button") : null;
-    if (!btn) return;
+      document.addEventListener("click", (e) => {
+        const t = e.target;
+        const btn = t && t.closest ? t.closest("button") : null;
+        if (!btn) return;
 
-    const idOk = btn.id === "btnNewExam25";
-    const text = (btn.textContent || "").trim().toLowerCase();
-    const textOk = text === "new 25q practice exam" || text.includes("new 25q");
+        const idOk = btn.id === "btnNewExam25";
+        const text = (btn.textContent || "").trim().toLowerCase();
+        const textOk = text === "new 25q practice exam" || text.includes("new 25q");
 
-    if (!idOk && !textOk) return;
+        if (!idOk && !textOk) return;
 
-    e.preventDefault();
-    genExam();
-  });
-}
-
+        e.preventDefault();
+        genExam();
+      });
+    }
 
     // Initialize auth state
     await refreshButtonAuth(ui.btn);
