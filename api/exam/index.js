@@ -368,28 +368,61 @@ module.exports = async function (context, req) {
       `/docs/search?api-version=2023-11-01`;
 
     async function runSearchForPart(partName, top) {
-      // Filter to just this part’s metadata_storage_name
-      const filter = buildSearchInFilter("metadata_storage_name", [partName]);
+  // 1) Resolve the REAL metadata_storage_name by searching (case-insensitive)
+  // This avoids exact-match failures from lowercase slugs.
+  const resolveBody = {
+    search: `"${partName}"`,
+    top: 5,
+    select: "metadata_storage_name",
+    queryType: "simple"
+  };
 
-      // Using search="*" avoids the keyword collapsing to one part
-      const searchBody = {
-        search: "*",
-        top: top || TOP_PER_PART,
-        select: "metadata_storage_name,content",
-        queryType: "simple",
-        filter
-      };
+  const resolveRes = await fetchJson(
+    searchUrl,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
+      body: JSON.stringify(resolveBody)
+    },
+    SEARCH_TIMEOUT_MS
+  );
 
-      return await fetchJson(
-        searchUrl,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
-          body: JSON.stringify(searchBody)
-        },
-        SEARCH_TIMEOUT_MS
-      );
-    }
+  // Default to the provided name if resolve fails
+  let resolvedName = partName;
+
+  if (resolveRes.ok) {
+    const vals = (resolveRes.data && (resolveRes.data.value || resolveRes.data.values)) || [];
+    // Try to find a hit whose metadata_storage_name matches ignoring case
+    const targetLower = String(partName).toLowerCase();
+    const exact = vals.find((h) => String(h.metadata_storage_name || "").toLowerCase() === targetLower);
+    const first = vals[0];
+
+    if (exact && exact.metadata_storage_name) resolvedName = String(exact.metadata_storage_name);
+    else if (first && first.metadata_storage_name) resolvedName = String(first.metadata_storage_name);
+  }
+
+  // 2) Now filter EXACTLY on the resolved real name
+  const filter = buildSearchInFilter("metadata_storage_name", [resolvedName]);
+
+  const searchBody = {
+    search: "*",
+    top: top || TOP_PER_PART,
+    select: "metadata_storage_name,content",
+    queryType: "simple",
+    filter
+  };
+
+  return await fetchJson(
+    searchUrl,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
+      body: JSON.stringify(searchBody)
+    },
+    SEARCH_TIMEOUT_MS
+  );
+}
+
 
     // Pull sources per part with a total char budget split across parts
     const partCount = quotaPlan.parts.length || 1;
