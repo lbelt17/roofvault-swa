@@ -1,10 +1,13 @@
-﻿// books.js — RoofVault grouped book dropdown + search (CLEAN)
+﻿// books.js — RoofVault grouped book dropdown + search (CLEAN + FIXED)
 // Uses /api/books -> body.books[] when available (grouped), fallback to body.values[] (raw)
 //
-// Goal: Your blobs are named: "Example Book - Part 01", "Example Book - Part 02", ...
-// This script shows ONE clean title: "Example Book" (no Part, no .pdf, no weird "- -")
+// Goal: Blobs named like "Example Book - Part 01", "Example Book - Part 02", ...
+// This script shows ONE clean title: "Example Book" and stores the full parts list in window.__rvSelectedBook
 
 (function () {
+  "use strict";
+
+  // ---------- DOM helpers ----------
   function $(id) {
     return document.getElementById(id);
   }
@@ -23,50 +26,69 @@
     return n;
   }
 
+  // ---------- API ----------
   async function fetchBooks() {
     const res = await fetch("/api/books", { cache: "no-store" });
     if (!res.ok) throw new Error(`books api failed: ${res.status}`);
     return await res.json();
   }
 
-  // ✅ Only strip trailing " - Part 01" / " - Part 1" etc. (and optional .pdf)
-  // ✅ Does NOT touch hyphens in the middle of titles (prevents "- -" weirdness)
+  // ---------- Title cleaning ----------
+  // Only strips a TRAILING " - Part 01" / " - Part 1" etc. and optional .pdf
   function cleanDisplayTitle(raw) {
     let s = String(raw || "").trim();
-
-    // remove file extension if it ever appears
     s = s.replace(/\.pdf$/i, "").trim();
-
-    // remove ONLY a trailing part suffix
-    // Examples:
-    // "Architectural sheet metal manual - Part 01" -> "Architectural sheet metal manual"
-    // "ASCE - Minimum Design Loads ... - Part 10" -> "ASCE - Minimum Design Loads ..."
     s = s.replace(/\s*-\s*Part\s*\d+\s*$/i, "").trim();
-
-    // collapse accidental double spaces
     s = s.replace(/\s{2,}/g, " ").trim();
-
     return s;
   }
 
+  // ---------- Normalize parts ----------
+  // Ensures we always store an array of STRING ids/names in selection.parts
+  function normalizeParts(parts) {
+    if (!Array.isArray(parts)) return [];
+    return parts
+      .map((p) => {
+        if (typeof p === "string") return p;
+
+        if (p && typeof p === "object") {
+          return (
+            p.metadata_storage_name ||
+            p.name ||
+            p.id ||
+            p.partId ||
+            p.blobName ||
+            p.ref ||
+            p.key ||
+            ""
+          );
+        }
+
+        return "";
+      })
+      .map((s) => String(s).trim())
+      .filter(Boolean);
+  }
+
+  // ---------- Build options from /api/books ----------
   function buildGroupedOptions(json) {
-    const books = Array.isArray(json.books) ? json.books : [];
-    // Expect: { bookGroupId, displayTitle, parts[] }
+    const books = Array.isArray(json?.books) ? json.books : [];
+    // Expect each: { bookGroupId, displayTitle, parts[] }
     return books
       .map((b) => ({
-        bookGroupId: String(b.bookGroupId || "").trim(),
-        displayTitle: cleanDisplayTitle(b.displayTitle),
-        parts: Array.isArray(b.parts) ? b.parts.map(String) : []
+        bookGroupId: String(b?.bookGroupId || "").trim(),
+        displayTitle: cleanDisplayTitle(b?.displayTitle || ""),
+        parts: normalizeParts(b?.parts)
       }))
       .filter((b) => b.bookGroupId && b.displayTitle);
   }
 
+  // ---------- Fallback if /api/books only returns raw filenames ----------
   function buildFallbackOptions(json) {
-    const vals = Array.isArray(json.values) ? json.values : [];
+    const vals = Array.isArray(json?.values) ? json.values : [];
 
-    // Fallback is raw filenames; we still show a clean grouped title and keep "parts" for the scripts.
-    // We also dedupe titles so you don’t see Part 01/02/03 as separate options.
-    const map = new Map(); // displayTitle -> { bookGroupId, displayTitle, parts[] }
+    // Map cleaned title -> grouped entry
+    const map = new Map();
 
     vals.forEach((v) => {
       const raw = String(v || "").trim();
@@ -77,18 +99,19 @@
 
       if (!map.has(title)) {
         map.set(title, {
-          // Stable ID: use the cleaned title (so selection is consistent)
-          bookGroupId: title,
+          bookGroupId: title, // stable id in fallback mode
           displayTitle: title,
           parts: []
         });
       }
+
       map.get(title).parts.push(raw);
     });
 
     return Array.from(map.values()).sort((a, b) => a.displayTitle.localeCompare(b.displayTitle));
   }
 
+  // ---------- Render ----------
   function renderDropdown(mount, options) {
     mount.innerHTML = "";
 
@@ -105,6 +128,9 @@
       el("option", { value: "", text: "Select a book…" })
     ]);
 
+    const sorted = options.slice().sort((a, b) => a.displayTitle.localeCompare(b.displayTitle));
+    const byId = new Map(sorted.map((b) => [b.bookGroupId, b]));
+
     function fill(list) {
       select.length = 1; // keep placeholder
       list.forEach((b) => {
@@ -112,11 +138,7 @@
       });
     }
 
-    // Sort once for a clean dropdown
-    const sorted = options.slice().sort((a, b) => a.displayTitle.localeCompare(b.displayTitle));
     fill(sorted);
-
-    const byId = new Map(sorted.map((b) => [b.bookGroupId, b]));
 
     search.addEventListener("input", () => {
       const q = search.value.trim().toLowerCase();
@@ -125,32 +147,31 @@
     });
 
     select.addEventListener("change", () => {
-  const picked = byId.get(select.value);
+      const picked = byId.get(select.value) || null;
 
-  const selection = picked
-    ? {
-        bookGroupId: picked.bookGroupId,
-        displayTitle: picked.displayTitle,
-        parts: picked.parts || []
-      }
-    : { bookGroupId: "", displayTitle: "", parts: [] };
+      const selection = picked
+        ? {
+            bookGroupId: picked.bookGroupId || "",
+            displayTitle: picked.displayTitle || "",
+            parts: normalizeParts(picked.parts)
+          }
+        : { bookGroupId: "", displayTitle: "", parts: [] };
 
-  // ✅ Make gen-exam.js happy (permanent contract)
-  window.__rvSelectedBook = selection;
+      // ✅ Contract used by gen-exam.js and other pages
+      window.__rvSelectedBook = selection;
+      window.__rvBookSelection = selection;
 
-  // (optional) keep your existing variable too, if other code uses it
-  window.__rvBookSelection = selection;
+      // ✅ Notify listeners
+      window.dispatchEvent(new CustomEvent("rv:bookChanged", { detail: selection }));
+    });
 
-  // ✅ notify listeners
-  window.dispatchEvent(new CustomEvent("rv:bookChanged", { detail: selection }));
-});
-
-
+    // Mount UI (IMPORTANT: outside change handler)
     mount.appendChild(label);
     mount.appendChild(search);
     mount.appendChild(select);
   }
 
+  // ---------- Init ----------
   async function init() {
     const mount = $("bookMount");
     if (!mount) return;
@@ -159,8 +180,14 @@
       const json = await fetchBooks();
       const grouped = buildGroupedOptions(json);
       const options = grouped.length ? grouped : buildFallbackOptions(json);
+
       renderDropdown(mount, options);
+
+      // Initialize selection empty (optional, but keeps state consistent)
+      window.__rvSelectedBook = { bookGroupId: "", displayTitle: "", parts: [] };
+      window.__rvBookSelection = window.__rvSelectedBook;
     } catch (e) {
+      console.error(e);
       mount.innerHTML = "";
       mount.appendChild(
         el("div", {
@@ -168,7 +195,6 @@
           text: "Book list failed to load. Refresh and try again."
         })
       );
-      console.error(e);
     }
   }
 
