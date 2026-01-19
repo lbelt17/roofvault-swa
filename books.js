@@ -173,30 +173,55 @@
 
   // ---------- Init ----------
   async function init() {
-    const mount = $("bookMount");
-    if (!mount) return;
+  const mount = $("bookMount");
+  if (!mount) return;
 
-    try {
-      const json = await fetchBooks();
-      const grouped = buildGroupedOptions(json);
-      const options = grouped.length ? grouped : buildFallbackOptions(json);
+  try {
+    const json = await fetchBooks();
 
-      renderDropdown(mount, options);
+    // 1) Build grouped options if available
+    const grouped = buildGroupedOptions(json);
 
-      // Initialize selection empty (optional, but keeps state consistent)
-      window.__rvSelectedBook = { bookGroupId: "", displayTitle: "", parts: [] };
-      window.__rvBookSelection = window.__rvSelectedBook;
-    } catch (e) {
-      console.error(e);
-      mount.innerHTML = "";
-      mount.appendChild(
-        el("div", {
-          class: "rv-book-error",
-          text: "Book list failed to load. Refresh and try again."
-        })
-      );
+    // 2) If grouped exists but some books have no parts, rebuild missing parts from values[]
+    if (grouped.length && Array.isArray(json?.values) && json.values.length) {
+      const raw = json.values.map((v) => String(v || "").trim()).filter(Boolean);
+
+      // map cleanedTitle -> list of raw part strings
+      const titleToParts = new Map();
+      raw.forEach((name) => {
+        const title = cleanDisplayTitle(name);
+        if (!title) return;
+        if (!titleToParts.has(title)) titleToParts.set(title, []);
+        titleToParts.get(title).push(name);
+      });
+
+      grouped.forEach((b) => {
+        if (!Array.isArray(b.parts) || b.parts.length === 0) {
+          const guessTitle = cleanDisplayTitle(b.displayTitle);
+          const parts = titleToParts.get(guessTitle) || [];
+          b.parts = parts;
+        }
+      });
     }
+
+    const options = grouped.length ? grouped : buildFallbackOptions(json);
+    renderDropdown(mount, options);
+
+    // Initialize selection empty (keeps state consistent)
+    window.__rvSelectedBook = { bookGroupId: "", displayTitle: "", parts: [] };
+    window.__rvBookSelection = window.__rvSelectedBook;
+  } catch (e) {
+    console.error(e);
+    mount.innerHTML = "";
+    mount.appendChild(
+      el("div", {
+        class: "rv-book-error",
+        text: "Book list failed to load. Refresh and try again."
+      })
+    );
   }
+}
+
 
   document.addEventListener("DOMContentLoaded", init);
 })();
