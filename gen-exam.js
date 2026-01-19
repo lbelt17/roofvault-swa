@@ -288,14 +288,26 @@
     ui.btn.onclick = () => genExam();
 
     // ✅ Dynamic "New 25Q Practice Exam" button (created after grading)
-    // IMPORTANT: your UI must create it with id="btnNewExam25"
-    document.addEventListener("click", (e) => {
-      const t = e.target;
-      const newBtn = t && t.closest ? t.closest("#btnNewExam25") : null;
-      if (!newBtn) return;
-      e.preventDefault();
-      genExam();
-    });
+// Works whether the button has an id or not (matches by text as fallback).
+if (!window.__rvNewExamClickWired) {
+  window.__rvNewExamClickWired = true;
+
+  document.addEventListener("click", (e) => {
+    const t = e.target;
+    const btn = t && t.closest ? t.closest("button") : null;
+    if (!btn) return;
+
+    const idOk = btn.id === "btnNewExam25";
+    const text = (btn.textContent || "").trim().toLowerCase();
+    const textOk = text === "new 25q practice exam" || text.includes("new 25q");
+
+    if (!idOk && !textOk) return;
+
+    e.preventDefault();
+    genExam();
+  });
+}
+
 
     // Initialize auth state
     await refreshButtonAuth(ui.btn);
