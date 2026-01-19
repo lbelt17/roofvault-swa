@@ -1,15 +1,14 @@
 ﻿// api/exam/index.js
-// RoofVault /api/exam — multi-part guaranteed + fresh mixes + no-repeat support
+// RoofVault /api/exam — multi-part guaranteed + fresh mixes + NO-REPEAT support
 //
-// Fixes / Features:
-// - Uses ALL body.parts (not just parts[0])
-// - Pulls sources PER PART and generates questions PER PART (quota / round-robin)
-// - Seeded RNG based on attemptNonce for fresh mixes
-// - Shuffles options and remaps correct answer so answer isn't always A/B
-// - Adds `ref` to each item (same as cite label) so UI always shows correct Part
-// - Supports excludeQuestions[] to prevent repeats across "New 25Q" attempts
-// - Avoids TOC/meta "which chapter/section/page" style questions
-// - If unique questions exhausted returns: {"items":[],"message":"No additional unique questions remain..."}
+// What this version guarantees:
+// - Uses ALL body.parts (no baseTitle keyword guessing when parts provided)
+// - Pulls sources PER PART and generates questions PER PART using quotas (round-robin distribution)
+// - Adds ref = cite so UI shows correct Part label
+// - Shuffles answer choices and remaps correct answer (A/B/C/D distributed)
+// - Supports excludeQuestions from gen-exam.js (client memory) and avoids repeats
+// - Avoids "chapter/section" meta questions
+// - If exhausted, returns items:[] with a professional message
 
 const crypto = require("crypto");
 
@@ -17,21 +16,13 @@ const crypto = require("crypto");
 const DEFAULT_COUNT = 25;
 const MAX_COUNT = 50;
 
-// How many chunks to fetch per part
-const TOP_PER_PART = 40;
+const TOP_PER_PART = 40; // chunks per part
+const MAX_SOURCE_CHARS_TOTAL = 11000; // total chars fed to model (split across parts)
 
-// Total max chars fed to the model (split across parts)
-const MAX_SOURCE_CHARS_TOTAL = 11000;
-
-// Timeouts
 const SEARCH_TIMEOUT_MS = 15000;
 const AOAI_TIMEOUT_MS = 90000;
 
-// Fields where text might live
 const TEXT_FIELDS = ["content", "text", "chunk", "chunkText", "pageText", "merged_content"];
-
-// Retry behavior to enforce "no repeats"
-const NOREPEAT_MAX_ATTEMPTS = 4;
 
 // ======= HELPERS =======
 function clampInt(n, min, max, fallback) {
@@ -88,6 +79,15 @@ async function fetchJson(url, options, timeoutMs) {
   }
 }
 
+// Normalize question for no-repeat comparisons
+function normQ(s) {
+  return String(s || "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/[^\w\s\?\.\,\-]/g, "")
+    .trim();
+}
+
 // Robust conversion to plain text.
 function asText(val) {
   if (val == null) return "";
@@ -99,7 +99,7 @@ function asText(val) {
         const parsed = JSON.parse(s);
         return asText(parsed);
       } catch {
-        // not valid JSON string; treat as text
+        // treat as text
       }
     }
     return val;
@@ -159,7 +159,7 @@ function pickText(doc) {
   return "";
 }
 
-// Build a compact source string with [label] blocks, capped to limit chars
+// Build compact sources string capped to limit chars
 function compactSourcesLimit(hits, limitChars) {
   let out = "";
   for (const h of hits) {
@@ -236,62 +236,7 @@ function normalizeOptions(opt) {
   ];
 }
 
-function shuffleOptionsAndRemapAnswer(item, rand) {
-  if (!item || !Array.isArray(item.options) || item.options.length !== 4) return item;
-
-  const letters = ["A", "B", "C", "D"];
-  const correctLetter = String(item.answer || "").toUpperCase();
-  const correctIndex = letters.indexOf(correctLetter);
-  if (correctIndex === -1) return item;
-
-  const indexed = item.options.map((opt, i) => ({ opt, originalIndex: i }));
-
-  for (let i = indexed.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [indexed[i], indexed[j]] = [indexed[j], indexed[i]];
-  }
-
-  const newCorrectIndex = indexed.findIndex((x) => x.originalIndex === correctIndex);
-
-  const newOptions = indexed.map((x, i) => ({
-    id: letters[i],
-    text: String((x.opt && x.opt.text) || "")
-  }));
-
-  return {
-    ...item,
-    options: newOptions,
-    answer: letters[Math.max(0, newCorrectIndex)]
-  };
-}
-
-function isValidAnswer(a) {
-  const x = safeString(a).toUpperCase().trim();
-  return x === "A" || x === "B" || x === "C" || x === "D";
-}
-
-function validateItems(items, count) {
-  if (!Array.isArray(items)) return { ok: false, reason: "items not array" };
-  if (items.length !== count) return { ok: false, reason: `items length ${items.length} != ${count}` };
-
-  for (let i = 0; i < count; i++) {
-    const q = items[i];
-    if (!q) return { ok: false, reason: "missing item" };
-    if (!safeString(q.question).trim()) return { ok: false, reason: "missing question" };
-
-    const opts = normalizeOptions(q.options);
-    const ans = safeString(q.answer).toUpperCase().trim();
-
-    if (!opts || opts.length !== 4) return { ok: false, reason: "options not 4" };
-    if (!isValidAnswer(ans)) return { ok: false, reason: "answer not A-D" };
-    if (!safeString(q.cite).trim()) return { ok: false, reason: "missing cite" };
-    if (!safeString(q.explanation).trim()) return { ok: false, reason: "missing explanation" };
-  }
-
-  return { ok: true };
-}
-
-// Seeded RNG
+// Seeded rng for freshness
 function seededRng(seedStr) {
   const h = crypto.createHash("sha256").update(String(seedStr)).digest();
   let idx = 0;
@@ -313,7 +258,27 @@ function shuffleInPlace(arr, rand) {
   return arr;
 }
 
-// Quota: guarantee distribution across parts
+function shuffleOptionsAndRemapAnswer(item, rand) {
+  if (!item || !Array.isArray(item.options) || item.options.length !== 4) return item;
+
+  const letters = ["A", "B", "C", "D"];
+  const correctLetter = String(item.answer || "").toUpperCase();
+  const correctIndex = letters.indexOf(correctLetter);
+  if (correctIndex === -1) return item;
+
+  const indexed = item.options.map((opt, i) => ({ opt, originalIndex: i }));
+  for (let i = indexed.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [indexed[i], indexed[j]] = [indexed[j], indexed[i]];
+  }
+
+  const newCorrectIndex = indexed.findIndex((x) => x.originalIndex === correctIndex);
+  const newOptions = indexed.map((x, i) => ({ id: letters[i], text: String(x.opt.text || "") }));
+
+  return { ...item, options: newOptions, answer: letters[newCorrectIndex] };
+}
+
+// Quotas: distribute count across parts fairly, shuffle part order per attempt
 function buildQuotas(parts, count, rand) {
   const uniq = Array.from(new Set(parts.map((p) => String(p).trim()).filter(Boolean)));
   if (!uniq.length) return { parts: [], quotas: [] };
@@ -322,7 +287,6 @@ function buildQuotas(parts, count, rand) {
   shuffleInPlace(order, rand);
 
   const k = order.length;
-
   if (k >= count) {
     return { parts: order.slice(0, count), quotas: order.slice(0, count).map(() => 1) };
   }
@@ -334,20 +298,6 @@ function buildQuotas(parts, count, rand) {
   for (let i = 0; i < quotas.length && rem > 0; i++, rem--) quotas[i]++;
 
   return { parts: order, quotas };
-}
-
-function normQ(s) {
-  return String(s || "")
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .replace(/[^\w\s\?\.\,\-]/g, "")
-    .trim();
-}
-
-function hashQ(q) {
-  const txt = normQ(q && (q.question || q.prompt || ""));
-  const cite = normQ(q && (q.cite || q.ref || ""));
-  return crypto.createHash("sha256").update(`${txt}||${cite}`).digest("hex");
 }
 
 // ======= MAIN =======
@@ -376,7 +326,6 @@ module.exports = async function (context, req) {
       return send(context, 500, { error: "Missing AOAI_ENDPOINT or AOAI_API_KEY" });
     }
 
-    // Request body
     const body = req.body || {};
     const count = clampInt(body.count, 1, MAX_COUNT, DEFAULT_COUNT);
 
@@ -385,7 +334,6 @@ module.exports = async function (context, req) {
       (crypto.randomUUID ? crypto.randomUUID() : crypto.randomBytes(16).toString("hex")) +
       (attemptNonce ? `-${attemptNonce}` : "");
 
-    // Parts required
     const partsRaw = Array.isArray(body.parts) ? body.parts : [];
     const parts = partsRaw.map((p) => String(p).trim()).filter(Boolean);
 
@@ -393,19 +341,10 @@ module.exports = async function (context, req) {
       return send(context, 400, { error: 'Provide {parts:["Book - Part 01", ...]}' });
     }
 
-    // No-repeat list from client
+    // NO-REPEAT input (cap to prevent giant prompts)
     const excludeQuestionsRaw = Array.isArray(body.excludeQuestions) ? body.excludeQuestions : [];
-
-// ✅ CAP exclude list to prevent timeouts on repeated "New 25Q" clicks
-// We only need to avoid repeats from recent exams, not forever.
-const excludeQuestions = excludeQuestionsRaw
-  .map(normQ)
-  .filter(Boolean)
-  .slice(-60); // <-- cap here (60 = safe)
-
-// Use normalized strings for quick filtering
-const excludeSet = new Set(excludeQuestions);
-
+    const excludeQuestions = excludeQuestionsRaw.map(normQ).filter(Boolean).slice(-120);
+    const excludeSet = new Set(excludeQuestions);
 
     const rand = seededRng(requestId);
     const quotaPlan = buildQuotas(parts, count, rand);
@@ -415,8 +354,8 @@ const excludeSet = new Set(excludeQuestions);
       `/indexes/${encodeURIComponent(SEARCH_INDEX_CONTENT)}` +
       `/docs/search?api-version=2023-11-01`;
 
-    // Resolve the REAL metadata_storage_name by searching, then filter exactly
     async function runSearchForPart(partName, top) {
+      // Resolve real metadata_storage_name to avoid slug/case mismatch
       const resolveBody = {
         search: `"${partName}"`,
         top: 5,
@@ -439,9 +378,7 @@ const excludeSet = new Set(excludeQuestions);
       if (resolveRes.ok) {
         const vals = (resolveRes.data && (resolveRes.data.value || resolveRes.data.values)) || [];
         const targetLower = String(partName).toLowerCase();
-        const exact = vals.find(
-          (h) => String(h.metadata_storage_name || "").toLowerCase() === targetLower
-        );
+        const exact = vals.find((h) => String(h.metadata_storage_name || "").toLowerCase() === targetLower);
         const first = vals[0];
 
         if (exact && exact.metadata_storage_name) resolvedName = String(exact.metadata_storage_name);
@@ -469,9 +406,9 @@ const excludeSet = new Set(excludeQuestions);
       );
     }
 
-    // Pull sources per part with char budget split across parts
+    // Pull sources per part with total budget split across parts
     const partCount = quotaPlan.parts.length || 1;
-    const perPartBudget = Math.max(800, Math.floor(MAX_SOURCE_CHARS_TOTAL / partCount));
+    const perPartBudget = Math.max(900, Math.floor(MAX_SOURCE_CHARS_TOTAL / partCount));
 
     const partSources = [];
     const partDiag = [];
@@ -516,8 +453,21 @@ const excludeSet = new Set(excludeQuestions);
       "NO-REPEAT RULE:\n" +
       "- You will be given an EXCLUDE list of previously asked questions.\n" +
       "- Do NOT repeat any question that is the same or substantially similar to an excluded question.\n" +
-      "- If you cannot produce enough unique questions, return a JSON object with items:[] AND include a message field explaining exhaustion.\n" +
       'If you cannot comply, return: {"items":[],"message":"No additional unique questions remain for this book based on the current indexed content."}';
+
+    function makeSchema(batchCount, idOffset) {
+      return (
+        `Return JSON exactly like:\n` +
+        `{"items":[{"id":"${idOffset + 1}","type":"mcq","question":"...","options":[{"id":"A","text":"..."},{"id":"B","text":"..."},{"id":"C","text":"..."},{"id":"D","text":"..."}],` +
+        `"answer":"A","cite":"<one of the [source] labels>","explanation":"..."}]}\n` +
+        `Rules:\n` +
+        `- items length MUST be exactly ${batchCount}\n` +
+        `- id MUST be "${idOffset + 1}" to "${idOffset + batchCount}" (sequential)\n` +
+        `- answer MUST be one of "A","B","C","D"\n` +
+        `- cite MUST match one of the bracketed source labels exactly\n` +
+        `- Finish the JSON (no truncation).`
+      );
+    }
 
     const aoaiUrl =
       `${AOAI_ENDPOINT.replace(/\/+$/, "")}` +
@@ -553,141 +503,131 @@ const excludeSet = new Set(excludeQuestions);
       return { ok: true, parsed, raw: content };
     }
 
-    function makeSchema(batchCount, idOffset) {
-      return (
-        `Return JSON exactly like:\n` +
-        `{"items":[{"id":"${idOffset + 1}","type":"mcq","question":"...","options":[{"id":"A","text":"..."},{"id":"B","text":"..."},{"id":"C","text":"..."},{"id":"D","text":"..."}],` +
-        `"answer":"A","cite":"<one of the [source] labels>","explanation":"..."}]}\n` +
-        `Rules:\n` +
-        `- items length MUST be exactly ${batchCount}\n` +
-        `- id MUST be "${idOffset + 1}" to "${idOffset + batchCount}" (sequential)\n` +
-        `- answer MUST be one of "A","B","C","D"\n` +
-        `- cite MUST match one of the bracketed source labels exactly\n` +
-        `- Finish the JSON (no truncation).`
-      );
-    }
-
-    async function generateExact(batchCount, idOffset, sourcesText, attemptNoRepeat) {
-      const schema = makeSchema(batchCount, idOffset);
-
-      const excludeBlock =
-        attemptNoRepeat && excludeQuestions.length
-          ? `\n\nEXCLUDE (do NOT repeat these questions or close paraphrases):\n- ${excludeQuestions
-              .slice(-250)
-              .join("\n- ")}\n`
-          : "\n";
-
-      const user =
-        `Create exactly ${batchCount} MCQs numbered ${idOffset + 1} to ${idOffset + batchCount}.\n` +
-        `Use ONLY the sources below. Every question must cite the correct [source] label.\n` +
-        `Avoid meta/navigation questions (chapters/sections/pages).\n` +
-        excludeBlock +
-        `\n${schema}\n\n` +
-        `SOURCES:\n${sourcesText}`;
-
-      const a1 = await callAoai(user);
-      if (!a1.ok) return { ok: false, detail: a1.detail, raw: a1.raw };
-
-      const parsed = a1.parsed;
-      const items = parsed && parsed.items;
-      const v = validateItems(items, batchCount);
-
-      if (!v.ok) {
-        return { ok: false, detail: v.reason, raw: a1.raw };
-      }
-
-      return { ok: true, items, message: parsed && parsed.message ? parsed.message : "" };
-    }
-
-    function filterNoRepeat(items) {
+    function filterNoRepeats(items) {
       const out = [];
       for (const q of items || []) {
-        const nq = normQ(q && q.question);
+        const nq = normQ(q?.question);
         if (!nq) continue;
         if (excludeSet.has(nq)) continue;
+        excludeSet.add(nq); // prevent duplicates within the same response too
         out.push(q);
       }
       return out;
     }
 
-    // Build generation tasks per part (quota)
+    async function generateExact(batchCount, idOffset, sourcesText) {
+      const schema = makeSchema(batchCount, idOffset);
+
+      const excludePreview =
+        excludeQuestions.length > 0
+          ? `\n\nEXCLUDE (do not repeat these questions):\n- ${excludeQuestions.slice(-60).join("\n- ")}\n`
+          : "\n\nEXCLUDE: (none)\n";
+
+      const user =
+        `Create exactly ${batchCount} MCQs numbered ${idOffset + 1} to ${idOffset + batchCount}.\n` +
+        `Use ONLY the sources below. Every question must cite the correct [source] label.\n` +
+        `Do NOT write chapter/section navigation questions.\n` +
+        excludePreview +
+        `\n${schema}\n\nSOURCES:\n${sourcesText}`;
+
+      // attempt 1
+      const a1 = await callAoai(user);
+      if (!a1.ok) return { ok: false, detail: a1.detail, raw: a1.raw };
+
+      let items = a1.parsed && a1.parsed.items;
+      items = filterNoRepeats(items);
+
+      // If the model gave fewer because of exclude, retry once asking for more unique ones
+      if (!Array.isArray(items) || items.length < batchCount) {
+        const needed = batchCount;
+        const repair =
+          `Your previous output did not contain enough UNIQUE questions.\n` +
+          `Return ONLY valid JSON and EXACTLY ${needed} UNIQUE items.\n` +
+          `Do NOT repeat any excluded questions.\n` +
+          `${schema}\n\n` +
+          `EXCLUDE (do not repeat):\n- ${excludeQuestions.slice(-60).join("\n- ")}\n\n` +
+          `SOURCES:\n${sourcesText}`;
+
+        const a2 = await callAoai(repair);
+        if (a2.ok) {
+          let items2 = a2.parsed && a2.parsed.items;
+          items2 = filterNoRepeats(items2);
+
+          if (Array.isArray(items2) && items2.length >= batchCount) {
+            return { ok: true, items: items2.slice(0, batchCount) };
+          }
+        }
+
+        // exhausted for this part
+        return { ok: true, items: [] };
+      }
+
+      return { ok: true, items: items.slice(0, batchCount) };
+    }
+
+    // Build per-part tasks by quota
     const tasks = [];
     let idOffset = 0;
-
     for (let i = 0; i < quotaPlan.parts.length; i++) {
       const partName = quotaPlan.parts[i];
-      const q = quotaPlan.quotas[i] || 0;
-      if (q <= 0) continue;
+      const qCount = quotaPlan.quotas[i] || 0;
+      if (qCount <= 0) continue;
 
       const src = partSources.find((p) => p.partName === partName);
       const sourcesText = src && src.sources ? src.sources : "";
       if (!sourcesText || sourcesText.length < 50) continue;
 
-      tasks.push({ partName, n: q, idOffset });
-      idOffset += q;
+      tasks.push({ partName, n: qCount, idOffset });
+      idOffset += qCount;
     }
 
-    // If tasks empty, fall back to merged sources
     let allGenerated = [];
     let usedMode = "per-part-quotas";
-
-    async function generateWithNoRepeat(countNeeded, sourcesText) {
-      let acc = [];
-      let attempt = 0;
-
-      while (attempt < NOREPEAT_MAX_ATTEMPTS && acc.length < countNeeded) {
-        attempt++;
-
-        const want = countNeeded - acc.length;
-        const b = await generateExact(want, 0, sourcesText, true);
-        if (!b.ok) break;
-
-        let got = Array.isArray(b.items) ? b.items : [];
-        got = filterNoRepeat(got);
-
-        // also dedupe within this run
-        const seenHashes = new Set(acc.map(hashQ));
-        for (const q of got) {
-          const h = hashQ(q);
-          if (!h || seenHashes.has(h)) continue;
-          seenHashes.add(h);
-          acc.push(q);
-          if (acc.length >= countNeeded) break;
-        }
-      }
-
-      return acc;
-    }
 
     if (!tasks.length) {
       usedMode = "merged-fallback";
       const merged = partSources.map((p) => p.sources).filter(Boolean).join("\n\n");
-      allGenerated = await generateWithNoRepeat(count, merged);
+      const b = await generateExact(count, 0, merged);
+      if (!b.ok) {
+        return send(context, 500, {
+          error: "Model returned invalid output",
+          detail: b.detail || "batch failed",
+          raw: b.raw,
+          _diag: { requestId, deployment: AOAI_DEPLOYMENT, usedMode, partDiag }
+        });
+      }
+      allGenerated = b.items;
     } else {
-      // Generate each part’s quota in mini-batches (up to 5) to avoid truncation
+      // mini-batches of 5 to avoid truncation
       for (const t of tasks) {
         let remaining = t.n;
+        let localOffset = t.idOffset;
 
         while (remaining > 0) {
           const n = remaining >= 5 ? 5 : remaining;
 
           const src = partSources.find((p) => p.partName === t.partName);
           const sourcesText = src && src.sources ? src.sources : "";
-          if (!sourcesText || sourcesText.length < 50) break;
 
-          const got = await generateWithNoRepeat(n, sourcesText);
-          allGenerated = allGenerated.concat(got);
+          const b = await generateExact(n, localOffset, sourcesText);
+          if (!b.ok) {
+            return send(context, 500, {
+              error: "Model returned invalid output",
+              detail: b.detail || "batch failed",
+              raw: b.raw,
+              _diag: { requestId, deployment: AOAI_DEPLOYMENT, usedMode, task: t, partDiag }
+            });
+          }
 
-          // if we couldn't generate any new unique items for this part, stop early
-          if (!got.length) break;
-
-          remaining -= got.length;
+          allGenerated = allGenerated.concat(b.items);
+          remaining -= n;
+          localOffset += n;
         }
       }
     }
 
-    // If we still don't have enough unique questions, return exhaustion message
-    if (allGenerated.length < Math.min(5, count) && excludeQuestions.length) {
+    // If we couldn't get enough unique items, return professional exhaustion message
+    if (!Array.isArray(allGenerated) || allGenerated.length < 1) {
       return send(context, 200, {
         items: [],
         message: "No additional unique questions remain for this book based on the current indexed content.",
@@ -697,8 +637,8 @@ const excludeSet = new Set(excludeQuestions);
       });
     }
 
-    // Normalize + shuffle answers + add ref + then shuffle questions
-    const normalized = allGenerated
+    // Normalize + shuffle answers + add ref
+    const finalItems = allGenerated
       .slice(0, count)
       .map((q) => {
         const cite = safeString(q.cite).replace(/^\[|\]$/g, "").trim();
@@ -713,9 +653,9 @@ const excludeSet = new Set(excludeQuestions);
       })
       .map((q) => shuffleOptionsAndRemapAnswer(q, rand));
 
-    const shuffled = normalized.slice();
+    // Shuffle question order for variety, then assign ids
+    const shuffled = finalItems.slice();
     shuffleInPlace(shuffled, rand);
-
     const out = shuffled.map((q, i) => ({
       id: String(i + 1),
       type: "mcq",
@@ -738,8 +678,8 @@ const excludeSet = new Set(excludeQuestions);
         partsProvided: parts.length,
         partsUsed: quotaPlan.parts,
         quotas: quotaPlan.quotas,
-        partDiag,
-        excludeCount: excludeQuestions.length
+        excludeCount: excludeQuestions.length,
+        partDiag
       }
     });
   } catch (e) {
