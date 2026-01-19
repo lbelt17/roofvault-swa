@@ -1,9 +1,16 @@
-﻿(function () {
+﻿// gen-exam.js — RoofVault Practice Exam wiring (stable + "New 25Q" works)
+// Requirements:
+// - HTML has: #bookMount, #btnGenExam25ByBook, #qList (optional), #status (optional), #diag (optional)
+// - books.js sets window.__rvSelectedBook = { bookGroupId, displayTitle, parts: [string|object] }
+// - renderQuiz(items) exists (preferred). If not, we print JSON into #qList.
+
+(function () {
   "use strict";
 
   // ================== CONFIG ==================
   const QUESTION_COUNT = 25;
   const API_URL = "/api/exam";
+  const FETCH_TIMEOUT_MS = 120000;
 
   // ================== DOM HELPERS ==================
   function $(id) {
@@ -49,7 +56,7 @@
       return null;
     }
 
-    // Ensure qList exists (your HTML already has it, but we keep this safe)
+    // Ensure qList exists (your HTML already has it, but keep safe)
     let qList = $("qList");
     if (!qList) {
       qList = el("div", { id: "qList" });
@@ -62,7 +69,7 @@
       bookMount.parentNode?.appendChild(qList);
     }
 
-    // IMPORTANT: We do NOT create the button. We require the HTML button to exist.
+    // Require the HTML button to exist
     const btn = $("btnGenExam25ByBook");
     if (!btn) {
       showDiag("❌ Missing #btnGenExam25ByBook in index.html. Add id to your existing button.");
@@ -102,22 +109,42 @@
   }
 
   // ================== BOOK SELECTION ==================
-  // Your app must provide a "selected book" object with:
-  // { bookGroupId, displayTitle, parts?: [] }
-  // We try a few common locations; if none exist we show a clear error.
   function getBookSelection() {
-    // Preferred: you expose a custom selection function (recommended)
     if (typeof window.getSelectedBook === "function") return window.getSelectedBook();
     if (typeof window.getBookSelection === "function") return window.getBookSelection();
-
-    // Common: selection stored globally by books.js / interactive-exam.js
     if (window.__rvSelectedBook) return window.__rvSelectedBook;
     if (window.rvSelectedBook) return window.rvSelectedBook;
-
-    // If someone accidentally relied on native window.getSelection(), it won't have bookGroupId.
-    // We DO NOT call it here.
-
     return null;
+  }
+
+  function normalizeParts(selection) {
+    if (Array.isArray(selection?.parts) && selection.parts.length) {
+      return selection.parts
+        .map((p) => {
+          if (typeof p === "string") return p;
+
+          // object form: extract best identifier
+          if (p && typeof p === "object") {
+            return (
+              p.metadata_storage_name ||
+              p.name ||
+              p.id ||
+              p.partId ||
+              p.blobName ||
+              p.ref ||
+              p.key ||
+              ""
+            );
+          }
+
+          return "";
+        })
+        .map((s) => String(s).trim())
+        .filter(Boolean);
+    }
+
+    // Fallback to bookGroupId (works if backend resolves slugs; also ok for single-part if it matches)
+    return [String(selection?.bookGroupId || "").trim()].filter(Boolean);
   }
 
   // ================== HELPERS ==================
@@ -145,22 +172,21 @@
       }));
   }
 
-  async function safeFetch(url, opts = {}, timeoutMs = 120000) {
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+  async function safeFetch(url, opts = {}, timeoutMs = FETCH_TIMEOUT_MS) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
 
-  try {
-    return await fetch(url, { ...opts, signal: ctrl.signal });
-  } catch (err) {
-    if (err.name === "AbortError") {
-      throw new Error("Request timed out while generating exam");
+    try {
+      return await fetch(url, { ...opts, signal: ctrl.signal });
+    } catch (err) {
+      if (err && err.name === "AbortError") {
+        throw new Error("Request timed out while generating exam");
+      }
+      throw err;
+    } finally {
+      clearTimeout(t);
     }
-    throw err;
-  } finally {
-    clearTimeout(t);
   }
-}
-
 
   // ================== MAIN ==================
   async function genExam() {
@@ -184,26 +210,7 @@
       return;
     }
 
-    const parts =
-  Array.isArray(selection.parts) && selection.parts.length
-    ? selection.parts
-        .map((p) => {
-          if (typeof p === "string") return p;
-
-          // Try common fields used by your /api/books response
-          return (
-            p.partId ||
-            p.id ||
-            p.name ||
-            p.metadata_storage_name ||
-            p.blobName ||
-            p.ref ||
-            ""
-          );
-        })
-        .filter(Boolean)
-    : [selection.bookGroupId];
-
+    const parts = normalizeParts(selection);
 
     try {
       btn.disabled = true;
@@ -218,8 +225,9 @@
         mode: "BOOK_ONLY",
         attemptNonce: `${Date.now()}-${Math.random().toString(16).slice(2)}`
       };
-      showDiag({ selection, parts, payload });
 
+      // Helpful debug while you’re building
+      showDiag({ selection, parts, payload });
 
       const res = await safeFetch(API_URL, {
         method: "POST",
@@ -227,23 +235,20 @@
         body: JSON.stringify(payload)
       });
 
-      // If API returns non-200, show body for debugging
-if (!res.ok) {
-  const txt = await res.text().catch(() => "");
-  showDiag({
-    error: "API request failed",
-    status: res.status,
-    statusText: res.statusText,
-    body: txt,
-    // ✅ keep these visible even when API fails
-    selection,
-    parts,
-    payload
-  });
-  setStatus("Error");
-  return;
-}
-
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        showDiag({
+          error: "API request failed",
+          status: res.status,
+          statusText: res.statusText || "",
+          body: txt,
+          selection,
+          parts,
+          payload
+        });
+        setStatus("Error");
+        return;
+      }
 
       const data = await res.json();
 
@@ -277,16 +282,25 @@ if (!res.ok) {
     const ui = ensureUI();
     if (!ui) return;
 
-    // Confirm file loaded
     showDiag("✅ gen-exam.js loaded. Click Generate to test.");
 
-    // Direct click wiring (simple + reliable)
+    // Main button
     ui.btn.onclick = () => genExam();
+
+    // ✅ Dynamic "New 25Q Practice Exam" button (created after grading)
+    // IMPORTANT: your UI must create it with id="btnNewExam25"
+    document.addEventListener("click", (e) => {
+      const t = e.target;
+      const newBtn = t && t.closest ? t.closest("#btnNewExam25") : null;
+      if (!newBtn) return;
+      e.preventDefault();
+      genExam();
+    });
 
     // Initialize auth state
     await refreshButtonAuth(ui.btn);
 
-    // If your app triggers book change events, keep auth state accurate
+    // Keep auth state accurate on book changes
     window.addEventListener("rv:bookChanged", async () => {
       const ui2 = ensureUI();
       if (ui2?.btn) await refreshButtonAuth(ui2.btn);
