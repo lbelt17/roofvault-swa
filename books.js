@@ -186,22 +186,38 @@
     if (grouped.length && Array.isArray(json?.values) && json.values.length) {
       const raw = json.values.map((v) => String(v || "").trim()).filter(Boolean);
 
-      // map cleanedTitle -> list of raw part strings
-      const titleToParts = new Map();
-      raw.forEach((name) => {
-        const title = cleanDisplayTitle(name);
-        if (!title) return;
-        if (!titleToParts.has(title)) titleToParts.set(title, []);
-        titleToParts.get(title).push(name);
-      });
+      // Normalize titles so these match:
+// "IIBEC-Manual-of-Practice-Glossary-Section"
+// "IIBEC - Manual - of - Practice - Glossary - Section"
+function keyifyTitle(s) {
+  return String(s || "")
+    .toLowerCase()
+    .replace(/\.pdf$/i, "")
+    .replace(/\s+/g, "")      // remove all spaces
+    .replace(/[^a-z0-9]/g, ""); // remove punctuation/hyphens
+}
 
-      grouped.forEach((b) => {
-        if (!Array.isArray(b.parts) || b.parts.length === 0) {
-          const guessTitle = cleanDisplayTitle(b.displayTitle);
-          const parts = titleToParts.get(guessTitle) || [];
-          b.parts = parts;
-        }
-      });
+// map normalizedTitle -> list of raw part strings
+const titleToParts = new Map();
+
+raw.forEach((name) => {
+  const title = cleanDisplayTitle(name);
+  const key = keyifyTitle(title);
+  if (!key) return;
+
+  if (!titleToParts.has(key)) titleToParts.set(key, []);
+  titleToParts.get(key).push(name);
+});
+
+grouped.forEach((b) => {
+  if (!Array.isArray(b.parts) || b.parts.length === 0) {
+    const guessTitle = cleanDisplayTitle(b.displayTitle);
+    const key = keyifyTitle(guessTitle);
+    const parts = titleToParts.get(key) || [];
+    b.parts = parts; // ✅ now single-file books get a 1-item parts array
+  }
+});
+
     }
 
     const options = grouped.length ? grouped : buildFallbackOptions(json);
