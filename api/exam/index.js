@@ -395,8 +395,17 @@ module.exports = async function (context, req) {
 
     // No-repeat list from client
     const excludeQuestionsRaw = Array.isArray(body.excludeQuestions) ? body.excludeQuestions : [];
-    const excludeQuestions = excludeQuestionsRaw.map(normQ).filter(Boolean);
-    const excludeSet = new Set(excludeQuestions);
+
+// ✅ CAP exclude list to prevent timeouts on repeated "New 25Q" clicks
+// We only need to avoid repeats from recent exams, not forever.
+const excludeQuestions = excludeQuestionsRaw
+  .map(normQ)
+  .filter(Boolean)
+  .slice(-60); // <-- cap here (60 = safe)
+
+// Use normalized strings for quick filtering
+const excludeSet = new Set(excludeQuestions);
+
 
     const rand = seededRng(requestId);
     const quotaPlan = buildQuotas(parts, count, rand);
