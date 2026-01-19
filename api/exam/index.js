@@ -234,6 +234,42 @@ function normalizeOptions(opt) {
     { id: "D", text: "" }
   ];
 }
+function shuffleOptionsAndRemapAnswer(item, rand) {
+  if (!item || !Array.isArray(item.options) || item.options.length !== 4) {
+    return item;
+  }
+
+  const letters = ["A", "B", "C", "D"];
+  const correctLetter = String(item.answer || "").toUpperCase();
+  const correctIndex = letters.indexOf(correctLetter);
+  if (correctIndex === -1) return item;
+
+  const indexed = item.options.map((opt, i) => ({
+    opt,
+    originalIndex: i
+  }));
+
+  for (let i = indexed.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [indexed[i], indexed[j]] = [indexed[j], indexed[i]];
+  }
+
+  const newCorrectIndex = indexed.findIndex(
+    (x) => x.originalIndex === correctIndex
+  );
+
+  const newOptions = indexed.map((x, i) => ({
+    id: letters[i],
+    text: String(x.opt.text || "")
+  }));
+
+  return {
+    ...item,
+    options: newOptions,
+    answer: letters[newCorrectIndex]
+  };
+}
+
 
 function isValidAnswer(a) {
   const x = safeString(a).toUpperCase().trim();
@@ -622,20 +658,31 @@ module.exports = async function (context, req) {
       }
     }
 
-    // Normalize + add ref
-    const finalItems = allGenerated.slice(0, count).map((q, i) => {
-      const cite = safeString(q.cite).replace(/^\[|\]$/g, "").trim();
-      return {
-        id: String(i + 1),
-        type: "mcq",
-        question: safeString(q.question),
-        options: normalizeOptions(q.options),
-        answer: safeString(q.answer).toUpperCase().trim(),
-        cite,
-        ref: cite, // ✅ UI-friendly, always shows the actual part label
-        explanation: safeString(q.explanation)
-      };
-    });
+    // Normalize + shuffle answers + add ref
+
+const finalItems = allGenerated
+  .slice(0, count)
+  .map((q) => {
+    const cite = safeString(q.cite).replace(/^\[|\]$/g, "").trim();
+    return {
+      ...q,
+      options: normalizeOptions(q.options),
+      answer: safeString(q.answer).toUpperCase().trim(),
+      cite,
+      ref: cite
+    };
+  })
+  .map((q) => shuffleOptionsAndRemapAnswer(q, rand))
+  .map((q, i) => ({
+    id: String(i + 1),
+    type: "mcq",
+    question: safeString(q.question),
+    options: q.options,
+    answer: q.answer,
+    cite: q.cite,
+    ref: q.ref,
+    explanation: safeString(q.explanation)
+  }));
 
     // Shuffle final questions for variety (but keep ids 1..count stable after shuffle)
     // We'll shuffle the array, then reassign ids.
