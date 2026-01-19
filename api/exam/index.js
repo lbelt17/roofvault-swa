@@ -1,15 +1,17 @@
 ﻿// api/exam/index.js
-// RoofVault /api/exam — SWA-friendly, stable, avoids unsupported filters
-// This version fixes:
-// - NO startswith() in $filter
-// - Two-step search:
-//   1) Resolve candidate metadata_storage_name values using keyword search
-//   2) Filter with search.in(metadata_storage_name, '...', ',') and search using keyword
-// - NEVER $select fields that might not exist (Azure Search throws 400)
-// - Robust text extraction from Search hits, INCLUDING when `content` is a JSON-string like ["...","..."]
-// - Fixes "No searchable content" caused by MAX_SOURCE_CHARS (truncates instead of skipping)
-// - Fixes AOAI truncation by batching (10 + 10 + remainder)
-// - Better diagnostics + stable output shape
+// RoofVault /api/exam — multi-part guaranteed + fresh mixes
+//
+// Fixes:
+// - Uses ALL body.parts (not just parts[0])
+// - No keyword-based "baseTitle" resolution when parts are provided
+// - Pulls sources PER PART and generates questions PER PART (quota / round-robin)
+// - Seeded shuffle using attemptNonce so each generate feels fresh
+// - Adds `ref` to each item (same as cite label) so UI always shows correct Part
+//
+// Notes:
+// - Works with chunked Azure AI Search docs where metadata_storage_name repeats across chunks
+// - Avoids unsupported startswith() filters
+// - Uses search.in(metadata_storage_name, ...) everywhere
 
 const crypto = require("crypto");
 
@@ -17,13 +19,17 @@ const crypto = require("crypto");
 const DEFAULT_COUNT = 25;
 const MAX_COUNT = 50;
 
-const RESOLVE_TOP = 120; // step 1: find matching doc names
-const FILTERED_TOP = 80; // step 2: pull chunks to feed AOAI
-const MAX_SOURCE_CHARS = 11000;
+// How many chunks to fetch per part (tune if needed)
+const TOP_PER_PART = 40;
 
+// Max chars fed to the model per part and total
+const MAX_SOURCE_CHARS_TOTAL = 11000;
+
+// Timeouts
 const SEARCH_TIMEOUT_MS = 15000;
 const AOAI_TIMEOUT_MS = 90000;
 
+// Fields where text might live
 const TEXT_FIELDS = ["content", "text", "chunk", "chunkText", "pageText", "merged_content"];
 
 // ======= HELPERS =======
@@ -46,6 +52,12 @@ function send(context, status, obj, extraHeaders = {}) {
     body: obj === undefined ? "" : JSON.stringify(obj)
   };
   return context.res;
+}
+
+function safeString(x, fallback = "") {
+  if (typeof x === "string") return x;
+  if (x == null) return fallback;
+  return String(x);
 }
 
 function escODataString(s) {
@@ -75,31 +87,6 @@ async function fetchJson(url, options, timeoutMs) {
   }
 }
 
-function safeString(x, fallback = "") {
-  if (typeof x === "string") return x;
-  if (x == null) return fallback;
-  return String(x);
-}
-
-function baseTitleFromPartName(name) {
-  return String(name)
-    .replace(/\s*-\s*Part\s*\d+\s*$/i, "")
-    .replace(/\s+Part\s*\d+\s*$/i, "")
-    .trim();
-}
-
-function extractKeyword(baseTitle) {
-  const s = String(baseTitle || "").trim();
-  if (!s) return "";
-  const tokens = s
-    .split(/\s+/)
-    .map((t) => t.replace(/[^\w]+/g, ""))
-    .filter(Boolean);
-  if (!tokens.length) return s;
-  const last = tokens[tokens.length - 1];
-  return last.length >= 3 ? last : s;
-}
-
 // Robust conversion to plain text.
 function asText(val) {
   if (val == null) return "";
@@ -118,7 +105,7 @@ function asText(val) {
   }
 
   if (Array.isArray(val)) {
-    const parts = val
+    return val
       .map((x) => {
         if (typeof x === "string") return x;
         if (x == null) return "";
@@ -132,9 +119,8 @@ function asText(val) {
           return String(x);
         }
       })
-      .filter(Boolean);
-
-    return parts.join("\n");
+      .filter(Boolean)
+      .join("\n");
   }
 
   if (typeof val === "object") {
@@ -172,28 +158,24 @@ function pickText(doc) {
   return "";
 }
 
-// IMPORTANT: truncate instead of skipping when first chunk exceeds MAX_SOURCE_CHARS
-function compactSources(hits) {
+// Build a compact source string with [label] blocks, capped to limit chars
+function compactSourcesLimit(hits, limitChars) {
   let out = "";
-
   for (const h of hits) {
     const cite = safeString(h.metadata_storage_name || "source");
     const text = (pickText(h) || "").trim();
     if (!text) continue;
 
     const header = `\n\n[${cite}]\n`;
-    const remaining = MAX_SOURCE_CHARS - out.length;
-
+    const remaining = limitChars - out.length;
     if (remaining <= header.length + 50) break;
 
     const allow = remaining - header.length;
     const chunk = text.length > allow ? text.slice(0, allow) : text;
 
     out += header + chunk;
-
-    if (out.length >= MAX_SOURCE_CHARS) break;
+    if (out.length >= limitChars) break;
   }
-
   return out.trim();
 }
 
@@ -260,7 +242,7 @@ function isValidAnswer(a) {
 
 function validateItems(items, count) {
   if (!Array.isArray(items)) return { ok: false, reason: "items not array" };
-  if (items.length < count) return { ok: false, reason: `returned ${items.length} < requested ${count}` };
+  if (items.length !== count) return { ok: false, reason: `items length ${items.length} != ${count}` };
 
   for (let i = 0; i < count; i++) {
     const q = items[i];
@@ -277,6 +259,62 @@ function validateItems(items, count) {
   }
 
   return { ok: true };
+}
+
+// Seeded shuffle for freshness
+function seededRng(seedStr) {
+  const h = crypto.createHash("sha256").update(String(seedStr)).digest();
+  let idx = 0;
+  return function rand() {
+    // xorshift-ish from hash bytes
+    const a = h[idx % h.length];
+    const b = h[(idx + 7) % h.length];
+    const c = h[(idx + 13) % h.length];
+    idx++;
+    const x = (a << 16) ^ (b << 8) ^ c ^ (idx * 2654435761);
+    // 0..1
+    return (x >>> 0) / 4294967296;
+  };
+}
+
+function shuffleInPlace(arr, rand) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// Quota: guarantee distribution across parts
+function buildQuotas(parts, count, rand) {
+  const uniq = Array.from(new Set(parts.map((p) => String(p).trim()).filter(Boolean)));
+  if (!uniq.length) return { parts: [], quotas: [] };
+
+  // Shuffle part order each attempt
+  const order = uniq.slice();
+  shuffleInPlace(order, rand);
+
+  const k = order.length;
+
+  // If more parts than questions, take first count parts, 1 each
+  if (k >= count) {
+    return {
+      parts: order.slice(0, count),
+      quotas: order.slice(0, count).map(() => 1)
+    };
+  }
+
+  // Otherwise distribute evenly + remainder
+  const base = Math.floor(count / k);
+  let rem = count - base * k;
+
+  const quotas = order.map(() => base);
+  // Give remainder to first rem parts
+  for (let i = 0; i < quotas.length && rem > 0; i++, rem--) quotas[i]++;
+
+  // Ensure at least 1 per part if possible
+  // (base could be 0 if count < k, handled above)
+  return { parts: order, quotas };
 }
 
 // ======= MAIN =======
@@ -304,51 +342,43 @@ module.exports = async function (context, req) {
       return send(context, 500, { error: "Missing AOAI_ENDPOINT or AOAI_API_KEY" });
     }
 
+    // Azure Functions (SWA) typically provides req.body already
     const body = req.body || {};
     const count = clampInt(body.count, 1, MAX_COUNT, DEFAULT_COUNT);
 
-    const parts = Array.isArray(body.parts) ? body.parts.filter(Boolean) : null;
-    const book = body.book ? String(body.book) : null;
+    const attemptNonce = safeString(body.attemptNonce || "");
+    const requestId =
+      (crypto.randomUUID ? crypto.randomUUID() : crypto.randomBytes(16).toString("hex")) +
+      (attemptNonce ? `-${attemptNonce}` : "");
 
-    if ((!parts || parts.length === 0) && !book) {
-      return send(context, 400, { error: 'Provide {parts:[...]} or {book:"..."}' });
+    // Parts MUST be provided for multi-part behavior
+    const partsRaw = Array.isArray(body.parts) ? body.parts : [];
+    const parts = partsRaw.map((p) => String(p).trim()).filter(Boolean);
+
+    if (!parts.length) {
+      return send(context, 400, { error: 'Provide {parts:["Book - Part 01", ...]}' });
     }
 
-    const baseTitle = parts?.length ? baseTitleFromPartName(parts[0]) : baseTitleFromPartName(book);
-    const keyword = extractKeyword(baseTitle) || baseTitle;
+    const rand = seededRng(requestId);
+    const quotaPlan = buildQuotas(parts, count, rand);
 
     const searchUrl =
       `${SEARCH_ENDPOINT.replace(/\/+$/, "")}` +
       `/indexes/${encodeURIComponent(SEARCH_INDEX_CONTENT)}` +
       `/docs/search?api-version=2023-11-01`;
 
-    async function runSearchResolve(searchText, top) {
-      const searchBody = {
-        search: searchText || "*",
-        top: top || RESOLVE_TOP,
-        select: "metadata_storage_name",
-        queryType: "simple"
-      };
+    async function runSearchForPart(partName, top) {
+      // Filter to just this part’s metadata_storage_name
+      const filter = buildSearchInFilter("metadata_storage_name", [partName]);
 
-      return await fetchJson(
-        searchUrl,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
-          body: JSON.stringify(searchBody)
-        },
-        SEARCH_TIMEOUT_MS
-      );
-    }
-
-    async function runSearchFiltered(searchText, filter, top) {
+      // Using search="*" avoids the keyword collapsing to one part
       const searchBody = {
-        search: searchText || "*",
-        top: top || FILTERED_TOP,
+        search: "*",
+        top: top || TOP_PER_PART,
         select: "metadata_storage_name,content",
-        queryType: "simple"
+        queryType: "simple",
+        filter
       };
-      if (filter) searchBody.filter = filter;
 
       return await fetchJson(
         searchUrl,
@@ -361,94 +391,46 @@ module.exports = async function (context, req) {
       );
     }
 
-    // ---- Step 1: resolve candidate names ----
-    const resolveRes = await runSearchResolve(keyword, RESOLVE_TOP);
-    if (!resolveRes.ok) {
-      return send(context, 502, {
-        error: "Search request failed (resolve)",
-        status: resolveRes.status,
-        detail: resolveRes.data,
-        _diag: { baseTitle, keyword }
-      });
-    }
+    // Pull sources per part with a total char budget split across parts
+    const partCount = quotaPlan.parts.length || 1;
+    const perPartBudget = Math.max(800, Math.floor(MAX_SOURCE_CHARS_TOTAL / partCount)); // never too tiny
 
-    const resolveHits = (resolveRes.data && (resolveRes.data.value || resolveRes.data.values)) || [];
-    const baseLower = String(baseTitle).toLowerCase();
+    const partSources = [];
+    const partDiag = [];
 
-    const keep = [];
-    for (const h of resolveHits) {
-      const name = safeString(h.metadata_storage_name);
-      if (!name) continue;
-      if (name.toLowerCase().includes(baseLower)) keep.push(name);
-      if (keep.length >= 80) break;
-    }
-
-    const resolvedNames = keep.length
-      ? Array.from(new Set(keep))
-      : Array.from(new Set(resolveHits.map((h) => safeString(h.metadata_storage_name)).filter(Boolean)));
-
-    if (!resolvedNames.length) {
-      return send(context, 404, {
-        error: "No searchable content returned for selection",
-        _diag: { baseTitle, keyword, resolveHits: resolveHits.length }
-      });
-    }
-
-    // ---- Step 2: search.in(...) filter + keyword search ----
-    const filter = buildSearchInFilter("metadata_storage_name", resolvedNames);
-
-    const sres = await runSearchFiltered(keyword, filter, FILTERED_TOP);
-    if (!sres.ok) {
-      return send(context, 502, {
-        error: "Search request failed (filtered)",
-        status: sres.status,
-        detail: sres.data,
-        _diag: { baseTitle, keyword, resolvedCount: resolvedNames.length, filter }
-      });
-    }
-
-    const hits = (sres.data && (sres.data.value || sres.data.values)) || [];
-    const sources = compactSources(hits);
-
-    if (!sources) {
-      const sample = hits[0] || null;
-      const sampleKeys = sample ? Object.keys(sample) : [];
-      const c = sample ? sample.content : null;
-
-      const contentType = typeof c;
-      const contentLen = typeof c === "string" ? c.length : Array.isArray(c) ? c.length : null;
-
-      let contentPreview = null;
-      try {
-        contentPreview =
-          typeof c === "string"
-            ? c.slice(0, 240)
-            : c == null
-            ? null
-            : JSON.stringify(c).slice(0, 240);
-      } catch {
-        contentPreview = c == null ? null : String(c).slice(0, 240);
+    for (const partName of quotaPlan.parts) {
+      const sres = await runSearchForPart(partName, TOP_PER_PART);
+      if (!sres.ok) {
+        return send(context, 502, {
+          error: "Search request failed (per-part)",
+          status: sres.status,
+          detail: sres.data,
+          _diag: { partName, requestId }
+        });
       }
 
-      return send(context, 404, {
-        error: "No searchable content returned for selection",
-        _diag: {
-          baseTitle,
-          keyword,
-          resolvedCount: resolvedNames.length,
-          filteredHits: hits.length,
-          sampleKeys,
-          contentType,
-          contentLen,
-          contentPreview
-        }
+      const hits = (sres.data && (sres.data.value || sres.data.values)) || [];
+      const sources = compactSourcesLimit(hits, perPartBudget);
+
+      partDiag.push({ partName, hits: hits.length, sourceChars: sources.length });
+
+      // If a part has no sources, we still keep it; model will cite what it can
+      partSources.push({
+        partName,
+        sources
       });
     }
 
-    // ---- AOAI (batched to avoid truncation) ----
-    const requestId =
-      crypto.randomUUID ? crypto.randomUUID() : crypto.randomBytes(16).toString("hex");
+    // If everything is empty, fail
+    const totalChars = partSources.reduce((sum, p) => sum + (p.sources ? p.sources.length : 0), 0);
+    if (totalChars < 50) {
+      return send(context, 404, {
+        error: "No searchable content returned for selection",
+        _diag: { requestId, parts: quotaPlan.parts, partDiag }
+      });
+    }
 
+    // ======= AOAI =======
     const system =
       "You generate practice exams from provided sources.\n" +
       "Return ONLY valid JSON (no markdown, no code fences, no extra text).\n" +
@@ -490,7 +472,7 @@ module.exports = async function (context, req) {
               { role: "system", content: system },
               { role: "user", content: promptUser }
             ],
-            temperature: 0.2,
+            temperature: 0.25,
             response_format: { type: "json_object" },
             max_tokens: 1200
           })
@@ -504,13 +486,14 @@ module.exports = async function (context, req) {
       return { ok: true, parsed, raw: content };
     }
 
-    async function generateBatch(batchCount, idOffset) {
+    async function generateExact(batchCount, idOffset, sourcesText) {
       const schema = makeSchema(batchCount, idOffset);
 
       const user =
-        `Create exactly ${batchCount} MCQs numbered ${idOffset + 1} to ${idOffset + batchCount}.\n\n` +
+        `Create exactly ${batchCount} MCQs numbered ${idOffset + 1} to ${idOffset + batchCount}.\n` +
+        `Use ONLY the sources below. Every question must cite the correct [source] label.\n\n` +
         `${schema}\n\n` +
-        `SOURCES:\n${sources}`;
+        `SOURCES:\n${sourcesText}`;
 
       const a1 = await callAoai(user);
       if (!a1.ok) return { ok: false, detail: a1.detail, raw: a1.raw };
@@ -524,7 +507,7 @@ module.exports = async function (context, req) {
           `Your previous output was invalid (${v.reason}) or truncated.\n` +
           `Return ONLY valid JSON and EXACTLY ${batchCount} items numbered ${idOffset + 1} to ${idOffset + batchCount}.\n\n` +
           `${schema}\n\n` +
-          `SOURCES:\n${sources}`;
+          `SOURCES:\n${sourcesText}`;
 
         const a2 = await callAoai(repair);
         if (a2.ok) {
@@ -540,54 +523,105 @@ module.exports = async function (context, req) {
       return { ok: true, items };
     }
 
-    // Plan: 10 + 10 + remainder
-    const plan = [];
-    let remaining = count;
-    let planOffset = 0;
-    while (remaining > 0) {
-      const n = remaining >= 5 ? 5 : remaining;
-      plan.push({ n, idOffset: planOffset });
-      remaining -= n;
-      planOffset += n;
+    // Build generation tasks per part (quota)
+    const tasks = [];
+    let idOffset = 0;
+
+    for (let i = 0; i < quotaPlan.parts.length; i++) {
+      const partName = quotaPlan.parts[i];
+      const q = quotaPlan.quotas[i] || 0;
+      if (q <= 0) continue;
+
+      const src = partSources.find((p) => p.partName === partName);
+      const sourcesText = src && src.sources ? src.sources : "";
+
+      // If sources are empty, still attempt small generation; but better to skip than fail hard
+      // We'll skip if truly empty
+      if (!sourcesText || sourcesText.length < 50) continue;
+
+      tasks.push({ partName, n: q, idOffset });
+      idOffset += q;
     }
 
-    let all = [];
-    for (const p of plan) {
-      const b = await generateBatch(p.n, p.idOffset);
+    // If tasks ended up empty due to missing sources, fall back to using all sources merged
+    let allGenerated = [];
+    let usedMode = "per-part-quotas";
+
+    if (!tasks.length) {
+      usedMode = "merged-fallback";
+      const merged = partSources.map((p) => p.sources).filter(Boolean).join("\n\n");
+      const b = await generateExact(count, 0, merged);
       if (!b.ok) {
         return send(context, 500, {
-          error: "Model returned non-JSON or wrong/short shape",
+          error: "Model returned invalid output",
           detail: b.detail || "batch failed",
           raw: b.raw,
-          _diag: { requestId: requestId, deployment: AOAI_DEPLOYMENT, baseTitle, keyword, plan }
+          _diag: { requestId, deployment: AOAI_DEPLOYMENT, usedMode, partDiag }
         });
       }
-      all = all.concat(b.items);
+      allGenerated = b.items;
+    } else {
+      // Generate each part’s quota in mini-batches of 5 to avoid truncation
+      for (const t of tasks) {
+        let remaining = t.n;
+        let localOffset = t.idOffset;
+
+        while (remaining > 0) {
+          const n = remaining >= 5 ? 5 : remaining;
+
+          const src = partSources.find((p) => p.partName === t.partName);
+          const sourcesText = src && src.sources ? src.sources : "";
+
+          const b = await generateExact(n, localOffset, sourcesText);
+          if (!b.ok) {
+            return send(context, 500, {
+              error: "Model returned invalid output",
+              detail: b.detail || "batch failed",
+              raw: b.raw,
+              _diag: { requestId, deployment: AOAI_DEPLOYMENT, usedMode, task: t, partDiag }
+            });
+          }
+
+          allGenerated = allGenerated.concat(b.items);
+          remaining -= n;
+          localOffset += n;
+        }
+      }
     }
 
-    const finalItems = all.slice(0, count).map((q, i) => ({
-      id: String(i + 1),
-      type: "mcq",
-      question: safeString(q.question),
-      options: normalizeOptions(q.options),
-      answer: safeString(q.answer).toUpperCase().trim(),
-      cite: safeString(q.cite).replace(/^\[|\]$/g, "").trim(),
-      explanation: safeString(q.explanation)
-    }));
+    // Normalize + add ref
+    const finalItems = allGenerated.slice(0, count).map((q, i) => {
+      const cite = safeString(q.cite).replace(/^\[|\]$/g, "").trim();
+      return {
+        id: String(i + 1),
+        type: "mcq",
+        question: safeString(q.question),
+        options: normalizeOptions(q.options),
+        answer: safeString(q.answer).toUpperCase().trim(),
+        cite,
+        ref: cite, // ✅ UI-friendly, always shows the actual part label
+        explanation: safeString(q.explanation)
+      };
+    });
+
+    // Shuffle final questions for variety (but keep ids 1..count stable after shuffle)
+    // We'll shuffle the array, then reassign ids.
+    const shuffled = finalItems.slice();
+    shuffleInPlace(shuffled, rand);
+    const out = shuffled.map((q, i) => ({ ...q, id: String(i + 1) }));
 
     return send(context, 200, {
-      items: finalItems,
+      items: out,
       modelDeployment: AOAI_DEPLOYMENT,
-      returned: finalItems.length,
+      returned: out.length,
       _diag: {
-        mode: "resolve-names-then-searchin-keyword",
-        baseTitle,
-        keyword,
-        resolvedCount: resolvedNames.length,
-        filteredHits: hits.length,
-        sourceChars: sources.length,
-        requestId: requestId,
-        plan
+        requestId,
+        usedMode,
+        count,
+        partsProvided: parts.length,
+        partsUsed: quotaPlan.parts,
+        quotas: quotaPlan.quotas,
+        partDiag
       }
     });
   } catch (e) {
