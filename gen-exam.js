@@ -202,6 +202,8 @@
         mode: "BOOK_ONLY",
         attemptNonce: `${Date.now()}-${Math.random().toString(16).slice(2)}`
       };
+      showDiag({ selection, parts, payload });
+
 
       const res = await safeFetch(API_URL, {
         method: "POST",
