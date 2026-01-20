@@ -1,32 +1,29 @@
-﻿// api/exam/index.js
+﻿/* eslint-env node */
+/* eslint-disable no-undef */
+// api/exam/index.js
 // RoofVault /api/exam — multi-part guaranteed + fresh mixes + NO-REPEAT support
 //
 // Guarantees:
-// - Uses ALL body.parts (no baseTitle keyword guessing when parts provided)
+// - Uses ALL body.parts (no keyword guessing when parts provided)
 // - Pulls sources PER PART and generates questions PER PART using quotas (fair distribution)
 // - Adds ref = cite so UI shows correct Part label
 // - Shuffles answer choices and remaps correct answer (A/B/C/D distributed)
-// - Supports excludeQuestions (client memory) and avoids repeats across "New 25Q" attempts
-// - Avoids "chapter/section/page/where is..." meta questions
+// - Supports excludeQuestions (client memory) and avoids repeats across “New 25Q” attempts
+// - Avoids “chapter/section/page/where is…” meta questions
 // - If exhausted, returns items:[] with a professional message
+//
+// NOTE: This version does NOT use fetch. It uses built-in https to avoid SWA runtime issues.
 
 const crypto = require("crypto");
-
-// ---- fetch (polyfill safety) ----
-let fetchFn = globalThis.fetch;
-try {
-  if (!fetchFn) fetchFn = require("node-fetch");
-} catch (_) {
-  // If node-fetch isn't available, Azure Functions Node 18+ should have fetch.
-}
-const fetch = (...args) => fetchFn(...args);
+const https = require("https");
+const { URL } = require("url");
 
 // ======= CONFIG =======
 const DEFAULT_COUNT = 25;
 const MAX_COUNT = 50;
 
-const TOP_PER_PART = 40; // chunks per part
-const MAX_SOURCE_CHARS_TOTAL = 11000; // total chars fed to model (split across parts)
+const TOP_PER_PART = 40;
+const MAX_SOURCE_CHARS_TOTAL = 11000;
 
 const SEARCH_TIMEOUT_MS = 15000;
 const AOAI_TIMEOUT_MS = 90000;
@@ -71,22 +68,52 @@ function buildSearchInFilter(field, values) {
   return `search.in(${field}, '${escODataString(joined)}', ',')`;
 }
 
-async function fetchJson(url, options, timeoutMs) {
-  const ac = new AbortController();
-  const t = setTimeout(() => ac.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, { ...options, signal: ac.signal });
-    const text = await res.text();
-    let data = null;
-    try {
-      data = text ? JSON.parse(text) : null;
-    } catch {
-      data = { _raw: text };
-    }
-    return { ok: res.ok, status: res.status, data, _rawText: text };
-  } finally {
-    clearTimeout(t);
-  }
+// Node https JSON client (no fetch dependency)
+function httpsJson(urlStr, { method = "POST", headers = {}, bodyObj = null } = {}, timeoutMs = 15000) {
+  return new Promise((resolve) => {
+    const u = new URL(urlStr);
+    const body = bodyObj == null ? "" : JSON.stringify(bodyObj);
+
+    const req = https.request(
+      {
+        protocol: u.protocol,
+        hostname: u.hostname,
+        port: u.port || 443,
+        path: u.pathname + (u.search || ""),
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(body),
+          ...headers
+        }
+      },
+      (res) => {
+        let raw = "";
+        res.setEncoding("utf8");
+        res.on("data", (chunk) => (raw += chunk));
+        res.on("end", () => {
+          let data = null;
+          try {
+            data = raw ? JSON.parse(raw) : null;
+          } catch {
+            data = { _raw: raw };
+          }
+          resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, data, _rawText: raw });
+        });
+      }
+    );
+
+    req.on("error", (err) => {
+      resolve({ ok: false, status: 0, data: { error: "request_error", message: err?.message || String(err) }, _rawText: "" });
+    });
+
+    req.setTimeout(timeoutMs, () => {
+      req.destroy(new Error("timeout"));
+    });
+
+    req.write(body);
+    req.end();
+  });
 }
 
 // Normalize question for no-repeat comparisons
@@ -98,7 +125,7 @@ function normQ(s) {
     .trim();
 }
 
-// Robust conversion to plain text.
+// Robust conversion to plain text
 function asText(val) {
   if (val == null) return "";
 
@@ -108,9 +135,7 @@ function asText(val) {
       try {
         const parsed = JSON.parse(s);
         return asText(parsed);
-      } catch {
-        // treat as text
-      }
+      } catch {}
     }
     return val;
   }
@@ -169,7 +194,6 @@ function pickText(doc) {
   return "";
 }
 
-// Build compact sources string capped to limit chars
 function compactSourcesLimit(hits, limitChars) {
   let out = "";
   for (const h of hits) {
@@ -202,7 +226,6 @@ function tryParseJsonLoose(s) {
   const first = cleaned.indexOf("{");
   const last = cleaned.lastIndexOf("}");
   let candidate = cleaned;
-
   if (first >= 0 && last > first) candidate = cleaned.slice(first, last + 1);
 
   try {
@@ -246,7 +269,6 @@ function normalizeOptions(opt) {
   ];
 }
 
-// Seeded rng for freshness
 function seededRng(seedStr) {
   const h = crypto.createHash("sha256").update(String(seedStr)).digest();
   let idx = 0;
@@ -288,7 +310,6 @@ function shuffleOptionsAndRemapAnswer(item, rand) {
   return { ...item, options: newOptions, answer: letters[newCorrectIndex] };
 }
 
-// Quotas: distribute count across parts fairly, shuffle part order per attempt
 function buildQuotas(parts, count, rand) {
   const uniq = Array.from(new Set(parts.map((p) => String(p).trim()).filter(Boolean)));
   if (!uniq.length) return { parts: [], quotas: [] };
@@ -310,7 +331,6 @@ function buildQuotas(parts, count, rand) {
   return { parts: order, quotas };
 }
 
-// Safe parse req.body if it arrives as string
 function parseBody(req) {
   const b = req && req.body;
   if (!b) return {};
@@ -333,18 +353,14 @@ module.exports = async function (context, req) {
       return send(context, 200, { ok: true, name: "exam", time: new Date().toISOString() });
     }
 
-    // ---- ENV (support both your "debug" env names and older names) ----
+    // ENV fallbacks (match what your /api/debug shows)
     const SEARCH_ENDPOINT =
       process.env.SEARCH_ENDPOINT || process.env.AZURE_SEARCH_ENDPOINT || process.env.SEARCH_SERVICE_ENDPOINT;
-
     const SEARCH_API_KEY =
       process.env.SEARCH_API_KEY || process.env.AZURE_SEARCH_API_KEY || process.env.SEARCH_ADMIN_KEY;
-
-    // Your deployed env shows SEARCH_INDEX, not SEARCH_INDEX_CONTENT
     const SEARCH_INDEX_CONTENT =
       process.env.SEARCH_INDEX_CONTENT || process.env.SEARCH_INDEX || "azureblob-index-content";
 
-    // Your deployed env shows AZURE_OPENAI_ENDPOINT / AZURE_OPENAI_DEPLOYMENT
     const AOAI_ENDPOINT = process.env.AOAI_ENDPOINT || process.env.AZURE_OPENAI_ENDPOINT;
     const AOAI_API_KEY =
       process.env.AOAI_API_KEY || process.env.AZURE_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
@@ -366,13 +382,12 @@ module.exports = async function (context, req) {
     }
     if (!AOAI_ENDPOINT || !AOAI_API_KEY) {
       return send(context, 500, {
-        error: "Missing AOAI endpoint/key (AOAI_ENDPOINT/AZURE_OPENAI_ENDPOINT and AOAI_API_KEY/AZURE_OPENAI_API_KEY)",
+        error: "Missing AOAI endpoint/key",
         _diag: { hasAoaiEndpoint: !!AOAI_ENDPOINT, hasAoaiKey: !!AOAI_API_KEY }
       });
     }
 
     const body = parseBody(req);
-
     const count = clampInt(body.count, 1, MAX_COUNT, DEFAULT_COUNT);
 
     const attemptNonce = safeString(body.attemptNonce || "");
@@ -387,7 +402,6 @@ module.exports = async function (context, req) {
       return send(context, 400, { error: 'Provide {parts:["Book - Part 01", ...]}' });
     }
 
-    // NO-REPEAT input (cap to prevent giant prompts)
     const excludeQuestionsRaw = Array.isArray(body.excludeQuestions) ? body.excludeQuestions : [];
     const excludeQuestions = excludeQuestionsRaw.map(normQ).filter(Boolean).slice(-120);
     const excludeSet = new Set(excludeQuestions);
@@ -401,7 +415,6 @@ module.exports = async function (context, req) {
       `/docs/search?api-version=2023-11-01`;
 
     async function runSearchForPart(partName, top) {
-      // Resolve real metadata_storage_name to avoid slug/case mismatch
       const resolveBody = {
         search: `"${partName}"`,
         top: 5,
@@ -409,12 +422,12 @@ module.exports = async function (context, req) {
         queryType: "simple"
       };
 
-      const resolveRes = await fetchJson(
+      const resolveRes = await httpsJson(
         searchUrl,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
-          body: JSON.stringify(resolveBody)
+          headers: { "api-key": SEARCH_API_KEY },
+          bodyObj: resolveBody
         },
         SEARCH_TIMEOUT_MS
       );
@@ -426,7 +439,6 @@ module.exports = async function (context, req) {
         const targetLower = String(partName).toLowerCase();
         const exact = vals.find((h) => String(h.metadata_storage_name || "").toLowerCase() === targetLower);
         const first = vals[0];
-
         if (exact && exact.metadata_storage_name) resolvedName = String(exact.metadata_storage_name);
         else if (first && first.metadata_storage_name) resolvedName = String(first.metadata_storage_name);
       }
@@ -441,18 +453,17 @@ module.exports = async function (context, req) {
         filter
       };
 
-      return await fetchJson(
+      return await httpsJson(
         searchUrl,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
-          body: JSON.stringify(searchBody)
+          headers: { "api-key": SEARCH_API_KEY },
+          bodyObj: searchBody
         },
         SEARCH_TIMEOUT_MS
       );
     }
 
-    // Pull sources per part with total budget split across parts
     const partCount = quotaPlan.parts.length || 1;
     const perPartBudget = Math.max(900, Math.floor(MAX_SOURCE_CHARS_TOTAL / partCount));
 
@@ -485,7 +496,7 @@ module.exports = async function (context, req) {
       });
     }
 
-    // ======= AOAI =======
+    // AOAI
     const system =
       "You generate practice exams from provided sources.\n" +
       "Return ONLY valid JSON (no markdown, no code fences, no extra text).\n" +
@@ -494,11 +505,11 @@ module.exports = async function (context, req) {
       "\n" +
       "QUALITY RULES:\n" +
       "- Do NOT write meta/navigation questions such as: 'Which chapter/section discusses...', 'In which part can you find...', 'What page...', 'Where is...', 'Which section contains...'.\n" +
-      "- Prefer practical, content-based questions: definitions, requirements, procedures, concepts, correct applications, and common pitfalls.\n" +
+      "- Prefer practical, content-based questions.\n" +
       "\n" +
       "NO-REPEAT RULE:\n" +
       "- You will be given an EXCLUDE list of previously asked questions.\n" +
-      "- Do NOT repeat any question that is the same or substantially similar to an excluded question.\n" +
+      "- Do NOT repeat any question that is the same or substantially similar.\n" +
       'If you cannot comply, return: {"items":[],"message":"No additional unique questions remain for this book based on the current indexed content."}';
 
     function makeSchema(batchCount, idOffset) {
@@ -508,7 +519,7 @@ module.exports = async function (context, req) {
         `"answer":"A","cite":"<one of the [source] labels>","explanation":"..."}]}\n` +
         `Rules:\n` +
         `- items length MUST be exactly ${batchCount}\n` +
-        `- id MUST be "${idOffset + 1}" to "${idOffset + batchCount}" (sequential)\n` +
+        `- id MUST be "${idOffset + 1}" to "${idOffset + batchCount}"\n` +
         `- answer MUST be one of "A","B","C","D"\n` +
         `- cite MUST match one of the bracketed source labels exactly\n` +
         `- Finish the JSON (no truncation).`
@@ -521,16 +532,15 @@ module.exports = async function (context, req) {
       `/chat/completions?api-version=${encodeURIComponent(AOAI_API_VERSION)}`;
 
     async function callAoai(promptUser) {
-      const r = await fetchJson(
+      const r = await httpsJson(
         aoaiUrl,
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
             "api-key": AOAI_API_KEY,
             "x-ms-client-request-id": requestId
           },
-          body: JSON.stringify({
+          bodyObj: {
             messages: [
               { role: "system", content: system },
               { role: "user", content: promptUser }
@@ -538,7 +548,7 @@ module.exports = async function (context, req) {
             temperature: 0.25,
             response_format: { type: "json_object" },
             max_tokens: 1200
-          })
+          }
         },
         AOAI_TIMEOUT_MS
       );
@@ -555,7 +565,7 @@ module.exports = async function (context, req) {
         const nq = normQ(q?.question);
         if (!nq) continue;
         if (excludeSet.has(nq)) continue;
-        excludeSet.add(nq); // prevent duplicates within the same response too
+        excludeSet.add(nq);
         out.push(q);
       }
       return out;
@@ -566,7 +576,7 @@ module.exports = async function (context, req) {
 
       const excludePreview =
         excludeQuestions.length > 0
-          ? `\n\nEXCLUDE (do not repeat these questions):\n- ${excludeQuestions.slice(-60).join("\n- ")}\n`
+          ? `\n\nEXCLUDE (do not repeat):\n- ${excludeQuestions.slice(-60).join("\n- ")}\n`
           : "\n\nEXCLUDE: (none)\n";
 
       const user =
@@ -576,42 +586,35 @@ module.exports = async function (context, req) {
         excludePreview +
         `\n${schema}\n\nSOURCES:\n${sourcesText}`;
 
-      // attempt 1
       const a1 = await callAoai(user);
       if (!a1.ok) return { ok: false, detail: a1.detail, raw: a1.raw };
 
       let items = a1.parsed && a1.parsed.items;
       items = filterNoRepeats(items);
 
-      // If the model gave fewer because of exclude, retry once asking for more unique ones
       if (!Array.isArray(items) || items.length < batchCount) {
-        const needed = batchCount;
         const repair =
-          `Your previous output did not contain enough UNIQUE questions.\n` +
-          `Return ONLY valid JSON and EXACTLY ${needed} UNIQUE items.\n` +
+          `Return ONLY valid JSON and EXACTLY ${batchCount} UNIQUE items.\n` +
           `Do NOT repeat any excluded questions.\n` +
           `${schema}\n\n` +
-          `EXCLUDE (do not repeat):\n- ${excludeQuestions.slice(-60).join("\n- ")}\n\n` +
+          `EXCLUDE:\n- ${excludeQuestions.slice(-60).join("\n- ")}\n\n` +
           `SOURCES:\n${sourcesText}`;
 
         const a2 = await callAoai(repair);
         if (a2.ok) {
           let items2 = a2.parsed && a2.parsed.items;
           items2 = filterNoRepeats(items2);
-
           if (Array.isArray(items2) && items2.length >= batchCount) {
             return { ok: true, items: items2.slice(0, batchCount) };
           }
         }
-
-        // exhausted for this part
         return { ok: true, items: [] };
       }
 
       return { ok: true, items: items.slice(0, batchCount) };
     }
 
-    // Build per-part tasks by quota
+    // Build per-part tasks
     const tasks = [];
     let idOffset = 0;
     for (let i = 0; i < quotaPlan.parts.length; i++) {
@@ -644,14 +647,12 @@ module.exports = async function (context, req) {
       }
       allGenerated = b.items;
     } else {
-      // mini-batches of 5 to avoid truncation
       for (const t of tasks) {
         let remaining = t.n;
         let localOffset = t.idOffset;
 
         while (remaining > 0) {
           const n = remaining >= 5 ? 5 : remaining;
-
           const src = partSources.find((p) => p.partName === t.partName);
           const sourcesText = src && src.sources ? src.sources : "";
 
@@ -672,7 +673,6 @@ module.exports = async function (context, req) {
       }
     }
 
-    // If we couldn't get enough unique items, return professional exhaustion message
     if (!Array.isArray(allGenerated) || allGenerated.length < 1) {
       return send(context, 200, {
         items: [],
@@ -683,7 +683,6 @@ module.exports = async function (context, req) {
       });
     }
 
-    // Normalize + shuffle answers + add ref
     const finalItems = allGenerated
       .slice(0, count)
       .map((q) => {
@@ -699,7 +698,6 @@ module.exports = async function (context, req) {
       })
       .map((q) => shuffleOptionsAndRemapAnswer(q, rand));
 
-    // Shuffle question order for variety, then assign ids
     const shuffled = finalItems.slice();
     shuffleInPlace(shuffled, rand);
     const out = shuffled.map((q, i) => ({
@@ -737,8 +735,3 @@ module.exports = async function (context, req) {
     });
   }
 };
-
-// Small helper to avoid accidental typo usage in headers (keeps linter happy in some setups)
-function SEARCH_API_KEY(_) {
-  return _;
-}
