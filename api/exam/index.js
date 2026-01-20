@@ -732,6 +732,7 @@ if (!a1.parsed || !Array.isArray(a1.parsed.items) || a1.parsed.items.length === 
         requestId,
         usedMode,
         count,
+        nCap: 8,
         partsProvided: parts.length,
         partsUsed: quotaPlan.parts,
         quotas: quotaPlan.quotas,
