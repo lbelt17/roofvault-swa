@@ -22,7 +22,7 @@ const { URL } = require("url");
 const DEFAULT_COUNT = 25;
 const MAX_COUNT = 50;
 
-const TOP_PER_PART = 40;
+const TOP_PER_PART = 25;
 const MAX_SOURCE_CHARS_TOTAL = 11000;
 
 const SEARCH_TIMEOUT_MS = 15000;
