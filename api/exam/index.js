@@ -652,7 +652,7 @@ module.exports = async function (context, req) {
         let localOffset = t.idOffset;
 
         while (remaining > 0) {
-          const n = remaining >= 5 ? 5 : remaining;
+          const n = remaining; // do it in ONE call per part to avoid 45s timeout
           const src = partSources.find((p) => p.partName === t.partName);
           const sourcesText = src && src.sources ? src.sources : "";
 
