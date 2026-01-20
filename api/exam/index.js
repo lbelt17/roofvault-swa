@@ -597,6 +597,10 @@ module.exports = async function (context, req) {
 
       const a1 = await callAoai(user);
       if (!a1.ok) return { ok: false, detail: a1.detail, raw: a1.raw };
+// DEBUG: if the model didn't return parseable items, fail loudly so we can see raw output
+if (!a1.parsed || !Array.isArray(a1.parsed.items) || a1.parsed.items.length === 0) {
+  return { ok: false, detail: "AOAI returned no parseable items", raw: a1.raw };
+}
 
       let items = a1.parsed && a1.parsed.items;
       items = filterNoRepeats(items);
