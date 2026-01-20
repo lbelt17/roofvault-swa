@@ -415,54 +415,63 @@ module.exports = async function (context, req) {
       `/docs/search?api-version=2023-11-01`;
 
     async function runSearchForPart(partName, top) {
-      const resolveBody = {
-        search: `"${partName}"`,
-        top: 5,
-        select: "metadata_storage_name",
-        queryType: "simple"
-      };
+  const resolvedName = String(partName || "").trim();
 
-      const resolveRes = await httpsJson(
-        searchUrl,
-        {
-          method: "POST",
-          headers: { "api-key": SEARCH_API_KEY },
-          bodyObj: resolveBody
-        },
-        SEARCH_TIMEOUT_MS
-      );
+  // -------------------------------------------------
+  // 1) STRICT MATCH (existing behavior)
+  // -------------------------------------------------
+  const strictFilter = buildSearchInFilter("metadata_storage_name", [resolvedName]);
 
-      let resolvedName = partName;
+  const strictBody = {
+    search: "*",
+    top: top || TOP_PER_PART,
+    select: "metadata_storage_name,content",
+    queryType: "simple",
+    filter: strictFilter
+  };
 
-      if (resolveRes.ok) {
-        const vals = (resolveRes.data && (resolveRes.data.value || resolveRes.data.values)) || [];
-        const targetLower = String(partName).toLowerCase();
-        const exact = vals.find((h) => String(h.metadata_storage_name || "").toLowerCase() === targetLower);
-        const first = vals[0];
-        if (exact && exact.metadata_storage_name) resolvedName = String(exact.metadata_storage_name);
-        else if (first && first.metadata_storage_name) resolvedName = String(first.metadata_storage_name);
-      }
+  const strictRes = await httpsJson(
+    searchUrl,
+    {
+      method: "POST",
+      headers: { "api-key": SEARCH_API_KEY },
+      bodyObj: strictBody
+    },
+    SEARCH_TIMEOUT_MS
+  );
 
-      const filter = buildSearchInFilter("metadata_storage_name", [resolvedName]);
+  const strictHits =
+    (strictRes?.data && (strictRes.data.value || strictRes.data.values)) || [];
 
-      const searchBody = {
-        search: "*",
-        top: top || TOP_PER_PART,
-        select: "metadata_storage_name,content",
-        queryType: "simple",
-        filter
-      };
+  // If strict search worked and returned enough hits, keep it
+  if (strictRes.ok && strictHits.length >= 5) {
+    return strictRes;
+  }
 
-      return await httpsJson(
-        searchUrl,
-        {
-          method: "POST",
-          headers: { "api-key": SEARCH_API_KEY },
-          bodyObj: searchBody
-        },
-        SEARCH_TIMEOUT_MS
-      );
-    }
+  // -------------------------------------------------
+  // 2) FALLBACK SEARCH (text-based, no strict filter)
+  // -------------------------------------------------
+  const fallbackBody = {
+    search: resolvedName,
+    top: top || TOP_PER_PART,
+    select: "metadata_storage_name,content",
+    queryType: "simple"
+  };
+
+  const fallbackRes = await httpsJson(
+    searchUrl,
+    {
+      method: "POST",
+      headers: { "api-key": SEARCH_API_KEY },
+      bodyObj: fallbackBody
+    },
+    SEARCH_TIMEOUT_MS
+  );
+
+  // Prefer fallback if it works, otherwise return strict result
+  return fallbackRes.ok ? fallbackRes : strictRes;
+}
+
 
     const partCount = quotaPlan.parts.length || 1;
     const perPartBudget = Math.max(900, Math.floor(MAX_SOURCE_CHARS_TOTAL / partCount));
