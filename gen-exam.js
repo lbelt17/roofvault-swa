@@ -235,7 +235,7 @@
   }
 
   // ================== MAIN ==================
-  async function genExam() {
+  async function genExam(options = {}) {
     const ui = ensureUI();
     if (!ui) return;
 
@@ -258,8 +258,11 @@
 
     const parts = normalizeParts(selection);
 
-    // ✅ Load previously-seen questions for this book
-    const excludeQuestions = loadSeen(selection.bookGroupId);
+    // ✅ KEY FIX:
+    // First exam should NOT exclude anything.
+    // Only "New 25Q Practice Exam" should exclude previously-seen questions.
+    const isNewAttempt = options.newAttempt === true;
+    const excludeQuestions = isNewAttempt ? loadSeen(selection.bookGroupId) : [];
 
     try {
       btn.disabled = true;
@@ -270,14 +273,19 @@
         bookGroupId: selection.bookGroupId,
         displayTitle: selection.displayTitle,
         parts,
-        excludeQuestions, // ✅ send to backend
+        excludeQuestions,
         count: QUESTION_COUNT,
         mode: "BOOK_ONLY",
         attemptNonce: `${Date.now()}-${Math.random().toString(16).slice(2)}`
       };
 
-      // Helpful debug while you’re building
-      showDiag({ selection, parts, excludeCount: excludeQuestions.length, payload });
+      showDiag({
+        selection,
+        parts,
+        newAttempt: isNewAttempt,
+        excludeCount: excludeQuestions.length,
+        payload
+      });
 
       const res = await safeFetch(API_URL, {
         method: "POST",
@@ -294,6 +302,7 @@
           body: txt,
           selection,
           parts,
+          newAttempt: isNewAttempt,
           excludeCount: excludeQuestions.length,
           payload
         });
@@ -307,7 +316,7 @@
       items = normalizeAndFilterItems(items, selection);
       items = markRwcMultiSelect(items, selection);
 
-      // ✅ Save these questions as “seen” so next time we avoid repeats
+      // Save these questions as “seen” AFTER a successful response
       addSeen(selection.bookGroupId, items);
 
       qList.textContent = "";
@@ -316,6 +325,13 @@
         window.renderQuiz(items);
       } else {
         qList.textContent = JSON.stringify(items, null, 2);
+      }
+
+      // If backend returns message + empty, show it
+      if (!items.length && data && data.message) {
+        setStatus("No items");
+        showDiag(data);
+        return;
       }
 
       setStatus(`Ready • ${items.length} questions`);
@@ -338,27 +354,26 @@
 
     showDiag("✅ gen-exam.js loaded. Click Generate to test.");
 
-    // Main button
-    ui.btn.onclick = () => genExam();
+    // Main Generate button = FIRST EXAM (excludeQuestions should be empty)
+    ui.btn.onclick = () => genExam({ newAttempt: false });
 
-    // ✅ Dynamic "New 25Q Practice Exam" button (created after grading)
-    // Works whether the button has an id or not (matches by text as fallback).
+    // "New 25Q Practice Exam" button = NEW ATTEMPT (excludeQuestions should be loaded)
     if (!window.__rvNewExamClickWired) {
       window.__rvNewExamClickWired = true;
 
       document.addEventListener("click", (e) => {
         const t = e.target;
-        const btn = t && t.closest ? t.closest("button") : null;
-        if (!btn) return;
+        const b = t && t.closest ? t.closest("button") : null;
+        if (!b) return;
 
-        const idOk = btn.id === "btnNewExam25";
-        const text = (btn.textContent || "").trim().toLowerCase();
+        const idOk = b.id === "btnNewExam25";
+        const text = (b.textContent || "").trim().toLowerCase();
         const textOk = text === "new 25q practice exam" || text.includes("new 25q");
 
         if (!idOk && !textOk) return;
 
         e.preventDefault();
-        genExam();
+        genExam({ newAttempt: true });
       });
     }
 
