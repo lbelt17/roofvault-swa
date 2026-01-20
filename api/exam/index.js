@@ -413,7 +413,7 @@ module.exports = async function (context, req) {
         searchUrl,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json", "api-key": SEARCHSEARCH_API_KEY(SEARCH_API_KEY) },
+          headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
           body: JSON.stringify(resolveBody)
         },
         SEARCH_TIMEOUT_MS
