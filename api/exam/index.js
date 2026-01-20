@@ -617,7 +617,7 @@ module.exports = async function (context, req) {
             return { ok: true, items: items2.slice(0, batchCount) };
           }
         }
-        return { ok: true, items: [] };
+        return { ok: true, items: Array.isArray(items) ? items : [] };
       }
 
       return { ok: true, items: items.slice(0, batchCount) };
