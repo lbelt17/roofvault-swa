@@ -665,7 +665,7 @@ if (!a1.parsed || !Array.isArray(a1.parsed.items) || a1.parsed.items.length === 
         let localOffset = t.idOffset;
 
         while (remaining > 0) {
-          const n = remaining; // do it in ONE call per part to avoid 45s timeout
+          const n = Math.min(remaining, 8); // cap per call to prevent JSON truncation
           const src = partSources.find((p) => p.partName === t.partName);
           const sourcesText = src && src.sources ? src.sources : "";
 
