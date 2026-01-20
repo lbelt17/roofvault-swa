@@ -1,16 +1,25 @@
 ﻿// api/exam/index.js
 // RoofVault /api/exam — multi-part guaranteed + fresh mixes + NO-REPEAT support
 //
-// What this version guarantees:
+// Guarantees:
 // - Uses ALL body.parts (no baseTitle keyword guessing when parts provided)
-// - Pulls sources PER PART and generates questions PER PART using quotas (round-robin distribution)
+// - Pulls sources PER PART and generates questions PER PART using quotas (fair distribution)
 // - Adds ref = cite so UI shows correct Part label
 // - Shuffles answer choices and remaps correct answer (A/B/C/D distributed)
-// - Supports excludeQuestions from gen-exam.js (client memory) and avoids repeats
-// - Avoids "chapter/section" meta questions
+// - Supports excludeQuestions (client memory) and avoids repeats across "New 25Q" attempts
+// - Avoids "chapter/section/page/where is..." meta questions
 // - If exhausted, returns items:[] with a professional message
 
 const crypto = require("crypto");
+
+// ---- fetch (polyfill safety) ----
+let fetchFn = globalThis.fetch;
+try {
+  if (!fetchFn) fetchFn = require("node-fetch");
+} catch (_) {
+  // If node-fetch isn't available, Azure Functions Node 18+ should have fetch.
+}
+const fetch = (...args) => fetchFn(...args);
 
 // ======= CONFIG =======
 const DEFAULT_COUNT = 25;
@@ -32,6 +41,7 @@ function clampInt(n, min, max, fallback) {
 }
 
 function send(context, status, obj, extraHeaders = {}) {
+  const isNoContent = status === 204;
   context.res = {
     status,
     headers: {
@@ -41,7 +51,7 @@ function send(context, status, obj, extraHeaders = {}) {
       "Access-Control-Allow-Headers": "Content-Type, Accept",
       ...extraHeaders
     },
-    body: obj === undefined ? "" : JSON.stringify(obj)
+    body: isNoContent ? "" : obj
   };
   return context.res;
 }
@@ -300,6 +310,21 @@ function buildQuotas(parts, count, rand) {
   return { parts: order, quotas };
 }
 
+// Safe parse req.body if it arrives as string
+function parseBody(req) {
+  const b = req && req.body;
+  if (!b) return {};
+  if (typeof b === "object") return b;
+  if (typeof b === "string") {
+    try {
+      return JSON.parse(b);
+    } catch {
+      return {};
+    }
+  }
+  return {};
+}
+
 // ======= MAIN =======
 module.exports = async function (context, req) {
   try {
@@ -308,25 +333,46 @@ module.exports = async function (context, req) {
       return send(context, 200, { ok: true, name: "exam", time: new Date().toISOString() });
     }
 
-    const SEARCH_ENDPOINT = process.env.SEARCH_ENDPOINT;
-    const SEARCH_API_KEY = process.env.SEARCH_API_KEY;
-    const SEARCH_INDEX_CONTENT = process.env.SEARCH_INDEX_CONTENT || "azureblob-index-content";
+    // ---- ENV (support both your "debug" env names and older names) ----
+    const SEARCH_ENDPOINT =
+      process.env.SEARCH_ENDPOINT || process.env.AZURE_SEARCH_ENDPOINT || process.env.SEARCH_SERVICE_ENDPOINT;
 
-    const AOAI_ENDPOINT = process.env.AOAI_ENDPOINT;
-    const AOAI_API_KEY = process.env.AOAI_API_KEY;
+    const SEARCH_API_KEY =
+      process.env.SEARCH_API_KEY || process.env.AZURE_SEARCH_API_KEY || process.env.SEARCH_ADMIN_KEY;
+
+    // Your deployed env shows SEARCH_INDEX, not SEARCH_INDEX_CONTENT
+    const SEARCH_INDEX_CONTENT =
+      process.env.SEARCH_INDEX_CONTENT || process.env.SEARCH_INDEX || "azureblob-index-content";
+
+    // Your deployed env shows AZURE_OPENAI_ENDPOINT / AZURE_OPENAI_DEPLOYMENT
+    const AOAI_ENDPOINT = process.env.AOAI_ENDPOINT || process.env.AZURE_OPENAI_ENDPOINT;
+    const AOAI_API_KEY =
+      process.env.AOAI_API_KEY || process.env.AZURE_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+
     const AOAI_DEPLOYMENT =
-      process.env.AOAI_DEPLOYMENT || process.env.EXAM_OPENAI_DEPLOYMENT || "gpt-4o-mini";
+      process.env.AOAI_DEPLOYMENT ||
+      process.env.AZURE_OPENAI_DEPLOYMENT ||
+      process.env.EXAM_OPENAI_DEPLOYMENT ||
+      "gpt-4o-mini";
+
     const AOAI_API_VERSION =
       process.env.AOAI_API_VERSION || process.env.OPENAI_API_VERSION || "2024-06-01";
 
     if (!SEARCH_ENDPOINT || !SEARCH_API_KEY) {
-      return send(context, 500, { error: "Missing SEARCH_ENDPOINT or SEARCH_API_KEY" });
+      return send(context, 500, {
+        error: "Missing SEARCH_ENDPOINT or SEARCH_API_KEY",
+        _diag: { hasSearchEndpoint: !!SEARCH_ENDPOINT, hasSearchKey: !!SEARCH_API_KEY }
+      });
     }
     if (!AOAI_ENDPOINT || !AOAI_API_KEY) {
-      return send(context, 500, { error: "Missing AOAI_ENDPOINT or AOAI_API_KEY" });
+      return send(context, 500, {
+        error: "Missing AOAI endpoint/key (AOAI_ENDPOINT/AZURE_OPENAI_ENDPOINT and AOAI_API_KEY/AZURE_OPENAI_API_KEY)",
+        _diag: { hasAoaiEndpoint: !!AOAI_ENDPOINT, hasAoaiKey: !!AOAI_API_KEY }
+      });
     }
 
-    const body = req.body || {};
+    const body = parseBody(req);
+
     const count = clampInt(body.count, 1, MAX_COUNT, DEFAULT_COUNT);
 
     const attemptNonce = safeString(body.attemptNonce || "");
@@ -350,7 +396,7 @@ module.exports = async function (context, req) {
     const quotaPlan = buildQuotas(parts, count, rand);
 
     const searchUrl =
-      `${SEARCH_ENDPOINT.replace(/\/+$/, "")}` +
+      `${String(SEARCH_ENDPOINT).replace(/\/+$/, "")}` +
       `/indexes/${encodeURIComponent(SEARCH_INDEX_CONTENT)}` +
       `/docs/search?api-version=2023-11-01`;
 
@@ -367,7 +413,7 @@ module.exports = async function (context, req) {
         searchUrl,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
+          headers: { "Content-Type": "application/json", "api-key": SEARCHSEARCH_API_KEY(SEARCH_API_KEY) },
           body: JSON.stringify(resolveBody)
         },
         SEARCH_TIMEOUT_MS
@@ -420,7 +466,7 @@ module.exports = async function (context, req) {
           error: "Search request failed (per-part)",
           status: sres.status,
           detail: sres.data,
-          _diag: { partName, requestId }
+          _diag: { partName, requestId, index: SEARCH_INDEX_CONTENT }
         });
       }
 
@@ -435,7 +481,7 @@ module.exports = async function (context, req) {
     if (totalChars < 50) {
       return send(context, 404, {
         error: "No searchable content returned for selection",
-        _diag: { requestId, parts: quotaPlan.parts, partDiag }
+        _diag: { requestId, parts: quotaPlan.parts, partDiag, index: SEARCH_INDEX_CONTENT }
       });
     }
 
@@ -470,7 +516,7 @@ module.exports = async function (context, req) {
     }
 
     const aoaiUrl =
-      `${AOAI_ENDPOINT.replace(/\/+$/, "")}` +
+      `${String(AOAI_ENDPOINT).replace(/\/+$/, "")}` +
       `/openai/deployments/${encodeURIComponent(AOAI_DEPLOYMENT)}` +
       `/chat/completions?api-version=${encodeURIComponent(AOAI_API_VERSION)}`;
 
@@ -679,7 +725,8 @@ module.exports = async function (context, req) {
         partsUsed: quotaPlan.parts,
         quotas: quotaPlan.quotas,
         excludeCount: excludeQuestions.length,
-        partDiag
+        partDiag,
+        index: SEARCH_INDEX_CONTENT
       }
     });
   } catch (e) {
@@ -690,3 +737,8 @@ module.exports = async function (context, req) {
     });
   }
 };
+
+// Small helper to avoid accidental typo usage in headers (keeps linter happy in some setups)
+function SEARCH_API_KEY(_) {
+  return _;
+}
