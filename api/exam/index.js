@@ -547,7 +547,7 @@ module.exports = async function (context, req) {
             ],
             temperature: 0.25,
             response_format: { type: "json_object" },
-            max_tokens: 1200
+            max_tokens: 900
           }
         },
         AOAI_TIMEOUT_MS
