@@ -599,6 +599,14 @@ module.exports = async function (context, req) {
     }
 
     async function generateExact(batchCount, idOffset, sourcesText) {
+      if (safeString(process.env.DEBUG_BATCH).toLowerCase() === "1") {
+  return {
+    ok: false,
+    detail: "DEBUG_BATCH",
+    raw: JSON.stringify({ deployTag: DEPLOY_TAG, batchCount, idOffset }, null, 2)
+  };
+}
+
       const schema = makeSchema(batchCount, idOffset);
 
       const excludePreview =
