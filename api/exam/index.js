@@ -543,7 +543,7 @@ module.exports = async function (context, req) {
       return (
         `Return JSON exactly like:\n` +
         `{"items":[{"id":"${idOffset + 1}","type":"mcq","question":"...","options":[{"id":"A","text":"..."},{"id":"B","text":"..."},{"id":"C","text":"..."},{"id":"D","text":"..."}],` +
-        `"answer":"A","cite":"<one of the [source] labels>","explanation":"..."}]}\n` +
+        `"answer":"A","cite":"<one of the [source] labels>"}]}\n` +
         `Rules:\n` +
         `- items length MUST be exactly ${batchCount}\n` +
         `- id MUST be "${idOffset + 1}" to "${idOffset + batchCount}"\n` +
