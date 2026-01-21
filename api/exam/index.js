@@ -18,6 +18,10 @@ const crypto = require("crypto");
 const https = require("https");
 const { URL } = require("url");
 
+// ======= DEPLOY PROOF TAG =======
+// Change this string any time you want to prove new code is deployed.
+const DEPLOY_TAG = "DEPLOY_TAG__2026-01-21__A";
+
 // ======= CONFIG =======
 const DEFAULT_COUNT = 25;
 const MAX_COUNT = 50;
@@ -98,13 +102,23 @@ function httpsJson(urlStr, { method = "POST", headers = {}, bodyObj = null } = {
           } catch {
             data = { _raw: raw };
           }
-          resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, data, _rawText: raw });
+          resolve({
+            ok: res.statusCode >= 200 && res.statusCode < 300,
+            status: res.statusCode,
+            data,
+            _rawText: raw
+          });
         });
       }
     );
 
     req.on("error", (err) => {
-      resolve({ ok: false, status: 0, data: { error: "request_error", message: err?.message || String(err) }, _rawText: "" });
+      resolve({
+        ok: false,
+        status: 0,
+        data: { error: "request_error", message: err?.message || String(err) },
+        _rawText: ""
+      });
     });
 
     req.setTimeout(timeoutMs, () => {
@@ -350,7 +364,12 @@ module.exports = async function (context, req) {
   try {
     if (req.method === "OPTIONS") return send(context, 204, "");
     if (req.method === "GET") {
-      return send(context, 200, { ok: true, name: "exam", time: new Date().toISOString() });
+      return send(context, 200, {
+        ok: true,
+        name: "exam",
+        time: new Date().toISOString(),
+        deployTag: DEPLOY_TAG
+      });
     }
 
     // ENV fallbacks (match what your /api/debug shows)
@@ -377,13 +396,13 @@ module.exports = async function (context, req) {
     if (!SEARCH_ENDPOINT || !SEARCH_API_KEY) {
       return send(context, 500, {
         error: "Missing SEARCH_ENDPOINT or SEARCH_API_KEY",
-        _diag: { hasSearchEndpoint: !!SEARCH_ENDPOINT, hasSearchKey: !!SEARCH_API_KEY }
+        _diag: { hasSearchEndpoint: !!SEARCH_ENDPOINT, hasSearchKey: !!SEARCH_API_KEY, deployTag: DEPLOY_TAG }
       });
     }
     if (!AOAI_ENDPOINT || !AOAI_API_KEY) {
       return send(context, 500, {
         error: "Missing AOAI endpoint/key",
-        _diag: { hasAoaiEndpoint: !!AOAI_ENDPOINT, hasAoaiKey: !!AOAI_API_KEY }
+        _diag: { hasAoaiEndpoint: !!AOAI_ENDPOINT, hasAoaiKey: !!AOAI_API_KEY, deployTag: DEPLOY_TAG }
       });
     }
 
@@ -415,63 +434,62 @@ module.exports = async function (context, req) {
       `/docs/search?api-version=2023-11-01`;
 
     async function runSearchForPart(partName, top) {
-  const resolvedName = String(partName || "").trim();
+      const resolvedName = String(partName || "").trim();
 
-  // -------------------------------------------------
-  // 1) STRICT MATCH (existing behavior)
-  // -------------------------------------------------
-  const strictFilter = buildSearchInFilter("metadata_storage_name", [resolvedName]);
+      // -------------------------------------------------
+      // 1) STRICT MATCH (existing behavior)
+      // -------------------------------------------------
+      const strictFilter = buildSearchInFilter("metadata_storage_name", [resolvedName]);
 
-  const strictBody = {
-    search: "*",
-    top: top || TOP_PER_PART,
-    select: "metadata_storage_name,content",
-    queryType: "simple",
-    filter: strictFilter
-  };
+      const strictBody = {
+        search: "*",
+        top: top || TOP_PER_PART,
+        select: "metadata_storage_name,content",
+        queryType: "simple",
+        filter: strictFilter
+      };
 
-  const strictRes = await httpsJson(
-    searchUrl,
-    {
-      method: "POST",
-      headers: { "api-key": SEARCH_API_KEY },
-      bodyObj: strictBody
-    },
-    SEARCH_TIMEOUT_MS
-  );
+      const strictRes = await httpsJson(
+        searchUrl,
+        {
+          method: "POST",
+          headers: { "api-key": SEARCH_API_KEY },
+          bodyObj: strictBody
+        },
+        SEARCH_TIMEOUT_MS
+      );
 
-  const strictHits =
-    (strictRes?.data && (strictRes.data.value || strictRes.data.values)) || [];
+      const strictHits =
+        (strictRes?.data && (strictRes.data.value || strictRes.data.values)) || [];
 
-  // If strict search worked and returned enough hits, keep it
-  if (strictRes.ok && strictHits.length >= 5) {
-    return strictRes;
-  }
+      // If strict search worked and returned enough hits, keep it
+      if (strictRes.ok && strictHits.length >= 5) {
+        return strictRes;
+      }
 
-  // -------------------------------------------------
-  // 2) FALLBACK SEARCH (text-based, no strict filter)
-  // -------------------------------------------------
-  const fallbackBody = {
-    search: resolvedName,
-    top: top || TOP_PER_PART,
-    select: "metadata_storage_name,content",
-    queryType: "simple"
-  };
+      // -------------------------------------------------
+      // 2) FALLBACK SEARCH (text-based, no strict filter)
+      // -------------------------------------------------
+      const fallbackBody = {
+        search: resolvedName,
+        top: top || TOP_PER_PART,
+        select: "metadata_storage_name,content",
+        queryType: "simple"
+      };
 
-  const fallbackRes = await httpsJson(
-    searchUrl,
-    {
-      method: "POST",
-      headers: { "api-key": SEARCH_API_KEY },
-      bodyObj: fallbackBody
-    },
-    SEARCH_TIMEOUT_MS
-  );
+      const fallbackRes = await httpsJson(
+        searchUrl,
+        {
+          method: "POST",
+          headers: { "api-key": SEARCH_API_KEY },
+          bodyObj: fallbackBody
+        },
+        SEARCH_TIMEOUT_MS
+      );
 
-  // Prefer fallback if it works, otherwise return strict result
-  return fallbackRes.ok ? fallbackRes : strictRes;
-}
-
+      // Prefer fallback if it works, otherwise return strict result
+      return fallbackRes.ok ? fallbackRes : strictRes;
+    }
 
     const partCount = quotaPlan.parts.length || 1;
     const perPartBudget = Math.max(900, Math.floor(MAX_SOURCE_CHARS_TOTAL / partCount));
@@ -486,7 +504,7 @@ module.exports = async function (context, req) {
           error: "Search request failed (per-part)",
           status: sres.status,
           detail: sres.data,
-          _diag: { partName, requestId, index: SEARCH_INDEX_CONTENT }
+          _diag: { partName, requestId, index: SEARCH_INDEX_CONTENT, deployTag: DEPLOY_TAG }
         });
       }
 
@@ -501,7 +519,7 @@ module.exports = async function (context, req) {
     if (totalChars < 50) {
       return send(context, 404, {
         error: "No searchable content returned for selection",
-        _diag: { requestId, parts: quotaPlan.parts, partDiag, index: SEARCH_INDEX_CONTENT }
+        _diag: { requestId, parts: quotaPlan.parts, partDiag, index: SEARCH_INDEX_CONTENT, deployTag: DEPLOY_TAG }
       });
     }
 
@@ -597,12 +615,18 @@ module.exports = async function (context, req) {
 
       const a1 = await callAoai(user);
       if (!a1.ok) return { ok: false, detail: a1.detail, raw: a1.raw };
-// DEBUG: if the model didn't return parseable items, fail loudly so we can see raw output
-if (!a1.parsed || !Array.isArray(a1.parsed.items) || a1.parsed.items.length === 0) {
-  return { ok: false, detail: "AOAI returned no parseable items", raw: a1.raw };
-}
 
-      let items = a1.parsed && a1.parsed.items;
+      // DEBUG: if the model didn't return parseable items, fail loudly so we can see raw output
+      if (!a1.parsed || !Array.isArray(a1.parsed.items) || a1.parsed.items.length === 0) {
+        return {
+          ok: false,
+          detail: "AOAI returned no parseable items",
+          raw: a1.raw,
+          _diag: { deployTag: DEPLOY_TAG }
+        };
+      }
+
+      let items = a1.parsed.items;
       items = filterNoRepeats(items);
 
       if (!Array.isArray(items) || items.length < batchCount) {
@@ -614,13 +638,15 @@ if (!a1.parsed || !Array.isArray(a1.parsed.items) || a1.parsed.items.length === 
           `SOURCES:\n${sourcesText}`;
 
         const a2 = await callAoai(repair);
-        if (a2.ok) {
-          let items2 = a2.parsed && a2.parsed.items;
+        if (a2.ok && a2.parsed && Array.isArray(a2.parsed.items)) {
+          let items2 = a2.parsed.items;
           items2 = filterNoRepeats(items2);
           if (Array.isArray(items2) && items2.length >= batchCount) {
             return { ok: true, items: items2.slice(0, batchCount) };
           }
         }
+
+        // Return what we have (possibly empty) so caller can decide what to do
         return { ok: true, items: Array.isArray(items) ? items : [] };
       }
 
@@ -630,6 +656,7 @@ if (!a1.parsed || !Array.isArray(a1.parsed.items) || a1.parsed.items.length === 
     // Build per-part tasks
     const tasks = [];
     let idOffset = 0;
+
     for (let i = 0; i < quotaPlan.parts.length; i++) {
       const partName = quotaPlan.parts[i];
       const qCount = quotaPlan.quotas[i] || 0;
@@ -650,14 +677,16 @@ if (!a1.parsed || !Array.isArray(a1.parsed.items) || a1.parsed.items.length === 
       usedMode = "merged-fallback";
       const merged = partSources.map((p) => p.sources).filter(Boolean).join("\n\n");
       const b = await generateExact(count, 0, merged);
+
       if (!b.ok) {
         return send(context, 500, {
           error: "Model returned invalid output",
           detail: b.detail || "batch failed",
           raw: b.raw,
-          _diag: { requestId, deployment: AOAI_DEPLOYMENT, usedMode, partDiag }
+          _diag: { requestId, deployment: AOAI_DEPLOYMENT, usedMode, partDiag, deployTag: DEPLOY_TAG }
         });
       }
+
       allGenerated = b.items;
     } else {
       for (const t of tasks) {
@@ -670,16 +699,17 @@ if (!a1.parsed || !Array.isArray(a1.parsed.items) || a1.parsed.items.length === 
           const sourcesText = src && src.sources ? src.sources : "";
 
           const b = await generateExact(n, localOffset, sourcesText);
+
           if (!b.ok) {
             return send(context, 500, {
               error: "Model returned invalid output",
               detail: b.detail || "batch failed",
               raw: b.raw,
-              _diag: { requestId, deployment: AOAI_DEPLOYMENT, usedMode, task: t, partDiag }
+              _diag: { requestId, deployment: AOAI_DEPLOYMENT, usedMode, task: t, partDiag, deployTag: DEPLOY_TAG }
             });
           }
 
-          allGenerated = allGenerated.concat(b.items);
+          allGenerated = allGenerated.concat(b.items || []);
           remaining -= n;
           localOffset += n;
         }
@@ -692,7 +722,15 @@ if (!a1.parsed || !Array.isArray(a1.parsed.items) || a1.parsed.items.length === 
         message: "No additional unique questions remain for this book based on the current indexed content.",
         modelDeployment: AOAI_DEPLOYMENT,
         returned: 0,
-        _diag: { requestId, usedMode, count, partsUsed: quotaPlan.parts, quotas: quotaPlan.quotas, partDiag }
+        _diag: {
+          requestId,
+          usedMode,
+          count,
+          partsUsed: quotaPlan.parts,
+          quotas: quotaPlan.quotas,
+          partDiag,
+          deployTag: DEPLOY_TAG
+        }
       });
     }
 
@@ -713,6 +751,7 @@ if (!a1.parsed || !Array.isArray(a1.parsed.items) || a1.parsed.items.length === 
 
     const shuffled = finalItems.slice();
     shuffleInPlace(shuffled, rand);
+
     const out = shuffled.map((q, i) => ({
       id: String(i + 1),
       type: "mcq",
@@ -729,6 +768,7 @@ if (!a1.parsed || !Array.isArray(a1.parsed.items) || a1.parsed.items.length === 
       modelDeployment: AOAI_DEPLOYMENT,
       returned: out.length,
       _diag: {
+        deployTag: DEPLOY_TAG,
         requestId,
         usedMode,
         count,
@@ -745,7 +785,8 @@ if (!a1.parsed || !Array.isArray(a1.parsed.items) || a1.parsed.items.length === 
     return send(context, 500, {
       error: "Unhandled exception",
       message: e?.message ? e.message : String(e),
-      stack: e?.stack ? String(e.stack).split("\n").slice(0, 12) : []
+      stack: e?.stack ? String(e.stack).split("\n").slice(0, 12) : [],
+      _diag: { deployTag: DEPLOY_TAG }
     });
   }
 };
