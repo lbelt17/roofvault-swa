@@ -702,7 +702,7 @@ module.exports = async function (context, req) {
         let localOffset = t.idOffset;
 
         while (remaining > 0) {
-          const n = Math.min(remaining, 4); // cap per call to prevent JSON truncation
+          const n = Math.min(remaining, 1); // cap per call to prevent JSON truncation
           const src = partSources.find((p) => p.partName === t.partName);
           const sourcesText = src && src.sources ? src.sources : "";
 
