@@ -87,7 +87,7 @@
         btn.title = "Auth system not loaded (getAuthState missing).";
         showDiag({
           error: "getAuthState is not defined on this page.",
-          fix: "Make sure your auth script is loaded before gen-exam.js"
+          fix: "Make sure your auth script is loaded before gen-exam.js",
         });
         return false;
       }
@@ -148,12 +148,21 @@
   }
 
   // ================== NO-REPEAT MEMORY (client-side) ==================
+  // Aggressive normalization so paraphrases collide into the same key
   function normQ(s) {
     return String(s || "")
       .toLowerCase()
+      .replace(
+        /\b(what|which|who|when|where|why|how|according to|in the|of the|is|are|was|were|does|do|did|a|an|the|and|or|to|for|with|in|on|at|by|from)\b/g,
+        " "
+      )
+      .replace(/[^\w\s]/g, " ")
+      .replace(/\d+/g, " ")
       .replace(/\s+/g, " ")
-      .replace(/[^\w\s\?\.\,\-]/g, "")
-      .trim();
+      .trim()
+      .split(" ")
+      .slice(0, 18)
+      .join(" ");
   }
 
   function seenKey(bookGroupId) {
@@ -214,7 +223,7 @@
       .filter(Boolean)
       .map((q) => ({
         ...q,
-        sourceTitle: q.sourceTitle || selection.displayTitle
+        sourceTitle: q.sourceTitle || selection.displayTitle,
       }));
   }
 
@@ -251,18 +260,17 @@
       showDiag({
         error: "No valid book selection found for exam generation.",
         fix: "Expose window.__rvSelectedBook (or window.getSelectedBook()) with {bookGroupId, displayTitle, parts?}.",
-        hint: "Your dropdown is working, but gen-exam.js needs a JS object representing the selected book."
+        hint: "Your dropdown is working, but gen-exam.js needs a JS object representing the selected book.",
       });
       return;
     }
 
     const parts = normalizeParts(selection);
 
-    // ✅ KEY FIX:
     // First exam should NOT exclude anything.
     // Only "New 25Q Practice Exam" should exclude previously-seen questions.
     const isNewAttempt = options.newAttempt === true;
-    const excludeQuestions = isNewAttempt ? loadSeen(selection.bookGroupId) : [];
+    const excludeQuestions = isNewAttempt ? loadSeen(selection.bookGroupId).slice(-200) : [];
 
     try {
       btn.disabled = true;
@@ -276,7 +284,7 @@
         excludeQuestions,
         count: QUESTION_COUNT,
         mode: "BOOK_ONLY",
-        attemptNonce: `${Date.now()}-${Math.random().toString(16).slice(2)}`
+        attemptNonce: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
       };
 
       showDiag({
@@ -284,13 +292,13 @@
         parts,
         newAttempt: isNewAttempt,
         excludeCount: excludeQuestions.length,
-        payload
+        payload,
       });
 
       const res = await safeFetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -304,7 +312,7 @@
           parts,
           newAttempt: isNewAttempt,
           excludeCount: excludeQuestions.length,
-          payload
+          payload,
         });
         setStatus("Error");
         return;
