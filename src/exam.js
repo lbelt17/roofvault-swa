@@ -31,7 +31,7 @@
       setStatus("Generating exam…");
       showDiag("Calling /api/exam …");
 
-      const res = await fetch("/api/exam", {
+      const res = await fetch("https://roofvault-exam-durable2.azurewebsites.net/api/exam", {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body: JSON.stringify({ book: pick.value, filterField: pick.field })
