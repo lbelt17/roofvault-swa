@@ -9,7 +9,7 @@
 
   // ================== CONFIG ==================
   const QUESTION_COUNT = 25;
-  const API_URL = "/api/exam";
+  const API_URL = "https://roofvault-exam-durable2.azurewebsites.net/api/exam";
   const FETCH_TIMEOUT_MS = 120000;
 
   // ================== DOM HELPERS ==================
