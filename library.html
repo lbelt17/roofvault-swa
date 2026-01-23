@@ -865,9 +865,18 @@ function filterBooks(query) {
   );
 }
 
-// Build each book card
+// Build each grouped book card (books-v2)
 function createBookCard(book) {
-  const firstLetter = book.title?.charAt(0)?.toUpperCase() || "R";
+  // books-v2 uses displayTitle + parts[]
+  const title = book.displayTitle || "Untitled Book";
+  const firstLetter = title.charAt(0).toUpperCase() || "R";
+
+  // Use the FIRST part as the open target (raw blob name, no .pdf)
+  const primaryPart = book.parts?.[0];
+  if (!primaryPart?.fileName) return null;
+
+  const blobName = primaryPart.fileName;
+  const partCount = Array.isArray(book.parts) ? book.parts.length : 0;
 
   const card = document.createElement("article");
   card.className = "book-card";
@@ -878,40 +887,55 @@ function createBookCard(book) {
         <span>${firstLetter}</span>
       </div>
       <div class="book-info">
-        <div class="book-title">${book.title}</div>
-        <div class="book-meta">${book.fileName}</div>
+        <div class="book-title">${title}</div>
+        <div class="book-meta">
+          ${partCount} part${partCount === 1 ? "" : "s"}
+        </div>
       </div>
     </div>
+
     <div class="book-footer">
       <div class="book-footer-left">
         <span class="pill-soft">
-          <span>📄</span>
-          <span>${book.fileName}</span>
+          <span>📘</span>
+          <span>Combined Volume</span>
         </span>
       </div>
+
       <button class="btn-view" type="button">
-        <span>View Details</span>
+        <span>Read</span>
         <span>➜</span>
       </button>
     </div>
   `;
 
   card.querySelector(".btn-view").addEventListener("click", async () => {
+    // Safari popup-safe: open tab immediately from the click
+    const newTab = window.open("about:blank", "_blank");
+    if (!newTab) {
+      alert("Pop-up blocked. Please allow pop-ups for RoofVault and try again.");
+      return;
+    }
+
     try {
-      const blobName = book.fileName; // raw blob name (NO .pdf)
+      newTab.document.write(
+        "<p style='font-family: system-ui; padding: 16px;'>Loading PDF…</p>"
+      );
 
       const res = await fetch(`/api/book?name=${encodeURIComponent(blobName)}`);
       const data = await res.json();
 
       if (!res.ok || !data?.ok || !data?.url) {
-        alert("Could not open this PDF. Please try again.");
+        newTab.close();
+        alert("Could not open this book. Please try again.");
         return;
       }
 
-      window.open(data.url, "_blank");
+      newTab.location.href = data.url;
     } catch (err) {
-      console.error("Open PDF failed:", err);
-      alert("Could not open this PDF. Please try again.");
+      console.error("Open book failed:", err);
+      newTab.close();
+      alert("Could not open this book. Please try again.");
     }
   });
 
@@ -919,11 +943,11 @@ function createBookCard(book) {
 }
 
 
-// Render list
+// Render list (books-v2 grouped objects)
 function renderBooks(list) {
   bookGrid.innerHTML = "";
 
-  if (list.length === 0) {
+  if (!Array.isArray(list) || list.length === 0) {
     bookGrid.classList.add("hidden");
     emptyState.classList.remove("hidden");
     resultCount.textContent = "No books found.";
@@ -933,11 +957,15 @@ function renderBooks(list) {
   emptyState.classList.add("hidden");
   bookGrid.classList.remove("hidden");
 
-  list.forEach((b) => bookGrid.appendChild(createBookCard(b)));
+  list.forEach((b) => {
+    const card = createBookCard(b);
+    if (card) bookGrid.appendChild(card);
+  });
 
   resultCount.textContent =
     list.length === 1 ? "1 book found" : `${list.length} books found`;
 }
+
 
 // Load books from your Azure Search API route
 async function loadBooks() {
