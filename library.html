@@ -834,65 +834,72 @@ const badgeBookCount = document.getElementById("badgeBookCount");
 
 let ALL_BOOKS = [];
 
-// Turn blob filenames into clean titles
-function cleanTitle(name) {
-  if (!name) return "Untitled Manual";
-
-  let title = name
-    .replace(/\.[^/.]+$/, "")     // remove extension
-    .replace(/[_\-]+/g, " ")      // underscores → spaces
-    .replace(/\s+/g, " ")         // collapse spaces
-    .trim();
-
-  // Capitalize each word
-  return title.replace(/\b\w+/g, (w) => w.charAt(0).toUpperCase() + w.slice(1));
+// ---- helpers ----
+function safeStr(v) {
+  return String(v ?? "").trim();
 }
 
-// Extract year if found inside the filename
-function extractYear(name) {
-  const match = name.match(/(19|20)\d{2}/);
+function getTitle(book) {
+  // books-v2 uses displayTitle; fallback to legacy title
+  return safeStr(book?.displayTitle || book?.title || "Untitled Manual");
+}
+
+function getParts(book) {
+  // books-v2 parts are objects like { raw, fileName, partLabel } OR strings
+  const parts = Array.isArray(book?.parts) ? book.parts : [];
+  return parts
+    .map((p) => {
+      if (typeof p === "string") return safeStr(p);
+      if (p && typeof p === "object") return safeStr(p.fileName || p.raw || "");
+      return "";
+    })
+    .filter(Boolean);
+}
+
+function getPrimaryBlobName(book) {
+  // Prefer first part's filename/raw; fallback to legacy fileName
+  const legacy = safeStr(book?.fileName);
+  if (legacy) return legacy;
+
+  const parts = getParts(book);
+  return parts[0] || "";
+}
+
+// Extract year if found inside the title (optional, not required)
+function extractYear(text) {
+  const match = safeStr(text).match(/(19|20)\d{2}/);
   return match ? match[0] : null;
 }
 
-// Search filter
+// ---- Search filter (GROUPED books) ----
 function filterBooks(query) {
   if (!query) return ALL_BOOKS;
+
   const q = query.toLowerCase();
 
-  return ALL_BOOKS.filter((b) =>
-    b.title.toLowerCase().includes(q) ||
-    b.fileName.toLowerCase().includes(q)
-  );
+  return ALL_BOOKS.filter((b) => {
+    const title = getTitle(b).toLowerCase();
+    if (title.includes(q)) return true;
+
+    // allow matching on any underlying part blob name
+    const parts = getParts(b);
+    return parts.some((p) => p.toLowerCase().includes(q));
+  });
 }
 
-// Build each book card (supports both books-v2 grouped + legacy flat)
+// ---- Build each grouped book card ----
 function createBookCard(book) {
-  const title = book?.displayTitle || book?.title || "Untitled Book";
+  const title = getTitle(book);
   const firstLetter = title.charAt(0).toUpperCase() || "R";
 
-  // Determine the blob name to open (raw blob name, NO .pdf)
-  // Supports:
-  // - legacy: book.fileName
-  // - books-v2: book.parts[0] as {fileName} OR as string
-  let blobName = book?.fileName || null;
-
-  const parts = Array.isArray(book?.parts) ? book.parts : [];
-  if (!blobName && parts.length > 0) {
-    const p0 = parts[0];
-    blobName =
-      (typeof p0 === "string" ? p0 : (p0 && p0.fileName)) || null;
-  }
-
+  const parts = getParts(book);
   const partCount = parts.length;
+
+  const blobName = getPrimaryBlobName(book); // raw blob name (NO .pdf)
+  const year = extractYear(title);
 
   const card = document.createElement("article");
   card.className = "book-card";
-
-  // Meta line: show parts count if grouped, otherwise show fileName if legacy
-  const metaText =
-    partCount > 0
-      ? `${partCount} part${partCount === 1 ? "" : "s"}`
-      : (book?.fileName || "");
 
   card.innerHTML = `
     <div class="book-main">
@@ -901,7 +908,10 @@ function createBookCard(book) {
       </div>
       <div class="book-info">
         <div class="book-title">${title}</div>
-        <div class="book-meta">${metaText}</div>
+        <div class="book-meta">
+          ${partCount ? `${partCount} part${partCount === 1 ? "" : "s"}` : "PDF"}
+          ${year ? ` • ${year}` : ""}
+        </div>
       </div>
     </div>
 
@@ -909,7 +919,7 @@ function createBookCard(book) {
       <div class="book-footer-left">
         <span class="pill-soft">
           <span>📘</span>
-          <span>${partCount > 0 ? "Combined Volume" : "PDF"}</span>
+          <span>${partCount ? "Combined Volume" : "PDF"}</span>
         </span>
       </div>
 
@@ -952,12 +962,12 @@ function createBookCard(book) {
       }
     });
   } else {
-    // Helpful debug (won’t break UI)
     console.warn("No blobName found for book:", book);
   }
 
   return card;
 }
+
 
 
 // Render list
@@ -985,20 +995,28 @@ function renderBooks(list) {
 
 
 
-// Load books from your Azure Search API route
+// Load books from your Azure Search API route (GROUPED books-v2)
 async function loadBooks() {
   try {
-    const res = await fetch("https://kind-flower-0fe142d0f.3.azurestaticapps.net/api/books");
+    const res = await fetch("/api/books");
+    if (!res.ok) throw new Error(`books api failed: ${res.status}`);
 
     const data = await res.json();
 
-    const filenames = data.values || [];
-
-    ALL_BOOKS = filenames.map((fn) => ({
-      title: cleanTitle(fn),
-      fileName: fn,
-      year: extractYear(fn),
-    }));
+    // ✅ PRIMARY: use grouped books-v2
+    if (Array.isArray(data.books) && data.books.length > 0) {
+      ALL_BOOKS = data.books;
+    }
+    // ⛑️ FALLBACK: legacy flat filenames (should rarely happen now)
+    else if (Array.isArray(data.values)) {
+      ALL_BOOKS = data.values.map((fn) => ({
+        title: cleanTitle(fn),
+        fileName: fn,
+        parts: [fn]
+      }));
+    } else {
+      ALL_BOOKS = [];
+    }
 
     badgeBookCount.textContent =
       ALL_BOOKS.length === 1 ? "1 manual" : `${ALL_BOOKS.length} manuals`;
@@ -1009,6 +1027,7 @@ async function loadBooks() {
     resultCount.textContent = "Could not load library.";
   }
 }
+
 
 // Initialize page
 document.addEventListener("DOMContentLoaded", () => {
