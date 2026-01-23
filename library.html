@@ -865,21 +865,34 @@ function filterBooks(query) {
   );
 }
 
-// Build each grouped book card (books-v2)
+// Build each book card (supports both books-v2 grouped + legacy flat)
 function createBookCard(book) {
-  // books-v2 uses displayTitle + parts[]
-  const title = book.displayTitle || "Untitled Book";
+  const title = book?.displayTitle || book?.title || "Untitled Book";
   const firstLetter = title.charAt(0).toUpperCase() || "R";
 
-  // Use the FIRST part as the open target (raw blob name, no .pdf)
-  const primaryPart = book.parts?.[0];
-  if (!primaryPart?.fileName) return null;
+  // Determine the blob name to open (raw blob name, NO .pdf)
+  // Supports:
+  // - legacy: book.fileName
+  // - books-v2: book.parts[0] as {fileName} OR as string
+  let blobName = book?.fileName || null;
 
-  const blobName = primaryPart.fileName;
-  const partCount = Array.isArray(book.parts) ? book.parts.length : 0;
+  const parts = Array.isArray(book?.parts) ? book.parts : [];
+  if (!blobName && parts.length > 0) {
+    const p0 = parts[0];
+    blobName =
+      (typeof p0 === "string" ? p0 : (p0 && p0.fileName)) || null;
+  }
+
+  const partCount = parts.length;
 
   const card = document.createElement("article");
   card.className = "book-card";
+
+  // Meta line: show parts count if grouped, otherwise show fileName if legacy
+  const metaText =
+    partCount > 0
+      ? `${partCount} part${partCount === 1 ? "" : "s"}`
+      : (book?.fileName || "");
 
   card.innerHTML = `
     <div class="book-main">
@@ -888,9 +901,7 @@ function createBookCard(book) {
       </div>
       <div class="book-info">
         <div class="book-title">${title}</div>
-        <div class="book-meta">
-          ${partCount} part${partCount === 1 ? "" : "s"}
-        </div>
+        <div class="book-meta">${metaText}</div>
       </div>
     </div>
 
@@ -898,52 +909,58 @@ function createBookCard(book) {
       <div class="book-footer-left">
         <span class="pill-soft">
           <span>📘</span>
-          <span>Combined Volume</span>
+          <span>${partCount > 0 ? "Combined Volume" : "PDF"}</span>
         </span>
       </div>
 
-      <button class="btn-view" type="button">
-        <span>Read</span>
+      <button class="btn-view" type="button" ${blobName ? "" : "disabled"}>
+        <span>${blobName ? "Read" : "Unavailable"}</span>
         <span>➜</span>
       </button>
     </div>
   `;
 
-  card.querySelector(".btn-view").addEventListener("click", async () => {
-    // Safari popup-safe: open tab immediately from the click
-    const newTab = window.open("about:blank", "_blank");
-    if (!newTab) {
-      alert("Pop-up blocked. Please allow pop-ups for RoofVault and try again.");
-      return;
-    }
-
-    try {
-      newTab.document.write(
-        "<p style='font-family: system-ui; padding: 16px;'>Loading PDF…</p>"
-      );
-
-      const res = await fetch(`/api/book?name=${encodeURIComponent(blobName)}`);
-      const data = await res.json();
-
-      if (!res.ok || !data?.ok || !data?.url) {
-        newTab.close();
-        alert("Could not open this book. Please try again.");
+  const btn = card.querySelector(".btn-view");
+  if (blobName) {
+    btn.addEventListener("click", async () => {
+      // Safari popup-safe: open immediately on click
+      const newTab = window.open("about:blank", "_blank");
+      if (!newTab) {
+        alert("Pop-up blocked. Please allow pop-ups for RoofVault and try again.");
         return;
       }
 
-      newTab.location.href = data.url;
-    } catch (err) {
-      console.error("Open book failed:", err);
-      newTab.close();
-      alert("Could not open this book. Please try again.");
-    }
-  });
+      try {
+        newTab.document.write(
+          "<p style='font-family: system-ui; padding: 16px;'>Loading PDF…</p>"
+        );
+
+        const res = await fetch(`/api/book?name=${encodeURIComponent(blobName)}`);
+        const data = await res.json();
+
+        if (!res.ok || !data?.ok || !data?.url) {
+          newTab.close();
+          alert("Could not open this book. Please try again.");
+          return;
+        }
+
+        newTab.location.href = data.url;
+      } catch (err) {
+        console.error("Open book failed:", err);
+        newTab.close();
+        alert("Could not open this book. Please try again.");
+      }
+    });
+  } else {
+    // Helpful debug (won’t break UI)
+    console.warn("No blobName found for book:", book);
+  }
 
   return card;
 }
 
 
-// Render list (books-v2 grouped objects)
+// Render list
 function renderBooks(list) {
   bookGrid.innerHTML = "";
 
@@ -959,12 +976,13 @@ function renderBooks(list) {
 
   list.forEach((b) => {
     const card = createBookCard(b);
-    if (card) bookGrid.appendChild(card);
+    bookGrid.appendChild(card);
   });
 
   resultCount.textContent =
     list.length === 1 ? "1 book found" : `${list.length} books found`;
 }
+
 
 
 // Load books from your Azure Search API route
