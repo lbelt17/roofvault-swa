@@ -2,7 +2,7 @@
 // Uses /api/books -> body.books[] when available (grouped), fallback to body.values[] (raw)
 //
 // Goal: Blobs named like "Example Book - Part 01", "Example Book - Part 02", ...
-// This script shows ONE clean title: "Example Book" and stores the full parts list in window.__rvSelectedBook
+// This script shows ONE clean title and stores the full parts list in window.__rvSelectedBook
 
 (function () {
   "use strict";
@@ -14,15 +14,18 @@
 
   function el(tag, attrs = {}, children = []) {
     const n = document.createElement(tag);
+
     Object.entries(attrs).forEach(([k, v]) => {
       if (k === "class") n.className = v;
       else if (k === "text") n.textContent = v;
       else n.setAttribute(k, v);
     });
+
     (Array.isArray(children) ? children : [children]).forEach((c) => {
       if (c == null) return;
       n.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
     });
+
     return n;
   }
 
@@ -43,16 +46,34 @@
     return s;
   }
 
+  // Normalize titles so these match:
+  // "IIBEC-Manual-of-Practice-Glossary-Section"
+  // "IIBEC - Manual - of - Practice - Glossary - Section"
+  function keyifyTitle(s) {
+    return String(s || "")
+      .toLowerCase()
+      .replace(/\.pdf$/i, "")
+      .replace(/\s+/g, "")        // remove all spaces
+      .replace(/[^a-z0-9]/g, ""); // remove punctuation/hyphens
+  }
+
   // ---------- Normalize parts ----------
-  // Ensures we always store an array of STRING ids/names in selection.parts
+  // Ensures we always store an array of STRING blob names in selection.parts
+  // Supports books-v2 parts objects like:
+  // { raw: "BlobName", fileName: "BlobName", partLabel: null }
   function normalizeParts(parts) {
     if (!Array.isArray(parts)) return [];
+
     return parts
       .map((p) => {
+        // already a string
         if (typeof p === "string") return p;
 
+        // object: pick best-known fields
         if (p && typeof p === "object") {
           return (
+            p.fileName ||               // ✅ books-v2
+            p.raw ||                    // ✅ books-v2
             p.metadata_storage_name ||
             p.name ||
             p.id ||
@@ -70,7 +91,7 @@
       .filter(Boolean);
   }
 
-  // ---------- Build options from /api/books ----------
+  // ---------- Build options from /api/books (grouped) ----------
   function buildGroupedOptions(json) {
     const books = Array.isArray(json?.books) ? json.books : [];
     // Expect each: { bookGroupId, displayTitle, parts[] }
@@ -108,10 +129,12 @@
       map.get(title).parts.push(raw);
     });
 
-    return Array.from(map.values()).sort((a, b) => a.displayTitle.localeCompare(b.displayTitle));
+    return Array.from(map.values()).sort((a, b) =>
+      a.displayTitle.localeCompare(b.displayTitle)
+    );
   }
 
-  // ---------- Render ----------
+  // ---------- Render dropdown ----------
   function renderDropdown(mount, options) {
     mount.innerHTML = "";
 
@@ -128,13 +151,17 @@
       el("option", { value: "", text: "Select a book…" })
     ]);
 
-    const sorted = options.slice().sort((a, b) => a.displayTitle.localeCompare(b.displayTitle));
+    const sorted = options.slice().sort((a, b) =>
+      a.displayTitle.localeCompare(b.displayTitle)
+    );
     const byId = new Map(sorted.map((b) => [b.bookGroupId, b]));
 
     function fill(list) {
       select.length = 1; // keep placeholder
       list.forEach((b) => {
-        select.appendChild(el("option", { value: b.bookGroupId, text: b.displayTitle }));
+        select.appendChild(
+          el("option", { value: b.bookGroupId, text: b.displayTitle })
+        );
       });
     }
 
@@ -165,7 +192,6 @@
       window.dispatchEvent(new CustomEvent("rv:bookChanged", { detail: selection }));
     });
 
-    // Mount UI (IMPORTANT: outside change handler)
     mount.appendChild(label);
     mount.appendChild(search);
     mount.appendChild(select);
@@ -173,71 +199,60 @@
 
   // ---------- Init ----------
   async function init() {
-  const mount = $("bookMount");
-  if (!mount) return;
+    const mount = $("bookMount");
+    if (!mount) return;
 
-  try {
-    const json = await fetchBooks();
+    try {
+      const json = await fetchBooks();
 
-    // 1) Build grouped options if available
-    const grouped = buildGroupedOptions(json);
+      // 1) Build grouped options if available
+      const grouped = buildGroupedOptions(json);
 
-    // 2) If grouped exists but some books have no parts, rebuild missing parts from values[]
-    if (grouped.length && Array.isArray(json?.values) && json.values.length) {
-      const raw = json.values.map((v) => String(v || "").trim()).filter(Boolean);
+      // 2) If grouped exists but some books have no parts, rebuild missing parts from values[]
+      if (grouped.length && Array.isArray(json?.values) && json.values.length) {
+        const raw = json.values
+          .map((v) => String(v || "").trim())
+          .filter(Boolean);
 
-      // Normalize titles so these match:
-// "IIBEC-Manual-of-Practice-Glossary-Section"
-// "IIBEC - Manual - of - Practice - Glossary - Section"
-function keyifyTitle(s) {
-  return String(s || "")
-    .toLowerCase()
-    .replace(/\.pdf$/i, "")
-    .replace(/\s+/g, "")      // remove all spaces
-    .replace(/[^a-z0-9]/g, ""); // remove punctuation/hyphens
-}
+        // map normalizedTitle -> list of raw part strings
+        const titleToParts = new Map();
 
-// map normalizedTitle -> list of raw part strings
-const titleToParts = new Map();
+        raw.forEach((name) => {
+          const title = cleanDisplayTitle(name);
+          const key = keyifyTitle(title);
+          if (!key) return;
 
-raw.forEach((name) => {
-  const title = cleanDisplayTitle(name);
-  const key = keyifyTitle(title);
-  if (!key) return;
+          if (!titleToParts.has(key)) titleToParts.set(key, []);
+          titleToParts.get(key).push(name);
+        });
 
-  if (!titleToParts.has(key)) titleToParts.set(key, []);
-  titleToParts.get(key).push(name);
-});
+        grouped.forEach((b) => {
+          if (!Array.isArray(b.parts) || b.parts.length === 0) {
+            const guessTitle = cleanDisplayTitle(b.displayTitle);
+            const key = keyifyTitle(guessTitle);
+            const parts = titleToParts.get(key) || [];
+            b.parts = parts; // ✅ now single-file books get a 1-item parts array
+          }
+        });
+      }
 
-grouped.forEach((b) => {
-  if (!Array.isArray(b.parts) || b.parts.length === 0) {
-    const guessTitle = cleanDisplayTitle(b.displayTitle);
-    const key = keyifyTitle(guessTitle);
-    const parts = titleToParts.get(key) || [];
-    b.parts = parts; // ✅ now single-file books get a 1-item parts array
-  }
-});
+      const options = grouped.length ? grouped : buildFallbackOptions(json);
+      renderDropdown(mount, options);
 
+      // Initialize selection empty (keeps state consistent)
+      window.__rvSelectedBook = { bookGroupId: "", displayTitle: "", parts: [] };
+      window.__rvBookSelection = window.__rvSelectedBook;
+    } catch (e) {
+      console.error(e);
+      mount.innerHTML = "";
+      mount.appendChild(
+        el("div", {
+          class: "rv-book-error",
+          text: "Book list failed to load. Refresh and try again."
+        })
+      );
     }
-
-    const options = grouped.length ? grouped : buildFallbackOptions(json);
-    renderDropdown(mount, options);
-
-    // Initialize selection empty (keeps state consistent)
-    window.__rvSelectedBook = { bookGroupId: "", displayTitle: "", parts: [] };
-    window.__rvBookSelection = window.__rvSelectedBook;
-  } catch (e) {
-    console.error(e);
-    mount.innerHTML = "";
-    mount.appendChild(
-      el("div", {
-        class: "rv-book-error",
-        text: "Book list failed to load. Refresh and try again."
-      })
-    );
   }
-}
-
 
   document.addEventListener("DOMContentLoaded", init);
 })();
