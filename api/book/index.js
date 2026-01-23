@@ -3,7 +3,7 @@ const {
   generateBlobSASQueryParameters,
   BlobSASPermissions,
   SASProtocol,
-  StorageSharedKeyCredential
+  StorageSharedKeyCredential,
 } = require("@azure/storage-blob");
 
 module.exports = async function (context, req) {
@@ -13,7 +13,7 @@ module.exports = async function (context, req) {
       context.res = {
         status: 400,
         headers: { "Content-Type": "application/json" },
-        body: { ok: false, error: "Missing ?name=" }
+        body: { ok: false, error: "Missing ?name=" },
       };
       return;
     }
@@ -25,27 +25,30 @@ module.exports = async function (context, req) {
       context.res = {
         status: 500,
         headers: { "Content-Type": "application/json" },
-        body: { ok: false, error: "Missing AZURE_STORAGE_CONNECTION_STRING or BLOB_CONTAINER" }
+        body: {
+          ok: false,
+          error: "Missing AZURE_STORAGE_CONNECTION_STRING or BLOB_CONTAINER",
+        },
       };
       return;
     }
 
-    // Parse account name/key from connection string
-    const parts = Object.fromEntries(
-      conn.split(";").map(kv => {
-        const i = kv.indexOf("=");
-        return i > 0 ? [kv.slice(0, i), kv.slice(i + 1)] : [kv, ""];
+    // Parse account name/key from connection string (needed to sign SAS)
+    const kv = Object.fromEntries(
+      conn.split(";").map((pair) => {
+        const i = pair.indexOf("=");
+        return i > 0 ? [pair.slice(0, i), pair.slice(i + 1)] : [pair, ""];
       })
     );
 
-    const accountName = parts.AccountName;
-    const accountKey = parts.AccountKey;
+    const accountName = kv.AccountName;
+    const accountKey = kv.AccountKey;
 
     if (!accountName || !accountKey) {
       context.res = {
         status: 500,
         headers: { "Content-Type": "application/json" },
-        body: { ok: false, error: "Invalid storage connection string" }
+        body: { ok: false, error: "Invalid storage connection string" },
       };
       return;
     }
@@ -53,29 +56,47 @@ module.exports = async function (context, req) {
     const blobServiceClient = BlobServiceClient.fromConnectionString(conn);
     const containerClient = blobServiceClient.getContainerClient(containerName);
 
-    const blobName = name.toLowerCase().endsWith(".pdf") ? name : `${name}.pdf`;
-    const blobClient = containerClient.getBlobClient(blobName);
+    // ✅ Try both: exact name AND name + ".pdf"
+    const candidates = [];
+    candidates.push(name);
 
-    const exists = await blobClient.exists();
-    if (!exists) {
+    if (!name.toLowerCase().endsWith(".pdf")) {
+      candidates.push(`${name}.pdf`);
+    }
+
+    let foundBlobName = null;
+
+    for (const candidate of candidates) {
+      const bc = containerClient.getBlobClient(candidate);
+      // eslint-disable-next-line no-await-in-loop
+      if (await bc.exists()) {
+        foundBlobName = candidate;
+        break;
+      }
+    }
+
+    if (!foundBlobName) {
       context.res = {
         status: 404,
         headers: { "Content-Type": "application/json" },
-        body: { ok: false, error: "Blob not found", tried: blobName }
+        body: { ok: false, error: "Blob not found", tried: candidates },
       };
       return;
     }
 
+    const blobClient = containerClient.getBlobClient(foundBlobName);
+
+    // SAS: read-only, short TTL
     const sharedKey = new StorageSharedKeyCredential(accountName, accountKey);
     const expiresOn = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
     const sas = generateBlobSASQueryParameters(
       {
         containerName,
-        blobName,
+        blobName: foundBlobName,
         permissions: BlobSASPermissions.parse("r"),
         expiresOn,
-        protocol: SASProtocol.Https
+        protocol: SASProtocol.Https,
       },
       sharedKey
     ).toString();
@@ -85,15 +106,15 @@ module.exports = async function (context, req) {
     context.res = {
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*"
+        "Access-Control-Allow-Origin": "*",
       },
-      body: { ok: true, name: blobName, url }
+      body: { ok: true, name: foundBlobName, url },
     };
   } catch (e) {
     context.res = {
       status: 500,
       headers: { "Content-Type": "application/json" },
-      body: { ok: false, error: String((e && e.message) || e) }
+      body: { ok: false, error: String((e && e.message) || e) },
     };
   }
 };
