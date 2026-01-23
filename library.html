@@ -867,7 +867,7 @@ function filterBooks(query) {
 
 // Build each book card
 function createBookCard(book) {
-  const firstLetter = book.title.charAt(0).toUpperCase() || "R";
+  const firstLetter = book.title?.charAt(0)?.toUpperCase() || "R";
 
   const card = document.createElement("article");
   card.className = "book-card";
@@ -896,12 +896,28 @@ function createBookCard(book) {
     </div>
   `;
 
-  card.querySelector(".btn-view").addEventListener("click", () => {
-    alert(`Book selected:\n\n${book.title}\n\nFull viewer coming in Step 4.`);
+  card.querySelector(".btn-view").addEventListener("click", async () => {
+    try {
+      const blobName = book.fileName; // raw blob name (NO .pdf)
+
+      const res = await fetch(`/api/book?name=${encodeURIComponent(blobName)}`);
+      const data = await res.json();
+
+      if (!res.ok || !data?.ok || !data?.url) {
+        alert("Could not open this PDF. Please try again.");
+        return;
+      }
+
+      window.open(data.url, "_blank");
+    } catch (err) {
+      console.error("Open PDF failed:", err);
+      alert("Could not open this PDF. Please try again.");
+    }
   });
 
   return card;
 }
+
 
 // Render list
 function renderBooks(list) {
