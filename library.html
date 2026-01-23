@@ -757,37 +757,48 @@ if (window.roles.includes('owner')) {
 }
 
 
+// ---- Safe auth state handling (Library page) ----
 try {
+  // principal may not exist on this page yet
+  const principal = window.principal || null;
 
-         const email =
-  principal.userDetails ||
-  principal.userId ||
-  'Signed in';
+  const email =
+    principal?.userDetails ||
+    principal?.userId ||
+    'Signed in';
 
-const isOwner =
-  email && email.toLowerCase && OWNER_EMAILS.includes(email.toLowerCase());
+  const isOwner =
+    email &&
+    typeof email === 'string' &&
+    OWNER_EMAILS.includes(email.toLowerCase());
 
-window.isLoggedIn = true;
-window.subscriptionTier = isOwner ? 'owner' : 'free';
+  window.isLoggedIn = true;
+  window.subscriptionTier = isOwner ? 'owner' : 'free';
 
-userEmailLabel.textContent = email;
+  userEmailLabel.textContent = email;
 
-subscriptionLabel.textContent =
-  window.subscriptionTier === 'owner' ? 'Owner Access' : 'Free Tier';
-subscriptionLabel.classList.remove('hidden');
+  subscriptionLabel.textContent =
+    window.subscriptionTier === 'owner'
+      ? 'Owner Access'
+      : 'Free Tier';
 
-btnLogin.classList.add('hidden');
-btnLogout.classList.remove('hidden');
+  subscriptionLabel.classList.remove('hidden');
+
+  btnLogin.classList.add('hidden');
+  btnLogout.classList.remove('hidden');
 
 } catch (err) {
   console.error('loadAuthState error:', err);
 
-  // Treat as logged out
+  // Treat as logged out / guest
   window.isLoggedIn = false;
   window.subscriptionTier = 'free';
+
   userEmailLabel.textContent = 'Not signed in';
+
   subscriptionLabel.textContent = 'Free (guest)';
   subscriptionLabel.classList.add('hidden');
+
   btnLogin.classList.remove('hidden');
   btnLogout.classList.add('hidden');
 }
