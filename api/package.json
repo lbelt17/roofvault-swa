@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "@azure/data-tables": "^13.3.0",
-    "node-fetch": "2.6.7"
-  }
+  "@azure/data-tables": "^13.3.0",
+  "node-fetch": "2.6.7",
+  "@azure/storage-blob": "^12.30.0"
+}
 }
