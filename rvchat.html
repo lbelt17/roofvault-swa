@@ -17,9 +17,7 @@
       --rv-radius-lg: 16px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -30,10 +28,7 @@
       color: var(--rv-text-main);
     }
 
-    .wrap {
-      max-width: 880px;
-      margin: 0 auto;
-    }
+    .wrap { max-width: 880px; margin: 0 auto; }
 
     .rv-header {
       display: flex;
@@ -96,9 +91,7 @@
       color: var(--rv-text-muted);
       margin-bottom: 10px;
     }
-    .back:hover {
-      color: var(--rv-text-main);
-    }
+    .back:hover { color: var(--rv-text-main); }
 
     .row {
       display: flex;
@@ -201,6 +194,23 @@
       margin-top: 14px;
     }
 
+    /* NEW: mode badge container */
+    #modeBadge {
+      margin: 2px 0 10px;
+    }
+
+    /* NEW: pill styling for badge */
+    .rv-badge {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 0, 0, 0.2);
+      background: #f7f7f7;
+      color: #111827;
+    }
+
     #answer {
       white-space: pre-wrap;
       line-height: 1.6;
@@ -217,24 +227,16 @@
       font-weight: 600;
     }
 
-    #answer h1 {
-      font-size: 18px;
-    }
-    #answer h2 {
-      font-size: 17px;
-    }
-    #answer h3 {
-      font-size: 16px;
-    }
+    #answer h1 { font-size: 18px; }
+    #answer h2 { font-size: 17px; }
+    #answer h3 { font-size: 16px; }
 
     #answer strong {
       font-weight: 600;
       color: #111827;
     }
 
-    #answer p {
-      margin: 0 0 6px;
-    }
+    #answer p { margin: 0 0 6px; }
 
     #sources {
       white-space: pre-wrap;
@@ -253,12 +255,8 @@
     }
 
     @media (max-width: 600px) {
-      .rv-card {
-        padding: 14px;
-      }
-      body {
-        padding: 16px 10px 30px;
-      }
+      .rv-card { padding: 14px; }
+      body { padding: 16px 10px 30px; }
     }
   </style>
 </head>
@@ -313,13 +311,15 @@
       </div>
 
       <div id="out">
+        <!-- NEW: mode badge -->
+        <div id="modeBadge"></div>
+
         <div id="answer"></div>
         <div id="sources"></div>
       </div>
     </div>
   </div>
 
-  <!-- Keep using your existing JS logic; we are only changing the look -->
   <script src="./rvchat.js"></script>
 </body>
 </html>

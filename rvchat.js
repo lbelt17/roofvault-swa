@@ -1,5 +1,5 @@
 ﻿// rvchat.js
-// Frontend for RoofVault Chat – nice markdown-style rendering + session-only memory
+// Frontend for RoofVault Chat – markdown-style rendering + session-only memory + mode badge
 
 function escapeHtml(str) {
   return String(str || "")
@@ -32,6 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const askBtn = document.getElementById("ask");
   const statusEl = document.getElementById("status");
   const outEl = document.getElementById("out");
+  const modeBadgeEl = document.getElementById("modeBadge");
   const answerEl = document.getElementById("answer");
   const sourcesEl = document.getElementById("sources");
 
@@ -53,6 +54,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function setModeBadge(mode) {
+    const m = String(mode || "").toLowerCase();
+    let label = "";
+
+    if (m === "doc") label = "Document Answer";
+    else if (m === "general") label = "General Answer";
+
+    if (!modeBadgeEl) return;
+
+    if (!label) {
+      modeBadgeEl.innerHTML = "";
+      return;
+    }
+
+    modeBadgeEl.innerHTML = `<span class="rv-badge">${escapeHtml(label)}</span>`;
+  }
+
   async function askRoofVault() {
     const question = (qEl.value || "").trim();
     if (!question) {
@@ -63,6 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
     askBtn.disabled = true;
     statusEl.textContent = "Thinking...";
     outEl.style.display = "block";
+    if (modeBadgeEl) modeBadgeEl.innerHTML = "";
     answerEl.innerHTML = "";
     sourcesEl.innerHTML = "";
 
@@ -92,14 +111,17 @@ document.addEventListener("DOMContentLoaded", () => {
         answerEl.textContent =
           data.error || "There was an error answering your question.";
         sourcesEl.textContent = "";
+        if (modeBadgeEl) modeBadgeEl.innerHTML = "";
 
         // If server failed, remove last user message so history stays clean
-        // (prevents polluted memory with unanswered user question)
         if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user") {
           chatHistory.pop();
         }
         return;
       }
+
+      // Show mode badge (doc vs general)
+      setModeBadge(data.mode);
 
       // Render the answer with markdown styling
       const answerText = String(data.answer || "");
@@ -132,6 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (e) {
       answerEl.textContent = "Network or server error: " + String(e);
       sourcesEl.textContent = "";
+      if (modeBadgeEl) modeBadgeEl.innerHTML = "";
 
       // Remove last user message on network failure
       if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user") {
