@@ -326,6 +326,7 @@ if (!snippets.length) {
     "- If you did NOT use external web browsing, write: 'Sources: General knowledge (no RoofVault document match)'.",
     "- Do NOT invent citations like [[1]] since no snippets exist."
   ].join(" ");
+const cleaned = answer.replace(/\[\[\d+\]\]|\[\d+\]/g, "");
 
   const generalUserPrompt = `Question: ${question}`;
 
@@ -336,27 +337,29 @@ if (!snippets.length) {
     (ao.error ? `No answer due to model error: ${ao.error}` : "I couldn't generate an answer.");
 
   context.res = jsonRes({
-    ok: true,
-    question,
-    answer: answer.replace(/\n{3,}/g, "\n\n").trim(),
-    sources: []
-  });
+  ok: true,
+  question,
+  answer: cleaned.replace(/\n{3,}/g, "\n\n").trim(),
+  sources: []
+});
+
   return;
 }
 
 
-    /* System Prompt */
     const systemPrompt = [
-      "You are RoofVault AI, a senior roofing consultant.",
-      "Use ONLY the provided snippets as factual basis.",
-      "Always include [#] citations matching provided snippets.",
-      "If unsupported → explicitly say 'No support in the provided sources.'",
-      "",
-      "Response structure:",
-      "1) **Overview Section**",
-      "2) **Technical Explanation Section**",
-      "3) **Real-World Relevance Section**"
-    ].join(" ");
+  "You are RoofVault AI, a senior roofing consultant.",
+  "Answer using ONLY the provided RoofVault document snippets as factual sources.",
+  "Do NOT use outside or general knowledge.",
+  "If the answer cannot be supported by the snippets, say exactly: 'No support in the provided sources.'",
+  "Use inline citations like [[#]] that match the snippet numbers.",
+  "",
+  "Response structure:",
+  "1) **Overview Section**",
+  "2) **Technical Explanation Section**",
+  "3) **Real-World Relevance Section**"
+].join(" ");
+
 
     const userPrompt = `Question: ${question}
 
