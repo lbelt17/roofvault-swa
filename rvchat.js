@@ -1,5 +1,5 @@
 ﻿// rvchat.js
-// Frontend for RoofVault Chat – nice markdown-style rendering
+// Frontend for RoofVault Chat – nice markdown-style rendering + session-only memory
 
 function escapeHtml(str) {
   return String(str || "")
@@ -35,6 +35,24 @@ document.addEventListener("DOMContentLoaded", () => {
   const answerEl = document.getElementById("answer");
   const sourcesEl = document.getElementById("sources");
 
+  // ===== Session-only memory (frontend) =====
+  // Stores the conversation in memory only (page refresh clears it).
+  const chatHistory = []; // items: { role: "user"|"assistant", content: string }
+
+  // Keep last N messages to control token size
+  const MAX_HISTORY = 10;
+
+  function pushHistory(role, content) {
+    const text = String(content || "").trim();
+    if (!text) return;
+    chatHistory.push({ role, content: text });
+
+    // Keep only last MAX_HISTORY
+    if (chatHistory.length > MAX_HISTORY) {
+      chatHistory.splice(0, chatHistory.length - MAX_HISTORY);
+    }
+  }
+
   async function askRoofVault() {
     const question = (qEl.value || "").trim();
     if (!question) {
@@ -48,11 +66,19 @@ document.addEventListener("DOMContentLoaded", () => {
     answerEl.innerHTML = "";
     sourcesEl.innerHTML = "";
 
+    // Add the user message to session history
+    pushHistory("user", question);
+
     try {
       const res = await fetch("/api/rvchat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question })
+
+        // Send both question (keeps backward compatibility) + messages (session memory)
+        body: JSON.stringify({
+          question,
+          messages: chatHistory
+        })
       });
 
       let data = {};
@@ -66,12 +92,22 @@ document.addEventListener("DOMContentLoaded", () => {
         answerEl.textContent =
           data.error || "There was an error answering your question.";
         sourcesEl.textContent = "";
+
+        // If server failed, remove last user message so history stays clean
+        // (prevents polluted memory with unanswered user question)
+        if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user") {
+          chatHistory.pop();
+        }
         return;
       }
 
       // Render the answer with markdown styling
-      const html = renderMarkdown(data.answer || "");
+      const answerText = String(data.answer || "");
+      const html = renderMarkdown(answerText);
       answerEl.innerHTML = html;
+
+      // Add assistant reply to session history
+      pushHistory("assistant", answerText);
 
       // Render sources nicely as a bulleted list
       if (Array.isArray(data.sources) && data.sources.length) {
@@ -96,6 +132,11 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (e) {
       answerEl.textContent = "Network or server error: " + String(e);
       sourcesEl.textContent = "";
+
+      // Remove last user message on network failure
+      if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user") {
+        chatHistory.pop();
+      }
     } finally {
       askBtn.disabled = false;
       statusEl.textContent = "";
