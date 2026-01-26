@@ -1,5 +1,6 @@
 ﻿// rvchat.js
 // Frontend for RoofVault Chat – markdown-style rendering + session-only memory + mode badge
+// ChatGPT-like input UX: Enter sends, Shift+Enter new line, input clears after send
 
 function escapeHtml(str) {
   return String(str || "")
@@ -48,7 +49,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!text) return;
     chatHistory.push({ role, content: text });
 
-    // Keep only last MAX_HISTORY
     if (chatHistory.length > MAX_HISTORY) {
       chatHistory.splice(0, chatHistory.length - MAX_HISTORY);
     }
@@ -57,18 +57,13 @@ document.addEventListener("DOMContentLoaded", () => {
   function setModeBadge(mode) {
     const m = String(mode || "").toLowerCase();
     let label = "";
-
     if (m === "doc") label = "Document Answer";
     else if (m === "general") label = "General Answer";
 
     if (!modeBadgeEl) return;
-
-    if (!label) {
-      modeBadgeEl.innerHTML = "";
-      return;
-    }
-
-    modeBadgeEl.innerHTML = `<span class="rv-badge">${escapeHtml(label)}</span>`;
+    modeBadgeEl.innerHTML = label
+      ? `<span class="rv-badge">${escapeHtml(label)}</span>`
+      : "";
   }
 
   async function askRoofVault() {
@@ -77,6 +72,10 @@ document.addEventListener("DOMContentLoaded", () => {
       qEl.focus();
       return;
     }
+
+    // ChatGPT-like: clear input immediately so user can type follow-up
+    qEl.value = "";
+    qEl.focus();
 
     askBtn.disabled = true;
     statusEl.textContent = "Thinking...";
@@ -92,8 +91,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await fetch("/api/rvchat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-
-        // Send both question (keeps backward compatibility) + messages (session memory)
         body: JSON.stringify({
           question,
           messages: chatHistory
@@ -113,10 +110,14 @@ document.addEventListener("DOMContentLoaded", () => {
         sourcesEl.textContent = "";
         if (modeBadgeEl) modeBadgeEl.innerHTML = "";
 
-        // If server failed, remove last user message so history stays clean
+        // Remove last user message so memory stays clean
         if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user") {
           chatHistory.pop();
         }
+
+        // Put question back in the box (nice UX)
+        qEl.value = question;
+        qEl.focus();
         return;
       }
 
@@ -125,8 +126,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Render the answer with markdown styling
       const answerText = String(data.answer || "");
-      const html = renderMarkdown(answerText);
-      answerEl.innerHTML = html;
+      answerEl.innerHTML = renderMarkdown(answerText);
 
       // Add assistant reply to session history
       pushHistory("assistant", answerText);
@@ -135,9 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (Array.isArray(data.sources) && data.sources.length) {
         const items = data.sources
           .map((s) => {
-            const label = escapeHtml(
-              `[${s.id}] ${s.source || "Unknown source"}`
-            );
+            const label = escapeHtml(`[${s.id}] ${s.source || "Unknown source"}`);
             return `<li>${label}</li>`;
           })
           .join("");
@@ -160,6 +158,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user") {
         chatHistory.pop();
       }
+
+      // Put question back in the box
+      qEl.value = question;
+      qEl.focus();
     } finally {
       askBtn.disabled = false;
       statusEl.textContent = "";
@@ -168,9 +170,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   askBtn.addEventListener("click", askRoofVault);
 
-  // Allow Enter+Ctrl / Enter+Cmd to submit
+  // ChatGPT-like input:
+  // - Enter sends
+  // - Shift+Enter inserts a newline
   qEl.addEventListener("keydown", (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       askRoofVault();
     }
