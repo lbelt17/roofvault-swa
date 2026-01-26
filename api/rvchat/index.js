@@ -1,8 +1,9 @@
 ﻿// api/rvchat/index.js
 // RoofVault Chat API (STRICT doc-grounded for roofing questions)
-// mode: "doc" | "general"
-// ✅ Doc-first, never mix doc + general for roofing questions
-// ✅ If roofing-related and no direct doc support → refuse (doc mode)
+// mode: "doc" | "general" | "web"
+// ✅ Default: roofing => DOC ONLY (Azure AI Search snippets + AOAI) with strict citations
+// ✅ If roofing + no doc support => return a "needsConsentForWeb" flag (UI should prompt user)
+// ✅ Web is NEVER automatic. Only runs when client explicitly sets mode:"web" (or allowWeb:true)
 // ✅ Session-only memory via messages[]
 // ✅ Citation tightening + enforcement
 // ✅ Stronger support check (prevents "sounds right" doc answers)
@@ -15,11 +16,25 @@ const {
   SEARCH_INDEX,
   AOAI_ENDPOINT,
   AOAI_KEY,
-  AOAI_DEPLOYMENT
+  AOAI_DEPLOYMENT,
+
+  // Optional (not required for doc-mode):
+  // If you later implement true Bing-grounded web mode via Foundry Agents,
+  // you can wire these and replace webFallback() below.
+  // FOUNDRY_API_KEY,
+  // FOUNDRY_PROJECT_ENDPOINT,
+  // FOUNDRY_AGENT_ID,
+
+  WEB_QUESTION_CREDITS // optional: e.g. "5"
 } = process.env;
 
 /* ===== Config (STRICT by default) ===== */
-const STRICT_DOC_GROUNDING = (process.env.STRICT_DOC_GROUNDING ?? "true").toLowerCase() === "true";
+const STRICT_DOC_GROUNDING =
+  (process.env.STRICT_DOC_GROUNDING ?? "true").toLowerCase() === "true";
+
+const DEFAULT_WEB_CREDITS = Number.isFinite(Number(WEB_QUESTION_CREDITS))
+  ? Number(WEB_QUESTION_CREDITS)
+  : 5;
 
 /* Always-JSON response helper */
 function jsonRes(body, status = 200) {
@@ -360,18 +375,28 @@ function listItemsAllHaveCitations(answer) {
     sawItem = true;
     if (!/\[\[\d{1,3}\]\]/.test(ln)) return false;
   }
-  return sawItem ? true : true; // if no list items, don't fail
+  return true; // if no list items, don't fail
 }
 
-/* Standard doc refusal payload */
-function docRefusal(question, sources = [], note = "") {
+/* Standard doc refusal payload (+ web prompt flags) */
+function docRefusal(question, sources = [], note = "", web = {}) {
   return {
     ok: true,
     mode: "doc",
     question,
     answer: "No support in the provided sources.",
     sources,
-    ...(note ? { note } : {})
+    ...(note ? { note } : {}),
+    // UI can use these to show a modal/button
+    needsConsentForWeb: true,
+    web: {
+      eligible: true,
+      reason: "No direct RoofVault library support found for this roofing question.",
+      creditsMax: DEFAULT_WEB_CREDITS,
+      creditsRemaining:
+        Number.isFinite(Number(web.creditsRemaining)) ? Number(web.creditsRemaining) : undefined,
+      ...web
+    }
   };
 }
 
@@ -379,7 +404,6 @@ function docRefusal(question, sources = [], note = "") {
 async function generalFallback(question, msgs) {
   const systemPrompt = [
     "You are RoofVault AI.",
-    "No relevant RoofVault document snippets were found (or they were insufficient).",
     "Answer helpfully using general knowledge. Keep it concise and clear.",
     "If you are unsure, say so briefly.",
     "",
@@ -404,6 +428,41 @@ async function generalFallback(question, msgs) {
   return answer.replace(/\n{3,}/g, "\n\n").trim();
 }
 
+/**
+ * WEB MODE (opt-in only)
+ * IMPORTANT: This is a SAFE placeholder.
+ * It does NOT pretend to have real web citations.
+ *
+ * To make this truly Bing-grounded later:
+ * - Call your Foundry Agent (with Bing knowledge) here
+ * - Return answer + links/sources from that agent run
+ */
+async function webFallback(question, msgs) {
+  const systemPrompt = [
+    "You are RoofVault AI.",
+    "The user explicitly requested WEB mode (not RoofVault documents).",
+    "Answer using general knowledge, but DO NOT fabricate links or citations.",
+    "If you cannot provide verified links, say so.",
+    "",
+    "End with exactly one line:",
+    "Sources: Web mode requested (web grounding not yet implemented on server)"
+  ].join(" ");
+
+  const userPrompt = `Question: ${question}`;
+  const ao = await aoaiAnswer(systemPrompt, userPrompt, msgs);
+
+  let answer =
+    (ao.ok ? ao.content : "") ||
+    (ao.error ? `No answer due to model error: ${ao.error}` : "I couldn't generate an answer.");
+
+  // Strip any snippet-style citations
+  answer = String(answer)
+    .replace(/\[\[\s*#\s*\]\]/g, "")
+    .replace(/\[\[\s*\d+\s*\]\]/g, "");
+
+  return answer.replace(/\n{3,}/g, "\n\n").trim();
+}
+
 module.exports = async function (context, req) {
   if (req.method === "OPTIONS") {
     context.res = jsonRes({ ok: true });
@@ -420,7 +479,8 @@ module.exports = async function (context, req) {
       AOAI_KEY: !!AOAI_KEY,
       AOAI_DEPLOYMENT: !!AOAI_DEPLOYMENT,
       INDEX_NAME: SEARCH_INDEX || null,
-      STRICT_DOC_GROUNDING
+      STRICT_DOC_GROUNDING,
+      DEFAULT_WEB_CREDITS
     };
 
     context.res = jsonRes({
@@ -434,21 +494,18 @@ module.exports = async function (context, req) {
   }
 
   try {
-    /* Env Var Guard */
-    const reqEnv = {
-      SEARCH_ENDPOINT: !!SEARCH_ENDPOINT,
-      SEARCH_KEY: !!SEARCH_KEY,
-      SEARCH_INDEX: !!SEARCH_INDEX,
+    /* Env Var Guard (doc + general/web both need AOAI; doc also needs search) */
+    const baseEnv = {
       AOAI_ENDPOINT: !!AOAI_ENDPOINT,
       AOAI_KEY: !!AOAI_KEY,
       AOAI_DEPLOYMENT: !!AOAI_DEPLOYMENT
     };
-    if (!Object.values(reqEnv).every(Boolean)) {
+    if (!Object.values(baseEnv).every(Boolean)) {
       context.res = jsonRes({
         ok: false,
         layer: "env",
-        error: "Missing environment variables",
-        seen: reqEnv
+        error: "Missing AOAI environment variables",
+        seen: baseEnv
       });
       return;
     }
@@ -461,6 +518,15 @@ module.exports = async function (context, req) {
         (msgs.length ? msgs[msgs.length - 1]?.content || "" : "") ||
         "").trim();
 
+    // Client can request explicit mode
+    // - mode:"web" => NEVER use docs, go webFallback()
+    // - mode:"doc" => doc mode only
+    // - mode:"general" => general mode only
+    // - allowWeb:true => treated same as mode:"web" (explicit user consent)
+    const clientMode = String(body.mode || "").toLowerCase().trim();
+    const allowWeb = Boolean(body.allowWeb);
+    const webCreditsRemaining = body.webCreditsRemaining;
+
     if (!question) {
       context.res = jsonRes({
         ok: false,
@@ -472,6 +538,38 @@ module.exports = async function (context, req) {
 
     /* ✅ DOMAIN ANCHOR GATE */
     const isRoofing = questionLooksRoofingRelated(question);
+
+    // If user explicitly wants web/general, respect it regardless of roofing-ness.
+    if (clientMode === "general") {
+      const answer = await generalFallback(question, msgs);
+      context.res = jsonRes({
+        ok: true,
+        mode: "general",
+        question,
+        answer,
+        sources: []
+      });
+      return;
+    }
+
+    if (clientMode === "web" || allowWeb) {
+      const answer = await webFallback(question, msgs);
+      context.res = jsonRes({
+        ok: true,
+        mode: "web",
+        question,
+        answer,
+        sources: [],
+        web: {
+          creditsMax: DEFAULT_WEB_CREDITS,
+          creditsRemaining:
+            Number.isFinite(Number(webCreditsRemaining)) ? Number(webCreditsRemaining) : undefined
+        }
+      });
+      return;
+    }
+
+    // Default behavior if not roofing: general knowledge is allowed
     if (!isRoofing) {
       const answer = await generalFallback(question, msgs);
       context.res = jsonRes({
@@ -484,11 +582,28 @@ module.exports = async function (context, req) {
       return;
     }
 
+    // From here down: ROOFING => DOC MODE ONLY (unless user explicitly asked web)
+    const docEnv = {
+      SEARCH_ENDPOINT: !!SEARCH_ENDPOINT,
+      SEARCH_KEY: !!SEARCH_KEY,
+      SEARCH_INDEX: !!SEARCH_INDEX
+    };
+    if (!Object.values(docEnv).every(Boolean)) {
+      context.res = jsonRes({
+        ok: false,
+        layer: "env",
+        error: "Missing SEARCH environment variables for doc mode",
+        seen: { ...baseEnv, ...docEnv }
+      });
+      return;
+    }
+
     /* 🔎 Perform Azure Search */
     let snippets = await searchSnippets(question, 8);
 
     /* ✅ STRICT behavior for roofing questions:
-       If no relevant snippets, DO NOT fall back to general knowledge. Refuse in doc mode. */
+       If no relevant snippets, DO NOT fall back to general knowledge.
+       Return a refusal + UI prompt flags (so user can opt-in to web). */
     if (!snippets.length) {
       context.res = jsonRes(
         docRefusal(
@@ -496,7 +611,8 @@ module.exports = async function (context, req) {
           [],
           STRICT_DOC_GROUNDING
             ? "Roofing-related question, but no directly supporting RoofVault snippets were found."
-            : "No relevant RoofVault snippets were found."
+            : "No relevant RoofVault snippets were found.",
+          { creditsRemaining: webCreditsRemaining }
         )
       );
       return;
@@ -509,7 +625,8 @@ module.exports = async function (context, req) {
           docRefusal(
             question,
             snippets.map((s) => ({ id: s.id, source: s.source })),
-            "Retrieved documents, but the excerpts did not contain strong direct support for a list-style answer."
+            "Retrieved documents, but the excerpts did not contain strong direct support for a list-style answer.",
+            { creditsRemaining: webCreditsRemaining }
           )
         );
         return;
@@ -553,7 +670,8 @@ ${snippets.map((s) => `[[${s.id}]] ${s.source}\n${s.text}`).join("\n\n")}`;
         docRefusal(
           question,
           snippets.map((s) => ({ id: s.id, source: s.source })),
-          "Model response did not include valid snippet citations."
+          "Model response did not include valid snippet citations.",
+          { creditsRemaining: webCreditsRemaining }
         )
       );
       return;
@@ -566,7 +684,8 @@ ${snippets.map((s) => `[[${s.id}]] ${s.source}\n${s.text}`).join("\n\n")}`;
           docRefusal(
             question,
             snippets.map((s) => ({ id: s.id, source: s.source })),
-            "List-style answer did not provide per-item citations; refusing to avoid ungrounded synthesis."
+            "List-style answer did not provide per-item citations; refusing to avoid ungrounded synthesis.",
+            { creditsRemaining: webCreditsRemaining }
           )
         );
         return;
@@ -579,7 +698,8 @@ ${snippets.map((s) => `[[${s.id}]] ${s.source}\n${s.text}`).join("\n\n")}`;
       mode: "doc",
       question,
       answer,
-      sources: snippets.map((s) => ({ id: s.id, source: s.source }))
+      sources: snippets.map((s) => ({ id: s.id, source: s.source })),
+      needsConsentForWeb: false
     });
   } catch (e) {
     context.res = jsonRes({
