@@ -1,6 +1,6 @@
 ﻿// rvchat.js
-// Frontend for RoofVault Chat – markdown-style rendering + session-only memory + mode badge
-// ChatGPT-like input UX: Enter sends, Shift+Enter new line, input clears after send
+// RoofVault Chat – session-only threaded chat UI + mode badge + citations list
+// Enter sends, Shift+Enter newline. Refresh clears session.
 
 function escapeHtml(str) {
   return String(str || "")
@@ -21,7 +21,7 @@ function renderMarkdown(md) {
   // Bold **text**
   html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
 
-  // Convert double newlines to paragraph breaks, single newlines to <br>
+  // Paragraph-ish breaks
   html = html.replace(/\n{2,}/g, "<br><br>");
   html = html.replace(/\n/g, "<br>");
 
@@ -33,37 +33,106 @@ document.addEventListener("DOMContentLoaded", () => {
   const askBtn = document.getElementById("ask");
   const statusEl = document.getElementById("status");
   const outEl = document.getElementById("out");
-  const modeBadgeEl = document.getElementById("modeBadge");
-  const answerEl = document.getElementById("answer");
-  const sourcesEl = document.getElementById("sources");
+
+  // We will turn #out into a transcript container
+  // (keep it simple: inject transcript HTML once)
+  outEl.innerHTML = `<div id="thread"></div>`;
+  const threadEl = document.getElementById("thread");
 
   // ===== Session-only memory (frontend) =====
-  // Stores the conversation in memory only (page refresh clears it).
   const chatHistory = []; // items: { role: "user"|"assistant", content: string }
-
-  // Keep last N messages to control token size
   const MAX_HISTORY = 10;
 
   function pushHistory(role, content) {
     const text = String(content || "").trim();
     if (!text) return;
     chatHistory.push({ role, content: text });
-
     if (chatHistory.length > MAX_HISTORY) {
       chatHistory.splice(0, chatHistory.length - MAX_HISTORY);
     }
   }
 
-  function setModeBadge(mode) {
+  function modeLabel(mode) {
     const m = String(mode || "").toLowerCase();
-    let label = "";
-    if (m === "doc") label = "Document Answer";
-    else if (m === "general") label = "General Answer";
+    if (m === "doc") return "Document Answer";
+    if (m === "general") return "General Answer";
+    return "";
+  }
 
-    if (!modeBadgeEl) return;
-    modeBadgeEl.innerHTML = label
-      ? `<span class="rv-badge">${escapeHtml(label)}</span>`
+  function appendUserBubble(text) {
+    const html = `
+      <div style="display:flex;justify-content:flex-end;margin:10px 0;">
+        <div style="
+          max-width: 85%;
+          background: #2563eb;
+          color: white;
+          padding: 10px 12px;
+          border-radius: 14px;
+          line-height: 1.5;
+          font-size: 14px;
+          box-shadow: 0 6px 14px rgba(37,99,235,0.18);
+          white-space: pre-wrap;
+        ">${escapeHtml(text)}</div>
+      </div>
+    `;
+    threadEl.insertAdjacentHTML("beforeend", html);
+  }
+
+  function appendAssistantBubble(answerText, mode, sources) {
+    const badge = modeLabel(mode);
+    const badgeHtml = badge
+      ? `<div style="margin-bottom:8px;"><span class="rv-badge">${escapeHtml(badge)}</span></div>`
       : "";
+
+    let sourcesHtml = "";
+    if (Array.isArray(sources) && sources.length) {
+      const items = sources
+        .map((s) => {
+          const label = escapeHtml(`[${s.id}] ${s.source || "Unknown source"}`);
+          return `<li>${label}</li>`;
+        })
+        .join("");
+      sourcesHtml = `
+        <div style="
+          margin-top:10px;
+          border-top:1px solid #e5e7eb;
+          padding-top:8px;
+          color:#6b7280;
+          font-size:12px;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+        ">
+          <div style="font-weight:600;margin-bottom:4px;color:#374151;">Sources</div>
+          <ul style="margin:4px 0 0 18px;padding:0;">
+            ${items}
+          </ul>
+        </div>
+      `;
+    }
+
+    const html = `
+      <div style="display:flex;justify-content:flex-start;margin:10px 0;">
+        <div style="
+          max-width: 85%;
+          background: #ffffff;
+          border: 1px solid #e5e7eb;
+          padding: 12px 12px;
+          border-radius: 14px;
+          line-height: 1.6;
+          font-size: 14px;
+          box-shadow: 0 8px 18px rgba(15,23,42,0.06);
+        ">
+          ${badgeHtml}
+          <div>${renderMarkdown(answerText)}</div>
+          ${sourcesHtml}
+        </div>
+      </div>
+    `;
+    threadEl.insertAdjacentHTML("beforeend", html);
+  }
+
+  function scrollToBottom() {
+    // Keep it simple: scroll the page to bottom
+    window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
   }
 
   async function askRoofVault() {
@@ -73,18 +142,19 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // ChatGPT-like: clear input immediately so user can type follow-up
+    // ChatGPT-like: clear input immediately
     qEl.value = "";
     qEl.focus();
 
     askBtn.disabled = true;
     statusEl.textContent = "Thinking...";
     outEl.style.display = "block";
-    if (modeBadgeEl) modeBadgeEl.innerHTML = "";
-    answerEl.innerHTML = "";
-    sourcesEl.innerHTML = "";
 
-    // Add the user message to session history
+    // UI: append user bubble immediately
+    appendUserBubble(question);
+    scrollToBottom();
+
+    // Memory: store user message
     pushHistory("user", question);
 
     try {
@@ -105,63 +175,38 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (!data.ok) {
-        answerEl.textContent =
-          data.error || "There was an error answering your question.";
-        sourcesEl.textContent = "";
-        if (modeBadgeEl) modeBadgeEl.innerHTML = "";
+        appendAssistantBubble(
+          data.error || "There was an error answering your question.",
+          "general",
+          []
+        );
 
-        // Remove last user message so memory stays clean
+        // Keep memory clean: remove last user message if server failed
         if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user") {
           chatHistory.pop();
         }
-
-        // Put question back in the box (nice UX)
-        qEl.value = question;
-        qEl.focus();
+        scrollToBottom();
         return;
       }
 
-      // Show mode badge (doc vs general)
-      setModeBadge(data.mode);
-
-      // Render the answer with markdown styling
       const answerText = String(data.answer || "");
-      answerEl.innerHTML = renderMarkdown(answerText);
+      const mode = data.mode || "";
+      const sources = Array.isArray(data.sources) ? data.sources : [];
 
-      // Add assistant reply to session history
+      // UI: append assistant bubble
+      appendAssistantBubble(answerText, mode, sources);
+      scrollToBottom();
+
+      // Memory: store assistant message
       pushHistory("assistant", answerText);
-
-      // Render sources nicely as a bulleted list
-      if (Array.isArray(data.sources) && data.sources.length) {
-        const items = data.sources
-          .map((s) => {
-            const label = escapeHtml(`[${s.id}] ${s.source || "Unknown source"}`);
-            return `<li>${label}</li>`;
-          })
-          .join("");
-
-        sourcesEl.innerHTML = `
-          <div style="font-weight:600;margin-bottom:4px;">Sources</div>
-          <ul style="margin:4px 0 0 18px;padding:0;">
-            ${items}
-          </ul>
-        `;
-      } else {
-        sourcesEl.innerHTML = "";
-      }
     } catch (e) {
-      answerEl.textContent = "Network or server error: " + String(e);
-      sourcesEl.textContent = "";
-      if (modeBadgeEl) modeBadgeEl.innerHTML = "";
+      appendAssistantBubble("Network or server error: " + String(e), "general", []);
 
-      // Remove last user message on network failure
+      // Keep memory clean on network failure
       if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user") {
         chatHistory.pop();
       }
-
-      // Put question back in the box
-      qEl.value = question;
-      qEl.focus();
+      scrollToBottom();
     } finally {
       askBtn.disabled = false;
       statusEl.textContent = "";
@@ -170,9 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   askBtn.addEventListener("click", askRoofVault);
 
-  // ChatGPT-like input:
-  // - Enter sends
-  // - Shift+Enter inserts a newline
+  // Enter sends, Shift+Enter new line
   qEl.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
