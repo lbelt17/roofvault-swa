@@ -5,6 +5,8 @@
 // ✅ If roofing-related and no direct doc support → refuse (doc mode)
 // ✅ Session-only memory via messages[]
 // ✅ Citation tightening + enforcement
+// ✅ Stronger support check (prevents "sounds right" doc answers)
+// ✅ List-item citation enforcement (each bullet/step must cite a snippet)
 // ✅ Domain-anchor gate prevents Mars-type false doc matches
 
 const {
@@ -313,25 +315,52 @@ function hasAnyValidCitation(answer) {
   return /\[\[\d{1,3}\]\]/.test(String(answer || ""));
 }
 
-/* ✅ Relevance gate (secondary): do snippets actually contain question tokens? */
-function snippetsLookRelevant(question, snippets) {
+/* Detect list/steps/factors style questions (we enforce stronger grounding here) */
+function isListStyleQuestion(question) {
+  const q = _norm(String(question || ""));
+  return (
+    /\bwhat (are|is) (the )?(key )?(factors|considerations|steps|requirements|components)\b/.test(q) ||
+    /\b(list|enumerate)\b/.test(q) ||
+    /\bhow do i\b/.test(q) ||
+    /\bwhat should\b/.test(q) ||
+    /\bwhat must\b/.test(q)
+  );
+}
+
+/* Stronger support check:
+   Require higher token overlap between question and snippets for list-style questions */
+function snippetsLookRelevantStrict(question, snippets) {
   const expanded = aliasExpand(String(question || "").trim());
   const toks = _tokens(expanded);
   if (!toks.length) return true;
 
-  const hay = _norm(snippets.map((s) => s.text || "").join(" ").slice(0, 8000));
-
+  const hay = _norm(snippets.map((s) => s.text || "").join(" ").slice(0, 12000));
   const uniq = Array.from(new Set(toks));
+
   let hits = 0;
   for (const t of uniq) {
     if (hay.includes(t)) hits++;
   }
 
-  let required = 2;
-  if (uniq.length <= 2) required = uniq.length;
-  else if (uniq.length === 3) required = 2;
+  // Strict threshold: at least 40% of tokens, minimum 3 hits (unless very short question)
+  const minHits = uniq.length <= 3 ? uniq.length : Math.max(3, Math.ceil(uniq.length * 0.4));
 
-  return hits >= required;
+  return hits >= minHits;
+}
+
+/* Enforce: each list item/bullet line must contain a valid [[n]] citation */
+function listItemsAllHaveCitations(answer) {
+  const lines = String(answer || "").split(/\r?\n/);
+  const itemLine = (ln) =>
+    /^\s*(\d+[\.\)]\s+|[-*]\s+|[A-Z][\.\)]\s+)/.test(ln);
+
+  let sawItem = false;
+  for (const ln of lines) {
+    if (!itemLine(ln)) continue;
+    sawItem = true;
+    if (!/\[\[\d{1,3}\]\]/.test(ln)) return false;
+  }
+  return sawItem ? true : true; // if no list items, don't fail
 }
 
 /* Standard doc refusal payload */
@@ -441,8 +470,7 @@ module.exports = async function (context, req) {
       return;
     }
 
-    /* ✅ DOMAIN ANCHOR GATE
-       If user asks something clearly non-roofing (Mars), answer using general knowledge immediately. */
+    /* ✅ DOMAIN ANCHOR GATE */
     const isRoofing = questionLooksRoofingRelated(question);
     if (!isRoofing) {
       const answer = await generalFallback(question, msgs);
@@ -459,11 +487,6 @@ module.exports = async function (context, req) {
     /* 🔎 Perform Azure Search */
     let snippets = await searchSnippets(question, 8);
 
-    // ✅ Secondary relevance gate: if snippets don't match, treat as "no match"
-    if (snippets.length && !snippetsLookRelevant(question, snippets)) {
-      snippets = [];
-    }
-
     /* ✅ STRICT behavior for roofing questions:
        If no relevant snippets, DO NOT fall back to general knowledge. Refuse in doc mode. */
     if (!snippets.length) {
@@ -479,6 +502,20 @@ module.exports = async function (context, req) {
       return;
     }
 
+    /* ✅ Stronger support check for list-style questions */
+    if (STRICT_DOC_GROUNDING && isListStyleQuestion(question)) {
+      if (!snippetsLookRelevantStrict(question, snippets)) {
+        context.res = jsonRes(
+          docRefusal(
+            question,
+            snippets.map((s) => ({ id: s.id, source: s.source })),
+            "Retrieved documents, but the excerpts did not contain strong direct support for a list-style answer."
+          )
+        );
+        return;
+      }
+    }
+
     /* Doc-mode prompt */
     const systemPrompt = [
       "You are RoofVault AI, a senior roofing consultant.",
@@ -487,7 +524,9 @@ module.exports = async function (context, req) {
       "Write a natural, ChatGPT-style answer (no forced sections).",
       "Keep it concise unless the user asks for depth.",
       "Every key claim must include inline citations like [[1]] that match the snippet numbers.",
-      "If the answer cannot be supported by the snippets, say exactly: No support in the provided sources."
+      "If the answer cannot be supported by the snippets, say exactly: No support in the provided sources.",
+      "",
+      "If you present a list (bullets/numbered items), each item must include a citation on the same line."
     ].join(" ");
 
     const userPrompt = `Question: ${question}
@@ -520,7 +559,21 @@ ${snippets.map((s) => `[[${s.id}]] ${s.source}\n${s.text}`).join("\n\n")}`;
       return;
     }
 
-    // ✅ Return doc answer
+    // ✅ STRICT: if list items exist, every item must have a citation
+    if (STRICT_DOC_GROUNDING && isListStyleQuestion(question)) {
+      if (!listItemsAllHaveCitations(answer)) {
+        context.res = jsonRes(
+          docRefusal(
+            question,
+            snippets.map((s) => ({ id: s.id, source: s.source })),
+            "List-style answer did not provide per-item citations; refusing to avoid ungrounded synthesis."
+          )
+        );
+        return;
+      }
+    }
+
+    /* ✅ Return doc answer */
     context.res = jsonRes({
       ok: true,
       mode: "doc",
