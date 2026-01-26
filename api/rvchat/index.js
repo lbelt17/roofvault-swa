@@ -189,11 +189,28 @@ async function searchSnippets(query, topN = 8) {
 }
 
 /* AOAI wrapper */
-async function aoaiAnswer(systemPrompt, userPrompt) {
+async function aoaiAnswer(systemPrompt, userPrompt, historyMessages = []) {
   const base = (AOAI_ENDPOINT || "").replace(/\/+$/, "");
   const url = `${base}/openai/deployments/${encodeURIComponent(
     AOAI_DEPLOYMENT
   )}/chat/completions?api-version=2024-06-01`;
+
+  // Session-only memory prep: include last N messages (user/assistant only)
+  const safeHistory = Array.isArray(historyMessages)
+    ? historyMessages
+        .filter(
+          (m) =>
+            m &&
+            (m.role === "user" || m.role === "assistant") &&
+            typeof m.content === "string" &&
+            m.content.trim()
+        )
+        .slice(-10)
+        .map((m) => ({
+          role: m.role,
+          content: String(m.content).slice(0, 2000)
+        }))
+    : [];
 
   let resp;
   try {
@@ -205,6 +222,7 @@ async function aoaiAnswer(systemPrompt, userPrompt) {
         max_tokens: 900,
         messages: [
           { role: "system", content: systemPrompt },
+          ...safeHistory,
           { role: "user", content: userPrompt }
         ]
       }
@@ -226,6 +244,7 @@ async function aoaiAnswer(systemPrompt, userPrompt) {
   const content = parsed?.choices?.[0]?.message?.content?.trim?.() || "";
   return { ok: true, content };
 }
+
 
 module.exports = async function (context, req) {
   if (req.method === "OPTIONS") {
@@ -296,16 +315,35 @@ module.exports = async function (context, req) {
     /* 🔎 Perform Azure Search */
     const snippets = await searchSnippets(question, 8);
 
-    /* If we have no snippets → no support */
-    if (!snippets.length) {
-      context.res = jsonRes({
-        ok: true,
-        question,
-        answer: "No support in the provided sources.",
-        sources: []
-      });
-      return;
-    }
+    /* If we have no snippets → general knowledge fallback (doc-first policy) */
+if (!snippets.length) {
+  const generalSystemPrompt = [
+    "You are RoofVault AI.",
+    "No RoofVault document snippets were found for this question.",
+    "Answer helpfully using general knowledge.",
+    "Be honest about uncertainty.",
+    "At the end, include a 'Sources:' section:",
+    "- If you did NOT use external web browsing, write: 'Sources: General knowledge (no RoofVault document match)'.",
+    "- Do NOT invent citations like [[1]] since no snippets exist."
+  ].join(" ");
+
+  const generalUserPrompt = `Question: ${question}`;
+
+  const ao = await aoaiAnswer(generalSystemPrompt, generalUserPrompt, msgs);
+
+  const answer =
+    (ao.ok ? ao.content : "") ||
+    (ao.error ? `No answer due to model error: ${ao.error}` : "I couldn't generate an answer.");
+
+  context.res = jsonRes({
+    ok: true,
+    question,
+    answer: answer.replace(/\n{3,}/g, "\n\n").trim(),
+    sources: []
+  });
+  return;
+}
+
 
     /* System Prompt */
     const systemPrompt = [
@@ -326,7 +364,7 @@ Sources:
 ${snippets.map((s) => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")}`;
 
     /* Call AOAI */
-    const ao = await aoaiAnswer(systemPrompt, userPrompt);
+    const ao = await aoaiAnswer(systemPrompt, userPrompt, msgs);
     let answer = (ao.ok ? ao.content : "") || "";
 
     if (!answer) {
