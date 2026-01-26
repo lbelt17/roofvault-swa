@@ -1,5 +1,5 @@
 ﻿// rvchat.js
-// RoofVault Chat – session-only threaded chat UI + mode badge + citations list
+// RoofVault Chat – session-only memory + newest-at-top threading (ChatGPT-inverse style)
 // Enter sends, Shift+Enter newline. Refresh clears session.
 
 function escapeHtml(str) {
@@ -34,8 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const statusEl = document.getElementById("status");
   const outEl = document.getElementById("out");
 
-  // We will turn #out into a transcript container
-  // (keep it simple: inject transcript HTML once)
+  // Turn #out into a transcript container
   outEl.innerHTML = `<div id="thread"></div>`;
   const threadEl = document.getElementById("thread");
 
@@ -59,26 +58,63 @@ document.addEventListener("DOMContentLoaded", () => {
     return "";
   }
 
-  function appendUserBubble(text) {
+  // Create a new "turn" container at the TOP (newest first)
+  function prependTurn(questionText) {
+    const turnId = "turn-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+
     const html = `
-      <div style="display:flex;justify-content:flex-end;margin:10px 0;">
-        <div style="
-          max-width: 85%;
-          background: #2563eb;
-          color: white;
-          padding: 10px 12px;
-          border-radius: 14px;
-          line-height: 1.5;
-          font-size: 14px;
-          box-shadow: 0 6px 14px rgba(37,99,235,0.18);
-          white-space: pre-wrap;
-        ">${escapeHtml(text)}</div>
+      <div id="${turnId}" style="
+        border: 1px solid #e5e7eb;
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 12px;
+        box-shadow: 0 8px 18px rgba(15,23,42,0.05);
+        margin: 10px 0;
+      ">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+          <div style="
+            max-width: 90%;
+            background: #2563eb;
+            color: white;
+            padding: 10px 12px;
+            border-radius: 14px;
+            line-height: 1.5;
+            font-size: 14px;
+            box-shadow: 0 6px 14px rgba(37,99,235,0.16);
+            white-space: pre-wrap;
+          ">${escapeHtml(questionText)}</div>
+        </div>
+
+        <div class="rv-assistant-slot" style="display:flex;justify-content:flex-start;">
+          <div style="
+            max-width: 90%;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 12px;
+            border-radius: 14px;
+            line-height: 1.6;
+            font-size: 14px;
+            width: 100%;
+          ">
+            <div style="color:#6b7280;font-size:12px;">Thinking…</div>
+          </div>
+        </div>
       </div>
     `;
-    threadEl.insertAdjacentHTML("beforeend", html);
+
+    // ✅ Prepend newest turn at the top
+    threadEl.insertAdjacentHTML("afterbegin", html);
+
+    // Keep the view at the top so newest stays near input
+    outEl.scrollTop = 0;
+
+    return turnId;
   }
 
-  function appendAssistantBubble(answerText, mode, sources) {
+  function renderAssistantIntoTurn(turnId, answerText, mode, sources) {
+    const turn = document.getElementById(turnId);
+    if (!turn) return;
+
     const badge = modeLabel(mode);
     const badgeHtml = badge
       ? `<div style="margin-bottom:8px;"><span class="rv-badge">${escapeHtml(badge)}</span></div>`
@@ -92,6 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
           return `<li>${label}</li>`;
         })
         .join("");
+
       sourcesHtml = `
         <div style="
           margin-top:10px;
@@ -109,17 +146,20 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
     }
 
-    const html = `
-      <div style="display:flex;justify-content:flex-start;margin:10px 0;">
+    const slot = turn.querySelector(".rv-assistant-slot");
+    if (!slot) return;
+
+    slot.innerHTML = `
+      <div style="display:flex;justify-content:flex-start;">
         <div style="
-          max-width: 85%;
-          background: #ffffff;
+          max-width: 90%;
+          background: #f9fafb;
           border: 1px solid #e5e7eb;
-          padding: 12px 12px;
+          padding: 12px;
           border-radius: 14px;
           line-height: 1.6;
           font-size: 14px;
-          box-shadow: 0 8px 18px rgba(15,23,42,0.06);
+          width: 100%;
         ">
           ${badgeHtml}
           <div>${renderMarkdown(answerText)}</div>
@@ -127,12 +167,9 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       </div>
     `;
-    threadEl.insertAdjacentHTML("beforeend", html);
-  }
 
-  function scrollToBottom() {
-    // Keep it simple: scroll the page to bottom
-    window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+    // Keep newest at top
+    outEl.scrollTop = 0;
   }
 
   async function askRoofVault() {
@@ -142,7 +179,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // ChatGPT-like: clear input immediately
+    // Clear input immediately
     qEl.value = "";
     qEl.focus();
 
@@ -150,9 +187,8 @@ document.addEventListener("DOMContentLoaded", () => {
     statusEl.textContent = "Thinking...";
     outEl.style.display = "block";
 
-    // UI: append user bubble immediately
-    appendUserBubble(question);
-    scrollToBottom();
+    // UI: create newest turn at top
+    const turnId = prependTurn(question);
 
     // Memory: store user message
     pushHistory("user", question);
@@ -175,17 +211,17 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (!data.ok) {
-        appendAssistantBubble(
+        renderAssistantIntoTurn(
+          turnId,
           data.error || "There was an error answering your question.",
           "general",
           []
         );
 
-        // Keep memory clean: remove last user message if server failed
+        // Keep memory clean
         if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user") {
           chatHistory.pop();
         }
-        scrollToBottom();
         return;
       }
 
@@ -193,20 +229,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const mode = data.mode || "";
       const sources = Array.isArray(data.sources) ? data.sources : [];
 
-      // UI: append assistant bubble
-      appendAssistantBubble(answerText, mode, sources);
-      scrollToBottom();
+      // UI: put answer into the same turn
+      renderAssistantIntoTurn(turnId, answerText, mode, sources);
 
       // Memory: store assistant message
       pushHistory("assistant", answerText);
     } catch (e) {
-      appendAssistantBubble("Network or server error: " + String(e), "general", []);
+      renderAssistantIntoTurn(turnId, "Network or server error: " + String(e), "general", []);
 
-      // Keep memory clean on network failure
+      // Keep memory clean
       if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user") {
         chatHistory.pop();
       }
-      scrollToBottom();
     } finally {
       askBtn.disabled = false;
       statusEl.textContent = "";
