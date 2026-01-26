@@ -344,10 +344,11 @@ module.exports = async function (context, req) {
 
     // If we have no snippets → general knowledge fallback
     if (!snippets.length) {
-      const answer = await generalFallback(question, msgs);
-      context.res = jsonRes({ ok: true, question, answer, sources: [] });
-      return;
-    }
+  const answer = await generalFallback(question, msgs);
+  context.res = jsonRes({ ok: true, mode: "general", question, answer, sources: [] });
+  return;
+}
+
 
     /* Document-mode prompt */
     const systemPrompt = [
@@ -385,16 +386,19 @@ ${snippets
     // If retrieval existed but model says unsupported → fallback to general knowledge
     if (/no support in the provided sources/i.test(answer)) {
       const fb = await generalFallback(question, msgs);
-      context.res = jsonRes({ ok: true, question, answer: fb, sources: [] });
-      return;
+      context.res = jsonRes({ ok: true, mode: "general", question, answer: fb, sources: [] });
+return;
+
     }
 
     context.res = jsonRes({
-      ok: true,
-      question,
-      answer,
-      sources: snippets.map((s) => ({ id: s.id, source: s.source }))
-    });
+  ok: true,
+  mode: "doc",
+  question,
+  answer,
+  sources: snippets.map((s) => ({ id: s.id, source: s.source }))
+});
+
   } catch (e) {
     context.res = jsonRes({
       ok: false,
