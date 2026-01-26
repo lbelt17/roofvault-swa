@@ -1,4 +1,7 @@
 ﻿// api/rvchat/index.js
+// RoofVault Chat API (doc-first, general fallback, session-only memory)
+// Adds mode: "doc" | "general" in responses
+// ✅ Adds relevance gate so irrelevant search hits don't force doc-mode
 
 const {
   SEARCH_ENDPOINT,
@@ -119,13 +122,11 @@ function decodeIdToName(id) {
     const raw = String(id || "").trim();
     if (!raw) return id || "unknown";
 
-    // Some Azure IDs are URL-safe base64; normalize then pad
     let b64 = raw.replace(/-/g, "+").replace(/_/g, "/");
     const padLen = (4 - (b64.length % 4)) % 4;
     if (padLen) b64 += "=".repeat(padLen);
 
     const url = Buffer.from(b64, "base64").toString("utf8");
-
     if (!/^https?:\/\//i.test(url)) return id;
 
     const lastSegment = url.split("/").pop() || url;
@@ -185,9 +186,9 @@ async function searchSnippets(query, topN = 8) {
   });
 }
 
-/* Session-only memory prep (backend): include last N messages (user/assistant only) */
+/* Session-only memory prep (backend) */
 function buildSafeHistory(historyMessages, max = 10) {
-  const safeHistory = Array.isArray(historyMessages)
+  return Array.isArray(historyMessages)
     ? historyMessages
         .filter(
           (m) =>
@@ -202,7 +203,6 @@ function buildSafeHistory(historyMessages, max = 10) {
           content: String(m.content).slice(0, 2000)
         }))
     : [];
-  return safeHistory;
 }
 
 /* AOAI wrapper */
@@ -252,27 +252,80 @@ async function aoaiAnswer(systemPrompt, userPrompt, historyMessages = []) {
 function tightenCitations(answer, validIdSet) {
   let s = String(answer || "");
 
-  // 1) Convert single [n] to [[n]] (but don't double-convert existing [[n]])
-  // Node 18 supports lookbehind; use safe boundaries to avoid [[[n]]]
+  // Convert [n] -> [[n]] (avoid converting existing [[n]])
   s = s.replace(/(?<!\[)\[(\d{1,3})\](?!\])/g, (m, n) => `[[${n}]]`);
 
-  // 2) Remove any [[...]] that is not a number or not in valid set
+  // Remove any [[...]] that isn't a valid numeric id in this response
   s = s.replace(/\[\[([^\]]+)\]\]/g, (m, inner) => {
     const n = String(inner || "").trim();
     if (!/^\d{1,3}$/.test(n)) return "";
     if (!validIdSet.has(n)) return "";
-    return `[[${n}]]`; // canonical
+    return `[[${n}]]`;
   });
 
-  // 3) Collapse ugly spacing left behind
   s = s.replace(/[ \t]{2,}/g, " ");
   s = s.replace(/\n{3,}/g, "\n\n").trim();
-
   return s;
 }
 
 function hasAnyValidCitation(answer) {
   return /\[\[\d{1,3}\]\]/.test(String(answer || ""));
+}
+
+/* ✅ Relevance gate: are snippets actually about the question? */
+function snippetsLookRelevant(question, snippets) {
+  const raw = String(question || "").trim();
+  const expanded = aliasExpand(raw);
+  const toks = _tokens(expanded);
+
+  // If we can’t extract tokens, don’t block.
+  if (!toks.length) return true;
+
+  const hay = _norm(snippets.map((s) => s.text || "").join(" ").slice(0, 8000));
+
+  // Count unique token hits
+  const uniq = Array.from(new Set(toks));
+  let hits = 0;
+  for (const t of uniq) {
+    if (hay.includes(t)) hits++;
+  }
+
+  // Require stronger match for short queries:
+  // - 1–2 tokens: must hit ALL
+  // - 3 tokens: need at least 2
+  // - 4+ tokens: need at least 2
+  let required = 2;
+  if (uniq.length <= 2) required = uniq.length;
+  else if (uniq.length === 3) required = 2;
+
+  return hits >= required;
+}
+
+/* General knowledge fallback */
+async function generalFallback(question, msgs) {
+  const systemPrompt = [
+    "You are RoofVault AI.",
+    "No relevant RoofVault document snippets were found (or they were insufficient).",
+    "Answer helpfully using general knowledge. Keep it concise and clear.",
+    "If you are unsure, say so briefly.",
+    "",
+    "At the end, include exactly one line:",
+    "Sources: General knowledge (no RoofVault document match)",
+    "",
+    "Do NOT use [[#]] style citations because no RoofVault snippets are available."
+  ].join(" ");
+
+  const userPrompt = `Question: ${question}`;
+  const ao = await aoaiAnswer(systemPrompt, userPrompt, msgs);
+
+  let answer =
+    (ao.ok ? ao.content : "") ||
+    (ao.error ? `No answer due to model error: ${ao.error}` : "I couldn't generate an answer.");
+
+  // Strip accidental snippet-style citations
+  answer = String(answer).replace(/\[\[\s*#\s*\]\]/g, "").replace(/\[\[\s*\d+\s*\]\]/g, "");
+  answer = answer.replace(/\n{3,}/g, "\n\n").trim();
+  return answer;
 }
 
 module.exports = async function (context, req) {
@@ -303,7 +356,6 @@ module.exports = async function (context, req) {
     return;
   }
 
-  /* Main Pipeline */
   try {
     /* Env Var Guard */
     const reqEnv = {
@@ -342,57 +394,42 @@ module.exports = async function (context, req) {
     }
 
     /* 🔎 Perform Azure Search */
-    const snippets = await searchSnippets(question, 8);
+    let snippets = await searchSnippets(question, 8);
 
-    /* If no snippets → general knowledge fallback */
+    // ✅ Relevance gate: if snippets don't match the question, treat as "no match"
+    if (snippets.length && !snippetsLookRelevant(question, snippets)) {
+      snippets = [];
+    }
+
+    /* If no relevant snippets → general fallback */
     if (!snippets.length) {
-      const generalSystemPrompt = [
-        "You are RoofVault AI.",
-        "No RoofVault document snippets were found for this question.",
-        "Answer helpfully using general knowledge.",
-        "Be honest about uncertainty.",
-        "At the end, include a 'Sources:' line:",
-        "- If you did NOT browse the web, write exactly: 'Sources: General knowledge (no RoofVault document match)'.",
-        "- Do NOT invent citations like [[1]] because there were no document snippets."
-      ].join(" ");
-
-      const generalUserPrompt = `Question: ${question}`;
-
-      const ao = await aoaiAnswer(generalSystemPrompt, generalUserPrompt, msgs);
-
-      const answer =
-        (ao.ok ? ao.content : "") ||
-        (ao.error
-          ? `No answer due to model error: ${ao.error}`
-          : "I couldn't generate an answer.");
-
+      const answer = await generalFallback(question, msgs);
       context.res = jsonRes({
         ok: true,
         mode: "general",
         question,
-        answer: String(answer).replace(/\n{3,}/g, "\n\n").trim(),
+        answer,
         sources: []
       });
       return;
     }
 
-    /* Doc-mode system prompt */
+    /* Doc-mode prompt */
     const systemPrompt = [
       "You are RoofVault AI, a senior roofing consultant.",
-      "Answer using ONLY the provided RoofVault document snippets as factual sources.",
+      "Use ONLY the provided RoofVault document snippets as your factual basis.",
       "Do NOT use outside or general knowledge.",
-      "You MUST include inline citations like [[#]] that match the snippet numbers provided.",
-      "If the answer cannot be supported by the snippets, say exactly: 'No support in the provided sources.'",
-      "",
-      "Keep it clear and not overly long."
+      "Write a natural, ChatGPT-style answer (no forced sections).",
+      "Keep it concise unless the user asks for depth.",
+      "Every key claim must include inline citations like [[1]] that match the snippet numbers.",
+      "If the answer cannot be supported by the snippets, say exactly: No support in the provided sources."
     ].join(" ");
 
     const userPrompt = `Question: ${question}
 
-Sources:
-${snippets.map((s) => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")}`;
+Snippets:
+${snippets.map((s) => `[[${s.id}]] ${s.source}\n${s.text}`).join("\n\n")}`;
 
-    /* Call AOAI */
     const ao = await aoaiAnswer(systemPrompt, userPrompt, msgs);
     let answer = (ao.ok ? ao.content : "") || "";
 
@@ -402,7 +439,7 @@ ${snippets.map((s) => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n
         : "No support in the provided sources.";
     }
 
-    // ✅ Citation tightening guard
+    // ✅ tighten citations
     const validIds = new Set(snippets.map((s) => String(s.id)));
     answer = tightenCitations(answer, validIds);
 
