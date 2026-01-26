@@ -1,11 +1,13 @@
 ﻿// rvchat.js
-// RoofVault Chat – session-only memory + newest-at-top threading (ChatGPT-inverse style)
+// RoofVault Chat – session-only memory + newest-at-top threading
+// Adds: Clear Chat button + "Session memory: ON" indicator
 // Enter sends, Shift+Enter newline. Refresh clears session.
 
 function escapeHtml(str) {
   return String(str || "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
+    .replace(/>/g, "&lt;")
     .replace(/>/g, "&gt;");
 }
 
@@ -34,12 +36,49 @@ document.addEventListener("DOMContentLoaded", () => {
   const statusEl = document.getElementById("status");
   const outEl = document.getElementById("out");
 
+  // ---- Add UI: session indicator + clear button (no HTML changes required) ----
+  // Place them inside the same row that contains Ask + status
+  const rowEl =
+    (askBtn && askBtn.parentElement) ? askBtn.parentElement : null;
+
+  let memEl = null;
+  let clearBtn = null;
+
+  if (rowEl) {
+    // Session indicator
+    memEl = document.createElement("span");
+    memEl.textContent = "Session memory: ON";
+    memEl.style.fontSize = "12px";
+    memEl.style.color = "#6b7280";
+    memEl.style.marginLeft = "10px";
+
+    // Clear button
+    clearBtn = document.createElement("button");
+    clearBtn.type = "button";
+    clearBtn.textContent = "Clear chat";
+    clearBtn.style.marginLeft = "auto";
+    clearBtn.style.border = "1px solid #e5e7eb";
+    clearBtn.style.background = "#ffffff";
+    clearBtn.style.color = "#111827";
+    clearBtn.style.boxShadow = "none";
+    clearBtn.style.fontWeight = "600";
+
+    // Keep the row layout nice
+    rowEl.style.display = "flex";
+    rowEl.style.alignItems = "center";
+    rowEl.style.gap = "8px";
+
+    // Insert in row: Ask button stays left, status + memory label next, clear on far right
+    rowEl.appendChild(memEl);
+    rowEl.appendChild(clearBtn);
+  }
+
   // Turn #out into a transcript container
   outEl.innerHTML = `<div id="thread"></div>`;
   const threadEl = document.getElementById("thread");
 
   // ===== Session-only memory (frontend) =====
-  const chatHistory = []; // items: { role: "user"|"assistant", content: string }
+  const chatHistory = []; // { role: "user"|"assistant", content: string }
   const MAX_HISTORY = 10;
 
   function pushHistory(role, content) {
@@ -49,6 +88,21 @@ document.addEventListener("DOMContentLoaded", () => {
     if (chatHistory.length > MAX_HISTORY) {
       chatHistory.splice(0, chatHistory.length - MAX_HISTORY);
     }
+  }
+
+  function clearHistoryAndUI() {
+    chatHistory.length = 0;
+    if (threadEl) threadEl.innerHTML = "";
+    outEl.style.display = "none";
+    statusEl.textContent = "";
+    qEl.value = "";
+    qEl.focus();
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      clearHistoryAndUI();
+    });
   }
 
   function modeLabel(mode) {
@@ -102,10 +156,10 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
-    // ✅ Prepend newest turn at the top
+    // Prepend newest turn at the top
     threadEl.insertAdjacentHTML("afterbegin", html);
 
-    // Keep the view at the top so newest stays near input
+    // Keep view at the top so newest stays near input
     outEl.scrollTop = 0;
 
     return turnId;
@@ -168,7 +222,6 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
-    // Keep newest at top
     outEl.scrollTop = 0;
   }
 
@@ -184,6 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
     qEl.focus();
 
     askBtn.disabled = true;
+    if (clearBtn) clearBtn.disabled = true;
     statusEl.textContent = "Thinking...";
     outEl.style.display = "block";
 
@@ -218,7 +272,7 @@ document.addEventListener("DOMContentLoaded", () => {
           []
         );
 
-        // Keep memory clean
+        // Keep memory clean: remove last user message
         if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user") {
           chatHistory.pop();
         }
@@ -229,7 +283,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const mode = data.mode || "";
       const sources = Array.isArray(data.sources) ? data.sources : [];
 
-      // UI: put answer into the same turn
       renderAssistantIntoTurn(turnId, answerText, mode, sources);
 
       // Memory: store assistant message
@@ -243,6 +296,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } finally {
       askBtn.disabled = false;
+      if (clearBtn) clearBtn.disabled = false;
       statusEl.textContent = "";
     }
   }
