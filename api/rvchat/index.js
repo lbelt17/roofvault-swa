@@ -1,6 +1,4 @@
 ﻿// api/rvchat/index.js
-// RoofVault Chat API (doc-first, general fallback, session-only memory)
-// Adds mode: "doc" | "general" in responses
 
 const {
   SEARCH_ENDPOINT,
@@ -73,7 +71,10 @@ function postJson(url, headers, bodyObj) {
 function aliasExpand(q) {
   let s = String(q || "");
   s = s.replace(/\bmembrane (roof )?systems?\b/gi, "Membrane Roof Systems");
-  s = s.replace(/\broof\s*decks\s*(a\s*to\s*z|atoz|a\-z)\b/gi, "Roof Decks: A to Z Hogan");
+  s = s.replace(
+    /\broof\s*decks\s*(a\s*to\s*z|atoz|a\-z)\b/gi,
+    "Roof Decks: A to Z Hogan"
+  );
   s = s.replace(/\bsteep[-\s]?slope\b/gi, "Steep-slope Roof Systems");
   return s;
 }
@@ -125,13 +126,9 @@ function decodeIdToName(id) {
 
     const url = Buffer.from(b64, "base64").toString("utf8");
 
-    // If that didn't look like a URL, just return the original id
     if (!/^https?:\/\//i.test(url)) return id;
 
-    // Take only the filename part
     const lastSegment = url.split("/").pop() || url;
-
-    // Decode URL-encoded characters if present
     try {
       return decodeURIComponent(lastSegment);
     } catch {
@@ -153,7 +150,6 @@ async function searchSnippets(query, topN = 8) {
   const expanded = aliasExpand(raw);
   const qToks = _tokens(expanded);
 
-  // If tokenization removes everything -> fallback to expanded text or "*"
   const searchText = qToks.length ? qToks.join(" ") : expanded || "*";
 
   let pass1;
@@ -189,14 +185,8 @@ async function searchSnippets(query, topN = 8) {
   });
 }
 
-/* AOAI wrapper (supports session-only memory via messages[]) */
-async function aoaiAnswer(systemPrompt, userPrompt, historyMessages = []) {
-  const base = (AOAI_ENDPOINT || "").replace(/\/+$/, "");
-  const url = `${base}/openai/deployments/${encodeURIComponent(
-    AOAI_DEPLOYMENT
-  )}/chat/completions?api-version=2024-06-01`;
-
-  // Session-only memory prep: include last N messages (user/assistant only)
+/* Session-only memory prep (backend): include last N messages (user/assistant only) */
+function buildSafeHistory(historyMessages, max = 10) {
   const safeHistory = Array.isArray(historyMessages)
     ? historyMessages
         .filter(
@@ -206,12 +196,23 @@ async function aoaiAnswer(systemPrompt, userPrompt, historyMessages = []) {
             typeof m.content === "string" &&
             m.content.trim()
         )
-        .slice(-10)
+        .slice(-max)
         .map((m) => ({
           role: m.role,
           content: String(m.content).slice(0, 2000)
         }))
     : [];
+  return safeHistory;
+}
+
+/* AOAI wrapper */
+async function aoaiAnswer(systemPrompt, userPrompt, historyMessages = []) {
+  const base = (AOAI_ENDPOINT || "").replace(/\/+$/, "");
+  const url = `${base}/openai/deployments/${encodeURIComponent(
+    AOAI_DEPLOYMENT
+  )}/chat/completions?api-version=2024-06-01`;
+
+  const safeHistory = buildSafeHistory(historyMessages, 10);
 
   let resp;
   try {
@@ -219,7 +220,7 @@ async function aoaiAnswer(systemPrompt, userPrompt, historyMessages = []) {
       url,
       { "api-key": AOAI_KEY },
       {
-        temperature: 0.2,
+        temperature: 0.1,
         max_tokens: 900,
         messages: [
           { role: "system", content: systemPrompt },
@@ -238,7 +239,8 @@ async function aoaiAnswer(systemPrompt, userPrompt, historyMessages = []) {
   } catch {}
 
   if (!resp.ok) {
-    const err = parsed?.error?.message || parsed?.message || resp.text || "unknown";
+    const err =
+      parsed?.error?.message || parsed?.message || resp.text || "unknown";
     return { ok: false, error: `AOAI HTTP ${resp.status}: ${err}` };
   }
 
@@ -246,41 +248,31 @@ async function aoaiAnswer(systemPrompt, userPrompt, historyMessages = []) {
   return { ok: true, content };
 }
 
-/* Detect "no support" from model */
-function looksUnsupported(answer) {
-  const a = String(answer || "").toLowerCase();
-  return (
-    a.includes("no support in the provided sources") ||
-    a.includes("cannot find it in the provided sources") ||
-    a.includes("not supported by the provided sources")
-  );
+/* ✅ Citation tightening: keep ONLY [[n]] where n is a valid snippet id */
+function tightenCitations(answer, validIdSet) {
+  let s = String(answer || "");
+
+  // 1) Convert single [n] to [[n]] (but don't double-convert existing [[n]])
+  // Node 18 supports lookbehind; use safe boundaries to avoid [[[n]]]
+  s = s.replace(/(?<!\[)\[(\d{1,3})\](?!\])/g, (m, n) => `[[${n}]]`);
+
+  // 2) Remove any [[...]] that is not a number or not in valid set
+  s = s.replace(/\[\[([^\]]+)\]\]/g, (m, inner) => {
+    const n = String(inner || "").trim();
+    if (!/^\d{1,3}$/.test(n)) return "";
+    if (!validIdSet.has(n)) return "";
+    return `[[${n}]]`; // canonical
+  });
+
+  // 3) Collapse ugly spacing left behind
+  s = s.replace(/[ \t]{2,}/g, " ");
+  s = s.replace(/\n{3,}/g, "\n\n").trim();
+
+  return s;
 }
 
-/* General knowledge fallback */
-async function generalFallback(question, msgs) {
-  const systemPrompt = [
-    "You are RoofVault AI.",
-    "No RoofVault document snippets were found or they were insufficient to answer.",
-    "Answer helpfully using general knowledge. Keep it concise and clear.",
-    "If you are unsure, say so briefly.",
-    "",
-    "At the end, include exactly one line:",
-    "Sources: General knowledge (no RoofVault document match)",
-    "",
-    "Do NOT use [[#]] style citations because no RoofVault snippets are available."
-  ].join(" ");
-
-  const userPrompt = `Question: ${question}`;
-  const ao = await aoaiAnswer(systemPrompt, userPrompt, msgs);
-
-  let answer =
-    (ao.ok ? ao.content : "") ||
-    (ao.error ? `No answer due to model error: ${ao.error}` : "I couldn't generate an answer.");
-
-  // Safety: strip any accidental snippet-style citations
-  answer = String(answer).replace(/\[\[\s*#\s*\]\]/g, "").replace(/\[\[\s*\d+\s*\]\]/g, "");
-  answer = answer.replace(/\n{3,}/g, "\n\n").trim();
-  return answer;
+function hasAnyValidCitation(answer) {
+  return /\[\[\d{1,3}\]\]/.test(String(answer || ""));
 }
 
 module.exports = async function (context, req) {
@@ -294,7 +286,7 @@ module.exports = async function (context, req) {
     const seen = {
       SEARCH_ENDPOINT: !!SEARCH_ENDPOINT,
       SEARCH_KEY: !!SEARCH_KEY,
-      SEARCH_INDEX_EXISTS: !!SEARCH_INDEX,
+      SEARCH_INDEX: !!SEARCH_INDEX,
       AOAI_ENDPOINT: !!AOAI_ENDPOINT,
       AOAI_KEY: !!AOAI_KEY,
       AOAI_DEPLOYMENT: !!AOAI_DEPLOYMENT,
@@ -354,37 +346,53 @@ module.exports = async function (context, req) {
 
     /* If no snippets → general knowledge fallback */
     if (!snippets.length) {
-      const answer = await generalFallback(question, msgs);
+      const generalSystemPrompt = [
+        "You are RoofVault AI.",
+        "No RoofVault document snippets were found for this question.",
+        "Answer helpfully using general knowledge.",
+        "Be honest about uncertainty.",
+        "At the end, include a 'Sources:' line:",
+        "- If you did NOT browse the web, write exactly: 'Sources: General knowledge (no RoofVault document match)'.",
+        "- Do NOT invent citations like [[1]] because there were no document snippets."
+      ].join(" ");
+
+      const generalUserPrompt = `Question: ${question}`;
+
+      const ao = await aoaiAnswer(generalSystemPrompt, generalUserPrompt, msgs);
+
+      const answer =
+        (ao.ok ? ao.content : "") ||
+        (ao.error
+          ? `No answer due to model error: ${ao.error}`
+          : "I couldn't generate an answer.");
+
       context.res = jsonRes({
         ok: true,
         mode: "general",
         question,
-        answer,
+        answer: String(answer).replace(/\n{3,}/g, "\n\n").trim(),
         sources: []
       });
       return;
     }
 
-    /* DOC-FIRST system prompt (simple ChatGPT-like, no forced sections) */
+    /* Doc-mode system prompt */
     const systemPrompt = [
       "You are RoofVault AI, a senior roofing consultant.",
-      "Use ONLY the provided RoofVault document snippets as your factual basis.",
+      "Answer using ONLY the provided RoofVault document snippets as factual sources.",
       "Do NOT use outside or general knowledge.",
+      "You MUST include inline citations like [[#]] that match the snippet numbers provided.",
+      "If the answer cannot be supported by the snippets, say exactly: 'No support in the provided sources.'",
       "",
-      "Write a natural, ChatGPT-style answer (no forced sections).",
-      "Keep it concise unless the user asks for depth or steps.",
-      "Use bullet points only when helpful.",
-      "",
-      "Every key claim must include inline citations using the snippet numbers like [[1]] or [[2]].",
-      "If the answer cannot be supported by the snippets, say exactly:",
-      "No support in the provided sources."
+      "Keep it clear and not overly long."
     ].join(" ");
 
     const userPrompt = `Question: ${question}
 
-Snippets:
-${snippets.map((s) => `[[${s.id}]] ${s.source}\n${s.text}`).join("\n\n")}`;
+Sources:
+${snippets.map((s) => "[[" + s.id + "]] " + s.source + "\n" + s.text).join("\n\n")}`;
 
+    /* Call AOAI */
     const ao = await aoaiAnswer(systemPrompt, userPrompt, msgs);
     let answer = (ao.ok ? ao.content : "") || "";
 
@@ -394,19 +402,13 @@ ${snippets.map((s) => `[[${s.id}]] ${s.source}\n${s.text}`).join("\n\n")}`;
         : "No support in the provided sources.";
     }
 
-    answer = answer.replace(/\n{3,}/g, "\n\n").trim();
+    // ✅ Citation tightening guard
+    const validIds = new Set(snippets.map((s) => String(s.id)));
+    answer = tightenCitations(answer, validIds);
 
-    /* If model says unsupported → general fallback (doc-first policy) */
-    if (looksUnsupported(answer)) {
-      const fb = await generalFallback(question, msgs);
-      context.res = jsonRes({
-        ok: true,
-        mode: "general",
-        question,
-        answer: fb,
-        sources: []
-      });
-      return;
+    // If doc-mode has zero valid citations, force the standard message
+    if (answer !== "No support in the provided sources." && !hasAnyValidCitation(answer)) {
+      answer = "No support in the provided sources.";
     }
 
     context.res = jsonRes({
