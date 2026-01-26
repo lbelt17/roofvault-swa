@@ -1,9 +1,11 @@
 ﻿// api/rvchat/index.js
-// RoofVault Chat API (doc-first, general fallback, session-only memory)
+// RoofVault Chat API (STRICT doc-grounded for roofing questions)
 // mode: "doc" | "general"
-// ✅ Citation tightening
-// ✅ Relevance gate
-// ✅ Domain-anchor gate (prevents Mars-type false doc matches)
+// ✅ Doc-first, never mix doc + general for roofing questions
+// ✅ If roofing-related and no direct doc support → refuse (doc mode)
+// ✅ Session-only memory via messages[]
+// ✅ Citation tightening + enforcement
+// ✅ Domain-anchor gate prevents Mars-type false doc matches
 
 const {
   SEARCH_ENDPOINT,
@@ -13,6 +15,9 @@ const {
   AOAI_KEY,
   AOAI_DEPLOYMENT
 } = process.env;
+
+/* ===== Config (STRICT by default) ===== */
+const STRICT_DOC_GROUNDING = (process.env.STRICT_DOC_GROUNDING ?? "true").toLowerCase() === "true";
 
 /* Always-JSON response helper */
 function jsonRes(body, status = 200) {
@@ -119,7 +124,6 @@ function _tokens(s) {
 
 /* ✅ Domain anchor gate: if user question isn't about roofing/building envelope, go GENERAL */
 const ROOF_ANCHORS = new Set([
-  // roofing basics
   "roof","roofing","reroof","re-roof","slope","steep","lowslope","low-slope","pitch",
   "deck","decks","sheathing","substrate","parapet","coping","curb","curbs",
   "flashing","counterflashing","baseflashing","termination","reglet",
@@ -131,9 +135,8 @@ const ROOF_ANCHORS = new Set([
   "shingle","shingles","tile","slate","metal","standing","seam",
   "underlayment","ice","water","shield",
   "uplift","wind","pressure","fm","factory","mutual",
-  "penetration","penetrations","pipe","vent","curb","skylight","equipment",
+  "penetration","penetrations","pipe","vent","skylight","equipment",
   "sealant","primer","mastic","tape",
-  // broader building-envelope terms that often appear in roofing Qs
   "rvalue","r-value","thermal","heat","humidity","ventilation","attic","soffit","ridge"
 ]);
 
@@ -143,8 +146,6 @@ function questionLooksRoofingRelated(question) {
 
   const expanded = aliasExpand(raw);
   const toks = _tokens(expanded);
-
-  // quick substring check too (catches "low-slope", etc.)
   const n = _norm(expanded);
 
   for (const t of toks) {
@@ -180,7 +181,7 @@ function decodeIdToName(id) {
   }
 }
 
-/* 🔎 Azure Search snippet fetch – matches your schema: id + content */
+/* 🔎 Azure Search snippet fetch – schema: id + content */
 async function searchSnippets(query, topN = 8) {
   const base = (SEARCH_ENDPOINT || "").replace(/\/+$/, "");
   const url = `${base}/indexes('${encodeURIComponent(
@@ -226,7 +227,7 @@ async function searchSnippets(query, topN = 8) {
   });
 }
 
-/* Session-only memory prep (backend) */
+/* Session-only memory prep */
 function buildSafeHistory(historyMessages, max = 10) {
   return Array.isArray(historyMessages)
     ? historyMessages
@@ -312,7 +313,7 @@ function hasAnyValidCitation(answer) {
   return /\[\[\d{1,3}\]\]/.test(String(answer || ""));
 }
 
-/* ✅ Relevance gate: are snippets actually about the question? (secondary) */
+/* ✅ Relevance gate (secondary): do snippets actually contain question tokens? */
 function snippetsLookRelevant(question, snippets) {
   const expanded = aliasExpand(String(question || "").trim());
   const toks = _tokens(expanded);
@@ -333,7 +334,19 @@ function snippetsLookRelevant(question, snippets) {
   return hits >= required;
 }
 
-/* General knowledge fallback */
+/* Standard doc refusal payload */
+function docRefusal(question, sources = [], note = "") {
+  return {
+    ok: true,
+    mode: "doc",
+    question,
+    answer: "No support in the provided sources.",
+    sources,
+    ...(note ? { note } : {})
+  };
+}
+
+/* General knowledge fallback (ONLY for clearly non-roofing questions) */
 async function generalFallback(question, msgs) {
   const systemPrompt = [
     "You are RoofVault AI.",
@@ -377,7 +390,8 @@ module.exports = async function (context, req) {
       AOAI_ENDPOINT: !!AOAI_ENDPOINT,
       AOAI_KEY: !!AOAI_KEY,
       AOAI_DEPLOYMENT: !!AOAI_DEPLOYMENT,
-      INDEX_NAME: SEARCH_INDEX || null
+      INDEX_NAME: SEARCH_INDEX || null,
+      STRICT_DOC_GROUNDING
     };
 
     context.res = jsonRes({
@@ -427,9 +441,10 @@ module.exports = async function (context, req) {
       return;
     }
 
-    // ✅ DOMAIN ANCHOR GATE (primary)
-    // If user asks something clearly non-roofing (Mars), go general immediately.
-    if (!questionLooksRoofingRelated(question)) {
+    /* ✅ DOMAIN ANCHOR GATE
+       If user asks something clearly non-roofing (Mars), answer using general knowledge immediately. */
+    const isRoofing = questionLooksRoofingRelated(question);
+    if (!isRoofing) {
       const answer = await generalFallback(question, msgs);
       context.res = jsonRes({
         ok: true,
@@ -449,16 +464,18 @@ module.exports = async function (context, req) {
       snippets = [];
     }
 
-    /* If no relevant snippets → general fallback */
+    /* ✅ STRICT behavior for roofing questions:
+       If no relevant snippets, DO NOT fall back to general knowledge. Refuse in doc mode. */
     if (!snippets.length) {
-      const answer = await generalFallback(question, msgs);
-      context.res = jsonRes({
-        ok: true,
-        mode: "general",
-        question,
-        answer,
-        sources: []
-      });
+      context.res = jsonRes(
+        docRefusal(
+          question,
+          [],
+          STRICT_DOC_GROUNDING
+            ? "Roofing-related question, but no directly supporting RoofVault snippets were found."
+            : "No relevant RoofVault snippets were found."
+        )
+      );
       return;
     }
 
@@ -487,15 +504,23 @@ ${snippets.map((s) => `[[${s.id}]] ${s.source}\n${s.text}`).join("\n\n")}`;
         : "No support in the provided sources.";
     }
 
-    // ✅ tighten citations
+    // ✅ tighten citations (only allow citations that exist in this response)
     const validIds = new Set(snippets.map((s) => String(s.id)));
     answer = tightenCitations(answer, validIds);
 
-    // If doc-mode has zero valid citations, force the standard message
+    // ✅ STRICT: if doc-mode has zero valid citations, refuse
     if (answer !== "No support in the provided sources." && !hasAnyValidCitation(answer)) {
-      answer = "No support in the provided sources.";
+      context.res = jsonRes(
+        docRefusal(
+          question,
+          snippets.map((s) => ({ id: s.id, source: s.source })),
+          "Model response did not include valid snippet citations."
+        )
+      );
+      return;
     }
 
+    // ✅ Return doc answer
     context.res = jsonRes({
       ok: true,
       mode: "doc",
