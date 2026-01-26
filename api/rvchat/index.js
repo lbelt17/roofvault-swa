@@ -1,7 +1,9 @@
 ﻿// api/rvchat/index.js
 // RoofVault Chat API (doc-first, general fallback, session-only memory)
-// Adds mode: "doc" | "general" in responses
-// ✅ Adds relevance gate so irrelevant search hits don't force doc-mode
+// mode: "doc" | "general"
+// ✅ Citation tightening
+// ✅ Relevance gate
+// ✅ Domain-anchor gate (prevents Mars-type false doc matches)
 
 const {
   SEARCH_ENDPOINT,
@@ -100,7 +102,6 @@ function _tokens(s) {
           "with",
           "from",
           "manual",
-          "roof",
           "roofs",
           "systems",
           "system",
@@ -114,6 +115,45 @@ function _tokens(s) {
           "pdf"
         ].includes(w)
     );
+}
+
+/* ✅ Domain anchor gate: if user question isn't about roofing/building envelope, go GENERAL */
+const ROOF_ANCHORS = new Set([
+  // roofing basics
+  "roof","roofing","reroof","re-roof","slope","steep","lowslope","low-slope","pitch",
+  "deck","decks","sheathing","substrate","parapet","coping","curb","curbs",
+  "flashing","counterflashing","baseflashing","termination","reglet",
+  "drain","drains","scupper","gutter","downspout","leader",
+  "insulation","polyiso","eps","xps","mineral","coverboard","gypsum",
+  "vapor","retarder","air","barrier","condensation","dewpoint","moisture",
+  "fastener","fasteners","plates","adhesive","bonding","weld","welded","seam","seams",
+  "membrane","tpo","epdm","pvc","modbit","modified","bitumen","bur","asphalt",
+  "shingle","shingles","tile","slate","metal","standing","seam",
+  "underlayment","ice","water","shield",
+  "uplift","wind","pressure","fm","factory","mutual",
+  "penetration","penetrations","pipe","vent","curb","skylight","equipment",
+  "sealant","primer","mastic","tape",
+  // broader building-envelope terms that often appear in roofing Qs
+  "rvalue","r-value","thermal","heat","humidity","ventilation","attic","soffit","ridge"
+]);
+
+function questionLooksRoofingRelated(question) {
+  const raw = String(question || "").trim();
+  if (!raw) return false;
+
+  const expanded = aliasExpand(raw);
+  const toks = _tokens(expanded);
+
+  // quick substring check too (catches "low-slope", etc.)
+  const n = _norm(expanded);
+
+  for (const t of toks) {
+    if (ROOF_ANCHORS.has(t)) return true;
+  }
+  for (const a of ROOF_ANCHORS) {
+    if (a.length >= 4 && n.includes(a)) return true;
+  }
+  return false;
 }
 
 /* 🔓 Decode index id (base64-encoded URL) into a nice filename */
@@ -272,28 +312,20 @@ function hasAnyValidCitation(answer) {
   return /\[\[\d{1,3}\]\]/.test(String(answer || ""));
 }
 
-/* ✅ Relevance gate: are snippets actually about the question? */
+/* ✅ Relevance gate: are snippets actually about the question? (secondary) */
 function snippetsLookRelevant(question, snippets) {
-  const raw = String(question || "").trim();
-  const expanded = aliasExpand(raw);
+  const expanded = aliasExpand(String(question || "").trim());
   const toks = _tokens(expanded);
-
-  // If we can’t extract tokens, don’t block.
   if (!toks.length) return true;
 
   const hay = _norm(snippets.map((s) => s.text || "").join(" ").slice(0, 8000));
 
-  // Count unique token hits
   const uniq = Array.from(new Set(toks));
   let hits = 0;
   for (const t of uniq) {
     if (hay.includes(t)) hits++;
   }
 
-  // Require stronger match for short queries:
-  // - 1–2 tokens: must hit ALL
-  // - 3 tokens: need at least 2
-  // - 4+ tokens: need at least 2
   let required = 2;
   if (uniq.length <= 2) required = uniq.length;
   else if (uniq.length === 3) required = 2;
@@ -323,9 +355,11 @@ async function generalFallback(question, msgs) {
     (ao.error ? `No answer due to model error: ${ao.error}` : "I couldn't generate an answer.");
 
   // Strip accidental snippet-style citations
-  answer = String(answer).replace(/\[\[\s*#\s*\]\]/g, "").replace(/\[\[\s*\d+\s*\]\]/g, "");
-  answer = answer.replace(/\n{3,}/g, "\n\n").trim();
-  return answer;
+  answer = String(answer)
+    .replace(/\[\[\s*#\s*\]\]/g, "")
+    .replace(/\[\[\s*\d+\s*\]\]/g, "");
+
+  return answer.replace(/\n{3,}/g, "\n\n").trim();
 }
 
 module.exports = async function (context, req) {
@@ -393,10 +427,24 @@ module.exports = async function (context, req) {
       return;
     }
 
+    // ✅ DOMAIN ANCHOR GATE (primary)
+    // If user asks something clearly non-roofing (Mars), go general immediately.
+    if (!questionLooksRoofingRelated(question)) {
+      const answer = await generalFallback(question, msgs);
+      context.res = jsonRes({
+        ok: true,
+        mode: "general",
+        question,
+        answer,
+        sources: []
+      });
+      return;
+    }
+
     /* 🔎 Perform Azure Search */
     let snippets = await searchSnippets(question, 8);
 
-    // ✅ Relevance gate: if snippets don't match the question, treat as "no match"
+    // ✅ Secondary relevance gate: if snippets don't match, treat as "no match"
     if (snippets.length && !snippetsLookRelevant(question, snippets)) {
       snippets = [];
     }
