@@ -28,6 +28,9 @@ const {
   WEB_QUESTION_CREDITS // optional: e.g. "5"
 } = process.env;
 
+/* ===== Deploy tag (to confirm prod is running THIS file) ===== */
+const DEPLOY_TAG = "RVCHAT__2026-01-27__CONSENT_FIX_CHECK__A";
+
 /* ===== Config (STRICT by default) ===== */
 const STRICT_DOC_GROUNDING =
   (process.env.STRICT_DOC_GROUNDING ?? "true").toLowerCase() === "true";
@@ -382,6 +385,7 @@ function listItemsAllHaveCitations(answer) {
 function docRefusal(question, sources = [], note = "", web = {}) {
   return {
     ok: true,
+    deployTag: DEPLOY_TAG,
     mode: "doc",
     question,
     answer: "No support in the provided sources.",
@@ -432,10 +436,6 @@ async function generalFallback(question, msgs) {
  * WEB MODE (opt-in only)
  * IMPORTANT: This is a SAFE placeholder.
  * It does NOT pretend to have real web citations.
- *
- * To make this truly Bing-grounded later:
- * - Call your Foundry Agent (with Bing knowledge) here
- * - Return answer + links/sources from that agent run
  */
 async function webFallback(question, msgs) {
   const systemPrompt = [
@@ -465,7 +465,7 @@ async function webFallback(question, msgs) {
 
 module.exports = async function (context, req) {
   if (req.method === "OPTIONS") {
-    context.res = jsonRes({ ok: true });
+    context.res = jsonRes({ ok: true, deployTag: DEPLOY_TAG });
     return;
   }
 
@@ -485,6 +485,7 @@ module.exports = async function (context, req) {
 
     context.res = jsonRes({
       ok: true,
+      deployTag: DEPLOY_TAG,
       layer: "diag",
       node: process.version,
       seen,
@@ -503,6 +504,7 @@ module.exports = async function (context, req) {
     if (!Object.values(baseEnv).every(Boolean)) {
       context.res = jsonRes({
         ok: false,
+        deployTag: DEPLOY_TAG,
         layer: "env",
         error: "Missing AOAI environment variables",
         seen: baseEnv
@@ -519,10 +521,6 @@ module.exports = async function (context, req) {
         "").trim();
 
     // Client can request explicit mode
-    // - mode:"web" => NEVER use docs, go webFallback()
-    // - mode:"doc" => doc mode only
-    // - mode:"general" => general mode only
-    // - allowWeb:true => treated same as mode:"web" (explicit user consent)
     const clientMode = String(body.mode || "").toLowerCase().trim();
     const allowWeb = Boolean(body.allowWeb);
     const webCreditsRemaining = body.webCreditsRemaining;
@@ -530,6 +528,7 @@ module.exports = async function (context, req) {
     if (!question) {
       context.res = jsonRes({
         ok: false,
+        deployTag: DEPLOY_TAG,
         layer: "input",
         error: "No question provided."
       });
@@ -544,6 +543,7 @@ module.exports = async function (context, req) {
       const answer = await generalFallback(question, msgs);
       context.res = jsonRes({
         ok: true,
+        deployTag: DEPLOY_TAG,
         mode: "general",
         question,
         answer,
@@ -556,6 +556,7 @@ module.exports = async function (context, req) {
       const answer = await webFallback(question, msgs);
       context.res = jsonRes({
         ok: true,
+        deployTag: DEPLOY_TAG,
         mode: "web",
         question,
         answer,
@@ -574,6 +575,7 @@ module.exports = async function (context, req) {
       const answer = await generalFallback(question, msgs);
       context.res = jsonRes({
         ok: true,
+        deployTag: DEPLOY_TAG,
         mode: "general",
         question,
         answer,
@@ -591,6 +593,7 @@ module.exports = async function (context, req) {
     if (!Object.values(docEnv).every(Boolean)) {
       context.res = jsonRes({
         ok: false,
+        deployTag: DEPLOY_TAG,
         layer: "env",
         error: "Missing SEARCH environment variables for doc mode",
         seen: { ...baseEnv, ...docEnv }
@@ -660,12 +663,25 @@ ${snippets.map((s) => `[[${s.id}]] ${s.source}\n${s.text}`).join("\n\n")}`;
         : "No support in the provided sources.";
     }
 
+    // ✅ If the model explicitly says there is no support, treat as refusal + consent prompt
+    if (String(answer).trim() === "No support in the provided sources.") {
+      context.res = jsonRes(
+        docRefusal(
+          question,
+          snippets.map((s) => ({ id: s.id, source: s.source })),
+          "Roofing-related question, but the available snippets did not directly support an answer.",
+          { creditsRemaining: webCreditsRemaining }
+        )
+      );
+      return;
+    }
+
     // ✅ tighten citations (only allow citations that exist in this response)
     const validIds = new Set(snippets.map((s) => String(s.id)));
     answer = tightenCitations(answer, validIds);
 
     // ✅ STRICT: if doc-mode has zero valid citations, refuse
-    if (answer !== "No support in the provided sources." && !hasAnyValidCitation(answer)) {
+    if (!hasAnyValidCitation(answer)) {
       context.res = jsonRes(
         docRefusal(
           question,
@@ -695,6 +711,7 @@ ${snippets.map((s) => `[[${s.id}]] ${s.source}\n${s.text}`).join("\n\n")}`;
     /* ✅ Return doc answer */
     context.res = jsonRes({
       ok: true,
+      deployTag: DEPLOY_TAG,
       mode: "doc",
       question,
       answer,
@@ -704,6 +721,7 @@ ${snippets.map((s) => `[[${s.id}]] ${s.source}\n${s.text}`).join("\n\n")}`;
   } catch (e) {
     context.res = jsonRes({
       ok: false,
+      deployTag: DEPLOY_TAG,
       layer: "pipeline",
       error: String(e && e.message),
       stack: String(e && e.stack)
