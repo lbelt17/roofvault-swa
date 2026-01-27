@@ -4,6 +4,10 @@
 // Adds: Web consent modal flow (opt-in only) + session web credits tracking
 // Enter sends, Shift+Enter newline. Refresh clears session.
 
+// IMPORTANT FIX (Step 2):
+// Always send mode:"doc" for the initial question so backend stays doc-first for roofing questions.
+// Web mode remains opt-in only via consent modal.
+
 function escapeHtml(str) {
   return String(str || "")
     .replace(/&/g, "&amp;")
@@ -71,7 +75,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const MAX_HISTORY = 10;
 
   // ===== Session web credits =====
-  // Default per session unless server overrides.
   let webCreditsMax = 5;
   let webCreditsRemaining = 5;
 
@@ -82,7 +85,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!Number.isFinite(max) || max <= 0) webCreditsMax = 5;
     if (!Number.isFinite(rem) || rem < 0) webCreditsRemaining = Number(webCreditsMax) || 5;
 
-    // clamp remaining to [0, max]
     webCreditsRemaining = Math.max(0, Math.min(Number(webCreditsRemaining), Number(webCreditsMax)));
   }
 
@@ -91,15 +93,12 @@ document.addEventListener("DOMContentLoaded", () => {
       normalizeCredits();
       return;
     }
-
     if (Number.isFinite(Number(webObj.creditsMax)) && Number(webObj.creditsMax) > 0) {
       webCreditsMax = Number(webObj.creditsMax);
     }
-
     if (Number.isFinite(Number(webObj.creditsRemaining))) {
       webCreditsRemaining = Number(webObj.creditsRemaining);
     }
-
     normalizeCredits();
   }
 
@@ -271,7 +270,7 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
   }
 
-  // ===== Consent modal (opt-in web) =====
+  // ===== Consent modal =====
   let consentOverlayEl = null;
 
   function ensureConsentModal() {
@@ -286,7 +285,6 @@ document.addEventListener("DOMContentLoaded", () => {
     consentOverlayEl.style.justifyContent = "center";
     consentOverlayEl.style.zIndex = "9999";
 
-    // dataset is our single source of truth for click handlers
     consentOverlayEl.dataset.turnId = "";
     consentOverlayEl.dataset.question = "";
 
@@ -359,27 +357,20 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
     document.body.appendChild(consentOverlayEl);
 
-    // click outside modal to close
     consentOverlayEl.addEventListener("click", (e) => {
       if (e.target === consentOverlayEl) hideConsentModal();
     });
 
-    // stay doc-only
-    const stayBtn = consentOverlayEl.querySelector("#rvConsentStay");
-    stayBtn.addEventListener("click", (e) => {
+    consentOverlayEl.querySelector("#rvConsentStay").addEventListener("click", (e) => {
       if (e && typeof e.stopPropagation === "function") e.stopPropagation();
       hideConsentModal();
     });
 
-    // use the web
-    const useWebBtn = consentOverlayEl.querySelector("#rvConsentUseWeb");
-    useWebBtn.addEventListener("click", async (e) => {
+    consentOverlayEl.querySelector("#rvConsentUseWeb").addEventListener("click", async (e) => {
       if (e && typeof e.stopPropagation === "function") e.stopPropagation();
 
       const turnId = String(consentOverlayEl?.dataset?.turnId || "");
       const question = String(consentOverlayEl?.dataset?.question || "");
-
-      // If these are empty, something upstream failed — do nothing (no crash).
       if (!turnId || !question) return;
 
       normalizeCredits();
@@ -388,10 +379,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // Optimistic local decrement (server persistence comes in Step 3)
       decrementWebCredit();
       hideConsentModal();
-
       await runWebForTurn(turnId, question);
     });
   }
@@ -405,12 +394,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function showConsentModal({ turnId, question, note, web }) {
     ensureConsentModal();
-
-    // Update local credits UI from server (if provided), but never break session value.
     setCreditsFromServer(web);
     normalizeCredits();
 
-    // IMPORTANT: persist state to dataset BEFORE rendering / showing modal
     consentOverlayEl.dataset.turnId = String(turnId || "");
     consentOverlayEl.dataset.question = String(question || "");
 
@@ -418,9 +404,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const creditsEl = consentOverlayEl.querySelector("#rvConsentCredits");
     const useWebBtn = consentOverlayEl.querySelector("#rvConsentUseWeb");
 
-    noteEl.textContent =
-      note || "No direct RoofVault library support found for this roofing question.";
-
+    noteEl.textContent = note || "No direct RoofVault library support found for this roofing question.";
     creditsEl.textContent = `Web credits remaining: ${webCreditsRemaining}`;
 
     if (webCreditsRemaining <= 0) {
@@ -497,7 +481,9 @@ document.addEventListener("DOMContentLoaded", () => {
     pushHistory("user", question);
 
     try {
+      // IMPORTANT: Explicitly request doc-first behavior.
       const data = await postRvchat({
+        mode: "doc",
         question,
         messages: chatHistory,
         webCreditsRemaining,
@@ -510,7 +496,6 @@ document.addEventListener("DOMContentLoaded", () => {
           "general",
           []
         );
-        // remove last user message to keep session context clean
         if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user") {
           chatHistory.pop();
         }
@@ -526,7 +511,6 @@ document.addEventListener("DOMContentLoaded", () => {
         Array.isArray(data.sources) ? data.sources : []
       );
 
-      // If the server is refusing in doc-mode and requesting consent, show modal.
       if (data.needsConsentForWeb) {
         showConsentModal({
           turnId,
@@ -534,8 +518,6 @@ document.addEventListener("DOMContentLoaded", () => {
           note: data.note || "",
           web: data.web || {},
         });
-
-        // Keep the assistant refusal message in session history so the conversation is coherent.
         pushHistory("assistant", String(data.answer || ""));
         return;
       }
