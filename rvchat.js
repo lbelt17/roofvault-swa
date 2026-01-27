@@ -15,15 +15,12 @@ function escapeHtml(str) {
 function renderMarkdown(md) {
   let html = escapeHtml(String(md || "").trim());
 
-  // Headings
   html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
   html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
   html = html.replace(/^# (.+)$/gm, "<h1>$1</h1>");
 
-  // Bold **text**
   html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
 
-  // Paragraph-ish breaks
   html = html.replace(/\n{2,}/g, "<br><br>");
   html = html.replace(/\n/g, "<br>");
 
@@ -36,7 +33,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const statusEl = document.getElementById("status");
   const outEl = document.getElementById("out");
 
-  // ---- Add UI: session indicator + clear button (no HTML changes required) ----
   const rowEl = (askBtn && askBtn.parentElement) ? askBtn.parentElement : null;
 
   let memEl = null;
@@ -67,36 +63,45 @@ document.addEventListener("DOMContentLoaded", () => {
     rowEl.appendChild(clearBtn);
   }
 
-  // Transcript container
   outEl.innerHTML = `<div id="thread"></div>`;
   const threadEl = document.getElementById("thread");
 
   // ===== Session-only memory (frontend) =====
-  const chatHistory = []; // { role: "user"|"assistant", content: string }
+  const chatHistory = [];
   const MAX_HISTORY = 10;
 
   // ===== Session web credits =====
-  // Start unknown; we’ll initialize from server when it first returns web.creditsMax
+  // Deterministic default: user starts with 5 per session unless server overrides.
   let webCreditsMax = 5;
-  let webCreditsRemaining = null; // null means "unknown yet"
+  let webCreditsRemaining = 5;
 
-  function setCreditsFromServer(webObj) {
-    if (!webObj || typeof webObj !== "object") return;
-    if (Number.isFinite(Number(webObj.creditsMax))) webCreditsMax = Number(webObj.creditsMax);
-
-    if (Number.isFinite(Number(webObj.creditsRemaining))) {
-      webCreditsRemaining = Number(webObj.creditsRemaining);
-      return;
-    }
-
-    // If server doesn’t send remaining, initialize once to max
-    if (webCreditsRemaining === null && Number.isFinite(Number(webCreditsMax))) {
-      webCreditsRemaining = Number(webCreditsMax);
+  function normalizeCredits() {
+    if (!Number.isFinite(Number(webCreditsMax)) || Number(webCreditsMax) <= 0) webCreditsMax = 5;
+    if (!Number.isFinite(Number(webCreditsRemaining)) || Number(webCreditsRemaining) < 0) {
+      webCreditsRemaining = webCreditsMax;
     }
   }
 
+  function setCreditsFromServer(webObj) {
+    if (!webObj || typeof webObj !== "object") {
+      normalizeCredits();
+      return;
+    }
+
+    if (Number.isFinite(Number(webObj.creditsMax)) && Number(webObj.creditsMax) > 0) {
+      webCreditsMax = Number(webObj.creditsMax);
+    }
+
+    // If server sends remaining, trust it. If not, keep our local session value.
+    if (Number.isFinite(Number(webObj.creditsRemaining))) {
+      webCreditsRemaining = Number(webObj.creditsRemaining);
+    }
+
+    normalizeCredits();
+  }
+
   function decrementWebCredit() {
-    if (webCreditsRemaining === null) webCreditsRemaining = Number(webCreditsMax) || 5;
+    normalizeCredits();
     webCreditsRemaining = Math.max(0, Number(webCreditsRemaining) - 1);
     return webCreditsRemaining;
   }
@@ -110,6 +115,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function hideConsentModal() {
+    if (!consentOverlayEl) return;
+    consentOverlayEl.style.display = "none";
+    consentState = null;
+  }
+
   function clearHistoryAndUI() {
     chatHistory.length = 0;
     if (threadEl) threadEl.innerHTML = "";
@@ -119,17 +130,14 @@ document.addEventListener("DOMContentLoaded", () => {
     qEl.focus();
 
     // reset credits for this session
-    webCreditsRemaining = null;
     webCreditsMax = 5;
+    webCreditsRemaining = 5;
 
-    // close modal if open
     hideConsentModal();
   }
 
   if (clearBtn) {
-    clearBtn.addEventListener("click", () => {
-      clearHistoryAndUI();
-    });
+    clearBtn.addEventListener("click", () => clearHistoryAndUI());
   }
 
   function modeLabel(mode) {
@@ -140,7 +148,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return "";
   }
 
-  // Create a new "turn" container at the TOP (newest first)
   function prependTurn(questionText) {
     const turnId = "turn-" + Date.now() + "-" + Math.random().toString(16).slice(2);
 
@@ -201,10 +208,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let sourcesHtml = "";
     if (Array.isArray(sources) && sources.length) {
       const items = sources
-        .map((s) => {
-          const label = escapeHtml(`[${s.id}] ${s.source || "Unknown source"}`);
-          return `<li>${label}</li>`;
-        })
+        .map((s) => `<li>${escapeHtml(`[${s.id}] ${s.source || "Unknown source"}`)}</li>`)
         .join("");
 
       sourcesHtml = `
@@ -217,9 +221,7 @@ document.addEventListener("DOMContentLoaded", () => {
           font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
         ">
           <div style="font-weight:600;margin-bottom:4px;color:#374151;">Sources</div>
-          <ul style="margin:4px 0 0 18px;padding:0;">
-            ${items}
-          </ul>
+          <ul style="margin:4px 0 0 18px;padding:0;">${items}</ul>
         </div>
       `;
     }
@@ -273,9 +275,9 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
   }
 
-  // ===== Consent modal (no HTML changes required) =====
+  // ===== Consent modal =====
   let consentOverlayEl = null;
-  let consentState = null; // { turnId, question, note, creditsMax, creditsRemaining }
+  let consentState = null;
 
   function ensureConsentModal() {
     if (consentOverlayEl) return;
@@ -299,20 +301,16 @@ document.addEventListener("DOMContentLoaded", () => {
       ">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
           <div style="
-            width: 34px;
-            height: 34px;
-            border-radius: 12px;
+            width: 34px;height: 34px;border-radius: 12px;
             background: linear-gradient(135deg, #111827, #4b5563);
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            color:#fff;
-            font-weight:800;
-            font-size:14px;
+            display:flex;align-items:center;justify-content:center;
+            color:#fff;font-weight:800;font-size:14px;
           ">RV</div>
           <div>
-            <div style="font-weight:800;font-size:14px;color:#111827;" id="rvConsentTitle">No direct RoofVault doc support</div>
-            <div style="font-size:12px;color:#6b7280;margin-top:2px;" id="rvConsentSubtitle"></div>
+            <div style="font-weight:800;font-size:14px;color:#111827;">No direct RoofVault doc support</div>
+            <div style="font-size:12px;color:#6b7280;margin-top:2px;">
+              Roofing-related question, but the available snippets did not directly support an answer.
+            </div>
           </div>
         </div>
 
@@ -340,26 +338,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
           <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
             <button type="button" id="rvConsentStay" style="
-              padding: 8px 14px;
-              border-radius: 999px;
-              border: 1px solid #e5e7eb;
-              background: #ffffff;
-              color: #111827;
-              font-size: 13px;
-              font-weight: 700;
-              cursor: pointer;
-              box-shadow: none;
+              padding: 8px 14px;border-radius: 999px;border: 1px solid #e5e7eb;
+              background: #ffffff;color: #111827;font-size: 13px;font-weight: 700;
+              cursor: pointer;box-shadow: none;
             ">Stay doc-only</button>
 
             <button type="button" id="rvConsentUseWeb" style="
-              padding: 8px 14px;
-              border-radius: 999px;
-              border: 1px solid #2563eb;
+              padding: 8px 14px;border-radius: 999px;border: 1px solid #2563eb;
               background: linear-gradient(135deg, #2563eb, #3b82f6);
-              color: #ffffff;
-              font-size: 13px;
-              font-weight: 800;
-              cursor: pointer;
+              color: #ffffff;font-size: 13px;font-weight: 800;cursor: pointer;
               box-shadow: 0 6px 14px rgba(37,99,235,0.25);
             ">Use the web (1 credit)</button>
           </div>
@@ -373,28 +360,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.body.appendChild(consentOverlayEl);
 
-    // Close on overlay click (but not modal click)
     consentOverlayEl.addEventListener("click", (e) => {
       if (e.target === consentOverlayEl) hideConsentModal();
     });
 
-    const stayBtn = consentOverlayEl.querySelector("#rvConsentStay");
-    const useWebBtn = consentOverlayEl.querySelector("#rvConsentUseWeb");
+    consentOverlayEl.querySelector("#rvConsentStay").addEventListener("click", () => hideConsentModal());
 
-    stayBtn.addEventListener("click", () => hideConsentModal());
-    useWebBtn.addEventListener("click", async () => {
+    consentOverlayEl.querySelector("#rvConsentUseWeb").addEventListener("click", async () => {
       if (!consentState) return;
 
-      // If out of credits, just close and do nothing
-      if (Number(webCreditsRemaining ?? webCreditsMax) <= 0) {
+      normalizeCredits();
+      if (webCreditsRemaining <= 0) {
         hideConsentModal();
         return;
       }
 
-      // Decrement credit now (client-controlled)
       decrementWebCredit();
-
-      // Call web mode and render into SAME turn
       hideConsentModal();
       await runWebForTurn(consentState.turnId, consentState.question);
     });
@@ -402,33 +383,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function showConsentModal({ turnId, question, note, web }) {
     ensureConsentModal();
-    setCreditsFromServer(web);
+    setCreditsFromServer(web); // will not zero out locally anymore
+    normalizeCredits();
 
-    consentState = {
-      turnId,
-      question,
-      note: note || "",
-      creditsMax: Number.isFinite(Number(web?.creditsMax)) ? Number(web.creditsMax) : webCreditsMax,
-      creditsRemaining:
-        Number.isFinite(Number(web?.creditsRemaining))
-          ? Number(web.creditsRemaining)
-          : (webCreditsRemaining === null ? webCreditsMax : webCreditsRemaining)
-    };
+    consentState = { turnId, question };
 
-    const subtitle = consentOverlayEl.querySelector("#rvConsentSubtitle");
     const noteEl = consentOverlayEl.querySelector("#rvConsentNote");
     const creditsEl = consentOverlayEl.querySelector("#rvConsentCredits");
     const useWebBtn = consentOverlayEl.querySelector("#rvConsentUseWeb");
 
-    subtitle.textContent = "Roofing-related question, but the available snippets did not directly support an answer.";
-    noteEl.textContent = consentState.note || "No direct RoofVault library support found for this roofing question.";
+    noteEl.textContent = note || "No direct RoofVault library support found for this roofing question.";
 
-    const remaining = Number(consentState.creditsRemaining);
-    const max = Number(consentState.creditsMax);
-    creditsEl.textContent = `Web credits remaining: ${Number.isFinite(remaining) ? remaining : max}`;
+    creditsEl.textContent = `Web credits remaining: ${webCreditsRemaining}`;
 
-    // Disable button if no credits
-    if (Number.isFinite(remaining) && remaining <= 0) {
+    if (webCreditsRemaining <= 0) {
       useWebBtn.disabled = true;
       useWebBtn.style.opacity = "0.65";
       useWebBtn.style.cursor = "not-allowed";
@@ -441,12 +409,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     consentOverlayEl.style.display = "flex";
-  }
-
-  function hideConsentModal() {
-    if (!consentOverlayEl) return;
-    consentOverlayEl.style.display = "none";
-    consentState = null;
   }
 
   async function postRvchat(payload) {
@@ -466,48 +428,31 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function runWebForTurn(turnId, question) {
-    // Update UI: show loading inside the same turn
     renderAssistantLoading(turnId, "Using the web…");
 
-    // Include session history + remaining credits
     const data = await postRvchat({
       mode: "web",
       question,
       messages: chatHistory,
-      webCreditsRemaining: webCreditsRemaining
+      webCreditsRemaining
     });
 
     if (!data.ok) {
-      renderAssistantIntoTurn(
-        turnId,
-        data.error || "Web mode failed.",
-        "general",
-        []
-      );
+      renderAssistantIntoTurn(turnId, data.error || "Web mode failed.", "general", []);
       return;
     }
 
-    // Render web answer
-    const answerText = String(data.answer || "");
-    const mode = data.mode || "web";
-    const sources = Array.isArray(data.sources) ? data.sources : [];
-    renderAssistantIntoTurn(turnId, answerText, mode, sources);
-
-    // Update credits from server if it returned anything
     setCreditsFromServer(data.web);
 
-    // Memory: store assistant message
+    const answerText = String(data.answer || "");
+    renderAssistantIntoTurn(turnId, answerText, data.mode || "web", Array.isArray(data.sources) ? data.sources : []);
     pushHistory("assistant", answerText);
   }
 
   async function askRoofVault() {
     const question = (qEl.value || "").trim();
-    if (!question) {
-      qEl.focus();
-      return;
-    }
+    if (!question) return;
 
-    // Clear input immediately
     qEl.value = "";
     qEl.focus();
 
@@ -516,46 +461,31 @@ document.addEventListener("DOMContentLoaded", () => {
     statusEl.textContent = "Thinking...";
     outEl.style.display = "block";
 
-    // Create newest turn at top
     const turnId = prependTurn(question);
-
-    // Memory: store user message
     pushHistory("user", question);
 
     try {
-      // Default call: let server decide doc/general (and possibly return consent flag)
       const data = await postRvchat({
         question,
         messages: chatHistory,
-        // If we already have credits in session, echo it (server can display it back in refusal)
-        webCreditsRemaining: webCreditsRemaining
+        webCreditsRemaining
       });
 
       if (!data.ok) {
-        renderAssistantIntoTurn(
-          turnId,
-          data.error || "There was an error answering your question.",
-          "general",
-          []
-        );
-
-        // Keep memory clean: remove last user message
-        if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user") {
-          chatHistory.pop();
-        }
+        renderAssistantIntoTurn(turnId, data.error || "There was an error answering your question.", "general", []);
+        if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user") chatHistory.pop();
         return;
       }
 
-      // Update credits if server provides web object
       setCreditsFromServer(data.web);
 
-      const answerText = String(data.answer || "");
-      const mode = data.mode || "";
-      const sources = Array.isArray(data.sources) ? data.sources : [];
+      renderAssistantIntoTurn(
+        turnId,
+        String(data.answer || ""),
+        data.mode || "",
+        Array.isArray(data.sources) ? data.sources : []
+      );
 
-      renderAssistantIntoTurn(turnId, answerText, mode, sources);
-
-      // If server requests consent, show modal (do NOT auto web-call)
       if (data.needsConsentForWeb) {
         showConsentModal({
           turnId,
@@ -563,21 +493,14 @@ document.addEventListener("DOMContentLoaded", () => {
           note: data.note || "",
           web: data.web || {}
         });
-
-        // Store the refusal answer in memory so the conversation is coherent
-        pushHistory("assistant", answerText);
+        pushHistory("assistant", String(data.answer || ""));
         return;
       }
 
-      // Normal: store assistant message
-      pushHistory("assistant", answerText);
+      pushHistory("assistant", String(data.answer || ""));
     } catch (e) {
       renderAssistantIntoTurn(turnId, "Network or server error: " + String(e), "general", []);
-
-      // Keep memory clean
-      if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user") {
-        chatHistory.pop();
-      }
+      if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user") chatHistory.pop();
     } finally {
       askBtn.disabled = false;
       if (clearBtn) clearBtn.disabled = false;
@@ -587,7 +510,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   askBtn.addEventListener("click", askRoofVault);
 
-  // Enter sends, Shift+Enter new line
   qEl.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
