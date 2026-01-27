@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const statusEl = document.getElementById("status");
   const outEl = document.getElementById("out");
 
-  const rowEl = (askBtn && askBtn.parentElement) ? askBtn.parentElement : null;
+  const rowEl = askBtn && askBtn.parentElement ? askBtn.parentElement : null;
 
   let memEl = null;
   let clearBtn = null;
@@ -71,15 +71,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const MAX_HISTORY = 10;
 
   // ===== Session web credits =====
-  // Deterministic default: user starts with 5 per session unless server overrides.
+  // Default per session unless server overrides.
   let webCreditsMax = 5;
   let webCreditsRemaining = 5;
 
   function normalizeCredits() {
-    if (!Number.isFinite(Number(webCreditsMax)) || Number(webCreditsMax) <= 0) webCreditsMax = 5;
-    if (!Number.isFinite(Number(webCreditsRemaining)) || Number(webCreditsRemaining) < 0) {
-      webCreditsRemaining = webCreditsMax;
-    }
+    const max = Number(webCreditsMax);
+    const rem = Number(webCreditsRemaining);
+
+    if (!Number.isFinite(max) || max <= 0) webCreditsMax = 5;
+    if (!Number.isFinite(rem) || rem < 0) webCreditsRemaining = Number(webCreditsMax) || 5;
+
+    // clamp remaining to [0, max]
+    webCreditsRemaining = Math.max(0, Math.min(Number(webCreditsRemaining), Number(webCreditsMax)));
   }
 
   function setCreditsFromServer(webObj) {
@@ -92,7 +96,6 @@ document.addEventListener("DOMContentLoaded", () => {
       webCreditsMax = Number(webObj.creditsMax);
     }
 
-    // If server sends remaining, trust it. If not, keep our local session value.
     if (Number.isFinite(Number(webObj.creditsRemaining))) {
       webCreditsRemaining = Number(webObj.creditsRemaining);
     }
@@ -115,15 +118,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function hideConsentModal() {
-    if (!consentOverlayEl) return;
-    consentOverlayEl.style.display = "none";
-    consentState = null;
-    if (consentOverlayEl) {
-  consentOverlayEl.dataset.turnId = "";
-  consentOverlayEl.dataset.question = "";
-}
-
+  function modeLabel(mode) {
+    const m = String(mode || "").toLowerCase();
+    if (m === "doc") return "Document Answer";
+    if (m === "general") return "General Answer";
+    if (m === "web") return "Web Answer";
+    return "";
   }
 
   function clearHistoryAndUI() {
@@ -134,7 +134,6 @@ document.addEventListener("DOMContentLoaded", () => {
     qEl.value = "";
     qEl.focus();
 
-    // reset credits for this session
     webCreditsMax = 5;
     webCreditsRemaining = 5;
 
@@ -143,14 +142,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (clearBtn) {
     clearBtn.addEventListener("click", () => clearHistoryAndUI());
-  }
-
-  function modeLabel(mode) {
-    const m = String(mode || "").toLowerCase();
-    if (m === "doc") return "Document Answer";
-    if (m === "general") return "General Answer";
-    if (m === "web") return "Web Answer";
-    return "";
   }
 
   function prependTurn(questionText) {
@@ -280,9 +271,8 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
   }
 
-  // ===== Consent modal =====
+  // ===== Consent modal (opt-in web) =====
   let consentOverlayEl = null;
-  let consentState = null;
 
   function ensureConsentModal() {
     if (consentOverlayEl) return;
@@ -295,6 +285,11 @@ document.addEventListener("DOMContentLoaded", () => {
     consentOverlayEl.style.alignItems = "center";
     consentOverlayEl.style.justifyContent = "center";
     consentOverlayEl.style.zIndex = "9999";
+
+    // dataset is our single source of truth for click handlers
+    consentOverlayEl.dataset.turnId = "";
+    consentOverlayEl.dataset.question = "";
+
     consentOverlayEl.innerHTML = `
       <div style="
         width: min(620px, 92vw);
@@ -364,54 +359,67 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
     document.body.appendChild(consentOverlayEl);
 
+    // click outside modal to close
     consentOverlayEl.addEventListener("click", (e) => {
       if (e.target === consentOverlayEl) hideConsentModal();
     });
 
-    consentOverlayEl
-      .querySelector("#rvConsentStay")
-      .addEventListener("click", () => hideConsentModal());
+    // stay doc-only
+    const stayBtn = consentOverlayEl.querySelector("#rvConsentStay");
+    stayBtn.addEventListener("click", (e) => {
+      if (e && typeof e.stopPropagation === "function") e.stopPropagation();
+      hideConsentModal();
+    });
 
-    consentOverlayEl
-      .querySelector("#rvConsentUseWeb")
-      .addEventListener("click", async (e) => {
-        // prevent any bubbling weirdness
-        if (e && typeof e.stopPropagation === "function") e.stopPropagation();
+    // use the web
+    const useWebBtn = consentOverlayEl.querySelector("#rvConsentUseWeb");
+    useWebBtn.addEventListener("click", async (e) => {
+      if (e && typeof e.stopPropagation === "function") e.stopPropagation();
 
-        // read state from overlay dataset (never null)
-        const turnId = consentOverlayEl?.dataset?.turnId || "";
-        const question = consentOverlayEl?.dataset?.question || "";
-        if (!turnId || !question) return;
+      const turnId = String(consentOverlayEl?.dataset?.turnId || "");
+      const question = String(consentOverlayEl?.dataset?.question || "");
 
-        normalizeCredits();
-        if (webCreditsRemaining <= 0) {
-          hideConsentModal();
-          return;
-        }
+      // If these are empty, something upstream failed — do nothing (no crash).
+      if (!turnId || !question) return;
 
-        decrementWebCredit();
+      normalizeCredits();
+      if (webCreditsRemaining <= 0) {
         hideConsentModal();
-        await runWebForTurn(turnId, question);
-      });
+        return;
+      }
+
+      // Optimistic local decrement (server persistence comes in Step 3)
+      decrementWebCredit();
+      hideConsentModal();
+
+      await runWebForTurn(turnId, question);
+    });
   }
 
+  function hideConsentModal() {
+    if (!consentOverlayEl) return;
+    consentOverlayEl.style.display = "none";
+    consentOverlayEl.dataset.turnId = "";
+    consentOverlayEl.dataset.question = "";
+  }
 
   function showConsentModal({ turnId, question, note, web }) {
     ensureConsentModal();
-    setCreditsFromServer(web); // will not zero out locally anymore
+
+    // Update local credits UI from server (if provided), but never break session value.
+    setCreditsFromServer(web);
     normalizeCredits();
 
-    consentState = { turnId, question };
-    // persist state on the overlay so click handlers never see null
-consentOverlayEl.dataset.turnId = String(turnId || "");
-consentOverlayEl.dataset.question = String(question || "");
-
+    // IMPORTANT: persist state to dataset BEFORE rendering / showing modal
+    consentOverlayEl.dataset.turnId = String(turnId || "");
+    consentOverlayEl.dataset.question = String(question || "");
 
     const noteEl = consentOverlayEl.querySelector("#rvConsentNote");
     const creditsEl = consentOverlayEl.querySelector("#rvConsentCredits");
     const useWebBtn = consentOverlayEl.querySelector("#rvConsentUseWeb");
 
-    noteEl.textContent = note || "No direct RoofVault library support found for this roofing question.";
+    noteEl.textContent =
+      note || "No direct RoofVault library support found for this roofing question.";
 
     creditsEl.textContent = `Web credits remaining: ${webCreditsRemaining}`;
 
@@ -434,7 +442,7 @@ consentOverlayEl.dataset.question = String(question || "");
     const res = await fetch("/api/rvchat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     let data = {};
@@ -453,7 +461,7 @@ consentOverlayEl.dataset.question = String(question || "");
       mode: "web",
       question,
       messages: chatHistory,
-      webCreditsRemaining
+      webCreditsRemaining,
     });
 
     if (!data.ok) {
@@ -464,7 +472,12 @@ consentOverlayEl.dataset.question = String(question || "");
     setCreditsFromServer(data.web);
 
     const answerText = String(data.answer || "");
-    renderAssistantIntoTurn(turnId, answerText, data.mode || "web", Array.isArray(data.sources) ? data.sources : []);
+    renderAssistantIntoTurn(
+      turnId,
+      answerText,
+      data.mode || "web",
+      Array.isArray(data.sources) ? data.sources : []
+    );
     pushHistory("assistant", answerText);
   }
 
@@ -487,12 +500,20 @@ consentOverlayEl.dataset.question = String(question || "");
       const data = await postRvchat({
         question,
         messages: chatHistory,
-        webCreditsRemaining
+        webCreditsRemaining,
       });
 
       if (!data.ok) {
-        renderAssistantIntoTurn(turnId, data.error || "There was an error answering your question.", "general", []);
-        if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user") chatHistory.pop();
+        renderAssistantIntoTurn(
+          turnId,
+          data.error || "There was an error answering your question.",
+          "general",
+          []
+        );
+        // remove last user message to keep session context clean
+        if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user") {
+          chatHistory.pop();
+        }
         return;
       }
 
@@ -505,13 +526,16 @@ consentOverlayEl.dataset.question = String(question || "");
         Array.isArray(data.sources) ? data.sources : []
       );
 
+      // If the server is refusing in doc-mode and requesting consent, show modal.
       if (data.needsConsentForWeb) {
         showConsentModal({
           turnId,
           question,
           note: data.note || "",
-          web: data.web || {}
+          web: data.web || {},
         });
+
+        // Keep the assistant refusal message in session history so the conversation is coherent.
         pushHistory("assistant", String(data.answer || ""));
         return;
       }
@@ -519,7 +543,9 @@ consentOverlayEl.dataset.question = String(question || "");
       pushHistory("assistant", String(data.answer || ""));
     } catch (e) {
       renderAssistantIntoTurn(turnId, "Network or server error: " + String(e), "general", []);
-      if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user") chatHistory.pop();
+      if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user") {
+        chatHistory.pop();
+      }
     } finally {
       askBtn.disabled = false;
       if (clearBtn) clearBtn.disabled = false;
