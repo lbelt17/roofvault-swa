@@ -119,6 +119,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!consentOverlayEl) return;
     consentOverlayEl.style.display = "none";
     consentState = null;
+    if (consentOverlayEl) {
+  consentOverlayEl.dataset.turnId = "";
+  consentOverlayEl.dataset.question = "";
+}
+
   }
 
   function clearHistoryAndUI() {
@@ -357,29 +362,39 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       </div>
     `;
-
     document.body.appendChild(consentOverlayEl);
 
     consentOverlayEl.addEventListener("click", (e) => {
       if (e.target === consentOverlayEl) hideConsentModal();
     });
 
-    consentOverlayEl.querySelector("#rvConsentStay").addEventListener("click", () => hideConsentModal());
+    consentOverlayEl
+      .querySelector("#rvConsentStay")
+      .addEventListener("click", () => hideConsentModal());
 
-    consentOverlayEl.querySelector("#rvConsentUseWeb").addEventListener("click", async () => {
-      if (!consentState) return;
+    consentOverlayEl
+      .querySelector("#rvConsentUseWeb")
+      .addEventListener("click", async (e) => {
+        // prevent any bubbling weirdness
+        if (e && typeof e.stopPropagation === "function") e.stopPropagation();
 
-      normalizeCredits();
-      if (webCreditsRemaining <= 0) {
+        // read state from overlay dataset (never null)
+        const turnId = consentOverlayEl?.dataset?.turnId || "";
+        const question = consentOverlayEl?.dataset?.question || "";
+        if (!turnId || !question) return;
+
+        normalizeCredits();
+        if (webCreditsRemaining <= 0) {
+          hideConsentModal();
+          return;
+        }
+
+        decrementWebCredit();
         hideConsentModal();
-        return;
-      }
-
-      decrementWebCredit();
-      hideConsentModal();
-      await runWebForTurn(consentState.turnId, consentState.question);
-    });
+        await runWebForTurn(turnId, question);
+      });
   }
+
 
   function showConsentModal({ turnId, question, note, web }) {
     ensureConsentModal();
@@ -387,6 +402,10 @@ document.addEventListener("DOMContentLoaded", () => {
     normalizeCredits();
 
     consentState = { turnId, question };
+    // persist state on the overlay so click handlers never see null
+consentOverlayEl.dataset.turnId = String(turnId || "");
+consentOverlayEl.dataset.question = String(question || "");
+
 
     const noteEl = consentOverlayEl.querySelector("#rvConsentNote");
     const creditsEl = consentOverlayEl.querySelector("#rvConsentCredits");
