@@ -1,7 +1,7 @@
 ﻿// rvchat.js
 // RoofVault Chat – session-only memory + newest-at-top threading
 // Adds: Clear Chat button + "Session memory: ON" indicator
-// Adds: Web-consent modal (opt-in only) + simple 5-credit tracking (frontend only)
+// Adds: Web consent modal flow (opt-in only) + session web credits tracking
 // Enter sends, Shift+Enter newline. Refresh clears session.
 
 function escapeHtml(str) {
@@ -37,20 +37,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const outEl = document.getElementById("out");
 
   // ---- Add UI: session indicator + clear button (no HTML changes required) ----
-  const rowEl = askBtn && askBtn.parentElement ? askBtn.parentElement : null;
+  const rowEl = (askBtn && askBtn.parentElement) ? askBtn.parentElement : null;
 
   let memEl = null;
   let clearBtn = null;
 
   if (rowEl) {
-    // Session indicator
     memEl = document.createElement("span");
     memEl.textContent = "Session memory: ON";
     memEl.style.fontSize = "12px";
     memEl.style.color = "#6b7280";
     memEl.style.marginLeft = "10px";
 
-    // Clear button
     clearBtn = document.createElement("button");
     clearBtn.type = "button";
     clearBtn.textContent = "Clear chat";
@@ -61,23 +59,47 @@ document.addEventListener("DOMContentLoaded", () => {
     clearBtn.style.boxShadow = "none";
     clearBtn.style.fontWeight = "600";
 
-    // Keep the row layout nice
     rowEl.style.display = "flex";
     rowEl.style.alignItems = "center";
     rowEl.style.gap = "8px";
 
-    // Insert in row
     rowEl.appendChild(memEl);
     rowEl.appendChild(clearBtn);
   }
 
-  // Turn #out into a transcript container
+  // Transcript container
   outEl.innerHTML = `<div id="thread"></div>`;
   const threadEl = document.getElementById("thread");
 
   // ===== Session-only memory (frontend) =====
   const chatHistory = []; // { role: "user"|"assistant", content: string }
   const MAX_HISTORY = 10;
+
+  // ===== Session web credits =====
+  // Start unknown; we’ll initialize from server when it first returns web.creditsMax
+  let webCreditsMax = 5;
+  let webCreditsRemaining = null; // null means "unknown yet"
+
+  function setCreditsFromServer(webObj) {
+    if (!webObj || typeof webObj !== "object") return;
+    if (Number.isFinite(Number(webObj.creditsMax))) webCreditsMax = Number(webObj.creditsMax);
+
+    if (Number.isFinite(Number(webObj.creditsRemaining))) {
+      webCreditsRemaining = Number(webObj.creditsRemaining);
+      return;
+    }
+
+    // If server doesn’t send remaining, initialize once to max
+    if (webCreditsRemaining === null && Number.isFinite(Number(webCreditsMax))) {
+      webCreditsRemaining = Number(webCreditsMax);
+    }
+  }
+
+  function decrementWebCredit() {
+    if (webCreditsRemaining === null) webCreditsRemaining = Number(webCreditsMax) || 5;
+    webCreditsRemaining = Math.max(0, Number(webCreditsRemaining) - 1);
+    return webCreditsRemaining;
+  }
 
   function pushHistory(role, content) {
     const text = String(content || "").trim();
@@ -88,156 +110,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ===== Web credits (frontend-only for now) =====
-  // This is intentionally not stored in localStorage to keep it "session-only".
-  let webCreditsRemaining = 5;
-
-  // ===== Consent modal (created dynamically) =====
-  function ensureConsentModal() {
-    if (document.getElementById("rv-consent-overlay")) return;
-
-    const overlay = document.createElement("div");
-    overlay.id = "rv-consent-overlay";
-    overlay.style.position = "fixed";
-    overlay.style.inset = "0";
-    overlay.style.background = "rgba(15,23,42,0.55)";
-    overlay.style.display = "none";
-    overlay.style.alignItems = "center";
-    overlay.style.justifyContent = "center";
-    overlay.style.padding = "18px";
-    overlay.style.zIndex = "9999";
-
-    const modal = document.createElement("div");
-    modal.id = "rv-consent-modal";
-    modal.style.width = "min(560px, 96vw)";
-    modal.style.background = "#ffffff";
-    modal.style.border = "1px solid #e5e7eb";
-    modal.style.borderRadius = "16px";
-    modal.style.boxShadow = "0 18px 50px rgba(15,23,42,0.25)";
-    modal.style.padding = "16px";
-
-    modal.innerHTML = `
-      <div style="display:flex;align-items:flex-start;gap:12px;">
-        <div style="
-          width:40px;height:40px;border-radius:12px;
-          background: linear-gradient(135deg, #111827, #4b5563);
-          display:flex;align-items:center;justify-content:center;
-          color:#fff;font-weight:800;
-        ">RV</div>
-
-        <div style="flex:1;">
-          <div style="font-weight:800;font-size:15px;color:#111827;">
-            No direct RoofVault doc support
-          </div>
-          <div id="rv-consent-note" style="margin-top:6px;color:#4b5563;font-size:13px;line-height:1.5;">
-            This roofing question doesn’t have a grounded answer in your RoofVault documents.
-            You can keep doc-only mode, or explicitly opt in to a web answer.
-          </div>
-
-          <div style="
-            margin-top:10px;
-            display:flex;gap:8px;flex-wrap:wrap;align-items:center;
-          ">
-            <span id="rv-consent-credits" style="
-              font-size:12px;color:#6b7280;background:#f3f4f6;border:1px solid #e5e7eb;
-              padding:5px 10px;border-radius:999px;
-            ">Web credits remaining: 5</span>
-          </div>
-
-          <div style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
-            <button id="rv-consent-cancel" type="button" style="
-              padding:8px 14px;border-radius:999px;border:1px solid #e5e7eb;
-              background:#ffffff;color:#111827;font-size:13px;font-weight:700;
-              box-shadow:none;cursor:pointer;
-            ">Stay doc-only</button>
-
-            <button id="rv-consent-web" type="button" style="
-              padding:8px 14px;border-radius:999px;border:1px solid #3b82f6;
-              background: linear-gradient(135deg, #2563eb, #3b82f6);
-              color:#ffffff;font-size:13px;font-weight:700;cursor:pointer;
-              box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
-            ">Use the web (1 credit)</button>
-          </div>
-
-          <div style="margin-top:10px;font-size:11px;color:#6b7280;line-height:1.45;">
-            Web mode is opt-in only. The server will not use the web unless you explicitly choose it.
-          </div>
-        </div>
-      </div>
-    `;
-
-    overlay.appendChild(modal);
-    document.body.appendChild(overlay);
-
-    // close on overlay click (outside modal)
-    overlay.addEventListener("click", (e) => {
-      if (e.target === overlay) {
-        hideConsentModal();
-        if (consentResolver) consentResolver({ choice: "cancel" });
-      }
-    });
-  }
-
-  let consentResolver = null;
-
-  function showConsentModal({ noteText = "", creditsRemaining = webCreditsRemaining } = {}) {
-    ensureConsentModal();
-    const overlay = document.getElementById("rv-consent-overlay");
-    const noteEl = document.getElementById("rv-consent-note");
-    const creditsEl = document.getElementById("rv-consent-credits");
-    const webBtn = document.getElementById("rv-consent-web");
-    const cancelBtn = document.getElementById("rv-consent-cancel");
-
-    if (!overlay || !noteEl || !creditsEl || !webBtn || !cancelBtn) return;
-
-    const safeNote =
-      String(noteText || "").trim() ||
-      "This roofing question doesn’t have a grounded answer in your RoofVault documents.";
-
-    noteEl.textContent = safeNote;
-    creditsEl.textContent = `Web credits remaining: ${Number.isFinite(Number(creditsRemaining)) ? Number(creditsRemaining) : webCreditsRemaining}`;
-
-    // Disable web button if no credits
-    const creditsNum = Number.isFinite(Number(creditsRemaining))
-      ? Number(creditsRemaining)
-      : webCreditsRemaining;
-
-    webBtn.disabled = !(creditsNum > 0);
-    webBtn.style.opacity = webBtn.disabled ? "0.6" : "1";
-    webBtn.style.cursor = webBtn.disabled ? "not-allowed" : "pointer";
-
-    overlay.style.display = "flex";
-
-    return new Promise((resolve) => {
-      consentResolver = resolve;
-
-      // Ensure we don't stack handlers
-      webBtn.onclick = () => {
-        hideConsentModal();
-        resolve({ choice: "web" });
-      };
-
-      cancelBtn.onclick = () => {
-        hideConsentModal();
-        resolve({ choice: "cancel" });
-      };
-    });
-  }
-
-  function hideConsentModal() {
-    const overlay = document.getElementById("rv-consent-overlay");
-    if (overlay) overlay.style.display = "none";
-    consentResolver = null;
-  }
-
   function clearHistoryAndUI() {
     chatHistory.length = 0;
-    webCreditsRemaining = 5; // session reset
     if (threadEl) threadEl.innerHTML = "";
     outEl.style.display = "none";
     statusEl.textContent = "";
     qEl.value = "";
     qEl.focus();
+
+    // reset credits for this session
+    webCreditsRemaining = null;
+    webCreditsMax = 5;
+
+    // close modal if open
+    hideConsentModal();
   }
 
   if (clearBtn) {
@@ -250,14 +136,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const m = String(mode || "").toLowerCase();
     if (m === "doc") return "Document Answer";
     if (m === "general") return "General Answer";
-    if (m === "web") return "Web Answer (Opt-in)";
+    if (m === "web") return "Web Answer";
     return "";
   }
 
   // Create a new "turn" container at the TOP (newest first)
   function prependTurn(questionText) {
-    const turnId =
-      "turn-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+    const turnId = "turn-" + Date.now() + "-" + Math.random().toString(16).slice(2);
 
     const html = `
       <div id="${turnId}" style="
@@ -299,12 +184,8 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
-    // Prepend newest turn at the top
     threadEl.insertAdjacentHTML("afterbegin", html);
-
-    // Keep view at the top so newest stays near input
     outEl.scrollTop = 0;
-
     return turnId;
   }
 
@@ -314,9 +195,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const badge = modeLabel(mode);
     const badgeHtml = badge
-      ? `<div style="margin-bottom:8px;"><span class="rv-badge">${escapeHtml(
-          badge
-        )}</span></div>`
+      ? `<div style="margin-bottom:8px;"><span class="rv-badge">${escapeHtml(badge)}</span></div>`
       : "";
 
     let sourcesHtml = "";
@@ -370,22 +249,211 @@ document.addEventListener("DOMContentLoaded", () => {
     outEl.scrollTop = 0;
   }
 
-  async function callRvChat({ question, mode, allowWeb }) {
-    const body = {
+  function renderAssistantLoading(turnId, label) {
+    const turn = document.getElementById(turnId);
+    if (!turn) return;
+    const slot = turn.querySelector(".rv-assistant-slot");
+    if (!slot) return;
+
+    slot.innerHTML = `
+      <div style="display:flex;justify-content:flex-start;">
+        <div style="
+          max-width: 90%;
+          background: #f9fafb;
+          border: 1px solid #e5e7eb;
+          padding: 12px;
+          border-radius: 14px;
+          line-height: 1.6;
+          font-size: 14px;
+          width: 100%;
+        ">
+          <div style="color:#6b7280;font-size:12px;">${escapeHtml(label || "Thinking…")}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // ===== Consent modal (no HTML changes required) =====
+  let consentOverlayEl = null;
+  let consentState = null; // { turnId, question, note, creditsMax, creditsRemaining }
+
+  function ensureConsentModal() {
+    if (consentOverlayEl) return;
+
+    consentOverlayEl = document.createElement("div");
+    consentOverlayEl.style.position = "fixed";
+    consentOverlayEl.style.inset = "0";
+    consentOverlayEl.style.background = "rgba(15, 23, 42, 0.45)";
+    consentOverlayEl.style.display = "none";
+    consentOverlayEl.style.alignItems = "center";
+    consentOverlayEl.style.justifyContent = "center";
+    consentOverlayEl.style.zIndex = "9999";
+    consentOverlayEl.innerHTML = `
+      <div style="
+        width: min(620px, 92vw);
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 24px 60px rgba(15,23,42,0.24);
+        padding: 16px 16px 14px;
+      ">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div style="
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #111827, #4b5563);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            color:#fff;
+            font-weight:800;
+            font-size:14px;
+          ">RV</div>
+          <div>
+            <div style="font-weight:800;font-size:14px;color:#111827;" id="rvConsentTitle">No direct RoofVault doc support</div>
+            <div style="font-size:12px;color:#6b7280;margin-top:2px;" id="rvConsentSubtitle"></div>
+          </div>
+        </div>
+
+        <div style="
+          margin: 10px 0 12px;
+          padding: 10px 12px;
+          border-radius: 12px;
+          background: #f9fafb;
+          border: 1px solid #e5e7eb;
+          color: #374151;
+          font-size: 13px;
+          line-height: 1.5;
+        " id="rvConsentNote"></div>
+
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <span style="
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            font-size: 12px;
+            color: #374151;
+            font-weight: 700;
+          " id="rvConsentCredits"></span>
+
+          <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" id="rvConsentStay" style="
+              padding: 8px 14px;
+              border-radius: 999px;
+              border: 1px solid #e5e7eb;
+              background: #ffffff;
+              color: #111827;
+              font-size: 13px;
+              font-weight: 700;
+              cursor: pointer;
+              box-shadow: none;
+            ">Stay doc-only</button>
+
+            <button type="button" id="rvConsentUseWeb" style="
+              padding: 8px 14px;
+              border-radius: 999px;
+              border: 1px solid #2563eb;
+              background: linear-gradient(135deg, #2563eb, #3b82f6);
+              color: #ffffff;
+              font-size: 13px;
+              font-weight: 800;
+              cursor: pointer;
+              box-shadow: 0 6px 14px rgba(37,99,235,0.25);
+            ">Use the web (1 credit)</button>
+          </div>
+        </div>
+
+        <div style="margin-top:10px;color:#6b7280;font-size:11px;">
+          Web mode is opt-in only. The server will not use the web unless you explicitly choose it.
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(consentOverlayEl);
+
+    // Close on overlay click (but not modal click)
+    consentOverlayEl.addEventListener("click", (e) => {
+      if (e.target === consentOverlayEl) hideConsentModal();
+    });
+
+    const stayBtn = consentOverlayEl.querySelector("#rvConsentStay");
+    const useWebBtn = consentOverlayEl.querySelector("#rvConsentUseWeb");
+
+    stayBtn.addEventListener("click", () => hideConsentModal());
+    useWebBtn.addEventListener("click", async () => {
+      if (!consentState) return;
+
+      // If out of credits, just close and do nothing
+      if (Number(webCreditsRemaining ?? webCreditsMax) <= 0) {
+        hideConsentModal();
+        return;
+      }
+
+      // Decrement credit now (client-controlled)
+      decrementWebCredit();
+
+      // Call web mode and render into SAME turn
+      hideConsentModal();
+      await runWebForTurn(consentState.turnId, consentState.question);
+    });
+  }
+
+  function showConsentModal({ turnId, question, note, web }) {
+    ensureConsentModal();
+    setCreditsFromServer(web);
+
+    consentState = {
+      turnId,
       question,
-      messages: chatHistory
+      note: note || "",
+      creditsMax: Number.isFinite(Number(web?.creditsMax)) ? Number(web.creditsMax) : webCreditsMax,
+      creditsRemaining:
+        Number.isFinite(Number(web?.creditsRemaining))
+          ? Number(web.creditsRemaining)
+          : (webCreditsRemaining === null ? webCreditsMax : webCreditsRemaining)
     };
 
-    if (mode) body.mode = mode;
-    if (allowWeb) body.allowWeb = true;
+    const subtitle = consentOverlayEl.querySelector("#rvConsentSubtitle");
+    const noteEl = consentOverlayEl.querySelector("#rvConsentNote");
+    const creditsEl = consentOverlayEl.querySelector("#rvConsentCredits");
+    const useWebBtn = consentOverlayEl.querySelector("#rvConsentUseWeb");
 
-    // Send remaining credits so server can echo it back for UI (optional)
-    body.webCreditsRemaining = webCreditsRemaining;
+    subtitle.textContent = "Roofing-related question, but the available snippets did not directly support an answer.";
+    noteEl.textContent = consentState.note || "No direct RoofVault library support found for this roofing question.";
 
+    const remaining = Number(consentState.creditsRemaining);
+    const max = Number(consentState.creditsMax);
+    creditsEl.textContent = `Web credits remaining: ${Number.isFinite(remaining) ? remaining : max}`;
+
+    // Disable button if no credits
+    if (Number.isFinite(remaining) && remaining <= 0) {
+      useWebBtn.disabled = true;
+      useWebBtn.style.opacity = "0.65";
+      useWebBtn.style.cursor = "not-allowed";
+      useWebBtn.textContent = "No web credits left";
+    } else {
+      useWebBtn.disabled = false;
+      useWebBtn.style.opacity = "1";
+      useWebBtn.style.cursor = "pointer";
+      useWebBtn.textContent = "Use the web (1 credit)";
+    }
+
+    consentOverlayEl.style.display = "flex";
+  }
+
+  function hideConsentModal() {
+    if (!consentOverlayEl) return;
+    consentOverlayEl.style.display = "none";
+    consentState = null;
+  }
+
+  async function postRvchat(payload) {
     const res = await fetch("/api/rvchat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
+      body: JSON.stringify(payload)
     });
 
     let data = {};
@@ -394,8 +462,42 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch {
       data = { ok: false, error: "Could not parse response JSON." };
     }
-
     return data;
+  }
+
+  async function runWebForTurn(turnId, question) {
+    // Update UI: show loading inside the same turn
+    renderAssistantLoading(turnId, "Using the web…");
+
+    // Include session history + remaining credits
+    const data = await postRvchat({
+      mode: "web",
+      question,
+      messages: chatHistory,
+      webCreditsRemaining: webCreditsRemaining
+    });
+
+    if (!data.ok) {
+      renderAssistantIntoTurn(
+        turnId,
+        data.error || "Web mode failed.",
+        "general",
+        []
+      );
+      return;
+    }
+
+    // Render web answer
+    const answerText = String(data.answer || "");
+    const mode = data.mode || "web";
+    const sources = Array.isArray(data.sources) ? data.sources : [];
+    renderAssistantIntoTurn(turnId, answerText, mode, sources);
+
+    // Update credits from server if it returned anything
+    setCreditsFromServer(data.web);
+
+    // Memory: store assistant message
+    pushHistory("assistant", answerText);
   }
 
   async function askRoofVault() {
@@ -414,15 +516,20 @@ document.addEventListener("DOMContentLoaded", () => {
     statusEl.textContent = "Thinking...";
     outEl.style.display = "block";
 
-    // UI: create newest turn at top
+    // Create newest turn at top
     const turnId = prependTurn(question);
 
     // Memory: store user message
     pushHistory("user", question);
 
     try {
-      // 1) Default request (doc/general routing on server)
-      const data = await callRvChat({ question });
+      // Default call: let server decide doc/general (and possibly return consent flag)
+      const data = await postRvchat({
+        question,
+        messages: chatHistory,
+        // If we already have credits in session, echo it (server can display it back in refusal)
+        webCreditsRemaining: webCreditsRemaining
+      });
 
       if (!data.ok) {
         renderAssistantIntoTurn(
@@ -433,132 +540,42 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
         // Keep memory clean: remove last user message
-        if (
-          chatHistory.length &&
-          chatHistory[chatHistory.length - 1]?.role === "user"
-        ) {
+        if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user") {
           chatHistory.pop();
         }
         return;
       }
 
-      // 2) If server requests consent (roofing + no doc support)
-      if (data.needsConsentForWeb) {
-        const noteText = String(data.note || data.answer || "").trim();
-        const serverCredits =
-          data?.web && Number.isFinite(Number(data.web.creditsRemaining))
-            ? Number(data.web.creditsRemaining)
-            : webCreditsRemaining;
+      // Update credits if server provides web object
+      setCreditsFromServer(data.web);
 
-        // Keep our local number in sync (if server echoed it)
-        webCreditsRemaining = Number.isFinite(Number(serverCredits))
-          ? Number(serverCredits)
-          : webCreditsRemaining;
-
-        // Show the refusal as the assistant message (doc mode refusal)
-        renderAssistantIntoTurn(
-          turnId,
-          String(data.answer || "No support in the provided sources."),
-          data.mode || "doc",
-          Array.isArray(data.sources) ? data.sources : []
-        );
-
-        // Prompt user for consent
-        const choice = await showConsentModal({
-          noteText,
-          creditsRemaining: webCreditsRemaining
-        });
-
-        if (!choice || choice.choice !== "web") {
-          // User stayed doc-only; DO NOT add assistant refusal to memory (keeps history cleaner)
-          statusEl.textContent = "";
-          return;
-        }
-
-        // No credits left safeguard
-        if (!(webCreditsRemaining > 0)) {
-          // Replace assistant with message about credits
-          renderAssistantIntoTurn(
-            turnId,
-            "Web mode is unavailable because you have 0 web credits remaining for this session.",
-            "general",
-            []
-          );
-
-          // Clean memory: remove last user message since we didn't provide a real answer
-          if (
-            chatHistory.length &&
-            chatHistory[chatHistory.length - 1]?.role === "user"
-          ) {
-            chatHistory.pop();
-          }
-          return;
-        }
-
-        // Spend 1 credit (frontend-controlled)
-        webCreditsRemaining = Math.max(0, webCreditsRemaining - 1);
-
-        // 3) Re-ask in explicit web mode (opt-in)
-        statusEl.textContent = "Using web mode…";
-        const webData = await callRvChat({ question, mode: "web" });
-
-        if (!webData.ok) {
-          renderAssistantIntoTurn(
-            turnId,
-            webData.error || "There was an error answering your question in web mode.",
-            "general",
-            []
-          );
-
-          // Revert credit spend on failure (optional but nice)
-          webCreditsRemaining = webCreditsRemaining + 1;
-
-          // Clean memory
-          if (
-            chatHistory.length &&
-            chatHistory[chatHistory.length - 1]?.role === "user"
-          ) {
-            chatHistory.pop();
-          }
-          return;
-        }
-
-        // Render web response (overwrite the assistant slot in the same turn)
-        renderAssistantIntoTurn(
-          turnId,
-          String(webData.answer || ""),
-          webData.mode || "web",
-          Array.isArray(webData.sources) ? webData.sources : []
-        );
-
-        // Memory: store assistant message (web answer)
-        pushHistory("assistant", String(webData.answer || ""));
-        statusEl.textContent = "";
-        return;
-      }
-
-      // 3) Normal answer
       const answerText = String(data.answer || "");
       const mode = data.mode || "";
       const sources = Array.isArray(data.sources) ? data.sources : [];
 
       renderAssistantIntoTurn(turnId, answerText, mode, sources);
 
-      // Memory: store assistant message
+      // If server requests consent, show modal (do NOT auto web-call)
+      if (data.needsConsentForWeb) {
+        showConsentModal({
+          turnId,
+          question,
+          note: data.note || "",
+          web: data.web || {}
+        });
+
+        // Store the refusal answer in memory so the conversation is coherent
+        pushHistory("assistant", answerText);
+        return;
+      }
+
+      // Normal: store assistant message
       pushHistory("assistant", answerText);
     } catch (e) {
-      renderAssistantIntoTurn(
-        turnId,
-        "Network or server error: " + String(e),
-        "general",
-        []
-      );
+      renderAssistantIntoTurn(turnId, "Network or server error: " + String(e), "general", []);
 
       // Keep memory clean
-      if (
-        chatHistory.length &&
-        chatHistory[chatHistory.length - 1]?.role === "user"
-      ) {
+      if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user") {
         chatHistory.pop();
       }
     } finally {
