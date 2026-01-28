@@ -403,7 +403,7 @@ async function callFoundryAgentWeb(question) {
   const enforcedPrompt = [
     `Answer using the web (Bing-grounded).`,
     `At the end, include a section exactly titled: "Sources:"`,
-    `Under "Sources:" provide 2–5 bullet links, each MUST be a full https URL.`,
+    `Under "Sources:" provide exactly 5 bullet links, each MUST be a full https URL.`,
     `Avoid gated/member-only links when possible; prefer official publisher pages.`,
     ``,
     `Question: ${question}`,
