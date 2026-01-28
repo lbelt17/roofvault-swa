@@ -3,7 +3,7 @@
 // Adds: Clear Chat button + "Session memory: ON" indicator
 // Adds: Web consent modal flow (opt-in only) + session web credits tracking
 // Enter sends, Shift+Enter newline. Refresh clears session.
-
+//
 // IMPORTANT FIX (Step 2):
 // Always send mode:"doc" for the initial question so backend stays doc-first for roofing questions.
 // Web mode remains opt-in only via consent modal.
@@ -29,6 +29,22 @@ function renderMarkdown(md) {
   html = html.replace(/\n/g, "<br>");
 
   return html;
+}
+
+function isHttpUrl(u) {
+  const s = String(u || "").trim();
+  return /^https?:\/\//i.test(s);
+}
+
+// Foundry sometimes returns trailing "】." etc in link text; sanitize for clickability
+function sanitizeUrl(u) {
+  let s = String(u || "").trim();
+  if (!s) return "";
+  // strip common trailing junk from citations or punctuation
+  s = s.replace(/[】\]\)\}>,.;:]+$/g, "");
+  // also strip surrounding angle/paren if any
+  s = s.replace(/^[<(\[]+/, "").replace(/[>\)\]]+$/, "");
+  return isHttpUrl(s) ? s : "";
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -191,34 +207,93 @@ document.addEventListener("DOMContentLoaded", () => {
     return turnId;
   }
 
+  function buildDocSourcesHtml(sources) {
+    if (!Array.isArray(sources) || !sources.length) return "";
+
+    const items = sources
+      .map((s) => {
+        const id = s && s.id ? String(s.id) : "";
+        const label = s && (s.source || s.title) ? String(s.source || s.title) : "Unknown source";
+        return `<li>${escapeHtml(id ? `[${id}] ${label}` : label)}</li>`;
+      })
+      .join("");
+
+    return `
+      <div style="
+        margin-top:10px;
+        border-top:1px solid #e5e7eb;
+        padding-top:8px;
+        color:#6b7280;
+        font-size:12px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+      ">
+        <div style="font-weight:600;margin-bottom:4px;color:#374151;">Sources</div>
+        <ul style="margin:4px 0 0 18px;padding:0;">${items}</ul>
+      </div>
+    `;
+  }
+
+  function buildWebSourcesHtml(sources) {
+    if (!Array.isArray(sources) || !sources.length) return "";
+
+    const items = sources
+      .map((s) => {
+        const title = s && s.title ? String(s.title) : "";
+        const publisher = s && s.publisher ? String(s.publisher) : "";
+        const rawUrl = s && s.url ? String(s.url) : "";
+        const url = sanitizeUrl(rawUrl);
+
+        if (!url) return "";
+
+        const label = title && title.trim() ? title.trim() : url;
+        const pub = publisher && publisher.trim() ? ` <span style="color:#9ca3af;">(${escapeHtml(publisher.trim())})</span>` : "";
+
+        return `
+          <li style="margin: 4px 0;">
+            <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer"
+               style="color:#2563eb;text-decoration:underline;word-break:break-word;">
+              ${escapeHtml(label)}
+            </a>${pub}
+          </li>
+        `;
+      })
+      .filter(Boolean)
+      .join("");
+
+    if (!items) return "";
+
+    return `
+      <div style="
+        margin-top:10px;
+        border-top:1px solid #e5e7eb;
+        padding-top:8px;
+        color:#6b7280;
+        font-size:12px;
+      ">
+        <div style="font-weight:700;margin-bottom:6px;color:#374151;">Web sources</div>
+        <ul style="margin:4px 0 0 18px;padding:0;">${items}</ul>
+      </div>
+    `;
+  }
+
   function renderAssistantIntoTurn(turnId, answerText, mode, sources) {
     const turn = document.getElementById(turnId);
     if (!turn) return;
 
-    const badge = modeLabel(mode);
+    const m = String(mode || "").toLowerCase();
+    const badge = modeLabel(m);
     const badgeHtml = badge
       ? `<div style="margin-bottom:8px;"><span class="rv-badge">${escapeHtml(badge)}</span></div>`
       : "";
 
+    // Doc sources vs Web sources (different shape)
     let sourcesHtml = "";
-    if (Array.isArray(sources) && sources.length) {
-      const items = sources
-        .map((s) => `<li>${escapeHtml(`[${s.id}] ${s.source || "Unknown source"}`)}</li>`)
-        .join("");
-
-      sourcesHtml = `
-        <div style="
-          margin-top:10px;
-          border-top:1px solid #e5e7eb;
-          padding-top:8px;
-          color:#6b7280;
-          font-size:12px;
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
-        ">
-          <div style="font-weight:600;margin-bottom:4px;color:#374151;">Sources</div>
-          <ul style="margin:4px 0 0 18px;padding:0;">${items}</ul>
-        </div>
-      `;
+    if (m === "web") {
+      sourcesHtml = buildWebSourcesHtml(sources);
+    } else if (m === "doc") {
+      sourcesHtml = buildDocSourcesHtml(sources);
+    } else {
+      sourcesHtml = "";
     }
 
     const slot = turn.querySelector(".rv-assistant-slot");
@@ -426,7 +501,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const res = await fetch("/api/rvchat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload)
     });
 
     let data = {};
@@ -445,7 +520,7 @@ document.addEventListener("DOMContentLoaded", () => {
       mode: "web",
       question,
       messages: chatHistory,
-      webCreditsRemaining,
+      webCreditsRemaining
     });
 
     if (!data.ok) {
@@ -486,7 +561,7 @@ document.addEventListener("DOMContentLoaded", () => {
         mode: "doc",
         question,
         messages: chatHistory,
-        webCreditsRemaining,
+        webCreditsRemaining
       });
 
       if (!data.ok) {
@@ -516,7 +591,7 @@ document.addEventListener("DOMContentLoaded", () => {
           turnId,
           question,
           note: data.note || "",
-          web: data.web || {},
+          web: data.web || {}
         });
         pushHistory("assistant", String(data.answer || ""));
         return;
