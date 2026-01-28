@@ -35,7 +35,7 @@ const {
   WEB_QUESTION_CREDITS
 } = process.env;
 
-const DEPLOY_TAG = "RVCHAT__2026-01-28__WEB_SOURCES__D";
+const DEPLOY_TAG = "RVCHAT__2026-01-28__WEB_SOURCES_FALLBACK__E";
 
 /* ========================= CONFIG ========================= */
 
@@ -206,7 +206,6 @@ function toStr(x) {
 function normalizeUrl(u) {
   const s = toStr(u).trim();
   if (!s) return "";
-  // basic sanity check
   if (!/^https?:\/\//i.test(s)) return "";
   return s;
 }
@@ -227,6 +226,38 @@ function dedupeSources(sources) {
     });
   }
   return out;
+}
+
+/**
+ * Fallback: parse sources from answer text.
+ * - Markdown links: [Title](https://example.com)
+ * - Plain urls: https://example.com
+ */
+function extractSourcesFromAnswerText(answerText) {
+  const text = toStr(answerText);
+  const sources = [];
+
+  const add = (title, url) => {
+    const u = normalizeUrl(url);
+    if (!u) return;
+    sources.push({ title: toStr(title).trim() || u, url: u, publisher: "" });
+  };
+
+  // Markdown links
+  // Note: keep it conservative (no nested parens parsing)
+  const mdLinkRe = /\[([^\]]{1,200})\]\((https?:\/\/[^\s)]+)\)/g;
+  let m;
+  while ((m = mdLinkRe.exec(text)) !== null) {
+    add(m[1], m[2]);
+  }
+
+  // Plain URLs (only add if not already captured)
+  const urlRe = /(https?:\/\/[^\s)\]}>"']+)/g;
+  while ((m = urlRe.exec(text)) !== null) {
+    add("", m[1]);
+  }
+
+  return dedupeSources(sources);
 }
 
 /* ========================= AOAI ========================= */
@@ -308,12 +339,10 @@ async function searchDocs(question) {
 
 function hasStrongDocSupport(results) {
   if (!Array.isArray(results) || results.length === 0) return false;
-  // Require at least one reasonably sized snippet
   return results.some((r) => String(r.content || "").trim().length >= MIN_SNIPPET_CHARS);
 }
 
 function buildDocContext(results) {
-  // Provide snippets with stable ids [1], [2], ...
   const parts = results.map((r) => {
     const headerBits = [
       `[${r.id}]`,
@@ -366,13 +395,8 @@ async function getEntraToken() {
   });
 }
 
-/**
- * Try to extract URL citations from common Foundry/Assistants message shapes.
- * We intentionally support multiple shapes because these payloads vary by API version + agent tooling.
- */
 function extractWebSourcesFromMessages(messagesData) {
   const sources = [];
-
   const add = (title, url, publisher) => {
     const u = normalizeUrl(url);
     if (!u) return;
@@ -384,16 +408,12 @@ function extractWebSourcesFromMessages(messagesData) {
   };
 
   const msgs = Array.isArray(messagesData) ? messagesData : [];
-
-  // Prefer assistant messages (some APIs return newest-first; others oldest-first)
   const assistantMsgs = msgs.filter((m) => m && m.role === "assistant");
 
-  // Walk through all assistant messages to be safe
   for (const m of assistantMsgs) {
     const contentArr = Array.isArray(m.content) ? m.content : [];
 
     for (const c of contentArr) {
-      // Most common: { type: "text", text: { value: "...", annotations: [...] } }
       const textObj = c?.text;
       const annotations = Array.isArray(textObj?.annotations)
         ? textObj.annotations
@@ -404,32 +424,27 @@ function extractWebSourcesFromMessages(messagesData) {
       for (const a of annotations) {
         if (!a) continue;
 
-        // Shape A: { type:"url_citation", url_citation:{ url, title } }
         if (a.type === "url_citation" && a.url_citation) {
           add(a.url_citation.title, a.url_citation.url, a.url_citation.publisher || a.url_citation.source);
           continue;
         }
 
-        // Shape B: { url_citation:{ url, title } } (no type)
         if (a.url_citation) {
           add(a.url_citation.title, a.url_citation.url, a.url_citation.publisher || a.url_citation.source);
           continue;
         }
 
-        // Shape C: { type:"web_citation", web_citation:{ url, title, publisher } }
         if (a.type === "web_citation" && a.web_citation) {
           add(a.web_citation.title, a.web_citation.url, a.web_citation.publisher || a.web_citation.source);
           continue;
         }
 
-        // Shape D (fallback): a has url/title directly
         if (a.url) {
           add(a.title || a.name, a.url, a.publisher || a.source);
           continue;
         }
       }
 
-      // Some agent stacks include "citations" on the content item itself
       const citations = Array.isArray(c?.citations) ? c.citations : [];
       for (const cit of citations) {
         if (!cit) continue;
@@ -437,7 +452,6 @@ function extractWebSourcesFromMessages(messagesData) {
       }
     }
 
-    // Some APIs include top-level citations on the message object
     const msgCitations = Array.isArray(m.citations) ? m.citations : [];
     for (const cit of msgCitations) {
       if (!cit) continue;
@@ -452,15 +466,10 @@ function pickAssistantAnswerText(messagesData) {
   const msgs = Array.isArray(messagesData) ? messagesData : [];
   const assistantMsgs = msgs.filter((m) => m && m.role === "assistant");
 
-  // Try to pick the "latest" assistant message:
-  // If API returns newest-first, index 0 is latest; if oldest-first, last is latest.
-  // We'll pick whichever has readable text, preferring first, then last.
   const candidates = [];
   if (assistantMsgs[0]) candidates.push(assistantMsgs[0]);
   if (assistantMsgs[assistantMsgs.length - 1] && assistantMsgs.length > 1)
     candidates.push(assistantMsgs[assistantMsgs.length - 1]);
-
-  // Also include the rest as fallback
   for (const m of assistantMsgs) candidates.push(m);
 
   const readTextFromMsg = (m) => {
@@ -468,10 +477,8 @@ function pickAssistantAnswerText(messagesData) {
     for (const c of contentArr) {
       const v = c?.text?.value;
       if (typeof v === "string" && v.trim()) return v.trim();
-      // fallback: sometimes plain string
       if (typeof c === "string" && c.trim()) return c.trim();
     }
-    // fallback: sometimes m.content is a string
     if (typeof m?.content === "string" && m.content.trim()) return m.content.trim();
     return "";
   };
@@ -480,7 +487,6 @@ function pickAssistantAnswerText(messagesData) {
     const t = readTextFromMsg(m);
     if (t) return t;
   }
-
   return "";
 }
 
@@ -488,38 +494,28 @@ async function foundryWebAnswer(question) {
   const token = await getEntraToken();
   const base = FOUNDRY_PROJECT_ENDPOINT.replace(/\/+$/, "");
 
-  // Create thread
   const t = await postJson(
     `${base}/threads?api-version=${FOUNDRY_VER}`,
     { Authorization: `Bearer ${token}` },
     {}
   );
   const threadId = safeJsonParse(t.text, {}).id;
+  if (!threadId) throw new Error("Foundry thread create failed");
 
-  if (!threadId) {
-    throw new Error("Foundry thread create failed");
-  }
-
-  // Add user message
   await postJson(
     `${base}/threads/${threadId}/messages?api-version=${FOUNDRY_VER}`,
     { Authorization: `Bearer ${token}` },
     { role: "user", content: question }
   );
 
-  // Run assistant
   const r = await postJson(
     `${base}/threads/${threadId}/runs?api-version=${FOUNDRY_VER}`,
     { Authorization: `Bearer ${token}` },
     { assistant_id: FOUNDRY_AGENT_ID }
   );
   const runId = safeJsonParse(r.text, {}).id;
+  if (!runId) throw new Error("Foundry run create failed");
 
-  if (!runId) {
-    throw new Error("Foundry run create failed");
-  }
-
-  // Poll
   const sleep = (ms) => new Promise((rr) => setTimeout(rr, ms));
   for (let i = 0; i < FOUNDRY_POLL_TRIES; i++) {
     await sleep(FOUNDRY_POLL_DELAY_MS);
@@ -534,7 +530,6 @@ async function foundryWebAnswer(question) {
     }
   }
 
-  // Read messages
   const msgs = await getJson(
     `${base}/threads/${threadId}/messages?api-version=${FOUNDRY_VER}`,
     { Authorization: `Bearer ${token}` }
@@ -542,15 +537,19 @@ async function foundryWebAnswer(question) {
   const data = safeJsonParse(msgs.text, {});
   const arr = Array.isArray(data.data) ? data.data : [];
 
-  const answer = pickAssistantAnswerText(arr);
-  const sources = extractWebSourcesFromMessages(arr);
+  const answer =
+    pickAssistantAnswerText(arr) ||
+    "Web search completed, but no readable answer was returned by the agent.";
 
-  return {
-    answer:
-      answer ||
-      "Web search completed, but no readable answer was returned by the agent.",
-    sources
-  };
+  // 1) Prefer structured citations extraction (when present)
+  let sources = extractWebSourcesFromMessages(arr);
+
+  // 2) Fallback: parse links directly from the answer text (works for your current payload)
+  if (!sources || sources.length === 0) {
+    sources = extractSourcesFromAnswerText(answer);
+  }
+
+  return { answer, sources };
 }
 
 /* ========================= DOC MODE ANSWER ========================= */
@@ -584,19 +583,10 @@ async function docModeAnswer(question) {
     "Do not invent standards, organizations, details, or citations."
   ].join("\n");
 
-  const userPrompt = [
-    "Question:",
-    question,
-    "",
-    "Sources:",
-    context,
-    "",
-    "Answer:"
-  ].join("\n");
+  const userPrompt = ["Question:", question, "", "Sources:", context, "", "Answer:"].join("\n");
 
   const answer = (await aoaiAnswer(systemPrompt, userPrompt)).trim();
 
-  // If model still refused, trigger consent
   if (!answer || answer === "No support in the provided sources.") {
     return {
       ok: true,
@@ -610,7 +600,6 @@ async function docModeAnswer(question) {
     };
   }
 
-  // Return sources list for UI (even if answer includes [1] style refs)
   const sources = results.map((r) => ({
     id: r.id,
     source: r.source || r.title || "Unknown source",
@@ -641,15 +630,10 @@ module.exports = async function (context, req) {
 
   // IMPORTANT: Default to doc mode unless explicitly general/web.
   const modeRaw = String(body.mode || "").toLowerCase();
-  const mode =
-    modeRaw === "web" ? "web" : modeRaw === "general" ? "general" : "doc";
+  const mode = modeRaw === "web" ? "web" : modeRaw === "general" ? "general" : "doc";
 
   if (!question) {
-    context.res = jsonRes({
-      ok: false,
-      deployTag: DEPLOY_TAG,
-      error: "No question provided"
-    });
+    context.res = jsonRes({ ok: false, deployTag: DEPLOY_TAG, error: "No question provided" });
     return;
   }
 
@@ -673,7 +657,6 @@ module.exports = async function (context, req) {
         mode: "web",
         question,
         answer: webOut.answer,
-        // ✅ NEW: web sources for clickable links in UI
         sources: webOut.sources,
         web: { creditsMax: DEFAULT_WEB_CREDITS }
       });
@@ -691,7 +674,6 @@ module.exports = async function (context, req) {
   if (mode === "doc") {
     const roofing = isRoofingRelated(question);
 
-    // If it's not roofing-related, don't force doc grounding; answer as general.
     if (!roofing) {
       const answer = await aoaiAnswer("Answer using general knowledge.", question);
       context.res = jsonRes({
@@ -706,7 +688,6 @@ module.exports = async function (context, req) {
       return;
     }
 
-    // Roofing-related => strict doc-grounding, else consent prompt
     try {
       const out = await docModeAnswer(question);
       context.res = jsonRes({ deployTag: DEPLOY_TAG, ...out });
