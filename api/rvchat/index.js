@@ -353,7 +353,7 @@ async function getEntraToken() {
   body.set("grant_type", "client_credentials");
   body.set("client_id", AZURE_CLIENT_ID);
   body.set("client_secret", AZURE_CLIENT_SECRET);
-  body.set("scope", "https://management.azure.com/.default");
+  body.set("scope", "https://ai.azure.com/.default");
 
   const res = await fetch(tokenUrl, {
     method: "POST",
