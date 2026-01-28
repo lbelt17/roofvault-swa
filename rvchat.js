@@ -7,6 +7,9 @@
 // IMPORTANT FIX (Step 2):
 // Always send mode:"doc" for the initial question so backend stays doc-first for roofing questions.
 // Web mode remains opt-in only via consent modal.
+//
+// NEW FIX (Step 3):
+// Gracefully handle HTTP 429 throttling responses from backend (AOAI rate limit) so UI doesn't look broken.
 
 function escapeHtml(str) {
   return String(str || "")
@@ -138,6 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (m === "doc") return "Document Answer";
     if (m === "general") return "General Answer";
     if (m === "web") return "Web Answer";
+    if (m === "system") return "System";
     return "";
   }
 
@@ -286,7 +290,6 @@ document.addEventListener("DOMContentLoaded", () => {
       ? `<div style="margin-bottom:8px;"><span class="rv-badge">${escapeHtml(badge)}</span></div>`
       : "";
 
-    // Doc sources vs Web sources (different shape)
     let sourcesHtml = "";
     if (m === "web") {
       sourcesHtml = buildWebSourcesHtml(sources);
@@ -343,6 +346,11 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       </div>
     `;
+  }
+
+  function renderSystemMessageIntoTurn(turnId, messageText) {
+    // Renders a system notice in place of assistant answer for this turn
+    renderAssistantIntoTurn(turnId, messageText, "system", []);
   }
 
   // ===== Consent modal =====
@@ -501,7 +509,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const res = await fetch("/api/rvchat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     let data = {};
@@ -510,18 +518,42 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch {
       data = { ok: false, error: "Could not parse response JSON." };
     }
-    return data;
+
+    return { res, data };
+  }
+
+  function isThrottled(res, data) {
+    if (data && data.throttled) return true;
+    if (res && res.status === 429) return true;
+    const err = String(data?.error || "");
+    return /rate limit|ratelimit|RateLimitReached/i.test(err);
+  }
+
+  function throttledMessage(data) {
+    const sec = Number(data?.retryAfterSeconds);
+    if (Number.isFinite(sec) && sec > 0) {
+      return `Rate limited by Azure OpenAI. Please try again in ${sec} seconds.`;
+    }
+    return data?.error || "Rate limited. Please try again shortly.";
   }
 
   async function runWebForTurn(turnId, question) {
     renderAssistantLoading(turnId, "Using the web…");
 
-    const data = await postRvchat({
+    const { res, data } = await postRvchat({
       mode: "web",
       question,
       messages: chatHistory,
-      webCreditsRemaining
+      webCreditsRemaining,
     });
+
+    // If throttled, DO NOT burn UI trust. Show system message.
+    if (isThrottled(res, data)) {
+      // IMPORTANT: Since user already spent a credit client-side, we keep it spent.
+      // If you later implement server-side credits, we’ll adjust this.
+      renderSystemMessageIntoTurn(turnId, throttledMessage(data));
+      return;
+    }
 
     if (!data.ok) {
       renderAssistantIntoTurn(turnId, data.error || "Web mode failed.", "general", []);
@@ -557,12 +589,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       // IMPORTANT: Explicitly request doc-first behavior.
-      const data = await postRvchat({
+      const { res, data } = await postRvchat({
         mode: "doc",
         question,
         messages: chatHistory,
-        webCreditsRemaining
+        webCreditsRemaining,
       });
+
+      if (isThrottled(res, data)) {
+        renderSystemMessageIntoTurn(turnId, throttledMessage(data));
+        // Roll back the user history entry so we don’t “pollute” memory with failed turns
+        if (chatHistory.length && chatHistory[chatHistory.length - 1]?.role === "user") {
+          chatHistory.pop();
+        }
+        return;
+      }
 
       if (!data.ok) {
         renderAssistantIntoTurn(
@@ -591,7 +632,7 @@ document.addEventListener("DOMContentLoaded", () => {
           turnId,
           question,
           note: data.note || "",
-          web: data.web || {}
+          web: data.web || {},
         });
         pushHistory("assistant", String(data.answer || ""));
         return;
