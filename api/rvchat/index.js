@@ -666,13 +666,28 @@ module.exports = async function (context, req) {
       );
 
       if (!aoai.ok) {
-        return jsonResponse(context, 502, {
-          ok: false,
-          deployTag: DEPLOY_TAG,
-          mode: "doc",
-          error: aoai.error || "AOAI failed",
-        });
-      }
+  const errText = String(aoai.error || "");
+  const is429 = errText.includes("AOAI error 429") || errText.includes("RateLimitReached");
+
+  if (is429) {
+    return jsonResponse(context, 429, {
+      ok: false,
+      deployTag: DEPLOY_TAG,
+      mode: "doc",
+      error: "Rate limited by Azure OpenAI. Please retry in ~60 seconds.",
+      retryAfterSeconds: 60,
+      throttled: true,
+    });
+  }
+
+  return jsonResponse(context, 502, {
+    ok: false,
+    deployTag: DEPLOY_TAG,
+    mode: "doc",
+    error: aoai.error || "AOAI failed",
+  });
+}
+
 
       const answer = String(aoai.text || "").trim();
 
