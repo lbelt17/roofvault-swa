@@ -384,7 +384,7 @@ async function callFoundryAgentWeb(question) {
 
   const token = await getEntraToken();
 
-  const threadsUrl = `${base}/threads?api-version=2024-10-01-preview`;
+  const threadsUrl = `${base}/threads?api-version=v1`;
   const createThreadRes = await fetch(threadsUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -398,7 +398,7 @@ async function callFoundryAgentWeb(question) {
   const threadId = threadData?.id;
   if (!threadId) throw new Error("Foundry thread id missing");
 
-  const messagesUrl = `${base}/threads/${encodeURIComponent(threadId)}/messages?api-version=2024-10-01-preview`;
+  const messagesUrl = `${base}/threads/${encodeURIComponent(threadId)}/messages?api-version=v1`;
 
   const enforcedPrompt = [
     `Answer using the web (Bing-grounded).`,
@@ -419,7 +419,7 @@ async function callFoundryAgentWeb(question) {
     throw new Error(`Foundry add message failed ${addMsgRes.status}: ${txt}`);
   }
 
-  const runsUrl = `${base}/threads/${encodeURIComponent(threadId)}/runs?api-version=2024-10-01-preview`;
+  const runsUrl = `${base}/threads/${encodeURIComponent(threadId)}/runs?api-version=v1`;
   const createRunRes = await fetch(runsUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -433,7 +433,7 @@ async function callFoundryAgentWeb(question) {
   const runId = runData?.id;
   if (!runId) throw new Error("Foundry run id missing");
 
-  const runUrl = `${base}/threads/${encodeURIComponent(threadId)}/runs/${encodeURIComponent(runId)}?api-version=2024-10-01-preview`;
+  const runUrl = `${base}/threads/${encodeURIComponent(threadId)}/runs/${encodeURIComponent(runId)}?api-version=v1`;
 
   const maxPollMs = 20000;
   const pollEveryMs = 700;
