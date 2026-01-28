@@ -215,11 +215,11 @@ async function searchDocs(query) {
 
   // Keep it simple: top chunks for grounding
   const payload = {
-    search: query,
-    top: 8,
-    queryType: "simple",
-    select: "content,chunk_id,bookGroupId,pageNumber,url",
-  };
+  search: query,
+  top: 8,
+  queryType: "simple",
+};
+
 
   const res = await fetch(url, {
     method: "POST",
