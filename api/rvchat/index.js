@@ -8,10 +8,13 @@
 // ✅ Session-only memory via messages[]
 // ✅ Foundry Agents wired for web mode (Bing-grounded agent)
 // ✅ Web sources enforced + extracted into sources[]
-// ✅ NEW (Step 1): Server-side URL validation (WEB MODE ONLY) to reduce 404s
-//
-// Deploy tag:
-const DEPLOY_TAG = "RVCHAT__2026-01-28__URL_VALIDATE__A";
+// ✅ Server-side URL validation (WEB MODE ONLY) to reduce 404s
+// ✅ NEW: Anti-429 stability fixes
+//    - Hard cap doc prompt size
+//    - Lower AOAI max_tokens
+//    - Instance-level "throttle fuse" to stop retry loops for ~65s after 429
+
+const DEPLOY_TAG = "RVCHAT__2026-01-28__AOAI_THROTTLE_FIX__B";
 
 // -------------------------
 // Env
@@ -27,8 +30,7 @@ const {
   AOAI_KEY,
   AOAI_DEPLOYMENT,
 
-  // Foundry / Agent (web mode) — keep whatever you already configured
-  // These names are intentionally flexible; web mode code below reads them defensively.
+  // Foundry / Agent (web mode)
   FOUNDRY_ENDPOINT,
   FOUNDRY_PROJECT_ENDPOINT,
   FOUNDRY_AGENT_ID,
@@ -38,6 +40,12 @@ const {
   AZURE_CLIENT_ID,
   AZURE_CLIENT_SECRET,
 } = process.env;
+
+// -------------------------
+// Instance-level throttle fuse
+// (prevents repeated AOAI calls when Azure is telling us to cool down)
+// -------------------------
+let AOAI_THROTTLED_UNTIL_MS = 0;
 
 // -------------------------
 // Small utilities
@@ -72,10 +80,15 @@ function normalizeMode(modeRaw) {
 
 function isProbablyRoofingQuestion(q) {
   const s = String(q || "").toLowerCase();
-  // Keep this conservative; doc gate is enforced by snippet support anyway.
   return /(roof|roofing|tpo|epdm|pvc|flashing|membrane|shingle|modified bitumen|asphalt|smacna|nrca|iibec|astm|fm global|uplift|parapet|coping|deck|insulation|vapor retarder|fastener)/i.test(
     s
   );
+}
+
+function clampText(s, maxChars) {
+  const t = String(s || "");
+  if (t.length <= maxChars) return t;
+  return t.slice(0, maxChars) + "…";
 }
 
 function uniqueByUrl(sources) {
@@ -97,7 +110,6 @@ function uniqueByUrl(sources) {
 }
 
 function tryMakeOfficialDomainFallback(sources) {
-  // Heuristic: choose the shortest, most “homepage-like” https URL (often the official site).
   const list = uniqueByUrl(sources);
   const scored = list
     .map((s) => {
@@ -106,7 +118,6 @@ function tryMakeOfficialDomainFallback(sources) {
         const path = (u.pathname || "").replace(/\/+$/, "");
         const depth = path ? path.split("/").filter(Boolean).length : 0;
         const isHttps = u.protocol === "https:";
-        // Prefer https, fewer path segments, no obvious tracking params
         const score =
           (isHttps ? 0 : 10) +
           depth * 2 +
@@ -124,7 +135,7 @@ function tryMakeOfficialDomainFallback(sources) {
 }
 
 // -------------------------
-// Fetch with timeout (Node 18+ has global fetch)
+// Fetch with timeout
 // -------------------------
 async function fetchWithTimeout(url, { timeoutMs = 3000, method = "GET" } = {}) {
   const controller = new AbortController();
@@ -135,10 +146,10 @@ async function fetchWithTimeout(url, { timeoutMs = 3000, method = "GET" } = {}) 
       redirect: "follow",
       signal: controller.signal,
       headers: {
-        // Some sites behave better with a browser-ish UA
         "User-Agent":
           "Mozilla/5.0 (compatible; RoofVaultBot/1.0; +https://roofvault.ai)",
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
       },
     });
     return res;
@@ -148,7 +159,6 @@ async function fetchWithTimeout(url, { timeoutMs = 3000, method = "GET" } = {}) 
 }
 
 function isValidHttpStatus(status) {
-  // Accept 200–399 (success + redirects)
   return status >= 200 && status <= 399;
 }
 
@@ -157,7 +167,7 @@ async function validateSourcesServerSide(
   {
     maxToValidate = 5,
     perUrlTimeoutMs = 3000,
-    totalBudgetMs = 9000, // cap total time spent validating
+    totalBudgetMs = 9000,
   } = {}
 ) {
   const sources = uniqueByUrl(extractedSources).slice(0, maxToValidate);
@@ -166,7 +176,6 @@ async function validateSourcesServerSide(
   const started = Date.now();
   const validated = [];
 
-  // Sequential validation to keep it lightweight and predictable.
   for (const s of sources) {
     if (Date.now() - started > totalBudgetMs) break;
 
@@ -174,7 +183,7 @@ async function validateSourcesServerSide(
     try {
       const res = await fetchWithTimeout(s.url, {
         timeoutMs: perUrlTimeoutMs,
-        method: "GET", // prefer GET over HEAD (many sites block HEAD)
+        method: "GET",
       });
       ok = isValidHttpStatus(res.status);
     } catch {
@@ -184,16 +193,11 @@ async function validateSourcesServerSide(
     if (ok) validated.push(s);
   }
 
-  // Best-effort fallback behavior:
-  // - If we validated at least 1 link, return those only.
-  // - If we validated 0 links, return original extracted sources (deduped),
-  //   but try to ensure at least one “official domain” style link is present.
   if (validated.length > 0) return validated;
 
   const fallback = uniqueByUrl(extractedSources).slice(0, maxToValidate);
   const official = tryMakeOfficialDomainFallback(fallback);
   if (official) {
-    // Put official first (no duplicates)
     const rest = fallback.filter((x) => x.url !== official.url);
     return [official, ...rest].slice(0, maxToValidate);
   }
@@ -213,20 +217,15 @@ async function searchDocs(query) {
       SEARCH_INDEX
     )}/docs/search?api-version=2023-11-01`;
 
-  // Keep it simple: top chunks for grounding
   const payload = {
-  search: query,
-  top: 8,
-  queryType: "simple",
-};
-
+    search: query,
+    top: 6, // keep smaller to reduce prompt size
+    queryType: "simple",
+  };
 
   const res = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "api-key": SEARCH_KEY,
-    },
+    headers: { "Content-Type": "application/json", "api-key": SEARCH_KEY },
     body: JSON.stringify(payload),
   });
 
@@ -240,14 +239,21 @@ async function searchDocs(query) {
   return { ok: true, chunks };
 }
 
+function hasAdequateSupport(chunks) {
+  // strong guard: require at least 1 chunk with substantial text
+  const good = (chunks || []).filter(
+    (c) => String(c?.content || "").trim().length >= 180
+  );
+  return good.length >= 1;
+}
+
 function buildCitationsFromChunks(chunks) {
-  // Minimal citation formatting—your existing UI likely just shows snippets.
-  // Keep stable: return structured citations for your model prompt.
   return (chunks || []).map((c, i) => {
     const title = c?.title || c?.sourcefile || `Source ${i + 1}`;
     const page = c?.pageNumber != null ? `p.${c.pageNumber}` : "";
     const id = c?.chunk_id != null ? `chunk:${c.chunk_id}` : "";
     return {
+      id: `S${i + 1}`,
       label: `[S${i + 1}] ${title}${page ? ` (${page})` : ""}${id ? ` (${id})` : ""}`,
       content: String(c?.content || ""),
       meta: {
@@ -262,18 +268,40 @@ function buildCitationsFromChunks(chunks) {
   });
 }
 
-function hasAdequateSupport(chunks) {
-  // Strong guard: require at least 1 chunk with substantial text.
-  const good = (chunks || []).filter((c) => String(c?.content || "").trim().length >= 200);
-  return good.length >= 1;
+// Build a SMALL sources block for AOAI (prevents huge token usage)
+function buildSourcesBlockForAOAI(citations) {
+  // Hard caps (these are the main fix)
+  const MAX_SOURCES = 4;
+  const MAX_CHARS_PER_SOURCE = 900; // truncate each chunk
+  const MAX_TOTAL_CHARS = 3200;     // cap combined sources block
+
+  const picked = (citations || []).slice(0, MAX_SOURCES);
+
+  let out = "";
+  for (const c of picked) {
+    const piece = `${c.label}\n${clampText(c.content, MAX_CHARS_PER_SOURCE)}\n\n---\n\n`;
+    if ((out.length + piece.length) > MAX_TOTAL_CHARS) break;
+    out += piece;
+  }
+  return out.trim();
 }
 
 // -------------------------
 // Azure OpenAI call (doc/general)
 // -------------------------
-async function callAOAI(messages, { temperature = 0.2 } = {}) {
+async function callAOAI(messages, { temperature = 0.2, maxTokens = 320 } = {}) {
   if (!AOAI_ENDPOINT || !AOAI_KEY || !AOAI_DEPLOYMENT) {
-    return { ok: false, error: "Missing AOAI_* env vars", text: "" };
+    return { ok: false, status: 0, error: "Missing AOAI_* env vars", text: "" };
+  }
+
+  // Throttle fuse: if we're in cooldown, do NOT call AOAI again
+  if (Date.now() < AOAI_THROTTLED_UNTIL_MS) {
+    return {
+      ok: false,
+      status: 429,
+      error: "RateLimitReached (fuse)",
+      text: "",
+    };
   }
 
   const url = `${AOAI_ENDPOINT}/openai/deployments/${encodeURIComponent(
@@ -283,21 +311,22 @@ async function callAOAI(messages, { temperature = 0.2 } = {}) {
   const payload = {
     messages,
     temperature,
-    max_tokens: 900,
+    max_tokens: maxTokens,
   };
 
   const res = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "api-key": AOAI_KEY,
-    },
+    headers: { "Content-Type": "application/json", "api-key": AOAI_KEY },
     body: JSON.stringify(payload),
   });
 
   if (!res.ok) {
     const txt = await res.text().catch(() => "");
-    return { ok: false, error: `AOAI error ${res.status}: ${txt}`, text: "" };
+    // If 429, set fuse for ~65s
+    if (res.status === 429) {
+      AOAI_THROTTLED_UNTIL_MS = Date.now() + 65000;
+    }
+    return { ok: false, status: res.status, error: `AOAI error ${res.status}: ${txt}`, text: "" };
   }
 
   const data = await res.json().catch(() => ({}));
@@ -305,18 +334,13 @@ async function callAOAI(messages, { temperature = 0.2 } = {}) {
     data?.choices?.[0]?.message?.content != null
       ? String(data.choices[0].message.content)
       : "";
-  return { ok: true, text };
+  return { ok: true, status: 200, text };
 }
 
 // -------------------------
 // Foundry Agent (web mode)
 // -------------------------
-// IMPORTANT: This is written defensively so it doesn’t break your already-working wiring.
-// It assumes your existing environment variables are correct.
-// If your current file uses different variable names/endpoints, swap ONLY the env wiring,
-// not the validation logic added after sources extraction.
 async function getEntraToken() {
-  // AAD v2 token endpoint
   if (!AZURE_TENANT_ID || !AZURE_CLIENT_ID || !AZURE_CLIENT_SECRET) {
     throw new Error("Missing AZURE_TENANT_ID / AZURE_CLIENT_ID / AZURE_CLIENT_SECRET");
   }
@@ -325,8 +349,6 @@ async function getEntraToken() {
     AZURE_TENANT_ID
   )}/oauth2/v2.0/token`;
 
-  // Scope commonly used for Azure resources; your existing setup may already work with this.
-  // If you had a known-good scope in your current file, keep it there.
   const body = new URLSearchParams();
   body.set("grant_type", "client_credentials");
   body.set("client_id", AZURE_CLIENT_ID);
@@ -351,7 +373,6 @@ async function getEntraToken() {
 }
 
 function pickFoundryBase() {
-  // Prefer project endpoint if provided; fallback to foundry endpoint.
   return (FOUNDRY_PROJECT_ENDPOINT || FOUNDRY_ENDPOINT || "").replace(/\/+$/, "");
 }
 
@@ -363,33 +384,22 @@ async function callFoundryAgentWeb(question) {
 
   const token = await getEntraToken();
 
-  // These routes reflect the common Agents/Threads/Runs pattern you said is already working.
-  // Keep consistent with your current working implementation.
   const threadsUrl = `${base}/threads?api-version=2024-10-01-preview`;
   const createThreadRes = await fetch(threadsUrl, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     body: JSON.stringify({}),
   });
-
   if (!createThreadRes.ok) {
     const txt = await createThreadRes.text().catch(() => "");
     throw new Error(`Foundry create thread failed ${createThreadRes.status}: ${txt}`);
   }
-
   const threadData = await createThreadRes.json();
   const threadId = threadData?.id;
   if (!threadId) throw new Error("Foundry thread id missing");
 
-  // Add message
-  const messagesUrl = `${base}/threads/${encodeURIComponent(
-    threadId
-  )}/messages?api-version=2024-10-01-preview`;
+  const messagesUrl = `${base}/threads/${encodeURIComponent(threadId)}/messages?api-version=2024-10-01-preview`;
 
-  // Enforce “Sources:” with 2–5 https links
   const enforcedPrompt = [
     `Answer using the web (Bing-grounded).`,
     `At the end, include a section exactly titled: "Sources:"`,
@@ -401,50 +411,29 @@ async function callFoundryAgentWeb(question) {
 
   const addMsgRes = await fetch(messagesUrl, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      role: "user",
-      content: enforcedPrompt,
-    }),
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ role: "user", content: enforcedPrompt }),
   });
-
   if (!addMsgRes.ok) {
     const txt = await addMsgRes.text().catch(() => "");
     throw new Error(`Foundry add message failed ${addMsgRes.status}: ${txt}`);
   }
 
-  // Create run
-  const runsUrl = `${base}/threads/${encodeURIComponent(
-    threadId
-  )}/runs?api-version=2024-10-01-preview`;
-
+  const runsUrl = `${base}/threads/${encodeURIComponent(threadId)}/runs?api-version=2024-10-01-preview`;
   const createRunRes = await fetch(runsUrl, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      assistant_id: FOUNDRY_AGENT_ID,
-    }),
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ assistant_id: FOUNDRY_AGENT_ID }),
   });
-
   if (!createRunRes.ok) {
     const txt = await createRunRes.text().catch(() => "");
     throw new Error(`Foundry create run failed ${createRunRes.status}: ${txt}`);
   }
-
   const runData = await createRunRes.json();
   const runId = runData?.id;
   if (!runId) throw new Error("Foundry run id missing");
 
-  // Poll run
-  const runUrl = `${base}/threads/${encodeURIComponent(
-    threadId
-  )}/runs/${encodeURIComponent(runId)}?api-version=2024-10-01-preview`;
+  const runUrl = `${base}/threads/${encodeURIComponent(threadId)}/runs/${encodeURIComponent(runId)}?api-version=2024-10-01-preview`;
 
   const maxPollMs = 20000;
   const pollEveryMs = 700;
@@ -472,12 +461,10 @@ async function callFoundryAgentWeb(question) {
     await new Promise((r) => setTimeout(r, pollEveryMs));
   }
 
-  // Get final messages
   const listMsgRes = await fetch(messagesUrl, {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
-
   if (!listMsgRes.ok) {
     const txt = await listMsgRes.text().catch(() => "");
     throw new Error(`Foundry list messages failed ${listMsgRes.status}: ${txt}`);
@@ -485,17 +472,12 @@ async function callFoundryAgentWeb(question) {
 
   const listData = await listMsgRes.json().catch(() => ({}));
   const items = Array.isArray(listData?.data) ? listData.data : [];
-
-  // Find the latest assistant message content (defensive)
   const assistantMsg = items.find((m) => String(m?.role).toLowerCase() === "assistant");
-  const content = assistantMsg?.content;
 
-  // content can be string or array depending on API shape
+  const content = assistantMsg?.content;
   let text = "";
-  if (typeof content === "string") {
-    text = content;
-  } else if (Array.isArray(content)) {
-    // try to join text parts
+  if (typeof content === "string") text = content;
+  else if (Array.isArray(content)) {
     text = content
       .map((part) => part?.text?.value || part?.text || part?.value || "")
       .filter(Boolean)
@@ -508,13 +490,12 @@ async function callFoundryAgentWeb(question) {
 }
 
 // -------------------------
-// Sources extraction
+// Sources extraction (web)
 // -------------------------
 function extractHttpsUrls(text) {
   const s = String(text || "");
   const re = /\bhttps:\/\/[^\s)<>\]}",']+/gi;
   const matches = s.match(re) || [];
-  // Clean trailing punctuation that often sticks to URLs
   return matches.map((u) => u.replace(/[)\].,;:"'!?]+$/g, ""));
 }
 
@@ -580,7 +561,6 @@ module.exports = async function (context, req) {
       const urls = extractHttpsUrls(webText);
       const extractedSources = sourcesFromUrls(urls).slice(0, 5);
 
-      // ✅ NEW: Validate links server-side (web mode only)
       const validatedSources = await validateSourcesServerSide(extractedSources, {
         maxToValidate: 5,
         perUrlTimeoutMs: 3000,
@@ -624,7 +604,6 @@ module.exports = async function (context, req) {
       const supported = hasAdequateSupport(chunks);
 
       if (!supported) {
-        // Strict refusal + consent gate for web fallback
         return jsonResponse(context, 200, {
           ok: true,
           deployTag: DEPLOY_TAG,
@@ -642,13 +621,13 @@ module.exports = async function (context, req) {
       const system = [
         `You are RoofVault Chat. You MUST be strictly grounded in the provided sources.`,
         `If the answer is not supported by the sources, respond exactly: "No support in the provided sources."`,
+        `Keep answers concise.`,
         `Cite sources inline like [S1], [S2].`,
         `Do not use outside knowledge.`,
       ].join("\n");
 
-      const sourcesBlock = citations
-        .map((c) => `${c.label}\n${c.content}`)
-        .join("\n\n---\n\n");
+      // ✅ BIG FIX: cap the size of the sources block
+      const sourcesBlock = buildSourcesBlockForAOAI(citations);
 
       const user = [
         `Question: ${question}`,
@@ -662,36 +641,41 @@ module.exports = async function (context, req) {
           { role: "system", content: system },
           { role: "user", content: user },
         ],
-        { temperature: 0.1 }
+        {
+          temperature: 0.1,
+          maxTokens: 320, // ✅ BIG FIX: cheaper responses
+        }
       );
 
       if (!aoai.ok) {
-  const errText = String(aoai.error || "");
-  const is429 = errText.includes("AOAI error 429") || errText.includes("RateLimitReached");
+        const errText = String(aoai.error || "");
+        const is429 =
+          aoai.status === 429 ||
+          errText.includes("AOAI error 429") ||
+          errText.includes("RateLimitReached") ||
+          errText.includes("fuse");
 
-  if (is429) {
-    return jsonResponse(context, 429, {
-      ok: false,
-      deployTag: DEPLOY_TAG,
-      mode: "doc",
-      error: "Rate limited by Azure OpenAI. Please retry in ~60 seconds.",
-      retryAfterSeconds: 60,
-      throttled: true,
-    });
-  }
+        if (is429) {
+          return jsonResponse(context, 429, {
+            ok: false,
+            deployTag: DEPLOY_TAG,
+            mode: "doc",
+            error: "Rate limited by Azure OpenAI. Please retry in ~60 seconds.",
+            retryAfterSeconds: 60,
+            throttled: true,
+          });
+        }
 
-  return jsonResponse(context, 502, {
-    ok: false,
-    deployTag: DEPLOY_TAG,
-    mode: "doc",
-    error: aoai.error || "AOAI failed",
-  });
-}
-
+        return jsonResponse(context, 502, {
+          ok: false,
+          deployTag: DEPLOY_TAG,
+          mode: "doc",
+          error: aoai.error || "AOAI failed",
+        });
+      }
 
       const answer = String(aoai.text || "").trim();
 
-      // If the model refused, keep the consent gate (but still doc mode)
       if (answer === "No support in the provided sources.") {
         return jsonResponse(context, 200, {
           ok: true,
@@ -705,7 +689,6 @@ module.exports = async function (context, req) {
         });
       }
 
-      // Return doc citations (your UI likely already renders doc snippets elsewhere)
       return jsonResponse(context, 200, {
         ok: true,
         deployTag: DEPLOY_TAG,
@@ -713,6 +696,7 @@ module.exports = async function (context, req) {
         question,
         answer,
         sources: citations.map((c) => ({
+          id: c.id,
           title: c.meta.title || c.meta.sourcefile || "",
           url: c.meta.url || "",
           publisher: "",
@@ -726,16 +710,28 @@ module.exports = async function (context, req) {
     // GENERAL MODE (non-roofing only)
     // -------------------------
     if (mode === "general") {
-      const system = `You are RoofVault Chat. Answer normally and helpfully.`;
+      const system = `You are RoofVault Chat. Answer normally and helpfully. Keep it concise.`;
       const aoai = await callAOAI(
         [
           { role: "system", content: system },
           { role: "user", content: question },
         ],
-        { temperature: 0.4 }
+        { temperature: 0.4, maxTokens: 320 }
       );
 
       if (!aoai.ok) {
+        const is429 = aoai.status === 429 || String(aoai.error || "").includes("RateLimitReached");
+        if (is429) {
+          return jsonResponse(context, 429, {
+            ok: false,
+            deployTag: DEPLOY_TAG,
+            mode,
+            error: "Rate limited by Azure OpenAI. Please retry in ~60 seconds.",
+            retryAfterSeconds: 60,
+            throttled: true,
+          });
+        }
+
         return jsonResponse(context, 502, {
           ok: false,
           deployTag: DEPLOY_TAG,
@@ -754,7 +750,6 @@ module.exports = async function (context, req) {
       });
     }
 
-    // Fallback
     return jsonResponse(context, 400, {
       ok: false,
       deployTag: DEPLOY_TAG,
