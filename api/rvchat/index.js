@@ -35,7 +35,7 @@ const {
   WEB_QUESTION_CREDITS
 } = process.env;
 
-const DEPLOY_TAG = "RVCHAT__2026-01-28__WEB_SOURCES_FALLBACK__E";
+const DEPLOY_TAG = "RVCHAT__2026-01-28__WEB_SOURCES_ENFORCED__F";
 
 /* ========================= CONFIG ========================= */
 
@@ -52,6 +52,15 @@ const MIN_SNIPPET_CHARS = 80;
 // Poll settings for Foundry run
 const FOUNDRY_POLL_TRIES = 20;
 const FOUNDRY_POLL_DELAY_MS = 600;
+
+// Web sources enforcement (so sources[] is never empty just because the model omitted links)
+const WEB_SOURCES_INSTRUCTION = [
+  "IMPORTANT:",
+  "At the end of your answer, include a section titled exactly 'Sources:'",
+  "Under 'Sources:', provide 2–5 bullet points, each containing a clickable link.",
+  "Each bullet must include a full https URL (e.g., https://example.com).",
+  "Prefer official/primary sources when possible."
+].join("\n");
 
 /* ========================= HELPERS ========================= */
 
@@ -128,7 +137,6 @@ function safeJsonParse(text, fallback = {}) {
 function isRoofingRelated(q) {
   const s = String(q || "").toLowerCase();
 
-  // RoofVault domain anchors
   const keywords = [
     "roof",
     "roofing",
@@ -182,8 +190,6 @@ function isRoofingRelated(q) {
     "ponding",
     "leak",
     "waterproofing",
-
-    // orgs/standards commonly asked in roofing context
     "nrca",
     "iibec",
     "smacna",
@@ -204,8 +210,12 @@ function toStr(x) {
 }
 
 function normalizeUrl(u) {
-  const s = toStr(u).trim();
+  let s = toStr(u).trim();
   if (!s) return "";
+
+  // Strip common trailing junk from grounding markers/punctuation
+  s = s.replace(/[】\]\)\}>,.;:]+$/g, "");
+
   if (!/^https?:\/\//i.test(s)) return "";
   return s;
 }
@@ -228,11 +238,7 @@ function dedupeSources(sources) {
   return out;
 }
 
-/**
- * Fallback: parse sources from answer text.
- * - Markdown links: [Title](https://example.com)
- * - Plain urls: https://example.com
- */
+// Fallback: parse sources from answer text
 function extractSourcesFromAnswerText(answerText) {
   const text = toStr(answerText);
   const sources = [];
@@ -243,15 +249,14 @@ function extractSourcesFromAnswerText(answerText) {
     sources.push({ title: toStr(title).trim() || u, url: u, publisher: "" });
   };
 
-  // Markdown links
-  // Note: keep it conservative (no nested parens parsing)
+  // Markdown links: [Title](https://example.com)
   const mdLinkRe = /\[([^\]]{1,200})\]\((https?:\/\/[^\s)]+)\)/g;
   let m;
   while ((m = mdLinkRe.exec(text)) !== null) {
     add(m[1], m[2]);
   }
 
-  // Plain URLs (only add if not already captured)
+  // Plain URLs
   const urlRe = /(https?:\/\/[^\s)\]}>"']+)/g;
   while ((m = urlRe.exec(text)) !== null) {
     add("", m[1]);
@@ -299,7 +304,6 @@ async function searchDocs(question) {
     SEARCH_INDEX
   )}/docs/search?api-version=${SEARCH_API_VERSION}`;
 
-  // Keep this conservative (no semantic config dependency)
   const body = {
     search: question,
     top: 5,
@@ -312,7 +316,6 @@ async function searchDocs(question) {
   const j = safeJsonParse(r.text, {});
   const value = Array.isArray(j.value) ? j.value : [];
 
-  // Normalize to {id, source, title, content}
   const results = value
     .map((v, idx) => {
       const content = String(v.content || v.chunk || "").trim();
@@ -395,82 +398,9 @@ async function getEntraToken() {
   });
 }
 
-function extractWebSourcesFromMessages(messagesData) {
-  const sources = [];
-  const add = (title, url, publisher) => {
-    const u = normalizeUrl(url);
-    if (!u) return;
-    sources.push({
-      title: toStr(title).trim() || u,
-      url: u,
-      publisher: toStr(publisher).trim() || ""
-    });
-  };
-
-  const msgs = Array.isArray(messagesData) ? messagesData : [];
-  const assistantMsgs = msgs.filter((m) => m && m.role === "assistant");
-
-  for (const m of assistantMsgs) {
-    const contentArr = Array.isArray(m.content) ? m.content : [];
-
-    for (const c of contentArr) {
-      const textObj = c?.text;
-      const annotations = Array.isArray(textObj?.annotations)
-        ? textObj.annotations
-        : Array.isArray(c?.annotations)
-        ? c.annotations
-        : [];
-
-      for (const a of annotations) {
-        if (!a) continue;
-
-        if (a.type === "url_citation" && a.url_citation) {
-          add(a.url_citation.title, a.url_citation.url, a.url_citation.publisher || a.url_citation.source);
-          continue;
-        }
-
-        if (a.url_citation) {
-          add(a.url_citation.title, a.url_citation.url, a.url_citation.publisher || a.url_citation.source);
-          continue;
-        }
-
-        if (a.type === "web_citation" && a.web_citation) {
-          add(a.web_citation.title, a.web_citation.url, a.web_citation.publisher || a.web_citation.source);
-          continue;
-        }
-
-        if (a.url) {
-          add(a.title || a.name, a.url, a.publisher || a.source);
-          continue;
-        }
-      }
-
-      const citations = Array.isArray(c?.citations) ? c.citations : [];
-      for (const cit of citations) {
-        if (!cit) continue;
-        add(cit.title || cit.name, cit.url, cit.publisher || cit.source);
-      }
-    }
-
-    const msgCitations = Array.isArray(m.citations) ? m.citations : [];
-    for (const cit of msgCitations) {
-      if (!cit) continue;
-      add(cit.title || cit.name, cit.url, cit.publisher || cit.source);
-    }
-  }
-
-  return dedupeSources(sources);
-}
-
 function pickAssistantAnswerText(messagesData) {
   const msgs = Array.isArray(messagesData) ? messagesData : [];
   const assistantMsgs = msgs.filter((m) => m && m.role === "assistant");
-
-  const candidates = [];
-  if (assistantMsgs[0]) candidates.push(assistantMsgs[0]);
-  if (assistantMsgs[assistantMsgs.length - 1] && assistantMsgs.length > 1)
-    candidates.push(assistantMsgs[assistantMsgs.length - 1]);
-  for (const m of assistantMsgs) candidates.push(m);
 
   const readTextFromMsg = (m) => {
     const contentArr = Array.isArray(m?.content) ? m.content : [];
@@ -483,7 +413,7 @@ function pickAssistantAnswerText(messagesData) {
     return "";
   };
 
-  for (const m of candidates) {
+  for (const m of assistantMsgs) {
     const t = readTextFromMsg(m);
     if (t) return t;
   }
@@ -494,6 +424,7 @@ async function foundryWebAnswer(question) {
   const token = await getEntraToken();
   const base = FOUNDRY_PROJECT_ENDPOINT.replace(/\/+$/, "");
 
+  // Create thread
   const t = await postJson(
     `${base}/threads?api-version=${FOUNDRY_VER}`,
     { Authorization: `Bearer ${token}` },
@@ -502,12 +433,17 @@ async function foundryWebAnswer(question) {
   const threadId = safeJsonParse(t.text, {}).id;
   if (!threadId) throw new Error("Foundry thread create failed");
 
+  // Augment user question to force linkable sources
+  const augmentedQuestion = `${question}\n\n${WEB_SOURCES_INSTRUCTION}`;
+
+  // Add user message
   await postJson(
     `${base}/threads/${threadId}/messages?api-version=${FOUNDRY_VER}`,
     { Authorization: `Bearer ${token}` },
-    { role: "user", content: question }
+    { role: "user", content: augmentedQuestion }
   );
 
+  // Run assistant
   const r = await postJson(
     `${base}/threads/${threadId}/runs?api-version=${FOUNDRY_VER}`,
     { Authorization: `Bearer ${token}` },
@@ -516,6 +452,7 @@ async function foundryWebAnswer(question) {
   const runId = safeJsonParse(r.text, {}).id;
   if (!runId) throw new Error("Foundry run create failed");
 
+  // Poll
   const sleep = (ms) => new Promise((rr) => setTimeout(rr, ms));
   for (let i = 0; i < FOUNDRY_POLL_TRIES; i++) {
     await sleep(FOUNDRY_POLL_DELAY_MS);
@@ -530,6 +467,7 @@ async function foundryWebAnswer(question) {
     }
   }
 
+  // Read messages
   const msgs = await getJson(
     `${base}/threads/${threadId}/messages?api-version=${FOUNDRY_VER}`,
     { Authorization: `Bearer ${token}` }
@@ -541,13 +479,8 @@ async function foundryWebAnswer(question) {
     pickAssistantAnswerText(arr) ||
     "Web search completed, but no readable answer was returned by the agent.";
 
-  // 1) Prefer structured citations extraction (when present)
-  let sources = extractWebSourcesFromMessages(arr);
-
-  // 2) Fallback: parse links directly from the answer text (works for your current payload)
-  if (!sources || sources.length === 0) {
-    sources = extractSourcesFromAnswerText(answer);
-  }
+  // Extract sources from answer text (markdown links or raw URLs)
+  const sources = extractSourcesFromAnswerText(answer);
 
   return { answer, sources };
 }
@@ -628,7 +561,6 @@ module.exports = async function (context, req) {
   const body = req.body || {};
   const question = String(body.question || "").trim();
 
-  // IMPORTANT: Default to doc mode unless explicitly general/web.
   const modeRaw = String(body.mode || "").toLowerCase();
   const mode = modeRaw === "web" ? "web" : modeRaw === "general" ? "general" : "doc";
 
@@ -670,7 +602,7 @@ module.exports = async function (context, req) {
     return;
   }
 
-  // DOC MODE (strict for roofing-related; non-roofing can be general without consent)
+  // DOC MODE
   if (mode === "doc") {
     const roofing = isRoofingRelated(question);
 
