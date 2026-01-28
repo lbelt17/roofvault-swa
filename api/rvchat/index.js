@@ -218,7 +218,7 @@ async function searchDocs(query) {
     search: query,
     top: 8,
     queryType: "simple",
-    select: "content,title,sourcefile,chunk_id,bookGroupId,pageNumber,url",
+    select: "content,sourcefile,chunk_id,bookGroupId,pageNumber,url",
   };
 
   const res = await fetch(url, {
