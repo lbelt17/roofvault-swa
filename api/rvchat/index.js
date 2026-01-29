@@ -9,12 +9,13 @@
 // ✅ Foundry Agents wired for web mode (Bing-grounded agent)
 // ✅ Web sources enforced + extracted into sources[]
 // ✅ Server-side URL validation (WEB MODE ONLY) to reduce 404s
+// ✅ NEW: Demo-stable web fallback when validation returns too few links (validated-first, then safe fallback)
 // ✅ NEW: Anti-429 stability fixes
 //    - Hard cap doc prompt size
 //    - Lower AOAI max_tokens
 //    - Instance-level "throttle fuse" to stop retry loops for ~65s after 429
 
-const DEPLOY_TAG = "RVCHAT__2026-01-28__AOAI_THROTTLE_FIX__B";
+const DEPLOY_TAG = "RVCHAT__2026-01-29__WEB_VALIDATION_FALLBACK__A";
 
 // -------------------------
 // Env
@@ -43,9 +44,34 @@ const {
 
 // -------------------------
 // Instance-level throttle fuse
-// (prevents repeated AOAI calls when Azure is telling us to cool down)
 // -------------------------
 let AOAI_THROTTLED_UNTIL_MS = 0;
+
+// -------------------------
+// Web sources policy
+// -------------------------
+const WEB_SOURCES_MIN = 2; // if validated < 2, fallback to reach at least 2
+const WEB_SOURCES_MAX = 5; // never return more than 5
+const WEB_FALLBACK_ALLOWLIST = [
+  "nrca.net",
+  "wbdg.org",
+  "ibec.org",
+  "iibec.org",
+  "iccsafe.org",
+  "gaf.com",
+  "certainteed.com",
+  "johnsmanville.com",
+  "owenscorning.com",
+  "soprema.us",
+  "holcim.com",
+  "astm.org",
+  "smacna.org",
+  "osha.gov",
+  "cdc.gov",
+  "nih.gov",
+  "noaa.gov",
+  "energy.gov",
+];
 
 // -------------------------
 // Small utilities
@@ -109,6 +135,47 @@ function uniqueByUrl(sources) {
   return out;
 }
 
+function hostOf(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "").toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+function isAllowlisted(url) {
+  const h = hostOf(url);
+  if (!h) return false;
+
+  if (h.endsWith(".gov") || h.endsWith(".edu")) return true;
+
+  return WEB_FALLBACK_ALLOWLIST.some((d) => h === d || h.endsWith(`.${d}`));
+}
+
+function isHomepageLike(url) {
+  try {
+    const u = new URL(url);
+    const path = (u.pathname || "/").trim();
+    return path === "/" || path === "" || path.toLowerCase() === "/index.html";
+  } catch {
+    return false;
+  }
+}
+
+function uniqByUrl(list) {
+  const seen = new Set();
+  const out = [];
+  for (const s of list || []) {
+    const url = (s?.url || "").trim();
+    if (!url) continue;
+    if (seen.has(url)) continue;
+    seen.add(url);
+    out.push(s);
+  }
+  return out;
+}
+
+// Your existing “official-ish” fallback scorer (kept)
 function tryMakeOfficialDomainFallback(sources) {
   const list = uniqueByUrl(sources);
   const scored = list
@@ -162,13 +229,15 @@ function isValidHttpStatus(status) {
   return status >= 200 && status <= 399;
 }
 
+/**
+ * WEB MODE ONLY validation:
+ * - Validate up to N extracted sources (GET with short timeouts + total budget)
+ * - Returns ONLY validated sources (can be 0..N)
+ * NOTE: Demo-stable fallback to reach minimum happens AFTER this function.
+ */
 async function validateSourcesServerSide(
   extractedSources,
-  {
-    maxToValidate = 5,
-    perUrlTimeoutMs = 3000,
-    totalBudgetMs = 9000,
-  } = {}
+  { maxToValidate = 5, perUrlTimeoutMs = 3000, totalBudgetMs = 9000 } = {}
 ) {
   const sources = uniqueByUrl(extractedSources).slice(0, maxToValidate);
   if (!sources.length) return [];
@@ -193,15 +262,7 @@ async function validateSourcesServerSide(
     if (ok) validated.push(s);
   }
 
-  if (validated.length > 0) return validated;
-
-  const fallback = uniqueByUrl(extractedSources).slice(0, maxToValidate);
-  const official = tryMakeOfficialDomainFallback(fallback);
-  if (official) {
-    const rest = fallback.filter((x) => x.url !== official.url);
-    return [official, ...rest].slice(0, maxToValidate);
-  }
-  return fallback;
+  return validated;
 }
 
 // -------------------------
@@ -254,7 +315,9 @@ function buildCitationsFromChunks(chunks) {
     const id = c?.chunk_id != null ? `chunk:${c.chunk_id}` : "";
     return {
       id: `S${i + 1}`,
-      label: `[S${i + 1}] ${title}${page ? ` (${page})` : ""}${id ? ` (${id})` : ""}`,
+      label: `[S${i + 1}] ${title}${page ? ` (${page})` : ""}${
+        id ? ` (${id})` : ""
+      }`,
       content: String(c?.content || ""),
       meta: {
         title: String(c?.title || ""),
@@ -270,17 +333,19 @@ function buildCitationsFromChunks(chunks) {
 
 // Build a SMALL sources block for AOAI (prevents huge token usage)
 function buildSourcesBlockForAOAI(citations) {
-  // Hard caps (these are the main fix)
   const MAX_SOURCES = 4;
-  const MAX_CHARS_PER_SOURCE = 900; // truncate each chunk
-  const MAX_TOTAL_CHARS = 3200;     // cap combined sources block
+  const MAX_CHARS_PER_SOURCE = 900;
+  const MAX_TOTAL_CHARS = 3200;
 
   const picked = (citations || []).slice(0, MAX_SOURCES);
 
   let out = "";
   for (const c of picked) {
-    const piece = `${c.label}\n${clampText(c.content, MAX_CHARS_PER_SOURCE)}\n\n---\n\n`;
-    if ((out.length + piece.length) > MAX_TOTAL_CHARS) break;
+    const piece = `${c.label}\n${clampText(
+      c.content,
+      MAX_CHARS_PER_SOURCE
+    )}\n\n---\n\n`;
+    if (out.length + piece.length > MAX_TOTAL_CHARS) break;
     out += piece;
   }
   return out.trim();
@@ -322,11 +387,15 @@ async function callAOAI(messages, { temperature = 0.2, maxTokens = 320 } = {}) {
 
   if (!res.ok) {
     const txt = await res.text().catch(() => "");
-    // If 429, set fuse for ~65s
     if (res.status === 429) {
       AOAI_THROTTLED_UNTIL_MS = Date.now() + 65000;
     }
-    return { ok: false, status: res.status, error: `AOAI error ${res.status}: ${txt}`, text: "" };
+    return {
+      ok: false,
+      status: res.status,
+      error: `AOAI error ${res.status}: ${txt}`,
+      text: "",
+    };
   }
 
   const data = await res.json().catch(() => ({}));
@@ -342,7 +411,9 @@ async function callAOAI(messages, { temperature = 0.2, maxTokens = 320 } = {}) {
 // -------------------------
 async function getEntraToken() {
   if (!AZURE_TENANT_ID || !AZURE_CLIENT_ID || !AZURE_CLIENT_SECRET) {
-    throw new Error("Missing AZURE_TENANT_ID / AZURE_CLIENT_ID / AZURE_CLIENT_SECRET");
+    throw new Error(
+      "Missing AZURE_TENANT_ID / AZURE_CLIENT_ID / AZURE_CLIENT_SECRET"
+    );
   }
 
   const tokenUrl = `https://login.microsoftonline.com/${encodeURIComponent(
@@ -379,7 +450,9 @@ function pickFoundryBase() {
 async function callFoundryAgentWeb(question) {
   const base = pickFoundryBase();
   if (!base || !FOUNDRY_AGENT_ID) {
-    throw new Error("Missing FOUNDRY_PROJECT_ENDPOINT/FOUNDRY_ENDPOINT or FOUNDRY_AGENT_ID");
+    throw new Error(
+      "Missing FOUNDRY_PROJECT_ENDPOINT/FOUNDRY_ENDPOINT or FOUNDRY_AGENT_ID"
+    );
   }
 
   const token = await getEntraToken();
@@ -387,18 +460,25 @@ async function callFoundryAgentWeb(question) {
   const threadsUrl = `${base}/threads?api-version=v1`;
   const createThreadRes = await fetch(threadsUrl, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({}),
   });
   if (!createThreadRes.ok) {
     const txt = await createThreadRes.text().catch(() => "");
-    throw new Error(`Foundry create thread failed ${createThreadRes.status}: ${txt}`);
+    throw new Error(
+      `Foundry create thread failed ${createThreadRes.status}: ${txt}`
+    );
   }
   const threadData = await createThreadRes.json();
   const threadId = threadData?.id;
   if (!threadId) throw new Error("Foundry thread id missing");
 
-  const messagesUrl = `${base}/threads/${encodeURIComponent(threadId)}/messages?api-version=v1`;
+  const messagesUrl = `${base}/threads/${encodeURIComponent(
+    threadId
+  )}/messages?api-version=v1`;
 
   const enforcedPrompt = [
     `Answer using the web (Bing-grounded).`,
@@ -411,29 +491,43 @@ async function callFoundryAgentWeb(question) {
 
   const addMsgRes = await fetch(messagesUrl, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({ role: "user", content: enforcedPrompt }),
   });
   if (!addMsgRes.ok) {
     const txt = await addMsgRes.text().catch(() => "");
-    throw new Error(`Foundry add message failed ${addMsgRes.status}: ${txt}`);
+    throw new Error(
+      `Foundry add message failed ${addMsgRes.status}: ${txt}`
+    );
   }
 
-  const runsUrl = `${base}/threads/${encodeURIComponent(threadId)}/runs?api-version=v1`;
+  const runsUrl = `${base}/threads/${encodeURIComponent(
+    threadId
+  )}/runs?api-version=v1`;
   const createRunRes = await fetch(runsUrl, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify({ assistant_id: FOUNDRY_AGENT_ID }),
   });
   if (!createRunRes.ok) {
     const txt = await createRunRes.text().catch(() => "");
-    throw new Error(`Foundry create run failed ${createRunRes.status}: ${txt}`);
+    throw new Error(
+      `Foundry create run failed ${createRunRes.status}: ${txt}`
+    );
   }
   const runData = await createRunRes.json();
   const runId = runData?.id;
   if (!runId) throw new Error("Foundry run id missing");
 
-  const runUrl = `${base}/threads/${encodeURIComponent(threadId)}/runs/${encodeURIComponent(runId)}?api-version=v1`;
+  const runUrl = `${base}/threads/${encodeURIComponent(
+    threadId
+  )}/runs/${encodeURIComponent(runId)}?api-version=v1`;
 
   const maxPollMs = 20000;
   const pollEveryMs = 700;
@@ -467,12 +561,16 @@ async function callFoundryAgentWeb(question) {
   });
   if (!listMsgRes.ok) {
     const txt = await listMsgRes.text().catch(() => "");
-    throw new Error(`Foundry list messages failed ${listMsgRes.status}: ${txt}`);
+    throw new Error(
+      `Foundry list messages failed ${listMsgRes.status}: ${txt}`
+    );
   }
 
   const listData = await listMsgRes.json().catch(() => ({}));
   const items = Array.isArray(listData?.data) ? listData.data : [];
-  const assistantMsg = items.find((m) => String(m?.role).toLowerCase() === "assistant");
+  const assistantMsg = items.find(
+    (m) => String(m?.role).toLowerCase() === "assistant"
+  );
 
   const content = assistantMsg?.content;
   let text = "";
@@ -521,6 +619,72 @@ function stripSourcesSection(text) {
   return s.slice(0, idx).trim();
 }
 
+/**
+ * Build demo-stable sources:
+ * - If validated >= WEB_SOURCES_MIN: return validated only (current strict behavior)
+ * - Else: return validated + “safe fallback” from extracted (allowlist/homepage-like preferred)
+ * - Still caps at WEB_SOURCES_MAX.
+ */
+function buildFinalWebSources(extractedSources, validatedSources) {
+  const extractedUnique = uniqByUrl(uniqueByUrl(extractedSources));
+  const validatedUnique = uniqByUrl(uniqueByUrl(validatedSources));
+
+  let finalSources = [...validatedUnique];
+  let validatedPartial = false;
+
+  if (finalSources.length < WEB_SOURCES_MIN) {
+    validatedPartial = true;
+
+    const validatedUrlSet = new Set(finalSources.map((s) => s.url));
+    const notValidated = extractedUnique.filter(
+      (s) => !validatedUrlSet.has(s.url)
+    );
+
+    const preferred = [];
+    const secondary = [];
+
+    for (const s of notValidated) {
+      const url = (s?.url || "").trim();
+      if (!url.startsWith("https://")) continue;
+
+      if (isAllowlisted(url) || isHomepageLike(url)) preferred.push(s);
+      else secondary.push(s);
+    }
+
+    const need = Math.max(0, WEB_SOURCES_MIN - finalSources.length);
+
+    const fill = [];
+    for (const s of preferred) {
+      if (fill.length >= need) break;
+      fill.push(s);
+    }
+    for (const s of secondary) {
+      if (fill.length >= need) break;
+      fill.push(s);
+    }
+
+    // If we STILL can’t reach min (rare), use your existing “official-ish” fallback heuristic
+    let combined = uniqByUrl([...finalSources, ...fill]);
+    if (combined.length < WEB_SOURCES_MIN) {
+      const official = tryMakeOfficialDomainFallback(extractedUnique);
+      if (official && !combined.find((x) => x.url === official.url)) {
+        combined = uniqByUrl([official, ...combined]);
+      }
+    }
+
+    finalSources = combined.slice(0, WEB_SOURCES_MAX);
+  }
+
+  finalSources = uniqByUrl(finalSources).slice(0, WEB_SOURCES_MAX);
+
+  return {
+    finalSources,
+    validatedPartial,
+    returnedCountValidated: validatedUnique.length,
+    returnedCountTotal: finalSources.length,
+  };
+}
+
 // -------------------------
 // Main handler
 // -------------------------
@@ -559,26 +723,31 @@ module.exports = async function (context, req) {
       }
 
       const urls = extractHttpsUrls(webText);
-      const extractedSources = sourcesFromUrls(urls).slice(0, 5);
+      const extractedSources = sourcesFromUrls(urls).slice(0, WEB_SOURCES_MAX);
 
       const validatedSources = await validateSourcesServerSide(extractedSources, {
-        maxToValidate: 5,
+        maxToValidate: WEB_SOURCES_MAX,
         perUrlTimeoutMs: 3000,
         totalBudgetMs: 9000,
       });
+
+      const built = buildFinalWebSources(extractedSources, validatedSources);
 
       return jsonResponse(context, 200, {
         ok: true,
         deployTag: DEPLOY_TAG,
         mode,
         answer: stripSourcesSection(webText),
-        sources: validatedSources,
+        sources: built.finalSources,
         web: {
           eligible: true,
           creditsMax: 5,
-          validated: true,
+          validated: true, // validation ran
+          validatedPartial: built.validatedPartial, // true if we had to fallback
           extractedCount: extractedSources.length,
-          returnedCount: validatedSources.length,
+          returnedCountValidated: built.returnedCountValidated,
+          returnedCountTotal: built.returnedCountTotal,
+          returnedCount: built.returnedCountTotal, // keep legacy field aligned
         },
       });
     }
@@ -626,15 +795,12 @@ module.exports = async function (context, req) {
         `Do not use outside knowledge.`,
       ].join("\n");
 
-      // ✅ BIG FIX: cap the size of the sources block
+      // Hard cap the sources block (prevents huge token usage)
       const sourcesBlock = buildSourcesBlockForAOAI(citations);
 
-      const user = [
-        `Question: ${question}`,
-        ``,
-        `Sources:`,
-        sourcesBlock,
-      ].join("\n");
+      const user = [`Question: ${question}`, ``, `Sources:`, sourcesBlock].join(
+        "\n"
+      );
 
       const aoai = await callAOAI(
         [
@@ -643,7 +809,7 @@ module.exports = async function (context, req) {
         ],
         {
           temperature: 0.1,
-          maxTokens: 320, // ✅ BIG FIX: cheaper responses
+          maxTokens: 320,
         }
       );
 
@@ -720,7 +886,9 @@ module.exports = async function (context, req) {
       );
 
       if (!aoai.ok) {
-        const is429 = aoai.status === 429 || String(aoai.error || "").includes("RateLimitReached");
+        const is429 =
+          aoai.status === 429 ||
+          String(aoai.error || "").includes("RateLimitReached");
         if (is429) {
           return jsonResponse(context, 429, {
             ok: false,
