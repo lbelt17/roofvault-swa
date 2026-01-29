@@ -1,641 +1,200 @@
 ﻿<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>RoofVault – Practice Exams</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RoofVault</title>
 
-  <style>
-    :root {
-      --bg: #0f1115;
-      --panel: #151922;
-      --panel-soft: #0c0f14;
-      --border-subtle: #252a36;
-      --accent: #21b3ff;
-      --accent-soft: #1a8ee0;
-      --text-main: #e6e9ef;
-      --text-muted: #a7b0c0;
-      --chip-bg: #1c2230;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: radial-gradient(circle at top, #1c2333 0, #05060a 55%, #020308 100%);
-      color: var(--text-main);
-      display: flex;
-      flex-direction: column;     /* stack header + card */
-      align-items: center;
-      justify-content: flex-start;
-      min-height: 100vh;
-      margin: 0;
-      padding: 16px;
-    }
-
-    /* ---------- Top auth/navigation bar (like Library) ---------- */
-
-    header {
-      width: 100%;
-      padding: 8px 4px 0;
-    }
-
-    .nav {
-      max-width: 980px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-    }
-
-    .nav-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 13px;
-    }
-
-    .logo-pill {
-      width: 30px;
-      height: 30px;
-      border-radius: 999px;
-      background: radial-gradient(circle at 30% 0, #46cdff 0, #008dff 45%, #0046b3 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 14px;
-      color: #02111c;
-      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.65);
-    }
-
-    .brand-text {
-      display: flex;
-      flex-direction: column;
-      line-height: 1.2;
-    }
-
-    .brand-title {
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    .brand-subtitle {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 11px;
-    }
-
-    .user-label {
-      color: var(--text-muted);
-    }
-
-    .tier-pill {
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: rgba(15, 19, 30, 0.95);
-      border: 1px solid rgba(120, 135, 170, 0.65);
-      color: var(--text-muted);
-    }
-
-    .btn {
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(120, 135, 170, 0.75);
-      background: rgba(15, 19, 30, 0.95);
-      color: var(--text-main);
-      font-size: 11px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .btn-text {
-      border-color: transparent;
-      background: transparent;
-      color: var(--text-muted);
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    /* ---------- Exam card layout (unchanged) ---------- */
-
-    .wrap {
-      width: min(980px, 100vw - 24px);
-      padding: 24px 24px 20px;
-      background: rgba(14, 17, 25, 0.96);
-      border-radius: 18px;
-      box-shadow:
-        0 22px 45px rgba(0,0,0,0.55),
-        0 0 0 1px rgba(255,255,255,0.02);
-      border: 1px solid rgba(70, 80, 110, 0.35);
-      backdrop-filter: blur(10px);
-      margin-top: 10px;
-    }
-
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 18px;
-    }
-
-    .header-main {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .logo {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      background: radial-gradient(circle at 30% 0, #46cdff 0, #008dff 45%, #0046b3 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #02111c;
-      font-weight: 800;
-      font-size: 18px;
-      letter-spacing: 0.06em;
-      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.65);
-    }
-
-    .titles {
-      line-height: 1.2;
-    }
-
-    .titles-main {
-      font-size: 18px;
-      font-weight: 700;
-    }
-
-    .titles-sub {
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .pill {
-      font-size: 11px;
-      padding: 5px 9px;
-      border-radius: 999px;
-      border: 1px solid rgba(120, 135, 170, 0.55);
-      background: rgba(15, 19, 30, 0.9);
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      white-space: nowrap;
-    }
-
-    .pill code {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size: 11px;
-      color: #a2b7ff;
-    }
-
-    h1 {
-      font-size: 20px;
-      margin: 0 0 6px 0;
-    }
-
-    .subtext {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-bottom: 16px;
-    }
-
-    .section {
-      border-radius: 14px;
-      background: var(--panel);
-      border: 1px solid var(--border-subtle);
-      padding: 14px 14px 16px;
-      margin-bottom: 14px;
-    }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-
-    .section-title {
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .section-hint {
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .book-row {
-      margin-top: 4px;
-    }
-
-    #bookMount {
-      margin: 4px 0 0 0;
-    }
-
-    .controls-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 6px;
-    }
-
-    button {
-      padding: 9px 14px;
-      border-radius: 999px;
-      border: none;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: transform 0.05s ease-out, box-shadow 0.08s ease-out, background 0.15s ease-out;
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: wait;
-      transform: none;
-      box-shadow: none;
-    }
-
-    .btn-primary {
-      color: #041018;
-      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
-      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
-    }
-
-    .btn-primary:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.55);
-    }
-
-    .btn-outline {
-      color: var(--text-main);
-      background: transparent;
-      border: 1px solid rgba(120, 135, 170, 0.65);
-    }
-
-    .btn-outline:hover:not(:disabled) {
-      background: rgba(26, 33, 48, 0.9);
-      transform: translateY(-1px);
-    }
-
-    .btn-outline span.icon {
-      font-size: 14px;
-      opacity: 0.9;
-    }
-
-    #qList {
-      background: var(--panel-soft);
-      border-radius: 12px;
-      border: 1px solid var(--border-subtle);
-      padding: 12px 12px 10px;
-      margin-top: 10px;
-      min-height: 220px;
-      max-height: 55vh;
-      overflow: auto;
-      font-size: 13px;
-      line-height: 1.45;
-    }
-
-    .q-empty {
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-
-    .q-item {
-      margin-bottom: 8px;
-      padding: 8px 9px;
-      border-radius: 8px;
-      background: rgba(20, 26, 40, 0.96);
-      border: 1px solid rgba(70, 80, 110, 0.6);
-    }
-
-    .q-item strong {
-      color: #f6f7ff;
-    }
-
-    #diag {
-      margin-top: 10px;
-      font-size: 11px;
-      color: var(--text-muted);
-      max-height: 26vh;
-      overflow: auto;
-      background: transparent;
-      border-radius: 8px;
-      border: 1px dashed rgba(90, 100, 135, 0.8);
-      padding: 8px 9px;
-      white-space: pre-wrap;
-    }
-
-    .diag-label {
-      font-weight: 600;
-      font-size: 11px;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: rgba(163, 176, 204, 0.9);
-      margin-bottom: 3px;
-    }
-
-    .footer-hint {
-      margin-top: 6px;
-      font-size: 11px;
-      color: var(--text-muted);
-      display: flex;
-      justify-content: flex-end;
-    }
-
-    .footer-hint span {
-      opacity: 0.8;
-    }
-
-    @media (max-width: 640px) {
-      .header {
-        flex-direction: column;
-        align-items: flex-start;
+    <style>
+      :root {
+        --bg: #0b0f14;
+        --card: #111827;
+        --card2: #0f172a;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --border: rgba(255, 255, 255, 0.08);
+        --shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+        --radius: 18px;
       }
-      .header-actions {
-        justify-content: flex-start;
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+          "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background: radial-gradient(1200px 900px at 20% -10%, rgba(56,189,248,.18), transparent 60%),
+                    radial-gradient(1000px 800px at 90% 10%, rgba(99,102,241,.18), transparent 55%),
+                    var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 28px;
       }
+
       .wrap {
-        padding: 18px 16px 14px;
+        width: 100%;
+        max-width: 920px;
       }
-      .nav {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-    }
-  </style>
-</head>
 
-<body>
-  <!-- Top auth bar (matches Library behavior) -->
-  <header>
-    <div class="nav">
-      <div class="nav-left">
-        <div class="logo-pill">RV</div>
-        <div class="brand-text">
-          <div class="brand-title">RoofVault Practice Exams</div>
-          <div class="brand-subtitle">
-            Generate book-specific exams grounded in your RoofDocs index.
+      .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 22px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .logo {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.04));
+        border: 1px solid var(--border);
+        box-shadow: 0 10px 30px rgba(0,0,0,.35);
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+      }
+
+      /* If you add a new logo file later, just replace this div with:
+         <img src="/static/your-new-logo.png" class="logo-img" alt="RoofVault" />
+      */
+      .logo-mark {
+        width: 22px;
+        height: 22px;
+        border-radius: 7px;
+        background: rgba(255,255,255,.7);
+        opacity: .12;
+      }
+
+      .title {
+        line-height: 1.15;
+      }
+
+      .title h1 {
+        font-size: 18px;
+        margin: 0;
+        letter-spacing: 0.2px;
+      }
+      .title p {
+        margin: 3px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+      }
+
+      @media (max-width: 900px) {
+        .grid { grid-template-columns: 1fr; }
+      }
+
+      .card {
+        text-decoration: none;
+        color: inherit;
+        background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px;
+        box-shadow: var(--shadow);
+        transition: transform .18s ease, border-color .18s ease, background .18s ease;
+        min-height: 150px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(255,255,255,.18);
+        background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      }
+
+      .card h2 {
+        margin: 0 0 8px;
+        font-size: 16px;
+        letter-spacing: 0.2px;
+      }
+
+      .card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .cta {
+        margin-top: 14px;
+        font-size: 13px;
+        color: rgba(255,255,255,.75);
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .footer {
+        margin-top: 16px;
+        color: rgba(255,255,255,.45);
+        font-size: 12px;
+        text-align: center;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <div class="top">
+        <div class="brand">
+          <div class="logo" aria-hidden="true">
+            <div class="logo-mark"></div>
+          </div>
+          <div class="title">
+            <h1>RoofVault</h1>
+            <p>Choose a module to begin.</p>
           </div>
         </div>
       </div>
 
-      <div class="nav-right">
-        <span id="userEmailLabel" class="user-label">Free User</span>
-        <span id="subscriptionLabel" class="tier-pill hidden"></span>
+      <div class="grid">
+        <a class="card" href="/rvchat.html">
+          <div>
+            <h2>RoofVault Chat</h2>
+            <p>Ask roofing questions grounded in your docs. Opt-in web mode when needed.</p>
+          </div>
+          <div class="cta">Open Chat <span aria-hidden="true">→</span></div>
+        </a>
 
-        <button id="btnLogin" class="btn btn-secondary">
-          <span>🔓 Login / Sign up</span>
-        </button>
+        <a class="card" href="/exams.html">
+          <div>
+            <h2>RoofVault Exams</h2>
+            <p>Generate practice exams by book and use the interactive exam experience.</p>
+          </div>
+          <div class="cta">Open Exams <span aria-hidden="true">→</span></div>
+        </a>
 
-        <button id="btnLogout" class="btn btn-secondary hidden">
-          <span>🚪 Logout</span>
-        </button>
+        <a class="card" href="/library.html">
+          <div>
+            <h2>RoofVault Library</h2>
+            <p>Browse your roofing manuals and source material.</p>
+          </div>
+          <div class="cta">Open Library <span aria-hidden="true">→</span></div>
+        </a>
+      </div>
 
-        <button id="btnBackHome" class="btn btn-text">
-          ⬅ Back to Library
-        </button>
+      <div class="footer">
+        © RoofVault
       </div>
     </div>
-  </header>
-
-  <!-- Exam card -->
-  <div class="wrap">
-    <!-- Header -->
-    <div class="header">
-      <div class="header-main">
-        <div class="logo">RV</div>
-        <div class="titles">
-          <div class="titles-main">RoofVault – Practice Exam Generator</div>
-          <div class="titles-sub">Generate book-specific exams grounded in your RoofDocs index.</div>
-        </div>
-      </div>
-      <div class="header-actions">
-        <div class="pill">
-          Search
-          <code>azureblob-index</code>
-        </div>
-        <div class="pill">
-          Model
-          <code>AOAI_DEPLOYMENT</code>
-        </div>
-      </div>
-    </div>
-
-    <h1>Interactive Practice Exam</h1>
-    <div class="subtext">
-      Select a book from your library, then generate a <strong>25-question practice exam</strong> based only on that source.
-      You can click again to regenerate a fresh exam from the same book.
-    </div>
-
-    <!-- Book selection -->
-    <div class="section">
-      <div class="section-header">
-        <div class="section-title">1. Choose a book</div>
-        <div class="section-hint">Books are loaded from your Azure Blob + Search index.</div>
-      </div>
-      <div class="book-row">
-        <!-- books.js / interactive-exam.js will populate this -->
-        <div id="bookMount"></div>
-      </div>
-    </div>
-
-    <!-- Controls + output -->
-    <div class="section">
-      <div class="section-header">
-        <div class="section-title">2. Generate a 25Q practice exam</div>
-        <div class="section-hint">Questions should cite and align with the selected document.</div>
-      </div>
-
-      <div class="controls-row">
-        <button id="btnGenExam25ByBook" class="btn-primary">
-          <span>Generate 25Q Practice Exam</span>
-        </button>
-
-        <button id="btnOpenChat" class="btn-outline" type="button">
-          <span class="icon">💬</span>
-          <span>Open RoofVault Chat</span>
-        </button>
-
-        <button id="btnLibrary" class="btn-outline" type="button">
-          <span class="icon">📚</span>
-          <span>Open RoofVault Library</span>
-        </button>
-      </div>
-
-      <div id="qList">
-        <div class="q-empty">
-          Your generated practice questions will appear here.
-          Pick a book above, then click <strong>“Generate 25Q Practice Exam”</strong>.
-        </div>
-      </div>
-
-      <pre id="diag">
-<span class="diag-label">Diagnostics</span>
-Ready.
-      </pre>
-
-      <div class="footer-hint">
-        <span>Tip: Click “Generate 25Q Practice Exam” again to get a new randomized exam from the same book.</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Existing logic (unchanged) -->
-  <script src="/interactive-exam.js?v=4"></script>
-  <script src="/books.js?v=4"></script>
-  <script src="auth.js?v=1"></script>
-  <script src="/gen-exam.js?v=4"></script>
-
-  <!-- Auth + navigation wiring -->
-  <script>
-    function updateExamAccess(isLoggedIn) {
-      const genBtn = document.getElementById('btnGenExam50ByBook');
-      if (!genBtn) return;
-
-      if (isLoggedIn) {
-        genBtn.disabled = false;
-        genBtn.title = 'Generate a 25-question practice exam.';
-        genBtn.textContent = 'Generate 25Q Practice Exam';
-        genBtn.style.cursor = 'pointer';
-      } else {
-        genBtn.disabled = true;
-        genBtn.title = 'Please log in to generate exams.';
-        genBtn.textContent = '🔒 Generate 25Q Practice Exam';
-        genBtn.style.cursor = 'not-allowed';
-      }
-    }
-
-    async function loadAuthState() {
-      const userEmailLabel = document.getElementById('userEmailLabel');
-      const subscriptionLabel = document.getElementById('subscriptionLabel');
-      const btnLogin = document.getElementById('btnLogin');
-      const btnLogout = document.getElementById('btnLogout');
-
-      try {
-        const res = await fetch('/api/auth-me', { credentials: 'include' });
-        if (!res.ok) throw new Error('No auth info');
-
-        const data = await res.json();
-
-        window.isLoggedIn = !!data.isLoggedIn;
-window.plan = data.plan || 'free';
-window.roles = data.roles || [];
-
-if (!data.isLoggedIn) {
-  // Logged out = Free User
-  userEmailLabel.textContent = 'Free User';
-  subscriptionLabel.classList.add('hidden');
-  btnLogin.classList.remove('hidden');
-  btnLogout.classList.add('hidden');
-  updateExamAccess(false);
-  return;
-}
-
-
-        userEmailLabel.textContent = data.email || '';
-
-if (window.roles.includes('owner')) {
-  subscriptionLabel.textContent = 'Owner Access';
-} else if (window.plan === 'premium') {
-  subscriptionLabel.textContent = 'Premium';
-} else {
-  subscriptionLabel.textContent = 'Free User';
-}
-
-        subscriptionLabel.classList.remove('hidden');
-        btnLogin.classList.add('hidden');
-        btnLogout.classList.remove('hidden');
-        updateExamAccess(true);
-
-      } catch (err) {
-        console.error('loadAuthState error:', err);
-
-        window.isLoggedIn = false;
-        window.subscriptionTier = 'free';
-        userEmailLabel.textContent = 'Not signed in';
-        subscriptionLabel.textContent = 'Free (guest)';
-        subscriptionLabel.classList.add('hidden');
-        btnLogin.classList.remove('hidden');
-        btnLogout.classList.add('hidden');
-        updateExamAccess(false);
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-      // Wire chat button
-      const chatBtn = document.getElementById('btnOpenChat');
-      if (chatBtn) {
-        chatBtn.addEventListener('click', function () {
-          window.location.href = 'rvchat.html';
-        });
-      }
-
-      // Wire library button
-      const libBtn = document.getElementById('btnLibrary');
-      if (libBtn) {
-        libBtn.addEventListener('click', function () {
-          window.location.href = 'library.html';
-        });
-      }
-
-      // Auth buttons
-      const btnLogin = document.getElementById('btnLogin');
-      const btnLogout = document.getElementById('btnLogout');
-      const btnBackHome = document.getElementById('btnBackHome');
-
-      if (btnLogin) {
-        btnLogin.addEventListener('click', function () {
-          window.location.href = '/login';
-        });
-      }
-
-      if (btnLogout) {
-        btnLogout.addEventListener('click', function () {
-          window.location.href =
-            '/.auth/logout?post_logout_redirect_uri=/index.html';
-        });
-      }
-
-      if (btnBackHome) {
-        btnBackHome.addEventListener('click', function () {
-          window.location.href = 'library.html';
-        });
-      }
-
-      // Default: locked until we know auth state
-      updateExamAccess(false);
-      loadAuthState();
-    });
-  </script>
-</body>
+  </body>
 </html>
