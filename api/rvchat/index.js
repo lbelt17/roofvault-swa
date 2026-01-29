@@ -723,13 +723,15 @@ module.exports = async function (context, req) {
       }
 
       const urls = extractHttpsUrls(webText);
-      const extractedSources = sourcesFromUrls(urls).slice(0, WEB_SOURCES_MAX);
+      const extractedSources = sourcesFromUrls(urls).slice(0, 12);
+
 
       const validatedSources = await validateSourcesServerSide(extractedSources, {
-        maxToValidate: WEB_SOURCES_MAX,
-        perUrlTimeoutMs: 3000,
-        totalBudgetMs: 9000,
-      });
+  maxToValidate: 8,
+  perUrlTimeoutMs: 2500,
+  totalBudgetMs: 9000,
+});
+
 
       const built = buildFinalWebSources(extractedSources, validatedSources);
 
