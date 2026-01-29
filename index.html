@@ -8,8 +8,6 @@
     <style>
       :root {
         --bg: #0b0f14;
-        --card: #111827;
-        --card2: #0f172a;
         --text: #e5e7eb;
         --muted: #9ca3af;
         --border: rgba(255, 255, 255, 0.08);
@@ -18,13 +16,15 @@
       }
 
       * { box-sizing: border-box; }
+
       body {
         margin: 0;
         font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
           "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        background: radial-gradient(1200px 900px at 20% -10%, rgba(56,189,248,.18), transparent 60%),
-                    radial-gradient(1000px 800px at 90% 10%, rgba(99,102,241,.18), transparent 55%),
-                    var(--bg);
+        background:
+          radial-gradient(1200px 900px at 20% -10%, rgba(56,189,248,.18), transparent 60%),
+          radial-gradient(1000px 800px at 90% 10%, rgba(99,102,241,.18), transparent 55%),
+          var(--bg);
         color: var(--text);
         min-height: 100vh;
         display: flex;
@@ -38,18 +38,18 @@
         max-width: 920px;
       }
 
+      /* ✅ Header centered */
       .top {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 22px;
+        justify-content: center;
+        margin-bottom: 18px;
       }
 
       .brand {
         display: flex;
         align-items: center;
         gap: 14px;
+        text-align: left;
       }
 
       .logo {
@@ -62,30 +62,32 @@
         display: grid;
         place-items: center;
         overflow: hidden;
+        flex: 0 0 auto;
       }
 
-      /* If you add a new logo file later, just replace this div with:
-         <img src="/static/your-new-logo.png" class="logo-img" alt="RoofVault" />
-      */
-      .logo-mark {
-        width: 22px;
-        height: 22px;
-        border-radius: 7px;
-        background: rgba(255,255,255,.7);
-        opacity: .12;
+      /* ✅ Logo image (you’ll add the file later) */
+      .logo-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
       }
+
+      /* If the image isn't found yet, the browser will show nothing.
+         The container still renders nicely. */
 
       .title {
         line-height: 1.15;
       }
 
       .title h1 {
-        font-size: 18px;
+        font-size: 22px;
         margin: 0;
         letter-spacing: 0.2px;
       }
+
       .title p {
-        margin: 3px 0 0;
+        margin: 4px 0 0;
         color: var(--muted);
         font-size: 13px;
       }
@@ -97,6 +99,7 @@
       }
 
       @media (max-width: 900px) {
+        .brand { justify-content: center; }
         .grid { grid-template-columns: 1fr; }
       }
 
@@ -157,7 +160,8 @@
       <div class="top">
         <div class="brand">
           <div class="logo" aria-hidden="true">
-            <div class="logo-mark"></div>
+            <!-- Step 2 later: place your logo file at /static/roofvault-logo.png -->
+            <img class="logo-img" src="/static/roofvault-logo.png" alt="RoofVault" />
           </div>
           <div class="title">
             <h1>RoofVault</h1>
@@ -192,9 +196,7 @@
         </a>
       </div>
 
-      <div class="footer">
-        © RoofVault
-      </div>
+      <div class="footer">© RoofVault</div>
     </div>
   </body>
 </html>
