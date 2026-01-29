@@ -863,14 +863,59 @@ module.exports = async function (context, req) {
         mode: "doc",
         question,
         answer,
-        sources: citations.map((c) => ({
-          id: c.id,
-          title: c.meta.title || c.meta.sourcefile || "",
-          url: c.meta.url || "",
-          publisher: "",
-          pageNumber: c.meta.pageNumber ?? null,
-          chunk_id: c.meta.chunk_id ?? null,
-        })),
+        sources: citations.map((c, i) => {
+  const m = (c && c.meta) || {};
+  const ch = (chunks && chunks[i]) || {};
+  const cm = (ch && (ch.meta || ch.metadata)) || {};
+
+  const title = String(
+    m.title ||
+      m.documentTitle ||
+      m.sourceTitle ||
+      m.sourcefile ||
+      m.sourceFile ||
+      cm.title ||
+      cm.documentTitle ||
+      cm.sourcefile ||
+      cm.sourceFile ||
+      cm.filename ||
+      cm.fileName ||
+      ""
+  ).trim();
+
+  const url = String(
+    m.url ||
+      m.sourceUrl ||
+      m.sourceURL ||
+      cm.url ||
+      cm.sourceUrl ||
+      cm.sourceURL ||
+      cm.blobUrl ||
+      cm.blobURL ||
+      ""
+  ).trim();
+
+  const pageRaw =
+    m.pageNumber ?? m.page ?? cm.pageNumber ?? cm.page ?? cm.pageno ?? null;
+  const pageNumber =
+    pageRaw === null || pageRaw === undefined
+      ? null
+      : Number.isFinite(Number(pageRaw))
+      ? Number(pageRaw)
+      : null;
+
+  const chunk_id =
+    m.chunk_id ?? m.chunkId ?? cm.chunk_id ?? cm.chunkId ?? null;
+
+  return {
+    id: c.id,
+    title,
+    url,
+    publisher: String(m.publisher || cm.publisher || "").trim(),
+    pageNumber,
+    chunk_id,
+  };
+}),
       });
     }
 
