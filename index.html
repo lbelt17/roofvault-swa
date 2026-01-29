@@ -1,202 +1,206 @@
 ﻿<!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>RoofVault</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RoofVault</title>
+  <meta name="description" content="Choose a module to begin." />
 
-    <style>
-      :root {
-        --bg: #0b0f14;
-        --text: #e5e7eb;
-        --muted: #9ca3af;
-        --border: rgba(255, 255, 255, 0.08);
-        --shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
-        --radius: 18px;
-      }
+  <style>
+    :root{
+      --bg0:#05070b;
+      --bg1:#071827;
+      --bg2:#0a0f1a;
+      --card:#0b1220cc;
+      --cardBorder:#1b2a40;
+      --text:#e9eef7;
+      --muted:#9fb0c8;
+      --muted2:#7f93b2;
+      --shadow: 0 20px 60px rgba(0,0,0,.55);
+      --radius: 18px;
+    }
 
-      * { box-sizing: border-box; }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin:0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display","SF Pro Text", system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(900px 600px at 75% 15%, rgba(62, 88, 255, .25), transparent 60%),
+        radial-gradient(900px 600px at 25% 25%, rgba(0, 180, 255, .18), transparent 62%),
+        linear-gradient(135deg, var(--bg1), var(--bg0) 45%, var(--bg2));
+      overflow-x:hidden;
+    }
 
-      body {
-        margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
-          "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        background:
-          radial-gradient(1200px 900px at 20% -10%, rgba(56,189,248,.18), transparent 60%),
-          radial-gradient(1000px 800px at 90% 10%, rgba(99,102,241,.18), transparent 55%),
-          var(--bg);
-        color: var(--text);
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 28px;
-      }
+    .wrap{
+      min-height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 48px 18px;
+    }
 
-      .wrap {
-        width: 100%;
-        max-width: 920px;
-      }
+    .shell{
+      width: 100%;
+      max-width: 980px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap: 22px;
+    }
 
-      /* ✅ Header centered */
-      .top {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 18px;
-      }
+    /* Brand */
+    .brand{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap: 10px;
+      text-align:center;
+      margin-bottom: 6px;
+    }
 
-      .brand {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        text-align: left;
-      }
+    .logo{
+      width: 110px;   /* <-- main size knob */
+      height: 110px;
+      border-radius: 22px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.06);
+      box-shadow: 0 12px 40px rgba(0,0,0,.45);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .logo img{
+      width: 78%;
+      height: 78%;
+      object-fit: contain;
+      display:block;
+    }
 
-      .logo {
-        width: 44px;
-        height: 44px;
-        border-radius: 12px;
-        background: linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.04));
-        border: 1px solid var(--border);
-        box-shadow: 0 10px 30px rgba(0,0,0,.35);
-        display: grid;
-        place-items: center;
-        overflow: hidden;
-        flex: 0 0 auto;
-      }
+    .subtitle{
+      font-size: 14px;
+      line-height: 1.4;
+      color: var(--muted);
+      letter-spacing: .2px;
+    }
 
-      /* ✅ Logo image (you’ll add the file later) */
-      .logo-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-      }
+    /* Cards */
+    .grid{
+      width:100%;
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 8px;
+    }
 
-      /* If the image isn't found yet, the browser will show nothing.
-         The container still renders nicely. */
+    .card{
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      padding: 18px 18px 16px;
+      border-radius: var(--radius);
+      background: var(--card);
+      border: 1px solid rgba(27,42,64,.75);
+      box-shadow: 0 14px 50px rgba(0,0,0,.45);
+      text-decoration:none;
+      color: inherit;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      transition: transform .15s ease, border-color .15s ease, background .15s ease;
+      outline: none;
+    }
 
-      .title {
-        line-height: 1.15;
-      }
+    .card:hover{
+      transform: translateY(-2px);
+      border-color: rgba(120, 160, 255, .45);
+      background: rgba(12, 20, 35, .82);
+    }
 
-      .title h1 {
-        font-size: 22px;
-        margin: 0;
-        letter-spacing: 0.2px;
-      }
+    .card:focus-visible{
+      box-shadow: 0 0 0 3px rgba(120,160,255,.35), 0 14px 50px rgba(0,0,0,.45);
+    }
 
-      .title p {
-        margin: 4px 0 0;
-        color: var(--muted);
-        font-size: 13px;
-      }
+    .card h3{
+      margin:0;
+      font-size: 16px;
+      letter-spacing: .2px;
+    }
 
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 14px;
-      }
+    .card p{
+      margin:0;
+      color: var(--muted2);
+      font-size: 13px;
+      line-height: 1.45;
+      min-height: 38px;
+    }
 
-      @media (max-width: 900px) {
-        .brand { justify-content: center; }
-        .grid { grid-template-columns: 1fr; }
-      }
+    .cta{
+      margin-top: 6px;
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      font-size: 13px;
+      color: rgba(233,238,247,.9);
+    }
 
-      .card {
-        text-decoration: none;
-        color: inherit;
-        background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 18px;
-        box-shadow: var(--shadow);
-        transition: transform .18s ease, border-color .18s ease, background .18s ease;
-        min-height: 150px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-      }
+    .arrow{
+      display:inline-block;
+      transform: translateY(1px);
+      opacity: .85;
+    }
 
-      .card:hover {
-        transform: translateY(-2px);
-        border-color: rgba(255,255,255,.18);
-        background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
-      }
+    footer{
+      margin-top: 6px;
+      font-size: 12px;
+      color: rgba(159,176,200,.55);
+      text-align:center;
+    }
 
-      .card h2 {
-        margin: 0 0 8px;
-        font-size: 16px;
-        letter-spacing: 0.2px;
-      }
+    /* Responsive */
+    @media (max-width: 860px){
+      .grid{ grid-template-columns: 1fr; }
+      .logo{ width: 96px; height: 96px; border-radius: 20px; }
+    }
+  </style>
+</head>
 
-      .card p {
-        margin: 0;
-        color: var(--muted);
-        font-size: 13px;
-        line-height: 1.45;
-      }
-
-      .cta {
-        margin-top: 14px;
-        font-size: 13px;
-        color: rgba(255,255,255,.75);
-        display: inline-flex;
-        gap: 8px;
-        align-items: center;
-      }
-
-      .footer {
-        margin-top: 16px;
-        color: rgba(255,255,255,.45);
-        font-size: 12px;
-        text-align: center;
-      }
-    </style>
-  </head>
-
-  <body>
-    <div class="wrap">
-      <div class="top">
-        <div class="brand">
-          <div class="logo" aria-hidden="true">
-            <!-- Step 2 later: place your logo file at /static/roofvault-logo.png -->
-            <img class="logo-img" src="/static/roofvault-logo.png" alt="RoofVault" />
-          </div>
-          <div class="title">
-            <h1>RoofVault</h1>
-            <p>Choose a module to begin.</p>
-          </div>
+<body>
+  <main class="wrap">
+    <section class="shell" aria-label="RoofVault hub">
+      <div class="brand">
+        <div class="logo" aria-label="RoofVault logo">
+          <img src="/static/roofvault-logo.png" alt="RoofVault" />
         </div>
+        <div class="subtitle">Choose a module to begin.</div>
       </div>
 
-      <div class="grid">
-        <a class="card" href="/rvchat.html">
-          <div>
-            <h2>RoofVault Chat</h2>
-            <p>Ask roofing questions grounded in your docs. Opt-in web mode when needed.</p>
-          </div>
-          <div class="cta">Open Chat <span aria-hidden="true">→</span></div>
+      <div class="grid" role="navigation" aria-label="Modules">
+        <a class="card" href="/rvchat.html" aria-label="Open RoofVault Chat">
+          <h3>RoofVault Chat</h3>
+          <p>Ask roofing questions grounded in your docs. Opt-in to web mode when needed.</p>
+          <div class="cta">Open Chat <span class="arrow">→</span></div>
         </a>
 
-        <a class="card" href="/exams.html">
-          <div>
-            <h2>RoofVault Exams</h2>
-            <p>Generate practice exams by book and use the interactive exam experience.</p>
-          </div>
-          <div class="cta">Open Exams <span aria-hidden="true">→</span></div>
+        <a class="card" href="/exams.html" aria-label="Open RoofVault Exams">
+          <h3>RoofVault Exams</h3>
+          <p>Generate practice exams by book and use the interactive exam experience.</p>
+          <div class="cta">Open Exams <span class="arrow">→</span></div>
         </a>
 
-        <a class="card" href="/library.html">
-          <div>
-            <h2>RoofVault Library</h2>
-            <p>Browse your roofing manuals and source material.</p>
-          </div>
-          <div class="cta">Open Library <span aria-hidden="true">→</span></div>
+        <a class="card" href="/library.html" aria-label="Open RoofVault Library">
+          <h3>RoofVault Library</h3>
+          <p>Browse your roofing manuals and source material.</p>
+          <div class="cta">Open Library <span class="arrow">→</span></div>
         </a>
       </div>
 
-      <div class="footer">© RoofVault</div>
-    </div>
-  </body>
+      <footer>© RoofVault</footer>
+    </section>
+  </main>
+</body>
 </html>
