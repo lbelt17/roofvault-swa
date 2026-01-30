@@ -264,7 +264,7 @@ async function validateSourcesServerSide(
 // -------------------------
 // Azure AI Search (docs)
 // -------------------------
-async function searchDocs(query) {
+async function searchDocs(query, { top = 6 } = {}) {
   if (!SEARCH_ENDPOINT || !SEARCH_KEY || !SEARCH_INDEX) {
     return { ok: false, error: "Missing SEARCH_* env vars", chunks: [] };
   }
@@ -276,7 +276,7 @@ async function searchDocs(query) {
 
   const payload = {
     search: query,
-    top: 6, // keep smaller to reduce prompt size
+    top, // keep smaller to reduce prompt size
     queryType: "simple",
   };
 
@@ -801,29 +801,50 @@ const isVague =
 
 if (looksLikeDocSummaryRequest && isVague) {
   // Collect ALL matching doc titles from chunks
-  const titlesRaw = (chunks || [])
-    .map((c) => String(c?.metadata_storage_name || "").trim())
-    .filter(Boolean);
+let pickerChunks = chunks || [];
 
-  // Normalize + dedupe
-  const seen = new Set();
-  const titles = [];
-  for (const t of titlesRaw) {
-    const k = t.toLowerCase();
-    if (seen.has(k)) continue;
-    seen.add(k);
-    titles.push(t);
+// If user is asking for IIBEC docs, do a broader "list docs" search
+// so we don't miss Part 01, 05, 07, 08, etc.
+if (qLower.includes("iibec")) {
+  const listSearch = await searchDocs(
+    "IIBEC Manual-of-Practice-2020 Part",
+    { top: 50 }
+  );
+
+  if (
+    listSearch &&
+    listSearch.ok &&
+    Array.isArray(listSearch.chunks) &&
+    listSearch.chunks.length
+  ) {
+    pickerChunks = listSearch.chunks;
   }
+}
 
-  // Sort by Part number if present (Part 01, 02, 03…)
-  titles.sort((a, b) => {
-    const pa = a.match(/part\s*(\d+)/i);
-    const pb = b.match(/part\s*(\d+)/i);
-    if (pa && pb) return Number(pa[1]) - Number(pb[1]);
-    if (pa) return -1;
-    if (pb) return 1;
-    return a.localeCompare(b);
-  });
+const titlesRaw = (pickerChunks || [])
+  .map((c) => String(c?.metadata_storage_name || "").trim())
+  .filter(Boolean);
+
+// Normalize + dedupe
+const seen = new Set();
+const titles = [];
+for (const t of titlesRaw) {
+  const k = t.toLowerCase();
+  if (seen.has(k)) continue;
+  seen.add(k);
+  titles.push(t);
+}
+
+// Sort by Part number if present (Part 01, 02, 03…)
+titles.sort((a, b) => {
+  const pa = a.match(/part\s*(\d+)/i);
+  const pb = b.match(/part\s*(\d+)/i);
+  if (pa && pb) return Number(pa[1]) - Number(pb[1]);
+  if (pa) return -1;
+  if (pb) return 1;
+  return a.localeCompare(b);
+});
+
 
   return jsonResponse(context, 200, {
     ok: true,
