@@ -856,6 +856,30 @@ module.exports = async function (context, req) {
           sources: [],
         });
       }
+      // Debug (safe): only returns metadata keys when ?debug=1
+const debugFlag = String((req.query && (req.query.debug || req.query.diag)) || "") === "1";
+const _diag = debugFlag
+  ? {
+      chunksCount: Array.isArray(chunks) ? chunks.length : 0,
+      chunk0Keys: chunks && chunks[0] ? Object.keys(chunks[0]) : [],
+      chunk0MetaKeys:
+        chunks && chunks[0] && (chunks[0].meta || chunks[0].metadata)
+          ? Object.keys(chunks[0].meta || chunks[0].metadata)
+          : [],
+      // best-effort peek at common fields (no chunk text)
+      chunk0MetaPreview: (() => {
+        const m = (chunks && chunks[0] && (chunks[0].meta || chunks[0].metadata)) || {};
+        return {
+          title: m.title || m.documentTitle || m.sourceTitle || null,
+          sourcefile: m.sourcefile || m.sourceFile || m.filename || m.fileName || null,
+          url: m.url || m.sourceUrl || m.blobUrl || null,
+          pageNumber: m.pageNumber ?? m.page ?? m.pageno ?? null,
+          chunk_id: m.chunk_id ?? m.chunkId ?? null,
+        };
+      })(),
+    }
+  : undefined;
+
 
       return jsonResponse(context, 200, {
         ok: true,
@@ -863,6 +887,7 @@ module.exports = async function (context, req) {
         mode: "doc",
         question,
         answer,
+        ...(debugFlag ? { _diag } : {}),
         sources: citations.map((c, i) => {
   const m = (c && c.meta) || {};
   const ch = (chunks && chunks[i]) || {};
