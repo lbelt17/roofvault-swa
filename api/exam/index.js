@@ -1,7 +1,10 @@
 ﻿// api/exam/index.js
-// Step: Add batching ONLY (no filtering, no top-up, no retries)
+// Step: Book-wide multi-part support (stable citations: SOURCE 1..SOURCE 8)
+// - Uses up to 8 parts max (1 top chunk per part) to preserve cite constraints.
+// - Keeps single-part mode working.
+// - Adds sources[] metadata for auditability.
 
-const DEPLOY_TAG = "DEPLOY_TAG__2026-01-22__BATCHING_ONLY_A";
+const DEPLOY_TAG = "DEPLOY_TAG__2026-01-30__MULTIPART_BOOKWIDE_A";
 
 process.on("unhandledRejection", (err) => console.error("[unhandledRejection]", err));
 process.on("uncaughtException", (err) => console.error("[uncaughtException]", err));
@@ -23,11 +26,21 @@ function getEnv(name) {
 function safeJsonParse(value) {
   if (!value) return null;
   if (typeof value === "object") return value;
-  try {
-    return JSON.parse(value);
-  } catch {
-    return null;
+  try { return JSON.parse(value); } catch { return null; }
+}
+
+function uniqStrings(arr) {
+  const out = [];
+  const seen = new Set();
+  for (const v of arr || []) {
+    const s = typeof v === "string" ? v.trim() : "";
+    if (!s) continue;
+    const key = s.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(s);
   }
+  return out;
 }
 
 module.exports = async function (context, req) {
@@ -37,8 +50,7 @@ module.exports = async function (context, req) {
         ok: true,
         deployTag: DEPLOY_TAG,
         method: "GET",
-        hint:
-          'POST { "parts":["NRCA - Steep-slope Roof Systems 2017 - Part 01"], "count": 25 }',
+        hint: 'POST { "parts":["<part1>","<part2>"], "count":25, "mode":"BOOK_ONLY" }',
       });
     }
 
@@ -60,21 +72,24 @@ module.exports = async function (context, req) {
       });
     }
 
-    const parts = Array.isArray(body.parts) ? body.parts : [];
+    const partsRaw = Array.isArray(body.parts) ? body.parts : [];
+    const partsAll = uniqStrings(partsRaw);
     const countRaw = Number.isFinite(body.count) ? body.count : parseInt(body.count, 10);
-    const desiredCount = Number.isFinite(countRaw) && countRaw > 0 ? Math.min(countRaw, 50) : 10;
+    const desiredCount = Number.isFinite(countRaw) && countRaw > 0 ? Math.min(countRaw, 50) : 25;
 
-    if (!parts.length || typeof parts[0] !== "string" || !parts[0].trim()) {
+    if (!partsAll.length) {
       return jsonRes(context, 400, {
         ok: false,
         deployTag: DEPLOY_TAG,
-        error: 'Body must include: parts: ["<part name>"]',
+        error: 'Body must include: parts: ["<part name>", ...]',
       });
     }
 
-    const partName = parts[0].trim();
+    // IMPORTANT: keep cites limited to SOURCE 1..SOURCE 8.
+    // So we sample up to 8 parts and take 1 best hit per part.
+    const parts = partsAll.slice(0, 8);
 
-    // --- 1) Search (same as baseline) ---
+    // --- 1) Search: 1 best chunk per part (top=1) ---
     const SEARCH_ENDPOINT = getEnv("SEARCH_ENDPOINT");
     const SEARCH_API_KEY = getEnv("SEARCH_API_KEY");
     const SEARCH_INDEX_CONTENT = process.env.SEARCH_INDEX_CONTENT || "azureblob-index-content";
@@ -83,43 +98,73 @@ module.exports = async function (context, req) {
       `${SEARCH_ENDPOINT.replace(/\/$/, "")}` +
       `/indexes/${encodeURIComponent(SEARCH_INDEX_CONTENT)}/docs/search?api-version=2023-11-01`;
 
-    const searchPayload = {
-      search: partName,
-      top: 8,
-      queryType: "simple",
-      select: "*",
-    };
+    const hitsByPart = [];
+    for (const partName of parts) {
+      const searchPayload = {
+        search: partName,
+        top: 1,
+        queryType: "simple",
+        select: "*",
+      };
 
-    const searchResp = await fetch(searchUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
-      body: JSON.stringify(searchPayload),
-    });
-
-    const searchText = await searchResp.text();
-    if (!searchResp.ok) {
-      return jsonRes(context, 500, {
-        ok: false,
-        deployTag: DEPLOY_TAG,
-        stage: "search",
-        error: `Search failed: HTTP ${searchResp.status}`,
-        raw: searchText.slice(0, 2000),
+      const searchResp = await fetch(searchUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
+        body: JSON.stringify(searchPayload),
       });
+
+      const searchText = await searchResp.text();
+      if (!searchResp.ok) {
+        return jsonRes(context, 500, {
+          ok: false,
+          deployTag: DEPLOY_TAG,
+          stage: "search",
+          partName,
+          error: `Search failed: HTTP ${searchResp.status}`,
+          raw: searchText.slice(0, 2000),
+        });
+      }
+
+      const searchJson = safeJsonParse(searchText) || {};
+      const docs = Array.isArray(searchJson.value) ? searchJson.value : [];
+      hitsByPart.push({ partName, doc: docs[0] || null });
     }
 
-    const searchJson = safeJsonParse(searchText) || {};
-    const hits = Array.isArray(searchJson.value) ? searchJson.value : [];
+    // Build up to 8 SOURCES (one per part). Keep total under ~11k chars.
+    const sourcesMeta = [];
+    const sourcePieces = [];
 
-    const sourcePieces = hits.map((doc, i) => {
-      const text =
-        doc.content ||
-        doc.text ||
-        doc.chunk ||
-        doc.pageContent ||
-        doc.merged_content ||
-        JSON.stringify(doc);
-      return `SOURCE ${i + 1}\n${String(text)}`.slice(0, 2500);
-    });
+    for (let i = 0; i < hitsByPart.length; i++) {
+      const { partName, doc } = hitsByPart[i];
+      const sourceId = `SOURCE ${i + 1}`;
+
+      let text = "";
+      if (doc) {
+        text =
+          doc.content ||
+          doc.text ||
+          doc.chunk ||
+          doc.pageContent ||
+          doc.merged_content ||
+          "";
+        if (!text) text = JSON.stringify(doc);
+      } else {
+        text = "(No search hit returned for this part query.)";
+      }
+
+      const piece = `${sourceId}\nPART: ${partName}\n${String(text)}`.slice(0, 2500);
+      sourcePieces.push(piece);
+
+      sourcesMeta.push({
+        sourceId,
+        part: partName,
+        // These fields exist in many Azure Blob indexers; include if present.
+        metadata_storage_name: doc?.metadata_storage_name,
+        metadata_storage_path: doc?.metadata_storage_path,
+        metadata_storage_url: doc?.metadata_storage_url,
+        score: doc?.["@search.score"],
+      });
+    }
 
     let sources = sourcePieces.join("\n\n");
     if (sources.length > 11000) sources = sources.slice(0, 11000);
@@ -138,8 +183,7 @@ module.exports = async function (context, req) {
 
     const system = `You generate exam questions. Output MUST be valid JSON only. No markdown.`;
 
-    // Keep batching simple and predictable
-    const BATCH_SIZE = 6; // small enough to avoid truncation
+    const BATCH_SIZE = 6;
     const batches = Math.ceil(desiredCount / BATCH_SIZE);
 
     const items = [];
@@ -155,11 +199,13 @@ Create ${want} multiple-choice questions from the sources below.
 Rules:
 - Output ONLY JSON with this exact shape:
   { "items": [ { "id":"1", "type":"mcq", "question":"...", "options":[{"id":"A","text":"..."},{"id":"B","text":"..."},{"id":"C","text":"..."},{"id":"D","text":"..."}], "answer":"A", "cite":"SOURCE 1" } ] }
-- Each cite MUST be one of: "SOURCE 1" .. "SOURCE 8"
+- Each cite MUST be one of: "SOURCE 1" .. "SOURCE ${Math.min(parts.length, 8)}"
 - Keep questions specific and useful.
 - Do NOT repeat previous questions.
+- IMPORTANT: Questions must be grounded in the provided SOURCES only. If unsure, ask about what IS in the sources.
 
-PART NAME: ${partName}
+BOOK / PARTS:
+${parts.join("\n")}
 
 SOURCES:
 ${sources}
@@ -210,29 +256,31 @@ ${items.map((q) => `- ${q.question}`).join("\n")}
         });
       }
 
-      // Normalize IDs so the final output is 1..N
       for (const it of parsed.items) {
         if (items.length >= desiredCount) break;
-        items.push({
-          ...it,
-          id: String(items.length + 1),
-        });
+        items.push({ ...it, id: String(items.length + 1) });
       }
     }
+
+    // Respond with a “book-wide” label when multiple parts are used.
+    const partLabel = parts.length === 1 ? parts[0] : `${parts[0]} (+${parts.length - 1} more parts)`;
 
     return jsonRes(context, 200, {
       ok: true,
       deployTag: DEPLOY_TAG,
       model: AOAI_DEPLOYMENT,
-      part: partName,
+      part: partLabel,
       debug: {
-        hits: hits.length,
+        hits: hitsByPart.filter(x => !!x.doc).length,
         sourceChars: sources.length,
         desiredCount,
         batchSize: BATCH_SIZE,
         batchesPlanned: batches,
         batchesUsed: Math.ceil(items.length / BATCH_SIZE),
+        partsUsed: parts.length,
+        partsTruncated: partsAll.length - parts.length,
       },
+      sources: sourcesMeta,
       items,
     });
   } catch (err) {
