@@ -17,34 +17,18 @@
     if (qList) { qList.classList.add("mono"); qList.textContent = JSON.stringify(items, null, 2); }
   });
 
-  // Picks ONE best part string. Backend appears to require a single part.
-  function pickSinglePart(pick) {
-    // Prefer explicit single selection fields if they exist
-    const candidates = [
-      pick?.part,
-      pick?.partName,
-      pick?.selectedPart
-    ].filter(v => typeof v === "string" && v.trim());
-
-    if (candidates.length) return candidates[0].trim();
-
-    // Otherwise, if we have an array, take the first part deterministically
-    if (Array.isArray(pick?.parts) && pick.parts.length) {
-      const first = pick.parts.find(Boolean);
-      if (typeof first === "string" && first.trim()) return first.trim();
+  function uniqStrings(arr) {
+    const out = [];
+    const seen = new Set();
+    for (const v of arr || []) {
+      const s = typeof v === "string" ? v.trim() : "";
+      if (!s) continue;
+      const key = s.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(s);
     }
-
-    // Last fallback: use display title as a "part-ish" string (matches your earlier working curl)
-    const displayTitle =
-      pick?.displayTitle ||
-      pick?.title ||
-      pick?.label ||
-      pick?.name ||
-      "";
-
-    if (typeof displayTitle === "string" && displayTitle.trim()) return displayTitle.trim();
-
-    return "";
+    return out;
   }
 
   function buildExamPayloadFromPick(pick) {
@@ -62,13 +46,23 @@
       pick?.name ||
       "";
 
-    const singlePart = pickSinglePart(pick);
+    // IMPORTANT: now that SWA /api/exam supports multi-part, we send ALL parts.
+    let parts = [];
+    if (Array.isArray(pick?.parts)) parts = uniqStrings(pick.parts);
+    else if (typeof pick?.part === "string" && pick.part.trim()) parts = [pick.part.trim()];
+    else if (typeof pick?.partName === "string" && pick.partName.trim()) parts = [pick.partName.trim()];
+    else if (typeof pick?.selectedPart === "string" && pick.selectedPart.trim()) parts = [pick.selectedPart.trim()];
+
+    if (!parts.length) {
+      // last resort: use the display title so the backend has something searchable
+      const fallback = displayTitle || (typeof pick?.text === "string" ? pick.text : "");
+      if (fallback && fallback.trim()) parts = [fallback.trim()];
+    }
 
     return {
       bookGroupId,
       displayTitle,
-      // IMPORTANT: backend appears to require ONE selected part
-      parts: singlePart ? [singlePart] : [],
+      parts,
       excludeQuestions: [],
       count: 25,
       mode: "BOOK_ONLY",
@@ -102,12 +96,9 @@
         return;
       }
 
-      if (!Array.isArray(payload.parts) || payload.parts.length !== 1) {
-        showDiag({ error: "Missing single selected part (backend requires one part).", payload, pick });
-        if (qList) {
-          qList.classList.add("mono");
-          qList.textContent = "Error: No single part selected (picker mismatch).";
-        }
+      if (!Array.isArray(payload.parts) || payload.parts.length === 0) {
+        showDiag({ error: "Missing parts[] from picker selection.", payload, pick });
+        if (qList) { qList.classList.add("mono"); qList.textContent = "Error: Missing parts[] (book selector mismatch)."; }
         setStatus("Error");
         return;
       }
@@ -116,7 +107,8 @@
       setStatus("Generating exam…");
       showDiag({ message: "Calling /api/exam …", payload });
 
-      const res = await fetch("https://roofvault-exam-durable2.azurewebsites.net/api/exam", {
+      // ✅ CRITICAL: same-origin SWA API (uses the code we just fixed)
+      const res = await fetch("/api/exam", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -140,6 +132,7 @@
         if (summary) {
           summary.innerHTML = '<span class="muted">Answer key hidden. Click "Show Answer Key" in the Questions panel.</span>';
         }
+
         window.renderQuiz?.(data.items);
 
         const modelName = data.modelDeployment || data.model;
@@ -152,7 +145,8 @@
           deployTag: data.deployTag,
           part: data.part,
           items: data.items.length,
-          debug: data.debug
+          debug: data.debug,
+          sourcesCount: Array.isArray(data.sources) ? data.sources.length : 0
         });
       } else {
         if (qList) {
