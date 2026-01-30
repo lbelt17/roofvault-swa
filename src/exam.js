@@ -13,27 +13,41 @@
     catch { diagEl.textContent = String(o); }
   }
 
-  // Render function exposed by previous step
   const renderQuiz = window.renderQuiz || (items => {
     if (qList) { qList.classList.add("mono"); qList.textContent = JSON.stringify(items, null, 2); }
   });
 
-  // Normalize the selected book object into the strict backend contract
-  function buildExamPayloadFromPick(pick) {
-    // We support a few possible shapes because the book picker has evolved over time.
-    // Expected best-case:
-    //   pick = { bookGroupId, displayTitle, parts:[], ... }
-    //
-    // Legacy shapes we might see:
-    //   pick.value = groupId
-    //   pick.title / pick.label = display title
-    //   pick.parts or pick.part or pick.value (single string)
-    //
-    // Our rules:
-    // - bookGroupId MUST be present
-    // - parts MUST be a non-empty array of strings
-    // - displayTitle is optional but preferred
+  // Picks ONE best part string. Backend appears to require a single part.
+  function pickSinglePart(pick) {
+    // Prefer explicit single selection fields if they exist
+    const candidates = [
+      pick?.part,
+      pick?.partName,
+      pick?.selectedPart
+    ].filter(v => typeof v === "string" && v.trim());
 
+    if (candidates.length) return candidates[0].trim();
+
+    // Otherwise, if we have an array, take the first part deterministically
+    if (Array.isArray(pick?.parts) && pick.parts.length) {
+      const first = pick.parts.find(Boolean);
+      if (typeof first === "string" && first.trim()) return first.trim();
+    }
+
+    // Last fallback: use display title as a "part-ish" string (matches your earlier working curl)
+    const displayTitle =
+      pick?.displayTitle ||
+      pick?.title ||
+      pick?.label ||
+      pick?.name ||
+      "";
+
+    if (typeof displayTitle === "string" && displayTitle.trim()) return displayTitle.trim();
+
+    return "";
+  }
+
+  function buildExamPayloadFromPick(pick) {
     const bookGroupId =
       pick?.bookGroupId ||
       pick?.groupId ||
@@ -48,25 +62,13 @@
       pick?.name ||
       "";
 
-    // Prefer explicit parts array; otherwise accept a single part string if present.
-    let parts = [];
-    if (Array.isArray(pick?.parts)) parts = pick.parts.filter(Boolean);
-    else if (typeof pick?.part === "string" && pick.part.trim()) parts = [pick.part.trim()];
-    else if (typeof pick?.partName === "string" && pick.partName.trim()) parts = [pick.partName.trim()];
-    else if (typeof pick?.selectedPart === "string" && pick.selectedPart.trim()) parts = [pick.selectedPart.trim()];
-
-    // If the picker only returns a "book" and not parts, we still need to send *something*.
-    // Your backend currently supports book-only mode; to keep it strict, we set parts to
-    // a single "book title" fallback ONLY if we have nothing else.
-    if (!parts.length) {
-      const fallback = displayTitle || (typeof pick?.text === "string" ? pick.text : "");
-      if (fallback && fallback.trim()) parts = [fallback.trim()];
-    }
+    const singlePart = pickSinglePart(pick);
 
     return {
       bookGroupId,
       displayTitle,
-      parts,
+      // IMPORTANT: backend appears to require ONE selected part
+      parts: singlePart ? [singlePart] : [],
       excludeQuestions: [],
       count: 25,
       mode: "BOOK_ONLY",
@@ -93,28 +95,18 @@
 
       const payload = buildExamPayloadFromPick(pick);
 
-      // Hard stop if required fields are missing (prevents silent broad retrieval)
       if (!payload.bookGroupId) {
-        showDiag({
-          error: "Missing bookGroupId from picker selection.",
-          pick
-        });
-        if (qList) {
-          qList.classList.add("mono");
-          qList.textContent = "Error: Missing bookGroupId (book selector mismatch).";
-        }
+        showDiag({ error: "Missing bookGroupId from picker selection.", pick });
+        if (qList) { qList.classList.add("mono"); qList.textContent = "Error: Missing bookGroupId."; }
         setStatus("Error");
         return;
       }
 
-      if (!Array.isArray(payload.parts) || payload.parts.length === 0) {
-        showDiag({
-          error: "Missing parts[] from picker selection.",
-          pick
-        });
+      if (!Array.isArray(payload.parts) || payload.parts.length !== 1) {
+        showDiag({ error: "Missing single selected part (backend requires one part).", payload, pick });
         if (qList) {
           qList.classList.add("mono");
-          qList.textContent = "Error: Missing parts[] (book selector mismatch).";
+          qList.textContent = "Error: No single part selected (picker mismatch).";
         }
         setStatus("Error");
         return;
@@ -144,15 +136,12 @@
         return;
       }
 
-      // Render path
       if (Array.isArray(data.items) && data.items.length) {
         if (summary) {
           summary.innerHTML = '<span class="muted">Answer key hidden. Click "Show Answer Key" in the Questions panel.</span>';
         }
-
         window.renderQuiz?.(data.items);
 
-        // Support either model or modelDeployment field names
         const modelName = data.modelDeployment || data.model;
         if (modelEl && modelName) modelEl.textContent = modelName;
 
