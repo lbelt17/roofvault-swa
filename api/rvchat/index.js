@@ -889,58 +889,43 @@ const _diag = debugFlag
         answer,
         ...(debugFlag ? { _diag } : {}),
         sources: citations.map((c, i) => {
-  const m = (c && c.meta) || {};
   const ch = (chunks && chunks[i]) || {};
-  const cm = (ch && (ch.meta || ch.metadata)) || {};
 
+  // Azure AI Search standard blob indexer fields:
   const title = String(
-    m.title ||
-      m.documentTitle ||
-      m.sourceTitle ||
-      m.sourcefile ||
-      m.sourceFile ||
-      cm.title ||
-      cm.documentTitle ||
-      cm.sourcefile ||
-      cm.sourceFile ||
-      cm.filename ||
-      cm.fileName ||
+    ch.metadata_storage_name ||
+      ch.title ||
+      ch.sourcefile ||
+      ch.sourceFile ||
+      ch.filename ||
+      ch.fileName ||
       ""
   ).trim();
 
-  const url = String(
-    m.url ||
-      m.sourceUrl ||
-      m.sourceURL ||
-      cm.url ||
-      cm.sourceUrl ||
-      cm.sourceURL ||
-      cm.blobUrl ||
-      cm.blobURL ||
+  const rawPath = String(
+    ch.metadata_storage_path ||
+      ch.url ||
+      ch.sourceUrl ||
       ""
   ).trim();
 
-  const pageRaw =
-    m.pageNumber ?? m.page ?? cm.pageNumber ?? cm.page ?? cm.pageno ?? null;
-  const pageNumber =
-    pageRaw === null || pageRaw === undefined
-      ? null
-      : Number.isFinite(Number(pageRaw))
-      ? Number(pageRaw)
-      : null;
+  // Only expose a URL if it looks like a real URL (avoid leaking weird internal paths)
+  const url = rawPath.startsWith("http://") || rawPath.startsWith("https://")
+    ? rawPath
+    : "";
 
-  const chunk_id =
-    m.chunk_id ?? m.chunkId ?? cm.chunk_id ?? cm.chunkId ?? null;
+  const chunk_id = ch.chunkId || ch.chunk_id || ch.id || null;
 
   return {
-    id: c.id,
-    title,
-    url,
-    publisher: String(m.publisher || cm.publisher || "").trim(),
-    pageNumber,
-    chunk_id,
+    id: c.id,                 // S1, S2, ...
+    title,                    // file name
+    url,                      // clickable if it's a real URL
+    publisher: "",
+    pageNumber: null,         // not available in your index schema right now
+    chunk_id,                 // chunk id for debugging
   };
 }),
+
       });
     }
 
