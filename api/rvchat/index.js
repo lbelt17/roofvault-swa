@@ -800,19 +800,30 @@ const isVague =
   question.split(/\s+/).length < 18; // short vague prompt
 
 if (looksLikeDocSummaryRequest && isVague) {
-  const titles = (chunks || [])
+  // Collect ALL matching doc titles from chunks
+  const titlesRaw = (chunks || [])
     .map((c) => String(c?.metadata_storage_name || "").trim())
     .filter(Boolean);
 
-  // unique titles, keep order
-  const uniq = [];
+  // Normalize + dedupe
   const seen = new Set();
-  for (const t of titles) {
+  const titles = [];
+  for (const t of titlesRaw) {
     const k = t.toLowerCase();
     if (seen.has(k)) continue;
     seen.add(k);
-    uniq.push(t);
+    titles.push(t);
   }
+
+  // Sort by Part number if present (Part 01, 02, 03…)
+  titles.sort((a, b) => {
+    const pa = a.match(/part\s*(\d+)/i);
+    const pb = b.match(/part\s*(\d+)/i);
+    if (pa && pb) return Number(pa[1]) - Number(pb[1]);
+    if (pa) return -1;
+    if (pb) return 1;
+    return a.localeCompare(b);
+  });
 
   return jsonResponse(context, 200, {
     ok: true,
@@ -820,9 +831,9 @@ if (looksLikeDocSummaryRequest && isVague) {
     mode: "doc",
     question,
     answer:
-      "Which document should I summarize? Reply with the exact title (or the Part #). Here are the closest matches:\n" +
-      uniq.slice(0, 6).map((t, i) => `- ${t}`).join("\n"),
-    sources: uniq.slice(0, 6).map((t, i) => ({
+      "Which document should I summarize? Reply with the Part number or full title:\n" +
+      titles.map((t) => `- ${t}`).join("\n"),
+    sources: titles.map((t, i) => ({
       id: `S${i + 1}`,
       title: t,
       url: "",
@@ -832,6 +843,7 @@ if (looksLikeDocSummaryRequest && isVague) {
     })),
   });
 }
+
 
 
       if (!supported) {
