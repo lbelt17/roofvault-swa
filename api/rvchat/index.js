@@ -5,14 +5,19 @@
 // ✅ Default: roofing => DOC ONLY (Azure AI Search snippets + AOAI) with strict citations
 // ✅ If roofing + no doc support => return needsConsentForWeb:true (UI prompts)
 // ✅ Web is NEVER automatic. Only runs when client explicitly sets mode:"web"
-// ✅ Session-only memory via messages[]
+// ✅ Session-only memory via messages[] (client side)
 // ✅ Foundry Agents wired for web mode (Bing-grounded agent)
 // ✅ Web sources enforced + extracted into sources[]
 // ✅ Server-side URL validation (WEB MODE ONLY) to reduce 404s
 // ✅ Demo-stable web fallback when validation returns too few links (validated-first, then safe fallback)
 // ✅ Anti-429 stability fixes (prompt cap + max_tokens + throttle fuse)
+//
+// ✅ FIXES IN THIS VERSION
+// A) Robust IIBEC Manual-of-Practice picker (high-top search + strict filter + numeric sort)
+// B) “Part 03” treated as doc selection → targeted search + grounded summary (doc-only)
+// C) Never emit needsConsentForWeb for valid picker/selection flows
 
-const DEPLOY_TAG = "RVCHAT__2026-01-29__WEB_VALIDATION_FALLBACK__A";
+const DEPLOY_TAG = "RVCHAT__2026-01-30__IIBEC_PICKER_PARTFIX__A";
 
 // -------------------------
 // Env
@@ -182,10 +187,7 @@ function tryMakeOfficialDomainFallback(sources) {
         const depth = path ? path.split("/").filter(Boolean).length : 0;
         const isHttps = u.protocol === "https:";
         const score =
-          (isHttps ? 0 : 10) +
-          depth * 2 +
-          (u.search ? 2 : 0) +
-          (u.hash ? 1 : 0);
+          (isHttps ? 0 : 10) + depth * 2 + (u.search ? 2 : 0) + (u.hash ? 1 : 0);
         return { s, score };
       } catch {
         return { s, score: 999 };
@@ -209,10 +211,8 @@ async function fetchWithTimeout(url, { timeoutMs = 3000, method = "GET" } = {}) 
       redirect: "follow",
       signal: controller.signal,
       headers: {
-        "User-Agent":
-          "Mozilla/5.0 (compatible; RoofVaultBot/1.0; +https://roofvault.ai)",
-        Accept:
-          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "User-Agent": "Mozilla/5.0 (compatible; RoofVaultBot/1.0; +https://roofvault.ai)",
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
       },
     });
     return res;
@@ -246,10 +246,7 @@ async function validateSourcesServerSide(
 
     let ok = false;
     try {
-      const res = await fetchWithTimeout(s.url, {
-        timeoutMs: perUrlTimeoutMs,
-        method: "GET",
-      });
+      const res = await fetchWithTimeout(s.url, { timeoutMs: perUrlTimeoutMs, method: "GET" });
       ok = isValidHttpStatus(res.status);
     } catch {
       ok = false;
@@ -270,13 +267,11 @@ async function searchDocs(query, { top = 6 } = {}) {
   }
 
   const url =
-    `${SEARCH_ENDPOINT}/indexes/${encodeURIComponent(
-      SEARCH_INDEX
-    )}/docs/search?api-version=2023-11-01`;
+    `${SEARCH_ENDPOINT}/indexes/${encodeURIComponent(SEARCH_INDEX)}/docs/search?api-version=2023-11-01`;
 
   const payload = {
     search: query,
-    top, // keep smaller to reduce prompt size
+    top,
     queryType: "simple",
   };
 
@@ -297,10 +292,7 @@ async function searchDocs(query, { top = 6 } = {}) {
 }
 
 function hasAdequateSupport(chunks) {
-  // strong guard: require at least 1 chunk with substantial text
-  const good = (chunks || []).filter(
-    (c) => String(c?.content || "").trim().length >= 180
-  );
+  const good = (chunks || []).filter((c) => String(c?.content || "").trim().length >= 180);
   return good.length >= 1;
 }
 
@@ -334,7 +326,6 @@ function buildCitationsFromChunks(chunks) {
   });
 }
 
-// Build a SMALL sources block for AOAI (prevents huge token usage)
 function buildSourcesBlockForAOAI(citations) {
   const MAX_SOURCES = 4;
   const MAX_CHARS_PER_SOURCE = 900;
@@ -344,10 +335,7 @@ function buildSourcesBlockForAOAI(citations) {
 
   let out = "";
   for (const c of picked) {
-    const piece = `${c.label}\n${clampText(
-      c.content,
-      MAX_CHARS_PER_SOURCE
-    )}\n\n---\n\n`;
+    const piece = `${c.label}\n${clampText(c.content, MAX_CHARS_PER_SOURCE)}\n\n---\n\n`;
     if (out.length + piece.length > MAX_TOTAL_CHARS) break;
     out += piece;
   }
@@ -362,14 +350,8 @@ async function callAOAI(messages, { temperature = 0.2, maxTokens = 320 } = {}) {
     return { ok: false, status: 0, error: "Missing AOAI_* env vars", text: "" };
   }
 
-  // Throttle fuse: if we're in cooldown, do NOT call AOAI again
   if (Date.now() < AOAI_THROTTLED_UNTIL_MS) {
-    return {
-      ok: false,
-      status: 429,
-      error: "RateLimitReached (fuse)",
-      text: "",
-    };
+    return { ok: false, status: 429, error: "RateLimitReached (fuse)", text: "" };
   }
 
   const url = `${AOAI_ENDPOINT}/openai/deployments/${encodeURIComponent(
@@ -390,22 +372,13 @@ async function callAOAI(messages, { temperature = 0.2, maxTokens = 320 } = {}) {
 
   if (!res.ok) {
     const txt = await res.text().catch(() => "");
-    if (res.status === 429) {
-      AOAI_THROTTLED_UNTIL_MS = Date.now() + 65000;
-    }
-    return {
-      ok: false,
-      status: res.status,
-      error: `AOAI error ${res.status}: ${txt}`,
-      text: "",
-    };
+    if (res.status === 429) AOAI_THROTTLED_UNTIL_MS = Date.now() + 65000;
+    return { ok: false, status: res.status, error: `AOAI error ${res.status}: ${txt}`, text: "" };
   }
 
   const data = await res.json().catch(() => ({}));
   const text =
-    data?.choices?.[0]?.message?.content != null
-      ? String(data.choices[0].message.content)
-      : "";
+    data?.choices?.[0]?.message?.content != null ? String(data.choices[0].message.content) : "";
   return { ok: true, status: 200, text };
 }
 
@@ -414,9 +387,7 @@ async function callAOAI(messages, { temperature = 0.2, maxTokens = 320 } = {}) {
 // -------------------------
 async function getEntraToken() {
   if (!AZURE_TENANT_ID || !AZURE_CLIENT_ID || !AZURE_CLIENT_SECRET) {
-    throw new Error(
-      "Missing AZURE_TENANT_ID / AZURE_CLIENT_ID / AZURE_CLIENT_SECRET"
-    );
+    throw new Error("Missing AZURE_TENANT_ID / AZURE_CLIENT_ID / AZURE_CLIENT_SECRET");
   }
 
   const tokenUrl = `https://login.microsoftonline.com/${encodeURIComponent(
@@ -453,9 +424,7 @@ function pickFoundryBase() {
 async function callFoundryAgentWeb(question) {
   const base = pickFoundryBase();
   if (!base || !FOUNDRY_AGENT_ID) {
-    throw new Error(
-      "Missing FOUNDRY_PROJECT_ENDPOINT/FOUNDRY_ENDPOINT or FOUNDRY_AGENT_ID"
-    );
+    throw new Error("Missing FOUNDRY_PROJECT_ENDPOINT/FOUNDRY_ENDPOINT or FOUNDRY_AGENT_ID");
   }
 
   const token = await getEntraToken();
@@ -463,25 +432,18 @@ async function callFoundryAgentWeb(question) {
   const threadsUrl = `${base}/threads?api-version=v1`;
   const createThreadRes = await fetch(threadsUrl, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     body: JSON.stringify({}),
   });
   if (!createThreadRes.ok) {
     const txt = await createThreadRes.text().catch(() => "");
-    throw new Error(
-      `Foundry create thread failed ${createThreadRes.status}: ${txt}`
-    );
+    throw new Error(`Foundry create thread failed ${createThreadRes.status}: ${txt}`);
   }
   const threadData = await createThreadRes.json();
   const threadId = threadData?.id;
   if (!threadId) throw new Error("Foundry thread id missing");
 
-  const messagesUrl = `${base}/threads/${encodeURIComponent(
-    threadId
-  )}/messages?api-version=v1`;
+  const messagesUrl = `${base}/threads/${encodeURIComponent(threadId)}/messages?api-version=v1`;
 
   const enforcedPrompt = [
     `Answer using the web (Bing-grounded).`,
@@ -494,10 +456,7 @@ async function callFoundryAgentWeb(question) {
 
   const addMsgRes = await fetch(messagesUrl, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     body: JSON.stringify({ role: "user", content: enforcedPrompt }),
   });
   if (!addMsgRes.ok) {
@@ -505,30 +464,23 @@ async function callFoundryAgentWeb(question) {
     throw new Error(`Foundry add message failed ${addMsgRes.status}: ${txt}`);
   }
 
-  const runsUrl = `${base}/threads/${encodeURIComponent(
-    threadId
-  )}/runs?api-version=v1`;
+  const runsUrl = `${base}/threads/${encodeURIComponent(threadId)}/runs?api-version=v1`;
   const createRunRes = await fetch(runsUrl, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     body: JSON.stringify({ assistant_id: FOUNDRY_AGENT_ID }),
   });
   if (!createRunRes.ok) {
     const txt = await createRunRes.text().catch(() => "");
-    throw new Error(
-      `Foundry create run failed ${createRunRes.status}: ${txt}`
-    );
+    throw new Error(`Foundry create run failed ${createRunRes.status}: ${txt}`);
   }
   const runData = await createRunRes.json();
   const runId = runData?.id;
   if (!runId) throw new Error("Foundry run id missing");
 
-  const runUrl = `${base}/threads/${encodeURIComponent(
-    threadId
-  )}/runs/${encodeURIComponent(runId)}?api-version=v1`;
+  const runUrl = `${base}/threads/${encodeURIComponent(threadId)}/runs/${encodeURIComponent(
+    runId
+  )}?api-version=v1`;
 
   const maxPollMs = 20000;
   const pollEveryMs = 700;
@@ -550,9 +502,8 @@ async function callFoundryAgentWeb(question) {
     if (status === "failed" || status === "cancelled" || status === "expired") {
       throw new Error(`Foundry run status: ${status}`);
     }
-    if (Date.now() - pollStart > maxPollMs) {
-      throw new Error("Foundry run poll timeout");
-    }
+    if (Date.now() - pollStart > maxPollMs) throw new Error("Foundry run poll timeout");
+
     await new Promise((r) => setTimeout(r, pollEveryMs));
   }
 
@@ -562,16 +513,12 @@ async function callFoundryAgentWeb(question) {
   });
   if (!listMsgRes.ok) {
     const txt = await listMsgRes.text().catch(() => "");
-    throw new Error(
-      `Foundry list messages failed ${listMsgRes.status}: ${txt}`
-    );
+    throw new Error(`Foundry list messages failed ${listMsgRes.status}: ${txt}`);
   }
 
   const listData = await listMsgRes.json().catch(() => ({}));
   const items = Array.isArray(listData?.data) ? listData.data : [];
-  const assistantMsg = items.find(
-    (m) => String(m?.role).toLowerCase() === "assistant"
-  );
+  const assistantMsg = items.find((m) => String(m?.role).toLowerCase() === "assistant");
 
   const content = assistantMsg?.content;
   let text = "";
@@ -620,12 +567,6 @@ function stripSourcesSection(text) {
   return s.slice(0, idx).trim();
 }
 
-/**
- * Build demo-stable sources:
- * - If validated >= WEB_SOURCES_MIN: return validated only
- * - Else: return validated + safe fallback from extracted (allowlist/homepage-like preferred)
- * - Caps at WEB_SOURCES_MAX.
- */
 function buildFinalWebSources(extractedSources, validatedSources) {
   const extractedUnique = uniqByUrl(uniqueByUrl(extractedSources));
   const validatedUnique = uniqByUrl(uniqueByUrl(validatedSources));
@@ -637,9 +578,7 @@ function buildFinalWebSources(extractedSources, validatedSources) {
     validatedPartial = true;
 
     const validatedUrlSet = new Set(finalSources.map((s) => s.url));
-    const notValidated = extractedUnique.filter(
-      (s) => !validatedUrlSet.has(s.url)
-    );
+    const notValidated = extractedUnique.filter((s) => !validatedUrlSet.has(s.url));
 
     const preferred = [];
     const secondary = [];
@@ -647,7 +586,6 @@ function buildFinalWebSources(extractedSources, validatedSources) {
     for (const s of notValidated) {
       const url = (s?.url || "").trim();
       if (!url.startsWith("https://")) continue;
-
       if (isAllowlisted(url) || isHomepageLike(url)) preferred.push(s);
       else secondary.push(s);
     }
@@ -686,28 +624,109 @@ function buildFinalWebSources(extractedSources, validatedSources) {
 }
 
 // -------------------------
+// IIBEC picker + selection helpers
+// -------------------------
+function normalizePart2(n) {
+  const num = Number(n);
+  if (!Number.isFinite(num) || num <= 0) return null;
+  return String(num).padStart(2, "0");
+}
+
+function extractPartSelection(question) {
+  const s = String(question || "").trim();
+  // Accept: "Part 3", "part03", "PART 03", "Part-03"
+  const m = s.match(/\bpart\s*[-#:]?\s*0*([0-9]{1,2})\b/i);
+  if (!m) return null;
+  const p = normalizePart2(m[1]);
+  return p ? `Part ${p}` : null;
+}
+
+function looksLikeIibecPickerRequest(question) {
+  const q = String(question || "").toLowerCase();
+
+  const mentionsIibec = q.includes("iibec") || q.includes("ibec");
+  if (!mentionsIibec) return false;
+
+  const mentionsSummary = q.includes("summary") || q.includes("summarize");
+  const mentionsDocContext =
+    q.includes("document") || q.includes("manual") || q.includes("library") || q.includes("in your library");
+
+  // If they already specified a part, it's not a picker request.
+  const hasPart = /\bpart\s*[-#:]?\s*0*[0-9]{1,2}\b/i.test(question);
+
+  return mentionsSummary && mentionsDocContext && !hasPart;
+}
+
+function isIibecManualOfPracticePartTitle(title) {
+  const t = String(title || "");
+  const u = t.toUpperCase();
+  if (!u.includes("IIBEC")) return false;
+  if (!u.includes("MANUAL-OF-PRACTICE-2020")) return false;
+  // Require Part with number (we normalize later)
+  if (!/\bPART\s*0*[0-9]{1,2}\b/i.test(t)) return false;
+  return true;
+}
+
+function partNumberFromTitle(title) {
+  const m = String(title || "").match(/\bpart\s*0*([0-9]{1,2})\b/i);
+  if (!m) return null;
+  return normalizePart2(m[1]);
+}
+
+function buildIibecPickerFromChunks(chunks) {
+  // Map title -> best url/path we saw for that title
+  const map = new Map();
+
+  for (const ch of chunks || []) {
+    const title = String(ch?.metadata_storage_name || "").trim();
+    if (!title) continue;
+    if (!isIibecManualOfPracticePartTitle(title)) continue;
+
+    const partNum = partNumberFromTitle(title);
+    if (!partNum) continue;
+
+    const url = String(ch?.metadata_storage_path || "").trim();
+    const key = title.toLowerCase();
+
+    if (!map.has(key)) {
+      map.set(key, { title, partNum, url: url || "" });
+    } else {
+      // Prefer a non-empty URL if we already had empty
+      const cur = map.get(key);
+      if (cur && !cur.url && url) {
+        map.set(key, { ...cur, url });
+      }
+    }
+  }
+
+  const list = Array.from(map.values());
+
+  list.sort((a, b) => {
+    const na = Number(a.partNum);
+    const nb = Number(b.partNum);
+    if (Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
+    return String(a.title).localeCompare(String(b.title));
+  });
+
+  return list;
+}
+
+// -------------------------
 // Main handler
 // -------------------------
 module.exports = async function (context, req) {
   try {
-    if (req.method === "OPTIONS") {
-      return jsonResponse(context, 204, "");
-    }
+    if (req.method === "OPTIONS") return jsonResponse(context, 204, "");
 
     const body = req.body || safeJsonParse(req.rawBody, {}) || {};
     const mode = normalizeMode(body.mode);
     const question = String(body.question || "").trim();
 
     if (!question) {
-      return jsonResponse(context, 400, {
-        ok: false,
-        deployTag: DEPLOY_TAG,
-        error: "Missing question",
-      });
+      return jsonResponse(context, 400, { ok: false, deployTag: DEPLOY_TAG, error: "Missing question" });
     }
 
-    const debugFlag =
-      String((req.query && (req.query.debug || req.query.diag)) || "") === "1";
+    const debugFlag = String((req.query && (req.query.debug || req.query.diag)) || "") === "1";
 
     // -------------------------
     // WEB MODE (explicit only)
@@ -756,13 +775,256 @@ module.exports = async function (context, req) {
     }
 
     // -------------------------
-    // DOC / GENERAL
+    // DOC / GENERAL (doc-first for roofing)
     // -------------------------
     const roofing = isProbablyRoofingQuestion(question);
 
-    // Default behavior: doc strict for roofing
+    // In doc mode OR general mode but roofing => doc path
     if (mode === "doc" || (mode === "general" && roofing)) {
-      const search = await searchDocs(question);
+      const wantsPicker = looksLikeIibecPickerRequest(question);
+      const partSelection = extractPartSelection(question); // "Part 03" or null
+      const isPartSelection = Boolean(partSelection);
+
+      // A) IIBEC picker request → run a high-top search specifically for IIBEC Manual-of-Practice parts
+      if (wantsPicker) {
+        // We do NOT rely on the user's vague query to retrieve all parts.
+        // We use a stable retrieval query that should return many parts across the index.
+        const pickerSearch = await searchDocs(`IIBEC Manual-of-Practice-2020 Part`, { top: 100 });
+        if (!pickerSearch.ok) {
+          return jsonResponse(context, 502, {
+            ok: false,
+            deployTag: DEPLOY_TAG,
+            mode: "doc",
+            error: pickerSearch.error || "Search failed",
+          });
+        }
+
+        const pickerList = buildIibecPickerFromChunks(pickerSearch.chunks || []);
+
+        const _diag = debugFlag
+          ? {
+              picker: {
+                query: `IIBEC Manual-of-Practice-2020 Part`,
+                chunksCount: Array.isArray(pickerSearch.chunks) ? pickerSearch.chunks.length : 0,
+                matchedTitles: pickerList.length,
+              },
+              chunk0Keys: pickerSearch.chunks && pickerSearch.chunks[0] ? Object.keys(pickerSearch.chunks[0]) : [],
+            }
+          : undefined;
+
+        if (!pickerList.length) {
+          // No picker matches found (still doc-only, no web consent auto-trigger here)
+          return jsonResponse(context, 200, {
+            ok: true,
+            deployTag: DEPLOY_TAG,
+            mode: "doc",
+            question,
+            answer:
+              "I couldn’t find the IIBEC Manual-of-Practice-2020 parts in the current library index. If you believe they exist, the search index may be missing them or the titles don’t match the expected pattern.",
+            sources: [],
+            ...(debugFlag ? { _diag } : {}),
+          });
+        }
+
+        const answer =
+          "Which IIBEC Manual-of-Practice-2020 part should I summarize?\n" +
+          "Reply with a Part number (example: `Part 03`).\n\n" +
+          pickerList.map((x) => `- ${x.title}`).join("\n");
+
+        // Provide sources with titles + URLs (when available) so UI can show links if it wants.
+        const sources = pickerList.slice(0, 25).map((x, i) => ({
+          id: `S${i + 1}`,
+          title: x.title,
+          url: x.url || "",
+          publisher: "",
+          pageNumber: null,
+          chunk_id: null,
+        }));
+
+        return jsonResponse(context, 200, {
+          ok: true,
+          deployTag: DEPLOY_TAG,
+          mode: "doc",
+          question,
+          answer,
+          sources,
+          ...(debugFlag ? { _diag } : {}),
+        });
+      }
+
+      // B) Part selection in doc mode → targeted search + grounded summary
+      if (isPartSelection) {
+        const partText = partSelection; // e.g., "Part 03"
+
+        // Targeted search query (stable + specific)
+        const targetedQuery = `IIBEC "Manual-of-Practice-2020" "${partText}"`;
+
+        const selSearch = await searchDocs(targetedQuery, { top: 24 });
+        if (!selSearch.ok) {
+          return jsonResponse(context, 502, {
+            ok: false,
+            deployTag: DEPLOY_TAG,
+            mode: "doc",
+            error: selSearch.error || "Search failed",
+          });
+        }
+
+        // Strictly keep only chunks from the correct book + correct part
+        let chunks = (selSearch.chunks || []).filter((ch) => {
+          const title = String(ch?.metadata_storage_name || "");
+          if (!isIibecManualOfPracticePartTitle(title)) return false;
+          const pn = partNumberFromTitle(title);
+          const wantPn = partNumberFromTitle(`Part ${partText.split(" ")[1]}`) || partText.split(" ")[1];
+          return pn === wantPn;
+        });
+
+        // If strict filter is too strict (because titles vary), fallback to just IIBEC+Manual-of-Practice and keep part in content/query match.
+        if (!chunks.length) {
+          chunks = (selSearch.chunks || []).filter((ch) => {
+            const title = String(ch?.metadata_storage_name || "").toUpperCase();
+            return title.includes("IIBEC") && title.includes("MANUAL-OF-PRACTICE-2020");
+          });
+        }
+
+        const _diag = debugFlag
+          ? {
+              selection: {
+                part: partText,
+                targetedQuery,
+                initialChunks: Array.isArray(selSearch.chunks) ? selSearch.chunks.length : 0,
+                keptChunks: Array.isArray(chunks) ? chunks.length : 0,
+              },
+              chunk0Keys: selSearch.chunks && selSearch.chunks[0] ? Object.keys(selSearch.chunks[0]) : [],
+            }
+          : undefined;
+
+        // If still no support, return a doc-only helpful message (NO web consent modal for a selection)
+        if (!hasAdequateSupport(chunks)) {
+          return jsonResponse(context, 200, {
+            ok: true,
+            deployTag: DEPLOY_TAG,
+            mode: "doc",
+            question,
+            answer:
+              `I couldn’t retrieve enough indexed content to summarize ${partText} of the IIBEC Manual-of-Practice-2020 right now. ` +
+              `Try replying with the full title of the part from the picker list, or ask the picker again: “Give me a summary on an IIBEC document in your library”.`,
+            sources: [],
+            ...(debugFlag ? { _diag } : {}),
+          });
+        }
+
+        const citations = buildCitationsFromChunks(chunks);
+
+        const system = [
+          `You are RoofVault Chat.`,
+          `You MUST be strictly grounded in the provided sources.`,
+          `If the answer is not supported by the sources, respond exactly: "No support in the provided sources."`,
+          `Write a clear, structured summary (bullets + short sections).`,
+          `Cite sources inline like [S1], [S2].`,
+          `Do not use outside knowledge.`,
+        ].join("\n");
+
+        const sourcesBlock = buildSourcesBlockForAOAI(citations);
+
+        const user = [
+          `Task: Summarize ${partText} of the IIBEC Manual-of-Practice-2020.`,
+          `Focus on the key topics, definitions, recommended practices, and any checklists or critical cautions mentioned in the sources.`,
+          ``,
+          `Sources:`,
+          sourcesBlock,
+        ].join("\n");
+
+        const aoai = await callAOAI(
+          [
+            { role: "system", content: system },
+            { role: "user", content: user },
+          ],
+          { temperature: 0.1, maxTokens: 420 }
+        );
+
+        if (!aoai.ok) {
+          const errText = String(aoai.error || "");
+          const is429 =
+            aoai.status === 429 ||
+            errText.includes("AOAI error 429") ||
+            errText.includes("RateLimitReached") ||
+            errText.includes("fuse");
+
+          if (is429) {
+            return jsonResponse(context, 429, {
+              ok: false,
+              deployTag: DEPLOY_TAG,
+              mode: "doc",
+              error: "Rate limited by Azure OpenAI. Please retry in ~60 seconds.",
+              retryAfterSeconds: 60,
+              throttled: true,
+            });
+          }
+
+          return jsonResponse(context, 502, {
+            ok: false,
+            deployTag: DEPLOY_TAG,
+            mode: "doc",
+            error: aoai.error || "AOAI failed",
+          });
+        }
+
+        const answer = String(aoai.text || "").trim();
+
+        // If model says "No support", do NOT trigger web modal for a part selection.
+        if (answer === "No support in the provided sources.") {
+          return jsonResponse(context, 200, {
+            ok: true,
+            deployTag: DEPLOY_TAG,
+            mode: "doc",
+            question,
+            answer:
+              `I can’t summarize ${partText} because the currently retrieved sources don’t contain enough content. ` +
+              `Try the picker again and select the full title, or re-run with debug=1 to confirm chunk fields.`,
+            sources: [],
+            ...(debugFlag ? { _diag } : {}),
+          });
+        }
+
+        return jsonResponse(context, 200, {
+          ok: true,
+          deployTag: DEPLOY_TAG,
+          mode: "doc",
+          question,
+          answer,
+          ...(debugFlag ? { _diag } : {}),
+          sources: citations.map((c, i) => {
+            const ch = (chunks && chunks[i]) || {};
+            const title = String(
+              ch.metadata_storage_name ||
+                ch.title ||
+                ch.sourcefile ||
+                ch.sourceFile ||
+                ch.filename ||
+                ch.fileName ||
+                ""
+            ).trim();
+
+            const rawPath = String(ch.metadata_storage_path || ch.url || ch.sourceUrl || "").trim();
+            const url =
+              rawPath.startsWith("http://") || rawPath.startsWith("https://") ? rawPath : "";
+
+            const chunk_id = ch.chunkId || ch.chunk_id || ch.id || null;
+
+            return {
+              id: c.id,
+              title,
+              url,
+              publisher: "",
+              pageNumber: null,
+              chunk_id,
+            };
+          }),
+        });
+      }
+
+      // C) Normal doc flow (and general→doc for roofing)
+      const search = await searchDocs(question, { top: 6 });
       if (!search.ok) {
         return jsonResponse(context, 502, {
           ok: false,
@@ -772,103 +1034,22 @@ module.exports = async function (context, req) {
         });
       }
 
-      // MUST be let: we may apply intent filters.
       let chunks = search.chunks || [];
 
-      // ✅ Doc-mode intent filter: if user explicitly asks for IIBEC, keep IIBEC sources only.
-      // (Stability-first: only activates when keyword is explicit.)
+      // If user explicitly asks for IIBEC (non-picker), keep IIBEC-only (light filter)
       const qUpper = String(question || "").toUpperCase();
       const wantsIIBEC = qUpper.includes("IIBEC");
       if (wantsIIBEC && Array.isArray(chunks) && chunks.length) {
         const filtered = chunks.filter((ch) =>
-          String(ch.metadata_storage_name || "").toUpperCase().includes("IIBEC")
+          String(ch?.metadata_storage_name || "").toUpperCase().includes("IIBEC")
         );
         if (filtered.length) chunks = filtered;
       }
 
       const supported = hasAdequateSupport(chunks);
-      // ✅ If user asks for a "summary" but doesn't specify which doc/part,
-// return a doc picker instead of a mediocre guessed summary.
-const qLower = String(question || "").toLowerCase();
-const looksLikeDocSummaryRequest =
-  qLower.includes("summary") &&
-  (qLower.includes("document") || qLower.includes("manual") || qLower.includes("in your library"));
 
-const isVague =
-  !/[Pp]art\s+\d+/.test(question) && // no "Part 04"
-  !/chapter\s+\d+/i.test(question) &&
-  question.split(/\s+/).length < 18; // short vague prompt
-
-if (looksLikeDocSummaryRequest && isVague) {
-  // Collect matching doc titles from chunks (picker mode)
-// Goal: when user asked for an IIBEC doc, only show IIBEC Manual-of-Practice parts in order.
-
-const qUpper = String(question || "").toUpperCase();
-const wantsIIBEC = qUpper.includes("IIBEC");
-
-// Collect raw titles from search chunks
-let titlesRaw = (chunks || [])
-  .map((c) => String(c?.metadata_storage_name || "").trim())
-  .filter(Boolean);
-
-// If the user asked for IIBEC, keep ONLY IIBEC Manual-of-Practice parts
-if (wantsIIBEC) {
-  titlesRaw = titlesRaw.filter((t) => {
-    const u = t.toUpperCase();
-    return (
-      u.includes("IIBEC") &&
-      u.includes("MANUAL-OF-PRACTICE-2020") &&
-      /PART\s*\d+/i.test(t)
-    );
-  });
-}
-
-// Dedupe (case-insensitive)
-const seen = new Set();
-let titles = [];
-for (const t of titlesRaw) {
-  const k = t.toLowerCase();
-  if (seen.has(k)) continue;
-  seen.add(k);
-  titles.push(t);
-}
-
-// Sort by Part number if present (Part 01, 02, 03…)
-titles.sort((a, b) => {
-  const pa = a.match(/part\s*(\d+)/i);
-  const pb = b.match(/part\s*(\d+)/i);
-  if (pa && pb) return Number(pa[1]) - Number(pb[1]);
-  if (pa) return -1;
-  if (pb) return 1;
-  return a.localeCompare(b);
-});
-
-// Optional safety: cap list so UI doesn't explode
-titles = titles.slice(0, 25);
-
-
-
-  return jsonResponse(context, 200, {
-    ok: true,
-    deployTag: DEPLOY_TAG,
-    mode: "doc",
-    question,
-    answer:
-      "Which document should I summarize? Reply with the Part number or full title:\n" +
-      titles.map((t) => `- ${t}`).join("\n"),
-    sources: titles.map((t, i) => ({
-      id: `S${i + 1}`,
-      title: t,
-      url: "",
-      publisher: "",
-      pageNumber: null,
-      chunk_id: null,
-    })),
-  });
-}
-
-
-
+      // Only show web-consent modal for roofing questions with no doc support,
+      // and ONLY when it's not a picker/selection flow (handled above).
       if (!supported) {
         return jsonResponse(context, 200, {
           ok: true,
@@ -894,19 +1075,14 @@ titles = titles.slice(0, 25);
 
       const sourcesBlock = buildSourcesBlockForAOAI(citations);
 
-      const user = [`Question: ${question}`, ``, `Sources:`, sourcesBlock].join(
-        "\n"
-      );
+      const user = [`Question: ${question}`, ``, `Sources:`, sourcesBlock].join("\n");
 
       const aoai = await callAOAI(
         [
           { role: "system", content: system },
           { role: "user", content: user },
         ],
-        {
-          temperature: 0.1,
-          maxTokens: 320,
-        }
+        { temperature: 0.1, maxTokens: 320 }
       );
 
       if (!aoai.ok) {
@@ -978,15 +1154,8 @@ titles = titles.slice(0, 25);
               ""
           ).trim();
 
-          const rawPath = String(
-            ch.metadata_storage_path || ch.url || ch.sourceUrl || ""
-          ).trim();
-
-          const url =
-            rawPath.startsWith("http://") || rawPath.startsWith("https://")
-              ? rawPath
-              : "";
-
+          const rawPath = String(ch.metadata_storage_path || ch.url || ch.sourceUrl || "").trim();
+          const url = rawPath.startsWith("http://") || rawPath.startsWith("https://") ? rawPath : "";
           const chunk_id = ch.chunkId || ch.chunk_id || ch.id || null;
 
           return {
@@ -1016,8 +1185,7 @@ titles = titles.slice(0, 25);
 
       if (!aoai.ok) {
         const is429 =
-          aoai.status === 429 ||
-          String(aoai.error || "").includes("RateLimitReached");
+          aoai.status === 429 || String(aoai.error || "").includes("RateLimitReached");
         if (is429) {
           return jsonResponse(context, 429, {
             ok: false,
