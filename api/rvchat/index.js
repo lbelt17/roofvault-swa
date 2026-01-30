@@ -296,7 +296,21 @@ async function searchDocs(query) {
   }
 
   const data = await res.json().catch(() => ({}));
-  const chunks = Array.isArray(data?.value) ? data.value : [];
+  let chunks = Array.isArray(data?.value) ? data.value : [];
+  // ✅ Doc-mode intent filter: if user asks for IIBEC, keep IIBEC sources only.
+// (Stability-first: only activates when keyword is explicit.)
+const qUpper = String(question || "").toUpperCase();
+const wantsIIBEC = qUpper.includes("IIBEC");
+
+if (wantsIIBEC && Array.isArray(chunks) && chunks.length) {
+  const filtered = chunks.filter((ch) =>
+    String(ch.metadata_storage_name || "").toUpperCase().includes("IIBEC")
+  );
+  if (filtered.length) {
+    chunks = filtered;
+  }
+}
+
   return { ok: true, chunks };
 }
 
