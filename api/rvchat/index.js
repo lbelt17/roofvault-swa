@@ -16,8 +16,9 @@
 // A) Robust IIBEC Manual-of-Practice picker (high-top search + strict filter + numeric sort)
 // B) “Part 03” treated as doc selection → targeted search + grounded summary (doc-only)
 // C) Never emit needsConsentForWeb for valid picker/selection flows
+// D) Selection summary upgraded: harvest enough chunks from the exact selected title
 
-const DEPLOY_TAG = "RVCHAT__2026-01-30__IIBEC_PICKER_PARTFIX__A";
+const DEPLOY_TAG = "RVCHAT__2026-01-30__IIBEC_PICKER_PARTFIX__B";
 
 // -------------------------
 // Env
@@ -52,8 +53,8 @@ let AOAI_THROTTLED_UNTIL_MS = 0;
 // -------------------------
 // Web sources policy
 // -------------------------
-const WEB_SOURCES_MIN = 2; // if validated < 2, fallback to reach at least 2
-const WEB_SOURCES_MAX = 5; // never return more than 5
+const WEB_SOURCES_MIN = 2;
+const WEB_SOURCES_MAX = 5;
 const WEB_FALLBACK_ALLOWLIST = [
   "nrca.net",
   "wbdg.org",
@@ -176,7 +177,6 @@ function uniqByUrl(list) {
   return out;
 }
 
-// Existing "official-ish" fallback scorer (kept)
 function tryMakeOfficialDomainFallback(sources) {
   const list = uniqueByUrl(sources);
   const scored = list
@@ -225,12 +225,6 @@ function isValidHttpStatus(status) {
   return status >= 200 && status <= 399;
 }
 
-/**
- * WEB MODE ONLY validation:
- * - Validate up to N extracted sources (GET with short timeouts + total budget)
- * - Returns ONLY validated sources (can be 0..N)
- * NOTE: Demo-stable fallback to reach minimum happens AFTER this function.
- */
 async function validateSourcesServerSide(
   extractedSources,
   { maxToValidate = 5, perUrlTimeoutMs = 3000, totalBudgetMs = 9000 } = {}
@@ -634,7 +628,6 @@ function normalizePart2(n) {
 
 function extractPartSelection(question) {
   const s = String(question || "").trim();
-  // Accept: "Part 3", "part03", "PART 03", "Part-03"
   const m = s.match(/\bpart\s*[-#:]?\s*0*([0-9]{1,2})\b/i);
   if (!m) return null;
   const p = normalizePart2(m[1]);
@@ -643,7 +636,6 @@ function extractPartSelection(question) {
 
 function looksLikeIibecPickerRequest(question) {
   const q = String(question || "").toLowerCase();
-
   const mentionsIibec = q.includes("iibec") || q.includes("ibec");
   if (!mentionsIibec) return false;
 
@@ -651,7 +643,6 @@ function looksLikeIibecPickerRequest(question) {
   const mentionsDocContext =
     q.includes("document") || q.includes("manual") || q.includes("library") || q.includes("in your library");
 
-  // If they already specified a part, it's not a picker request.
   const hasPart = /\bpart\s*[-#:]?\s*0*[0-9]{1,2}\b/i.test(question);
 
   return mentionsSummary && mentionsDocContext && !hasPart;
@@ -662,7 +653,6 @@ function isIibecManualOfPracticePartTitle(title) {
   const u = t.toUpperCase();
   if (!u.includes("IIBEC")) return false;
   if (!u.includes("MANUAL-OF-PRACTICE-2020")) return false;
-  // Require Part with number (we normalize later)
   if (!/\bPART\s*0*[0-9]{1,2}\b/i.test(t)) return false;
   return true;
 }
@@ -674,7 +664,6 @@ function partNumberFromTitle(title) {
 }
 
 function buildIibecPickerFromChunks(chunks) {
-  // Map title -> best url/path we saw for that title
   const map = new Map();
 
   for (const ch of chunks || []) {
@@ -691,23 +680,13 @@ function buildIibecPickerFromChunks(chunks) {
     if (!map.has(key)) {
       map.set(key, { title, partNum, url: url || "" });
     } else {
-      // Prefer a non-empty URL if we already had empty
       const cur = map.get(key);
-      if (cur && !cur.url && url) {
-        map.set(key, { ...cur, url });
-      }
+      if (cur && !cur.url && url) map.set(key, { ...cur, url });
     }
   }
 
   const list = Array.from(map.values());
-
-  list.sort((a, b) => {
-    const na = Number(a.partNum);
-    const nb = Number(b.partNum);
-    if (Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
-    return String(a.title).localeCompare(String(b.title));
-  });
-
+  list.sort((a, b) => Number(a.partNum) - Number(b.partNum));
   return list;
 }
 
@@ -779,16 +758,13 @@ module.exports = async function (context, req) {
     // -------------------------
     const roofing = isProbablyRoofingQuestion(question);
 
-    // In doc mode OR general mode but roofing => doc path
     if (mode === "doc" || (mode === "general" && roofing)) {
       const wantsPicker = looksLikeIibecPickerRequest(question);
       const partSelection = extractPartSelection(question); // "Part 03" or null
       const isPartSelection = Boolean(partSelection);
 
-      // A) IIBEC picker request → run a high-top search specifically for IIBEC Manual-of-Practice parts
+      // A) Picker request
       if (wantsPicker) {
-        // We do NOT rely on the user's vague query to retrieve all parts.
-        // We use a stable retrieval query that should return many parts across the index.
         const pickerSearch = await searchDocs(`IIBEC Manual-of-Practice-2020 Part`, { top: 100 });
         if (!pickerSearch.ok) {
           return jsonResponse(context, 502, {
@@ -813,7 +789,6 @@ module.exports = async function (context, req) {
           : undefined;
 
         if (!pickerList.length) {
-          // No picker matches found (still doc-only, no web consent auto-trigger here)
           return jsonResponse(context, 200, {
             ok: true,
             deployTag: DEPLOY_TAG,
@@ -831,7 +806,6 @@ module.exports = async function (context, req) {
           "Reply with a Part number (example: `Part 03`).\n\n" +
           pickerList.map((x) => `- ${x.title}`).join("\n");
 
-        // Provide sources with titles + URLs (when available) so UI can show links if it wants.
         const sources = pickerList.slice(0, 25).map((x, i) => ({
           id: `S${i + 1}`,
           title: x.title,
@@ -852,13 +826,14 @@ module.exports = async function (context, req) {
         });
       }
 
-      // B) Part selection in doc mode → targeted search + grounded summary
+      // B) Part selection → harvest chunks from exact title (so we don’t summarize off 1 chunk)
       if (isPartSelection) {
         const partText = partSelection; // e.g., "Part 03"
+        const wantedPartNum = partText.split(" ")[1]; // "03"
+        const exactTitle = `IIBEC - Manual-of-Practice-2020 - ${partText}`;
 
-        // Targeted search query (stable + specific)
+        // First pass: targeted query
         const targetedQuery = `IIBEC "Manual-of-Practice-2020" "${partText}"`;
-
         const selSearch = await searchDocs(targetedQuery, { top: 24 });
         if (!selSearch.ok) {
           return jsonResponse(context, 502, {
@@ -869,36 +844,54 @@ module.exports = async function (context, req) {
           });
         }
 
-        // Strictly keep only chunks from the correct book + correct part
-        let chunks = (selSearch.chunks || []).filter((ch) => {
-          const title = String(ch?.metadata_storage_name || "");
-          if (!isIibecManualOfPracticePartTitle(title)) return false;
-          const pn = partNumberFromTitle(title);
-          const wantPn = partNumberFromTitle(`Part ${partText.split(" ")[1]}`) || partText.split(" ")[1];
-          return pn === wantPn;
-        });
+        // Strict keep from exact doc title
+        let chunks = (selSearch.chunks || []).filter(
+          (ch) => String(ch?.metadata_storage_name || "").trim() === exactTitle
+        );
 
-        // If strict filter is too strict (because titles vary), fallback to just IIBEC+Manual-of-Practice and keep part in content/query match.
+        // If too few chunks, run a second harvest search using the exact title and high top
+        let harvested = false;
+        if (chunks.length < 6) {
+          const harvestSearch = await searchDocs(`"${exactTitle}"`, { top: 100 });
+          if (harvestSearch.ok) {
+            const harvestedChunks = (harvestSearch.chunks || []).filter(
+              (ch) => String(ch?.metadata_storage_name || "").trim() === exactTitle
+            );
+            if (harvestedChunks.length > chunks.length) {
+              chunks = harvestedChunks;
+              harvested = true;
+            }
+          }
+        }
+
+        // Final fallback: if exactTitle match fails (title variance), allow IIBEC MOP 2020 + part-number match
         if (!chunks.length) {
           chunks = (selSearch.chunks || []).filter((ch) => {
-            const title = String(ch?.metadata_storage_name || "").toUpperCase();
-            return title.includes("IIBEC") && title.includes("MANUAL-OF-PRACTICE-2020");
+            const title = String(ch?.metadata_storage_name || "");
+            if (!isIibecManualOfPracticePartTitle(title)) return false;
+            const pn = partNumberFromTitle(title);
+            return pn === wantedPartNum;
           });
         }
+
+        // Keep a safe amount for summarization stability
+        chunks = (chunks || []).slice(0, 16);
 
         const _diag = debugFlag
           ? {
               selection: {
                 part: partText,
+                exactTitle,
                 targetedQuery,
                 initialChunks: Array.isArray(selSearch.chunks) ? selSearch.chunks.length : 0,
                 keptChunks: Array.isArray(chunks) ? chunks.length : 0,
+                harvested,
               },
               chunk0Keys: selSearch.chunks && selSearch.chunks[0] ? Object.keys(selSearch.chunks[0]) : [],
             }
           : undefined;
 
-        // If still no support, return a doc-only helpful message (NO web consent modal for a selection)
+        // If still no support, doc-only helpful message (NO web modal for selection)
         if (!hasAdequateSupport(chunks)) {
           return jsonResponse(context, 200, {
             ok: true,
@@ -906,8 +899,8 @@ module.exports = async function (context, req) {
             mode: "doc",
             question,
             answer:
-              `I couldn’t retrieve enough indexed content to summarize ${partText} of the IIBEC Manual-of-Practice-2020 right now. ` +
-              `Try replying with the full title of the part from the picker list, or ask the picker again: “Give me a summary on an IIBEC document in your library”.`,
+              `I couldn’t retrieve enough indexed content to summarize ${partText} right now. ` +
+              `Try the picker again and select the full title, or re-run with debug=1 to confirm indexing.`,
             sources: [],
             ...(debugFlag ? { _diag } : {}),
           });
@@ -919,7 +912,8 @@ module.exports = async function (context, req) {
           `You are RoofVault Chat.`,
           `You MUST be strictly grounded in the provided sources.`,
           `If the answer is not supported by the sources, respond exactly: "No support in the provided sources."`,
-          `Write a clear, structured summary (bullets + short sections).`,
+          `Write a clear, structured summary (headings + bullets).`,
+          `Do NOT invent definitions. If a definition is not explicitly in sources, omit it.`,
           `Cite sources inline like [S1], [S2].`,
           `Do not use outside knowledge.`,
         ].join("\n");
@@ -928,7 +922,8 @@ module.exports = async function (context, req) {
 
         const user = [
           `Task: Summarize ${partText} of the IIBEC Manual-of-Practice-2020.`,
-          `Focus on the key topics, definitions, recommended practices, and any checklists or critical cautions mentioned in the sources.`,
+          `Focus on what the document actually covers: main sections, key concepts, recommended practices, cautions, and any checklists.`,
+          `Avoid legal/contract assumptions unless explicitly present in sources.`,
           ``,
           `Sources:`,
           sourcesBlock,
@@ -939,7 +934,7 @@ module.exports = async function (context, req) {
             { role: "system", content: system },
             { role: "user", content: user },
           ],
-          { temperature: 0.1, maxTokens: 420 }
+          { temperature: 0.1, maxTokens: 480 }
         );
 
         if (!aoai.ok) {
@@ -971,7 +966,6 @@ module.exports = async function (context, req) {
 
         const answer = String(aoai.text || "").trim();
 
-        // If model says "No support", do NOT trigger web modal for a part selection.
         if (answer === "No support in the provided sources.") {
           return jsonResponse(context, 200, {
             ok: true,
@@ -979,8 +973,7 @@ module.exports = async function (context, req) {
             mode: "doc",
             question,
             answer:
-              `I can’t summarize ${partText} because the currently retrieved sources don’t contain enough content. ` +
-              `Try the picker again and select the full title, or re-run with debug=1 to confirm chunk fields.`,
+              `I can’t summarize ${partText} because the retrieved sources don’t contain enough content.`,
             sources: [],
             ...(debugFlag ? { _diag } : {}),
           });
@@ -1006,24 +999,15 @@ module.exports = async function (context, req) {
             ).trim();
 
             const rawPath = String(ch.metadata_storage_path || ch.url || ch.sourceUrl || "").trim();
-            const url =
-              rawPath.startsWith("http://") || rawPath.startsWith("https://") ? rawPath : "";
-
+            const url = rawPath.startsWith("http://") || rawPath.startsWith("https://") ? rawPath : "";
             const chunk_id = ch.chunkId || ch.chunk_id || ch.id || null;
 
-            return {
-              id: c.id,
-              title,
-              url,
-              publisher: "",
-              pageNumber: null,
-              chunk_id,
-            };
+            return { id: c.id, title, url, publisher: "", pageNumber: null, chunk_id };
           }),
         });
       }
 
-      // C) Normal doc flow (and general→doc for roofing)
+      // C) Normal doc flow
       const search = await searchDocs(question, { top: 6 });
       if (!search.ok) {
         return jsonResponse(context, 502, {
@@ -1036,7 +1020,6 @@ module.exports = async function (context, req) {
 
       let chunks = search.chunks || [];
 
-      // If user explicitly asks for IIBEC (non-picker), keep IIBEC-only (light filter)
       const qUpper = String(question || "").toUpperCase();
       const wantsIIBEC = qUpper.includes("IIBEC");
       if (wantsIIBEC && Array.isArray(chunks) && chunks.length) {
@@ -1048,8 +1031,6 @@ module.exports = async function (context, req) {
 
       const supported = hasAdequateSupport(chunks);
 
-      // Only show web-consent modal for roofing questions with no doc support,
-      // and ONLY when it's not a picker/selection flow (handled above).
       if (!supported) {
         return jsonResponse(context, 200, {
           ok: true,
@@ -1074,7 +1055,6 @@ module.exports = async function (context, req) {
       ].join("\n");
 
       const sourcesBlock = buildSourcesBlockForAOAI(citations);
-
       const user = [`Question: ${question}`, ``, `Sources:`, sourcesBlock].join("\n");
 
       const aoai = await callAOAI(
@@ -1143,7 +1123,6 @@ module.exports = async function (context, req) {
         ...(debugFlag ? { _diag } : {}),
         sources: citations.map((c, i) => {
           const ch = (chunks && chunks[i]) || {};
-
           const title = String(
             ch.metadata_storage_name ||
               ch.title ||
@@ -1158,14 +1137,7 @@ module.exports = async function (context, req) {
           const url = rawPath.startsWith("http://") || rawPath.startsWith("https://") ? rawPath : "";
           const chunk_id = ch.chunkId || ch.chunk_id || ch.id || null;
 
-          return {
-            id: c.id,
-            title,
-            url,
-            publisher: "",
-            pageNumber: null,
-            chunk_id,
-          };
+          return { id: c.id, title, url, publisher: "", pageNumber: null, chunk_id };
         }),
       });
     }
@@ -1184,8 +1156,7 @@ module.exports = async function (context, req) {
       );
 
       if (!aoai.ok) {
-        const is429 =
-          aoai.status === 429 || String(aoai.error || "").includes("RateLimitReached");
+        const is429 = aoai.status === 429 || String(aoai.error || "").includes("RateLimitReached");
         if (is429) {
           return jsonResponse(context, 429, {
             ok: false,
