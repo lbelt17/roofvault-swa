@@ -800,34 +800,32 @@ const isVague =
   question.split(/\s+/).length < 18; // short vague prompt
 
 if (looksLikeDocSummaryRequest && isVague) {
-  // Collect ALL matching doc titles from chunks
-let pickerChunks = chunks || [];
+  // Collect matching doc titles from chunks (picker mode)
+// Goal: when user asked for an IIBEC doc, only show IIBEC Manual-of-Practice parts in order.
 
-// If user is asking for IIBEC docs, do a broader "list docs" search
-// so we don't miss Part 01, 05, 07, 08, etc.
-if (qLower.includes("iibec")) {
-  const listSearch = await searchDocs(
-    "IIBEC Manual-of-Practice-2020 Part",
-    { top: 50 }
-  );
+const qUpper = String(question || "").toUpperCase();
+const wantsIIBEC = qUpper.includes("IIBEC");
 
-  if (
-    listSearch &&
-    listSearch.ok &&
-    Array.isArray(listSearch.chunks) &&
-    listSearch.chunks.length
-  ) {
-    pickerChunks = listSearch.chunks;
-  }
-}
-
-const titlesRaw = (pickerChunks || [])
+// Collect raw titles from search chunks
+let titlesRaw = (chunks || [])
   .map((c) => String(c?.metadata_storage_name || "").trim())
   .filter(Boolean);
 
-// Normalize + dedupe
+// If the user asked for IIBEC, keep ONLY IIBEC Manual-of-Practice parts
+if (wantsIIBEC) {
+  titlesRaw = titlesRaw.filter((t) => {
+    const u = t.toUpperCase();
+    return (
+      u.includes("IIBEC") &&
+      u.includes("MANUAL-OF-PRACTICE-2020") &&
+      /PART\s*\d+/i.test(t)
+    );
+  });
+}
+
+// Dedupe (case-insensitive)
 const seen = new Set();
-const titles = [];
+let titles = [];
 for (const t of titlesRaw) {
   const k = t.toLowerCase();
   if (seen.has(k)) continue;
@@ -844,6 +842,10 @@ titles.sort((a, b) => {
   if (pb) return 1;
   return a.localeCompare(b);
 });
+
+// Optional safety: cap list so UI doesn't explode
+titles = titles.slice(0, 25);
+
 
 
   return jsonResponse(context, 200, {
