@@ -787,6 +787,52 @@ module.exports = async function (context, req) {
       }
 
       const supported = hasAdequateSupport(chunks);
+      // ✅ If user asks for a "summary" but doesn't specify which doc/part,
+// return a doc picker instead of a mediocre guessed summary.
+const qLower = String(question || "").toLowerCase();
+const looksLikeDocSummaryRequest =
+  qLower.includes("summary") &&
+  (qLower.includes("document") || qLower.includes("manual") || qLower.includes("in your library"));
+
+const isVague =
+  !/[Pp]art\s+\d+/.test(question) && // no "Part 04"
+  !/chapter\s+\d+/i.test(question) &&
+  question.split(/\s+/).length < 18; // short vague prompt
+
+if (looksLikeDocSummaryRequest && isVague) {
+  const titles = (chunks || [])
+    .map((c) => String(c?.metadata_storage_name || "").trim())
+    .filter(Boolean);
+
+  // unique titles, keep order
+  const uniq = [];
+  const seen = new Set();
+  for (const t of titles) {
+    const k = t.toLowerCase();
+    if (seen.has(k)) continue;
+    seen.add(k);
+    uniq.push(t);
+  }
+
+  return jsonResponse(context, 200, {
+    ok: true,
+    deployTag: DEPLOY_TAG,
+    mode: "doc",
+    question,
+    answer:
+      "Which document should I summarize? Reply with the exact title (or the Part #). Here are the closest matches:\n" +
+      uniq.slice(0, 6).map((t, i) => `- ${t}`).join("\n"),
+    sources: uniq.slice(0, 6).map((t, i) => ({
+      id: `S${i + 1}`,
+      title: t,
+      url: "",
+      publisher: "",
+      pageNumber: null,
+      chunk_id: null,
+    })),
+  });
+}
+
 
       if (!supported) {
         return jsonResponse(context, 200, {
