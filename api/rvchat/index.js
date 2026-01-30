@@ -9,11 +9,8 @@
 // ✅ Foundry Agents wired for web mode (Bing-grounded agent)
 // ✅ Web sources enforced + extracted into sources[]
 // ✅ Server-side URL validation (WEB MODE ONLY) to reduce 404s
-// ✅ NEW: Demo-stable web fallback when validation returns too few links (validated-first, then safe fallback)
-// ✅ NEW: Anti-429 stability fixes
-//    - Hard cap doc prompt size
-//    - Lower AOAI max_tokens
-//    - Instance-level "throttle fuse" to stop retry loops for ~65s after 429
+// ✅ Demo-stable web fallback when validation returns too few links (validated-first, then safe fallback)
+// ✅ Anti-429 stability fixes (prompt cap + max_tokens + throttle fuse)
 
 const DEPLOY_TAG = "RVCHAT__2026-01-29__WEB_VALIDATION_FALLBACK__A";
 
@@ -87,6 +84,7 @@ function jsonResponse(context, status, body) {
     },
     body,
   };
+  return context.res;
 }
 
 function safeJsonParse(str, fallback = null) {
@@ -146,9 +144,7 @@ function hostOf(url) {
 function isAllowlisted(url) {
   const h = hostOf(url);
   if (!h) return false;
-
   if (h.endsWith(".gov") || h.endsWith(".edu")) return true;
-
   return WEB_FALLBACK_ALLOWLIST.some((d) => h === d || h.endsWith(`.${d}`));
 }
 
@@ -175,7 +171,7 @@ function uniqByUrl(list) {
   return out;
 }
 
-// Your existing “official-ish” fallback scorer (kept)
+// Existing "official-ish" fallback scorer (kept)
 function tryMakeOfficialDomainFallback(sources) {
   const list = uniqueByUrl(sources);
   const scored = list
@@ -296,21 +292,7 @@ async function searchDocs(query) {
   }
 
   const data = await res.json().catch(() => ({}));
-  let chunks = Array.isArray(data?.value) ? data.value : [];
-  // ✅ Doc-mode intent filter: if user asks for IIBEC, keep IIBEC sources only.
-// (Stability-first: only activates when keyword is explicit.)
-const qUpper = String(question || "").toUpperCase();
-const wantsIIBEC = qUpper.includes("IIBEC");
-
-if (wantsIIBEC && Array.isArray(chunks) && chunks.length) {
-  const filtered = chunks.filter((ch) =>
-    String(ch.metadata_storage_name || "").toUpperCase().includes("IIBEC")
-  );
-  if (filtered.length) {
-    chunks = filtered;
-  }
-}
-
+  const chunks = Array.isArray(data?.value) ? data.value : [];
   return { ok: true, chunks };
 }
 
@@ -324,22 +306,29 @@ function hasAdequateSupport(chunks) {
 
 function buildCitationsFromChunks(chunks) {
   return (chunks || []).map((c, i) => {
-    const title = c?.title || c?.sourcefile || `Source ${i + 1}`;
-    const page = c?.pageNumber != null ? `p.${c.pageNumber}` : "";
-    const id = c?.chunk_id != null ? `chunk:${c.chunk_id}` : "";
+    const title =
+      c?.metadata_storage_name ||
+      c?.title ||
+      c?.sourcefile ||
+      c?.sourceFile ||
+      `Source ${i + 1}`;
+
+    const id =
+      c?.chunkId != null
+        ? `chunk:${c.chunkId}`
+        : c?.chunk_id != null
+        ? `chunk:${c.chunk_id}`
+        : "";
+
     return {
       id: `S${i + 1}`,
-      label: `[S${i + 1}] ${title}${page ? ` (${page})` : ""}${
-        id ? ` (${id})` : ""
-      }`,
+      label: `[S${i + 1}] ${title}${id ? ` (${id})` : ""}`,
       content: String(c?.content || ""),
       meta: {
-        title: String(c?.title || ""),
-        sourcefile: String(c?.sourcefile || ""),
-        url: String(c?.url || ""),
+        metadata_storage_name: String(c?.metadata_storage_name || ""),
+        metadata_storage_path: String(c?.metadata_storage_path || ""),
         bookGroupId: String(c?.bookGroupId || ""),
-        pageNumber: c?.pageNumber ?? null,
-        chunk_id: c?.chunk_id ?? null,
+        chunkId: String(c?.chunkId || ""),
       },
     };
   });
@@ -513,9 +502,7 @@ async function callFoundryAgentWeb(question) {
   });
   if (!addMsgRes.ok) {
     const txt = await addMsgRes.text().catch(() => "");
-    throw new Error(
-      `Foundry add message failed ${addMsgRes.status}: ${txt}`
-    );
+    throw new Error(`Foundry add message failed ${addMsgRes.status}: ${txt}`);
   }
 
   const runsUrl = `${base}/threads/${encodeURIComponent(
@@ -635,9 +622,9 @@ function stripSourcesSection(text) {
 
 /**
  * Build demo-stable sources:
- * - If validated >= WEB_SOURCES_MIN: return validated only (current strict behavior)
- * - Else: return validated + “safe fallback” from extracted (allowlist/homepage-like preferred)
- * - Still caps at WEB_SOURCES_MAX.
+ * - If validated >= WEB_SOURCES_MIN: return validated only
+ * - Else: return validated + safe fallback from extracted (allowlist/homepage-like preferred)
+ * - Caps at WEB_SOURCES_MAX.
  */
 function buildFinalWebSources(extractedSources, validatedSources) {
   const extractedUnique = uniqByUrl(uniqueByUrl(extractedSources));
@@ -677,7 +664,6 @@ function buildFinalWebSources(extractedSources, validatedSources) {
       fill.push(s);
     }
 
-    // If we STILL can’t reach min (rare), use your existing “official-ish” fallback heuristic
     let combined = uniqByUrl([...finalSources, ...fill]);
     if (combined.length < WEB_SOURCES_MIN) {
       const official = tryMakeOfficialDomainFallback(extractedUnique);
@@ -720,6 +706,9 @@ module.exports = async function (context, req) {
       });
     }
 
+    const debugFlag =
+      String((req.query && (req.query.debug || req.query.diag)) || "") === "1";
+
     // -------------------------
     // WEB MODE (explicit only)
     // -------------------------
@@ -739,13 +728,11 @@ module.exports = async function (context, req) {
       const urls = extractHttpsUrls(webText);
       const extractedSources = sourcesFromUrls(urls).slice(0, 12);
 
-
       const validatedSources = await validateSourcesServerSide(extractedSources, {
-  maxToValidate: 8,
-  perUrlTimeoutMs: 2500,
-  totalBudgetMs: 9000,
-});
-
+        maxToValidate: 8,
+        perUrlTimeoutMs: 2500,
+        totalBudgetMs: 9000,
+      });
 
       const built = buildFinalWebSources(extractedSources, validatedSources);
 
@@ -758,12 +745,12 @@ module.exports = async function (context, req) {
         web: {
           eligible: true,
           creditsMax: 5,
-          validated: true, // validation ran
-          validatedPartial: built.validatedPartial, // true if we had to fallback
+          validated: true,
+          validatedPartial: built.validatedPartial,
           extractedCount: extractedSources.length,
           returnedCountValidated: built.returnedCountValidated,
           returnedCountTotal: built.returnedCountTotal,
-          returnedCount: built.returnedCountTotal, // keep legacy field aligned
+          returnedCount: built.returnedCountTotal,
         },
       });
     }
@@ -785,7 +772,20 @@ module.exports = async function (context, req) {
         });
       }
 
-      const chunks = search.chunks || [];
+      // MUST be let: we may apply intent filters.
+      let chunks = search.chunks || [];
+
+      // ✅ Doc-mode intent filter: if user explicitly asks for IIBEC, keep IIBEC sources only.
+      // (Stability-first: only activates when keyword is explicit.)
+      const qUpper = String(question || "").toUpperCase();
+      const wantsIIBEC = qUpper.includes("IIBEC");
+      if (wantsIIBEC && Array.isArray(chunks) && chunks.length) {
+        const filtered = chunks.filter((ch) =>
+          String(ch.metadata_storage_name || "").toUpperCase().includes("IIBEC")
+        );
+        if (filtered.length) chunks = filtered;
+      }
+
       const supported = hasAdequateSupport(chunks);
 
       if (!supported) {
@@ -811,7 +811,6 @@ module.exports = async function (context, req) {
         `Do not use outside knowledge.`,
       ].join("\n");
 
-      // Hard cap the sources block (prevents huge token usage)
       const sourcesBlock = buildSourcesBlockForAOAI(citations);
 
       const user = [`Question: ${question}`, ``, `Sources:`, sourcesBlock].join(
@@ -870,30 +869,13 @@ module.exports = async function (context, req) {
           sources: [],
         });
       }
-      // Debug (safe): only returns metadata keys when ?debug=1
-const debugFlag = String((req.query && (req.query.debug || req.query.diag)) || "") === "1";
-const _diag = debugFlag
-  ? {
-      chunksCount: Array.isArray(chunks) ? chunks.length : 0,
-      chunk0Keys: chunks && chunks[0] ? Object.keys(chunks[0]) : [],
-      chunk0MetaKeys:
-        chunks && chunks[0] && (chunks[0].meta || chunks[0].metadata)
-          ? Object.keys(chunks[0].meta || chunks[0].metadata)
-          : [],
-      // best-effort peek at common fields (no chunk text)
-      chunk0MetaPreview: (() => {
-        const m = (chunks && chunks[0] && (chunks[0].meta || chunks[0].metadata)) || {};
-        return {
-          title: m.title || m.documentTitle || m.sourceTitle || null,
-          sourcefile: m.sourcefile || m.sourceFile || m.filename || m.fileName || null,
-          url: m.url || m.sourceUrl || m.blobUrl || null,
-          pageNumber: m.pageNumber ?? m.page ?? m.pageno ?? null,
-          chunk_id: m.chunk_id ?? m.chunkId ?? null,
-        };
-      })(),
-    }
-  : undefined;
 
+      const _diag = debugFlag
+        ? {
+            chunksCount: Array.isArray(chunks) ? chunks.length : 0,
+            chunk0Keys: chunks && chunks[0] ? Object.keys(chunks[0]) : [],
+          }
+        : undefined;
 
       return jsonResponse(context, 200, {
         ok: true,
@@ -903,43 +885,38 @@ const _diag = debugFlag
         answer,
         ...(debugFlag ? { _diag } : {}),
         sources: citations.map((c, i) => {
-  const ch = (chunks && chunks[i]) || {};
+          const ch = (chunks && chunks[i]) || {};
 
-  // Azure AI Search standard blob indexer fields:
-  const title = String(
-    ch.metadata_storage_name ||
-      ch.title ||
-      ch.sourcefile ||
-      ch.sourceFile ||
-      ch.filename ||
-      ch.fileName ||
-      ""
-  ).trim();
+          const title = String(
+            ch.metadata_storage_name ||
+              ch.title ||
+              ch.sourcefile ||
+              ch.sourceFile ||
+              ch.filename ||
+              ch.fileName ||
+              ""
+          ).trim();
 
-  const rawPath = String(
-    ch.metadata_storage_path ||
-      ch.url ||
-      ch.sourceUrl ||
-      ""
-  ).trim();
+          const rawPath = String(
+            ch.metadata_storage_path || ch.url || ch.sourceUrl || ""
+          ).trim();
 
-  // Only expose a URL if it looks like a real URL (avoid leaking weird internal paths)
-  const url = rawPath.startsWith("http://") || rawPath.startsWith("https://")
-    ? rawPath
-    : "";
+          const url =
+            rawPath.startsWith("http://") || rawPath.startsWith("https://")
+              ? rawPath
+              : "";
 
-  const chunk_id = ch.chunkId || ch.chunk_id || ch.id || null;
+          const chunk_id = ch.chunkId || ch.chunk_id || ch.id || null;
 
-  return {
-    id: c.id,                 // S1, S2, ...
-    title,                    // file name
-    url,                      // clickable if it's a real URL
-    publisher: "",
-    pageNumber: null,         // not available in your index schema right now
-    chunk_id,                 // chunk id for debugging
-  };
-}),
-
+          return {
+            id: c.id,
+            title,
+            url,
+            publisher: "",
+            pageNumber: null,
+            chunk_id,
+          };
+        }),
       });
     }
 
