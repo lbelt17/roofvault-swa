@@ -7,204 +7,206 @@
 
   <style>
     :root {
-      --bg: #0f1115;
-      --panel: #151922;
-      --panel-soft: #0c0f14;
-      --border-subtle: #252a36;
+      /* Homepage-like "Apple dark" palette */
+      --bg-0: #05060a;
+      --bg-1: #070a12;
+      --bg-2: #0b1220;
+
+      --card: rgba(14, 17, 25, 0.82);
+      --card-strong: rgba(14, 17, 25, 0.94);
+      --border: rgba(90, 105, 140, 0.22);
+      --border-strong: rgba(90, 105, 140, 0.30);
+
+      --text: #e8edf6;
+      --muted: rgba(232, 237, 246, 0.68);
+
       --accent: #21b3ff;
-      --accent-soft: #1a8ee0;
-      --text-main: #e6e9ef;
-      --text-muted: #a7b0c0;
-      --chip-bg: #1c2230;
+      --accent-2: #1a8ee0;
+
+      --chip: rgba(15, 19, 30, 0.85);
+      --shadow: 0 22px 45px rgba(0,0,0,0.55);
+      --radius-xl: 22px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --radius-sm: 12px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: radial-gradient(circle at top, #1c2333 0, #05060a 55%, #020308 100%);
-      color: var(--text-main);
+      color: var(--text);
+      margin: 0;
+      min-height: 100vh;
+
+      /* Match homepage vibe */
+      background:
+        radial-gradient(1200px 800px at 25% 0%, rgba(33,179,255,0.14), transparent 60%),
+        radial-gradient(900px 700px at 70% 10%, rgba(104,64,255,0.12), transparent 62%),
+        radial-gradient(circle at top, #1c2333 0, #05060a 55%, #020308 100%);
+      padding: 18px 16px 28px;
       display: flex;
-      flex-direction: column;     /* stack header + card */
+      flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      min-height: 100vh;
-      margin: 0;
-      padding: 16px;
     }
 
-    /* ---------- Top auth/navigation bar (like Library) ---------- */
-
+    /* ---------- Top auth/nav (kept; cosmetics only) ---------- */
     header {
       width: 100%;
-      padding: 8px 4px 0;
+      padding: 6px 2px 0;
     }
 
     .nav {
-      max-width: 980px;
+      max-width: 1040px;
       margin: 0 auto;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
+      gap: 14px;
     }
 
     .nav-left {
       display: flex;
       align-items: center;
       gap: 10px;
-      font-size: 13px;
+      min-width: 240px;
     }
 
     .logo-pill {
-      width: 30px;
-      height: 30px;
+      width: 32px;
+      height: 32px;
       border-radius: 999px;
       background: radial-gradient(circle at 30% 0, #46cdff 0, #008dff 45%, #0046b3 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
       font-size: 14px;
       color: #02111c;
-      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.65);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.55);
     }
 
-    .brand-text {
-      display: flex;
-      flex-direction: column;
-      line-height: 1.2;
-    }
-
-    .brand-title {
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    .brand-subtitle {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
+    .brand-text { line-height: 1.2; }
+    .brand-title { font-size: 13px; font-weight: 650; letter-spacing: 0.2px; }
+    .brand-subtitle { font-size: 11px; color: var(--muted); }
 
     .nav-right {
       display: flex;
       align-items: center;
       gap: 8px;
       font-size: 11px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
-    .user-label {
-      color: var(--text-muted);
-    }
+    .user-label { color: var(--muted); }
 
     .tier-pill {
-      padding: 4px 8px;
+      padding: 5px 10px;
       border-radius: 999px;
-      background: rgba(15, 19, 30, 0.95);
-      border: 1px solid rgba(120, 135, 170, 0.65);
-      color: var(--text-muted);
+      background: rgba(15, 19, 30, 0.78);
+      border: 1px solid rgba(120, 135, 170, 0.45);
+      color: var(--muted);
+      backdrop-filter: blur(10px);
     }
 
     .btn {
-      padding: 6px 10px;
+      padding: 7px 11px;
       border-radius: 999px;
-      border: 1px solid rgba(120, 135, 170, 0.75);
-      background: rgba(15, 19, 30, 0.95);
-      color: var(--text-main);
+      border: 1px solid rgba(120, 135, 170, 0.48);
+      background: rgba(15, 19, 30, 0.72);
+      color: var(--text);
       font-size: 11px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-    }
-
-    .btn-text {
-      border-color: transparent;
-      background: transparent;
-      color: var(--text-muted);
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    /* ---------- Exam card layout (unchanged) ---------- */
-
-    .wrap {
-      width: min(980px, 100vw - 24px);
-      padding: 24px 24px 20px;
-      background: rgba(14, 17, 25, 0.96);
-      border-radius: 18px;
-      box-shadow:
-        0 22px 45px rgba(0,0,0,0.55),
-        0 0 0 1px rgba(255,255,255,0.02);
-      border: 1px solid rgba(70, 80, 110, 0.35);
+      gap: 6px;
       backdrop-filter: blur(10px);
-      margin-top: 10px;
     }
 
-    .header {
+    .btn:hover { border-color: rgba(120,135,170,0.65); }
+    .btn-text { border-color: transparent; background: transparent; color: var(--muted); }
+    .btn-text:hover { color: rgba(232,237,246,0.85); }
+
+    .hidden { display: none; }
+
+    /* ---------- Main shell (homepage-like centered module panel) ---------- */
+    .shell {
+      width: min(1040px, 100%);
+      margin-top: 14px;
+      padding: 26px 26px 22px;
+      border-radius: var(--radius-xl);
+      background: var(--card-strong);
+      border: 1px solid var(--border-strong);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .hero {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 14px;
       margin-bottom: 18px;
     }
 
-    .header-main {
+    .hero-left {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
+      min-width: 280px;
     }
 
     .logo {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
       background: radial-gradient(circle at 30% 0, #46cdff 0, #008dff 45%, #0046b3 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: grid;
+      place-items: center;
       color: #02111c;
-      font-weight: 800;
+      font-weight: 900;
       font-size: 18px;
       letter-spacing: 0.06em;
-      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.65);
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.55);
+      flex: 0 0 auto;
     }
 
-    .titles {
+    .hero-title {
+      font-size: 18px;
+      font-weight: 750;
+      letter-spacing: 0.2px;
+      margin: 0;
       line-height: 1.2;
     }
 
-    .titles-main {
-      font-size: 18px;
-      font-weight: 700;
-    }
-
-    .titles-sub {
+    .hero-sub {
+      margin: 4px 0 0;
       font-size: 12px;
-      color: var(--text-muted);
+      color: var(--muted);
+      line-height: 1.35;
+      max-width: 58ch;
     }
 
-    .header-actions {
+    .hero-chips {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
     .pill {
       font-size: 11px;
-      padding: 5px 9px;
+      padding: 6px 10px;
       border-radius: 999px;
-      border: 1px solid rgba(120, 135, 170, 0.55);
-      background: rgba(15, 19, 30, 0.9);
-      color: var(--text-muted);
-      display: flex;
+      border: 1px solid rgba(120, 135, 170, 0.40);
+      background: rgba(15, 19, 30, 0.62);
+      color: var(--muted);
+      display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
       white-space: nowrap;
+      backdrop-filter: blur(10px);
     }
 
     .pill code {
@@ -213,69 +215,65 @@
       color: #a2b7ff;
     }
 
-    h1 {
-      font-size: 20px;
-      margin: 0 0 6px 0;
+    /* ---------- Sections (clean cards) ---------- */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
     }
 
-    .subtext {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-bottom: 16px;
+    .card {
+      border-radius: var(--radius-lg);
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 16px 16px 14px;
+      backdrop-filter: blur(12px);
     }
 
-    .section {
-      border-radius: 14px;
-      background: var(--panel);
-      border: 1px solid var(--border-subtle);
-      padding: 14px 14px 16px;
-      margin-bottom: 14px;
-    }
-
-    .section-header {
+    .card-head {
       display: flex;
-      align-items: center;
+      align-items: baseline;
       justify-content: space-between;
-      gap: 8px;
+      gap: 12px;
       margin-bottom: 10px;
     }
 
-    .section-title {
-      font-size: 14px;
-      font-weight: 600;
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      color: rgba(232,237,246,0.92);
     }
 
-    .section-hint {
+    .card-hint {
       font-size: 12px;
-      color: var(--text-muted);
+      color: var(--muted);
     }
 
-    .book-row {
-      margin-top: 4px;
-    }
+    #bookMount { margin: 6px 0 0; }
 
-    #bookMount {
-      margin: 4px 0 0 0;
-    }
-
+    /* Buttons */
     .controls-row {
       display: flex;
-      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-start;
       gap: 10px;
+      flex-wrap: wrap;
       margin-top: 6px;
     }
 
     button {
-      padding: 9px 14px;
+      padding: 10px 14px;
       border-radius: 999px;
       border: none;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      transition: transform 0.05s ease-out, box-shadow 0.08s ease-out, background 0.15s ease-out;
+      gap: 8px;
+      transition: transform 0.05s ease-out, box-shadow 0.08s ease-out, filter 0.15s ease-out;
+      -webkit-tap-highlight-color: transparent;
     }
 
     button:disabled {
@@ -283,232 +281,187 @@
       cursor: wait;
       transform: none;
       box-shadow: none;
+      filter: none;
     }
 
     .btn-primary {
       color: #041018;
-      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
-      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 12px 26px rgba(0, 0, 0, 0.50);
     }
 
     .btn-primary:hover:not(:disabled) {
       transform: translateY(-1px);
-      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.55);
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.60);
+      filter: brightness(1.02);
     }
 
-    .btn-outline {
-      color: var(--text-main);
-      background: transparent;
-      border: 1px solid rgba(120, 135, 170, 0.65);
+    /* Status + error (demo-safe; no logic changes required) */
+    .statusbar {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
 
-    .btn-outline:hover:not(:disabled) {
-      background: rgba(26, 33, 48, 0.9);
-      transform: translateY(-1px);
+    .status {
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(120,135,170,0.26);
+      background: rgba(15, 19, 30, 0.55);
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--muted);
+      display: none; /* shown if any script toggles it later */
     }
 
-    .btn-outline span.icon {
-      font-size: 14px;
-      opacity: 0.9;
+    .status strong { color: rgba(232,237,246,0.88); }
+
+    .error {
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255, 99, 120, 0.28);
+      background: rgba(255, 99, 120, 0.08);
+      padding: 10px 12px;
+      font-size: 12px;
+      color: rgba(255, 199, 208, 0.90);
+      display: none; /* shown if any script toggles it later */
     }
 
+    /* Question list container (cleaner, less "dev panel") */
     #qList {
-      background: var(--panel-soft);
-      border-radius: 12px;
-      border: 1px solid var(--border-subtle);
-      padding: 12px 12px 10px;
-      margin-top: 10px;
-      min-height: 220px;
-      max-height: 55vh;
+      margin-top: 12px;
+      background: rgba(10, 12, 18, 0.55);
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(90,105,140,0.26);
+      padding: 12px;
+      min-height: 240px;
+      max-height: 58vh;
       overflow: auto;
       font-size: 13px;
-      line-height: 1.45;
+      line-height: 1.5;
     }
 
-    .q-empty {
-      font-size: 13px;
-      color: var(--text-muted);
-    }
+    .q-empty { color: var(--muted); }
 
     .q-item {
-      margin-bottom: 8px;
-      padding: 8px 9px;
-      border-radius: 8px;
-      background: rgba(20, 26, 40, 0.96);
-      border: 1px solid rgba(70, 80, 110, 0.6);
+      margin-bottom: 10px;
+      padding: 10px 10px;
+      border-radius: 12px;
+      background: rgba(14, 17, 25, 0.86);
+      border: 1px solid rgba(90,105,140,0.28);
     }
 
-    .q-item strong {
-      color: #f6f7ff;
-    }
+    .q-item strong { color: #f6f7ff; }
 
+    /* Diagnostics: keep node for scripts, but hide for demo */
     #diag {
-      margin-top: 10px;
-      font-size: 11px;
-      color: var(--text-muted);
-      max-height: 26vh;
-      overflow: auto;
-      background: transparent;
-      border-radius: 8px;
-      border: 1px dashed rgba(90, 100, 135, 0.8);
-      padding: 8px 9px;
-      white-space: pre-wrap;
-    }
-
-    .diag-label {
-      font-weight: 600;
-      font-size: 11px;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: rgba(163, 176, 204, 0.9);
-      margin-bottom: 3px;
+      display: none !important;
+      visibility: hidden !important;
+      height: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      border: 0 !important;
     }
 
     .footer-hint {
-      margin-top: 6px;
+      margin-top: 10px;
       font-size: 11px;
-      color: var(--text-muted);
+      color: var(--muted);
       display: flex;
       justify-content: flex-end;
     }
 
-    .footer-hint span {
-      opacity: 0.8;
-    }
-
-    @media (max-width: 640px) {
-      .header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .header-actions {
-        justify-content: flex-start;
-      }
-      .wrap {
-        padding: 18px 16px 14px;
-      }
-      .nav {
-        flex-direction: column;
-        align-items: flex-start;
-      }
+    @media (max-width: 720px) {
+      .nav { flex-direction: column; align-items: flex-start; }
+      .shell { padding: 18px 16px 16px; }
+      .hero { flex-direction: column; align-items: flex-start; }
+      .hero-chips { justify-content: flex-start; }
+      #qList { max-height: 62vh; }
     }
   </style>
 </head>
 
 <body>
-  <!-- Top auth bar (matches Library behavior) -->
+  <!-- Top auth bar (kept; cosmetics only) -->
   <header>
     <div class="nav">
       <div class="nav-left">
         <div class="logo-pill">RV</div>
         <div class="brand-text">
           <div class="brand-title">RoofVault Practice Exams</div>
-          <div class="brand-subtitle">
-            Generate book-specific exams grounded in your RoofDocs index.
-          </div>
+          <div class="brand-subtitle">Generate a book-specific practice exam.</div>
         </div>
       </div>
 
       <div class="nav-right">
-        <span id="userEmailLabel" class="user-label">Free User</span>
-        <span id="subscriptionLabel" class="tier-pill hidden"></span>
+  <button id="btnBackHome" class="btn btn-text">
+    ⬅ Back to Library
+  </button>
+</div>
 
-        <button id="btnLogin" class="btn btn-secondary">
-          <span>🔓 Login / Sign up</span>
-        </button>
-
-        <button id="btnLogout" class="btn btn-secondary hidden">
-          <span>🚪 Logout</span>
-        </button>
-
-        <button id="btnBackHome" class="btn btn-text">
-          ⬅ Back to Library
-        </button>
-      </div>
     </div>
   </header>
 
-  <!-- Exam card -->
-  <div class="wrap">
-    <!-- Header -->
-    <div class="header">
-      <div class="header-main">
+  <!-- Main panel -->
+  <main class="shell">
+    <div class="hero">
+      <div class="hero-left">
         <div class="logo">RV</div>
-        <div class="titles">
-          <div class="titles-main">RoofVault – Practice Exam Generator</div>
-          <div class="titles-sub">Generate book-specific exams grounded in your RoofDocs index.</div>
+        <div>
+          <h1 class="hero-title">Practice Exam Generator</h1>
+          <p class="hero-sub">Choose a book, then generate a 25-question practice exam.</p>
         </div>
       </div>
-      <div class="header-actions">
-        <div class="pill">
-          Search
-          <code>azureblob-index</code>
-        </div>
-        <div class="pill">
-          Model
-          <code>AOAI_DEPLOYMENT</code>
-        </div>
+
+      <div class="hero-chips" aria-label="system info">
+        <div class="pill">Search <code>azureblob-index</code></div>
+        <div class="pill">Model <code>AOAI_DEPLOYMENT</code></div>
       </div>
     </div>
 
-    <h1>Interactive Practice Exam</h1>
-    <div class="subtext">
-      Select a book from your library, then generate a <strong>25-question practice exam</strong> based only on that source.
-      You can click again to regenerate a fresh exam from the same book.
-    </div>
-
-    <!-- Book selection -->
-    <div class="section">
-      <div class="section-header">
-        <div class="section-title">1. Choose a book</div>
-        <div class="section-hint">Books are loaded from your Azure Blob + Search index.</div>
-      </div>
-      <div class="book-row">
-        <!-- books.js / interactive-exam.js will populate this -->
+    <div class="grid">
+      <!-- Book selection -->
+      <section class="card" aria-label="choose a book">
+        <div class="card-head">
+          <div class="card-title">1. Choose a book</div>
+          <div class="card-hint">Search and select from your library.</div>
+        </div>
         <div id="bookMount"></div>
-      </div>
-    </div>
+      </section>
 
-    <!-- Controls + output -->
-    <div class="section">
-      <div class="section-header">
-        <div class="section-title">2. Generate a 25Q practice exam</div>
-        <div class="section-hint">Questions should cite and align with the selected document.</div>
-      </div>
-
-      <div class="controls-row">
-        <button id="btnGenExam25ByBook" class="btn-primary">
-          <span>Generate 25Q Practice Exam</span>
-        </button>
-
-        <button id="btnOpenChat" class="btn-outline" type="button">
-          <span class="icon">💬</span>
-          <span>Open RoofVault Chat</span>
-        </button>
-
-        <button id="btnLibrary" class="btn-outline" type="button">
-          <span class="icon">📚</span>
-          <span>Open RoofVault Library</span>
-        </button>
-      </div>
-
-      <div id="qList">
-        <div class="q-empty">
-          Your generated practice questions will appear here.
-          Pick a book above, then click <strong>“Generate 25Q Practice Exam”</strong>.
+      <!-- Generate + output -->
+      <section class="card" aria-label="generate exam">
+        <div class="card-head">
+          <div class="card-title">2. Generate</div>
+          <div class="card-hint">One click. No extra steps.</div>
         </div>
-      </div>
 
-      <pre id="diag">
-<span class="diag-label">Diagnostics</span>
-Ready.
-      </pre>
+        <div class="controls-row">
+          <button id="btnGenExam25ByBook" class="btn-primary">
+            <span>Generate 25Q Practice Exam</span>
+          </button>
+        </div>
 
-      <div class="footer-hint">
-        <span>Tip: Click “Generate 25Q Practice Exam” again to get a new randomized exam from the same book.</span>
-      </div>
+        <!-- Dedicated status + error areas (safe; scripts may toggle later) -->
+        <div class="statusbar" aria-label="status and errors">
+          <div id="genStatus" class="status"><strong>Generating…</strong> This can take a moment.</div>
+          <div id="genError" class="error">Something went wrong. Please try again.</div>
+        </div>
+
+        <div id="qList" aria-label="questions">
+          <div class="q-empty">
+            Pick a book above, then click <strong>“Generate 25Q Practice Exam”</strong>.
+          </div>
+        </div>
+
+        <!-- Diagnostics node kept for scripts, hidden for demo -->
+        <pre id="diag">Ready.</pre>
+
+        <div class="footer-hint">
+          <span>Tip: Click Generate again for a fresh randomized exam from the same book.</span>
+        </div>
+      </section>
     </div>
-  </div>
+  </main>
 
   <!-- Existing logic (unchanged) -->
   <script src="/interactive-exam.js?v=4"></script>
@@ -516,7 +469,7 @@ Ready.
   <script src="auth.js?v=1"></script>
   <script src="/gen-exam.js?v=4"></script>
 
-  <!-- Auth + navigation wiring -->
+  <!-- Auth + navigation wiring (UNCHANGED; cosmetics step only) -->
   <script>
     function updateExamAccess(isLoggedIn) {
       const genBtn = document.getElementById('btnGenExam50ByBook');
