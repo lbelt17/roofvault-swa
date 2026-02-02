@@ -476,11 +476,11 @@
   const DEMO_MODE_DISABLE_EXAM_AUTH = true;
 
   function updateExamAccess(isLoggedIn) {
-    // Correct button ID
+    // Correct button ID used by gen-exam.js
     const genBtn = document.getElementById('btnGenExam25ByBook');
     if (!genBtn) return;
 
-    // DEMO MODE: always allow
+    // DEMO MODE: always allow generating exams
     if (DEMO_MODE_DISABLE_EXAM_AUTH) {
       genBtn.disabled = false;
       genBtn.title = 'Generate a 25-question practice exam.';
@@ -501,11 +501,6 @@
   }
 
   async function loadAuthState() {
-    const userEmailLabel = document.getElementById('userEmailLabel');
-    const subscriptionLabel = document.getElementById('subscriptionLabel');
-    const btnLogin = document.getElementById('btnLogin');
-    const btnLogout = document.getElementById('btnLogout');
-
     // DEMO MODE: skip auth fetch entirely
     if (DEMO_MODE_DISABLE_EXAM_AUTH) {
       updateExamAccess(true);
@@ -515,90 +510,26 @@
     try {
       const res = await fetch('/api/auth-me', { credentials: 'include' });
       if (!res.ok) throw new Error('No auth info');
-
       const data = await res.json();
-
-      window.isLoggedIn = !!data.isLoggedIn;
-      window.plan = data.plan || 'free';
-      window.roles = data.roles || [];
-
-      if (!data.isLoggedIn) {
-        userEmailLabel.textContent = 'Free User';
-        subscriptionLabel.classList.add('hidden');
-        btnLogin.classList.remove('hidden');
-        btnLogout.classList.add('hidden');
-        updateExamAccess(false);
-        return;
-      }
-
-      userEmailLabel.textContent = data.email || '';
-
-      if (window.roles.includes('owner')) {
-        subscriptionLabel.textContent = 'Owner Access';
-      } else if (window.plan === 'premium') {
-        subscriptionLabel.textContent = 'Premium';
-      } else {
-        subscriptionLabel.textContent = 'Free User';
-      }
-
-      subscriptionLabel.classList.remove('hidden');
-      btnLogin.classList.add('hidden');
-      btnLogout.classList.remove('hidden');
-      updateExamAccess(true);
-
+      updateExamAccess(!!data.isLoggedIn);
     } catch (err) {
       console.error('loadAuthState error:', err);
       updateExamAccess(false);
     }
   }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    // Back to Library only (demo-clean)
+    const btnBackHome = document.getElementById('btnBackHome');
+    if (btnBackHome) {
+      btnBackHome.addEventListener('click', function () {
+        window.location.href = 'library.html';
+      });
+    }
+
+    // Default: allow in demo
+    updateExamAccess(false);
+    loadAuthState();
+  });
 </script>
 
-
-    document.addEventListener('DOMContentLoaded', function () {
-      // Wire chat button
-      const chatBtn = document.getElementById('btnOpenChat');
-      if (chatBtn) {
-        chatBtn.addEventListener('click', function () {
-          window.location.href = 'rvchat.html';
-        });
-      }
-
-      // Wire library button
-      const libBtn = document.getElementById('btnLibrary');
-      if (libBtn) {
-        libBtn.addEventListener('click', function () {
-          window.location.href = 'library.html';
-        });
-      }
-
-      // Auth buttons
-      const btnLogin = document.getElementById('btnLogin');
-      const btnLogout = document.getElementById('btnLogout');
-      const btnBackHome = document.getElementById('btnBackHome');
-
-      if (btnLogin) {
-        btnLogin.addEventListener('click', function () {
-          window.location.href = '/login';
-        });
-      }
-
-      if (btnLogout) {
-        btnLogout.addEventListener('click', function () {
-          window.location.href =
-            '/.auth/logout?post_logout_redirect_uri=/index.html';
-        });
-      }
-
-      if (btnBackHome) {
-        btnBackHome.addEventListener('click', function () {
-          window.location.href = 'library.html';
-        });
-      }
-
-      // Default: locked until we know auth state
-      updateExamAccess(false);
-      loadAuthState();
-    });
-  </script>
-</body>
-</html>
