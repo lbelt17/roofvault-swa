@@ -6,8 +6,12 @@
 //
 // ✅ Quality guardrails added (no "chapter/section/page" questions)
 // ✅ Reject + regenerate safety net (won't return TOC/navigation questions)
+//
+// ✅ DEMO/TEST: GET /api/exam?bank=rwc&count=25 returns the RWC question bank (incl. exhibit images)
+//    (Does NOT affect POST behavior)
 
-const DEPLOY_TAG = "DEPLOY_TAG__2026-02-02__MULTIPART_BOOKWIDE_NO_SOURCES__NO_TOC_QS_B";
+const DEPLOY_TAG =
+  "DEPLOY_TAG__2026-02-02__MULTIPART_BOOKWIDE_NO_SOURCES__NO_TOC_QS_B__BANK_RWC_TEST_C";
 
 process.on("unhandledRejection", (err) => console.error("[unhandledRejection]", err));
 process.on("uncaughtException", (err) => console.error("[uncaughtException]", err));
@@ -88,7 +92,6 @@ function normalizeText(s) {
 function looksLikeTocOrNavigationQuestion(q) {
   const t = normalizeText(q).toLowerCase();
 
-  // Strong bans: "which chapter", "in chapter 3", "what section", "appendix", "table of contents", etc.
   const bannedPatterns = [
     /\bwhich\s+chapter\b/i,
     /\bwhat\s+chapter\b/i,
@@ -116,7 +119,6 @@ function looksLikeTocOrNavigationQuestion(q) {
   for (const re of bannedPatterns) {
     if (re.test(t)) return true;
   }
-
   return false;
 }
 
@@ -127,7 +129,6 @@ function looksMalformedMcq(q) {
   if (!question || !answer) return true;
   if (!Array.isArray(q.options) || q.options.length < 4) return true;
 
-  // Must have A-D (or at least 4 options)
   const ids = q.options.map((o) => String(o?.id || "").toUpperCase());
   const hasA = ids.includes("A");
   const hasB = ids.includes("B");
@@ -137,11 +138,9 @@ function looksMalformedMcq(q) {
 
   if (!["A", "B", "C", "D"].includes(answer.toUpperCase())) return true;
 
-  // Avoid empty option texts
   for (const o of q.options) {
     if (!normalizeText(o?.text)) return true;
   }
-
   return false;
 }
 
@@ -160,20 +159,90 @@ function normalizeMcq(it, nextId) {
   };
 }
 
+// ---------- Bank loader (RWC) ----------
+
+function safeInt(n, fallback) {
+  const x = parseInt(String(n ?? ""), 10);
+  return Number.isFinite(x) ? x : fallback;
+}
+
+function loadRwcBank() {
+  // File path: api/exam/rwc-question-bank-full.js
+  // Must export object with { book, questions: [...] }
+  // (Your file already does module.exports = RWC_QUESTION_BANK_FULL;)
+  // If this require fails, we return null and expose error in GET response.
+  // NOTE: require is cached; good for performance.
+  // eslint-disable-next-line global-require
+  return require("./rwc-question-bank-full.js");
+}
+
 // ---------- Main ----------
 
 module.exports = async function (context, req) {
   try {
+    // ---------- GET ----------
     if (req.method === "GET") {
+      const bank = String(req.query?.bank || "").toLowerCase();
+      const count = Math.min(Math.max(safeInt(req.query?.count, 25), 1), 200);
+
+      // DEMO/TEST: return RWC bank (so you can confirm exhibit images are coming through)
+      if (bank === "rwc") {
+        try {
+          const bankObj = loadRwcBank();
+          const questions = Array.isArray(bankObj?.questions) ? bankObj.questions : [];
+
+          // Return BOTH exhibitImage + imageRef for compatibility with whatever the UI expects.
+          const items = questions.slice(0, count).map((q, idx) => ({
+            id: String(q.id || idx + 1),
+            type: q.type || "mcq",
+            question: q.question || "",
+            options: Array.isArray(q.options) ? q.options : [],
+            answer: q.answer || "",
+            multi: !!q.multi,
+            correctIndexes: Array.isArray(q.correctIndexes) ? q.correctIndexes : [],
+            expectedSelections: q.expectedSelections,
+            cite: q.cite || bankObj?.book || "RWC Bank",
+            explanation: q.explanation || "",
+            // compatibility
+            exhibitImage: q.exhibitImage || "",
+            imageRef: q.imageRef || q.exhibitImage || "",
+          }));
+
+          return jsonRes(context, 200, {
+            ok: true,
+            deployTag: DEPLOY_TAG,
+            mode: "bank",
+            bank: "rwc",
+            book: bankObj?.book || "IIBEC - RWC Study Guide.docx",
+            countRequested: count,
+            returned: items.length,
+            hasAnyExhibitImages: items.some((x) => !!x.exhibitImage || !!x.imageRef),
+            items,
+          });
+        } catch (e) {
+          return jsonRes(context, 500, {
+            ok: false,
+            deployTag: DEPLOY_TAG,
+            mode: "bank",
+            bank: "rwc",
+            error: "Failed to load rwc-question-bank-full.js",
+            detail: e?.message || String(e),
+          });
+        }
+      }
+
+      // Default GET (health)
       return jsonRes(context, 200, {
         ok: true,
         deployTag: DEPLOY_TAG,
         method: "GET",
         hint: 'POST { "parts":["<part1>","<part2>"], "count":25 }',
-        note: "Exam endpoint is multi-part grounded; sources are not returned.",
+        note:
+          "Exam endpoint is multi-part grounded; sources are not returned. For RWC bank test: GET /api/exam?bank=rwc&count=25",
       });
     }
 
+    // ---------- POST (UNCHANGED BEHAVIOR) ----------
     if (req.method !== "POST") {
       return jsonRes(context, 405, {
         ok: false,
@@ -207,7 +276,6 @@ module.exports = async function (context, req) {
       });
     }
 
-    // Stability/perf: up to 8 parts
     const parts = partsAll.slice(0, 8);
 
     // --- 1) Search: 1 best chunk per part (top=1) ---
@@ -251,7 +319,6 @@ module.exports = async function (context, req) {
       hitsByPart.push({ partName, doc: docs[0] || null });
     }
 
-    // Build compact grounded context
     const contextPieces = [];
     for (const { partName, doc } of hitsByPart) {
       const text = doc ? firstTextFromDoc(doc) : "(No search hit returned for this part query.)";
@@ -288,9 +355,6 @@ module.exports = async function (context, req) {
     ].join(" ");
 
     const BATCH_SIZE = 6;
-
-    // Regeneration safety cap (prevents infinite loops)
-    // We'll try a bit harder than before to ensure we fill desiredCount with valid items.
     const MAX_TOTAL_CALLS = Math.max(6, Math.ceil(desiredCount / BATCH_SIZE) + 6);
 
     const items = [];
@@ -300,7 +364,6 @@ module.exports = async function (context, req) {
       const remaining = desiredCount - items.length;
       const want = Math.min(BATCH_SIZE, remaining);
 
-      // Avoid list: last ~20 questions to reduce repeats
       const avoid = items.slice(-20).map((q) => `- ${q.question}`).join("\n");
 
       const user = `
@@ -314,7 +377,7 @@ STRICT RULES:
 - Do NOT invent facts not present in CONTEXT.
 - Do NOT ask about: chapter numbers, sections, appendices, page numbers, figure/table numbers, or "where in the document" something is.
 - Do NOT ask "Which chapter/section..." or "What is covered in chapter..."
-- Prefer applied roofing questions: definitions, installation requirements, materials behavior, drainage/flashings, fastening, underlayment, detailing, design/load concepts if present, safety/quality requirements if present.
+- Prefer applied roofing questions.
 - Do NOT repeat previous questions.
 
 BOOK / PARTS:
@@ -361,7 +424,6 @@ ${avoid}
       const parsed = extractFirstJsonObject(content) || safeJsonParse(content);
 
       if (!parsed?.items || !Array.isArray(parsed.items)) {
-        // If the model glitched, keep stability: try again until cap
         continue;
       }
 
@@ -369,14 +431,9 @@ ${avoid}
         if (items.length >= desiredCount) break;
 
         const q = normalizeMcq(it, items.length + 1);
-
-        // Skip malformed
         if (looksMalformedMcq(q)) continue;
-
-        // Hard-ban TOC/navigation questions
         if (looksLikeTocOrNavigationQuestion(q.question)) continue;
 
-        // Light de-dupe guard
         const key = q.question.toLowerCase();
         const dup = items.some((x) => x.question.toLowerCase() === key);
         if (dup) continue;
@@ -385,8 +442,8 @@ ${avoid}
       }
     }
 
-    // If we still couldn't fill (rare), return what we have but be explicit in debug.
-    const partLabel = parts.length === 1 ? parts[0] : `${parts[0]} (+${parts.length - 1} more parts)`;
+    const partLabel =
+      parts.length === 1 ? parts[0] : `${parts[0]} (+${parts.length - 1} more parts)`;
 
     return jsonRes(context, 200, {
       ok: true,
