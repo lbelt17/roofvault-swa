@@ -1,10 +1,9 @@
 // scripts/smoke-test-search-only.mjs
 // RoofVault: Search-only smoke test (NO OpenAI calls).
-// Source of truth: SWA /api/books (same as frontend).
+// Source of truth: SWA /api/books
 // Search strategy (per part):
 //   A) Exact filename filter: search="*" + filter metadata_storage_name eq '<part>'
 //   B) Fallback free-text: search="<part>"
-// This prevents false FAILs when filename fields aren’t full-text searchable.
 //
 // Usage:
 //   SWA_BASE="https://kind-flower-0fe142d0f.3.azurestaticapps.net" \
@@ -65,7 +64,6 @@ function normalizePartsArray(parts) {
   return parts.map(normalizePart).filter(Boolean);
 }
 
-// Escape single quotes for OData filter string literals
 function escapeODataString(s) {
   return String(s).replace(/'/g, "''");
 }
@@ -90,7 +88,6 @@ async function searchTopHit(searchUrl, payload) {
   return { ok: true, status: 200, hit: docs[0] || null, json };
 }
 
-// Attempt A: exact filename filter (fast + definitive if field is filterable)
 async function hitByExactFilename(searchUrl, partName) {
   const filter = `metadata_storage_name eq '${escapeODataString(partName)}'`;
   const payload = {
@@ -98,18 +95,17 @@ async function hitByExactFilename(searchUrl, partName) {
     top: 1,
     filter,
     queryType: "simple",
-    select: "metadata_storage_name,metadata_storage_path,metadata_storage_url,@search.score",
+    // IMPORTANT: no "select" so we don't reference fields that don't exist
   };
   return await searchTopHit(searchUrl, payload);
 }
 
-// Attempt B: fallback free-text search (less definitive)
 async function hitByFreeText(searchUrl, partName) {
   const payload = {
     search: partName,
     top: 1,
     queryType: "simple",
-    select: "metadata_storage_name,metadata_storage_path,metadata_storage_url,@search.score",
+    // IMPORTANT: no "select"
   };
   return await searchTopHit(searchUrl, payload);
 }
@@ -133,14 +129,12 @@ async function hitByFreeText(searchUrl, partName) {
     process.exit(2);
   }
 
-  // Prefer grouped list (it matches UI behavior)
   const books = grouped.length ? grouped : values.map(v => ({ displayTitle: String(v), parts: [String(v)] }));
 
   const searchUrl = buildSearchUrl();
   const results = [];
   let partsChecked = 0;
 
-  // Quick sanity probe: we’ll print 1 debug sample if everything looks like “0 hits”
   let debugPrinted = false;
 
   for (const book of books) {
@@ -163,7 +157,6 @@ async function hitByFreeText(searchUrl, partName) {
     for (const p of parts) {
       partsChecked++;
 
-      // A) exact filename filter
       const a = await hitByExactFilename(searchUrl, p);
       if (a.ok) {
         if (a.hit) {
@@ -177,13 +170,11 @@ async function hitByFreeText(searchUrl, partName) {
         exactErrored++;
       }
 
-      // B) fallback free-text
       const b = await hitByFreeText(searchUrl, p);
       if (b.ok && b.hit) {
         hits++;
       }
 
-      // If we’re in the “everything is failing” scenario, print a single debug sample once.
       if (!debugPrinted && hits === 0 && partsChecked <= 5) {
         debugPrinted = true;
         console.log("\n[debug] sample part that returned no hit:");
