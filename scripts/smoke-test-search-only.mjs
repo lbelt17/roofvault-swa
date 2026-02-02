@@ -1,7 +1,10 @@
 // scripts/smoke-test-search-only.mjs
 // RoofVault: Search-only smoke test (NO OpenAI calls).
-// Source of truth for book lists: SWA /api/books (same as frontend books.js)
-// For each book (grouped) we test up to 8 parts in Azure AI Search (top=1).
+// Source of truth: SWA /api/books (same as frontend).
+// Search strategy (per part):
+//   A) Exact filename filter: search="*" + filter metadata_storage_name eq '<part>'
+//   B) Fallback free-text: search="<part>"
+// This prevents false FAILs when filename fields aren’t full-text searchable.
 //
 // Usage:
 //   SWA_BASE="https://kind-flower-0fe142d0f.3.azurestaticapps.net" \
@@ -9,10 +12,6 @@
 //   SEARCH_API_KEY="<your-key>" \
 //   SEARCH_INDEX_CONTENT="azureblob-index-content" \
 //   node scripts/smoke-test-search-only.mjs
-//
-// Notes:
-// - Does NOT require auth; /api/books should be public. If yours is gated, tell me.
-// - Does NOT call OpenAI.
 
 const MAX_PARTS = 8;
 
@@ -36,14 +35,9 @@ function buildSearchUrl() {
 async function fetchJson(url) {
   const res = await fetch(url, { cache: "no-store" });
   const text = await res.text();
-
   let json = null;
   try { json = JSON.parse(text); } catch {}
-
-  if (!res.ok) {
-    return { ok: false, status: res.status, text: text.slice(0, 2000), json };
-  }
-  return { ok: true, status: res.status, text, json };
+  return { ok: res.ok, status: res.status, text, json };
 }
 
 function normalizePart(p) {
@@ -52,9 +46,9 @@ function normalizePart(p) {
   if (p && typeof p === "object") {
     return String(
       p.metadata_storage_name ||
-      p.fileName || // books-v2
+      p.fileName ||
       p.name ||
-      p.raw ||      // books-v2
+      p.raw ||
       p.id ||
       p.partId ||
       p.blobName ||
@@ -71,47 +65,12 @@ function normalizePartsArray(parts) {
   return parts.map(normalizePart).filter(Boolean);
 }
 
-// Build fallback grouped books from raw filenames (json.values[]) if needed.
-// This mirrors the intent of books.js fallback behavior (grouping by cleaned title).
-function cleanTitleFromFilename(s) {
-  const x = String(s || "").replace(/\.[^.]+$/, ""); // remove extension
-  return x
-    .replace(/\s*-\s*part\s*\d+\s*$/i, "")
-    .replace(/\s*\(\s*part\s*\d+\s*\)\s*$/i, "")
-    .trim();
+// Escape single quotes for OData filter string literals
+function escapeODataString(s) {
+  return String(s).replace(/'/g, "''");
 }
 
-function groupFromValues(values) {
-  const map = new Map(); // title -> { displayTitle, parts[] }
-  for (const v of values || []) {
-    const filename = normalizePart(v);
-    if (!filename) continue;
-
-    const title = cleanTitleFromFilename(filename);
-    const key = title.toLowerCase();
-
-    if (!map.has(key)) {
-      map.set(key, { displayTitle: title, parts: [] });
-    }
-    map.get(key).parts.push(filename);
-  }
-
-  // Sort parts so Part 01..Part 10 are ordered
-  const out = Array.from(map.values());
-  for (const b of out) {
-    b.parts = b.parts.sort((a, c) => a.localeCompare(c, undefined, { numeric: true, sensitivity: "base" }));
-  }
-  return out;
-}
-
-async function topHit(searchUrl, query) {
-  const payload = {
-    search: query,
-    top: 1,
-    queryType: "simple",
-    select: "metadata_storage_name,metadata_storage_path,metadata_storage_url,@search.score",
-  };
-
+async function searchTopHit(searchUrl, payload) {
   const res = await fetch(searchUrl, {
     method: "POST",
     headers: {
@@ -128,7 +87,31 @@ async function topHit(searchUrl, query) {
   try { json = JSON.parse(text); } catch { return { ok: false, status: 200, text: "Non-JSON response from search" }; }
 
   const docs = Array.isArray(json.value) ? json.value : [];
-  return { ok: true, status: 200, hit: docs[0] || null };
+  return { ok: true, status: 200, hit: docs[0] || null, json };
+}
+
+// Attempt A: exact filename filter (fast + definitive if field is filterable)
+async function hitByExactFilename(searchUrl, partName) {
+  const filter = `metadata_storage_name eq '${escapeODataString(partName)}'`;
+  const payload = {
+    search: "*",
+    top: 1,
+    filter,
+    queryType: "simple",
+    select: "metadata_storage_name,metadata_storage_path,metadata_storage_url,@search.score",
+  };
+  return await searchTopHit(searchUrl, payload);
+}
+
+// Attempt B: fallback free-text search (less definitive)
+async function hitByFreeText(searchUrl, partName) {
+  const payload = {
+    search: partName,
+    top: 1,
+    queryType: "simple",
+    select: "metadata_storage_name,metadata_storage_path,metadata_storage_url,@search.score",
+  };
+  return await searchTopHit(searchUrl, payload);
 }
 
 (async function main() {
@@ -136,7 +119,7 @@ async function topHit(searchUrl, query) {
   if (!booksResp.ok) {
     console.error("❌ Failed to fetch /api/books");
     console.error(`HTTP ${booksResp.status}`);
-    console.error(booksResp.text);
+    console.error(String(booksResp.text).slice(0, 2000));
     process.exit(2);
   }
 
@@ -144,22 +127,21 @@ async function topHit(searchUrl, query) {
   const grouped = Array.isArray(json.books) ? json.books : [];
   const values = Array.isArray(json.values) ? json.values : [];
 
-  // Prefer grouped books. If empty, build from raw values.
-  let books = grouped;
-  if (!books.length && values.length) {
-    books = groupFromValues(values);
-  }
-
-  if (!books.length) {
-    console.error("❌ /api/books returned no grouped books and no values[] fallback.");
+  if (!grouped.length && !values.length) {
+    console.error("❌ /api/books returned no books and no values[] fallback.");
     console.error("Response keys:", Object.keys(json));
     process.exit(2);
   }
 
+  // Prefer grouped list (it matches UI behavior)
+  const books = grouped.length ? grouped : values.map(v => ({ displayTitle: String(v), parts: [String(v)] }));
+
   const searchUrl = buildSearchUrl();
   const results = [];
-
   let partsChecked = 0;
+
+  // Quick sanity probe: we’ll print 1 debug sample if everything looks like “0 hits”
+  let debugPrinted = false;
 
   for (const book of books) {
     const name = String(book.displayTitle || book.title || book.bookTitle || "(untitled)").trim();
@@ -172,16 +154,49 @@ async function topHit(searchUrl, query) {
     }
 
     const parts = partsAll.slice(0, MAX_PARTS);
+
     let hits = 0;
+    let exactOk = 0;
+    let exactEmpty = 0;
+    let exactErrored = 0;
 
     for (const p of parts) {
       partsChecked++;
-      const r = await topHit(searchUrl, p);
-      if (r.ok && r.hit) hits++;
+
+      // A) exact filename filter
+      const a = await hitByExactFilename(searchUrl, p);
+      if (a.ok) {
+        if (a.hit) {
+          hits++;
+          exactOk++;
+          continue;
+        } else {
+          exactEmpty++;
+        }
+      } else {
+        exactErrored++;
+      }
+
+      // B) fallback free-text
+      const b = await hitByFreeText(searchUrl, p);
+      if (b.ok && b.hit) {
+        hits++;
+      }
+
+      // If we’re in the “everything is failing” scenario, print a single debug sample once.
+      if (!debugPrinted && hits === 0 && partsChecked <= 5) {
+        debugPrinted = true;
+        console.log("\n[debug] sample part that returned no hit:");
+        console.log("partName:", p);
+        console.log("exactFilterStatus:", a.status, "exactHit:", !!a.hit, "exactOk:", a.ok);
+        if (!a.ok) console.log("exactFilterErrorBody:", String(a.text).slice(0, 400));
+        console.log("freeTextStatus:", b.status, "freeTextHit:", !!b.hit, "freeTextOk:", b.ok);
+        if (!b.ok) console.log("freeTextErrorBody:", String(b.text).slice(0, 400));
+      }
     }
 
-    const pass = hits > 0;               // at least 1 part searchable
-    const weak = hits < parts.length;    // some parts missing hits
+    const pass = hits > 0;
+    const weak = hits < parts.length;
 
     results.push({
       name,
@@ -191,6 +206,7 @@ async function topHit(searchUrl, query) {
       hits,
       partsUsed: parts.length,
       partsTotal: partsAll.length,
+      exact: { ok: exactOk, empty: exactEmpty, errored: exactErrored },
     });
   }
 
@@ -209,7 +225,7 @@ async function topHit(searchUrl, query) {
   if (fail.length) {
     console.log("\n--- FAILURES ---");
     for (const f of fail) {
-      console.log(`- ${f.name} (${f.groupId}) :: ${f.reason}`);
+      console.log(`- ${f.name} (${f.groupId}) :: ${f.reason || "NO_HITS"}`);
     }
   }
 
