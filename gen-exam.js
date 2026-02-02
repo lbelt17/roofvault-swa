@@ -1,4 +1,8 @@
 ﻿// gen-exam.js — RoofVault Practice Exam wiring (stable + "New 25Q" works + no-repeat memory)
+// Contract fix (CRITICAL):
+// - /api/exam expects ONLY: { parts: [...], count: 25 }
+// - Do NOT send bookGroupId, displayTitle, mode, excludeQuestions, attemptNonce, etc.
+//
 // Requirements:
 // - HTML has: #bookMount, #btnGenExam25ByBook, #qList (optional), #status (optional), #diag (optional)
 // - books.js sets window.__rvSelectedBook = { bookGroupId, displayTitle, parts: [string|object] }
@@ -46,6 +50,12 @@
     } catch {
       diagEl.textContent = String(o);
     }
+  }
+
+  function setVisibleError(message, extra) {
+    // Prefer #status for a human-facing message, and #diag for detail
+    setStatus(message || "Error");
+    if (extra) showDiag(extra);
   }
 
   // ================== UI ==================
@@ -143,12 +153,12 @@
         .filter(Boolean);
     }
 
-    // Fallback to bookGroupId
+    // Fallback to bookGroupId (only if present)
     return [String(selection?.bookGroupId || "").trim()].filter(Boolean);
   }
 
-  // ================== NO-REPEAT MEMORY (client-side) ==================
-  // Aggressive normalization so paraphrases collide into the same key
+  // ================== NO-REPEAT MEMORY (client-side only) ==================
+  // We KEEP this, but we DO NOT send excludeQuestions to the backend anymore.
   function normQ(s) {
     return String(s || "")
       .toLowerCase()
@@ -181,10 +191,9 @@
 
   function saveSeen(bookGroupId, arr) {
     try {
-      // cap storage so it never grows forever
       localStorage.setItem(seenKey(bookGroupId), JSON.stringify(arr.slice(-400)));
     } catch {
-      // ignore storage errors
+      // ignore
     }
   }
 
@@ -243,6 +252,10 @@
     }
   }
 
+  function clearResults(qList) {
+    if (qList) qList.textContent = "";
+  }
+
   // ================== MAIN ==================
   async function genExam(options = {}) {
     const ui = ensureUI();
@@ -257,7 +270,7 @@
     // Book selection
     const selection = getBookSelection();
     if (!selection || !selection.bookGroupId) {
-      showDiag({
+      setVisibleError("Error: No book selected.", {
         error: "No valid book selection found for exam generation.",
         fix: "Expose window.__rvSelectedBook (or window.getSelectedBook()) with {bookGroupId, displayTitle, parts?}.",
         hint: "Your dropdown is working, but gen-exam.js needs a JS object representing the selected book.",
@@ -267,32 +280,46 @@
 
     const parts = normalizeParts(selection);
 
-    // First exam should NOT exclude anything.
-    // Only "New 25Q Practice Exam" should exclude previously-seen questions.
+    // HARD-FAIL: parts[] must exist and be non-empty
+    if (!Array.isArray(parts) || parts.length === 0) {
+      clearResults(qList);
+      setVisibleError("Error: This book has no parts[] available.", {
+        error: "parts[] is missing/empty after normalization.",
+        selection,
+        normalizedParts: parts,
+        fix: "Ensure books.js sets selectedBook.parts as an array (strings or objects with metadata_storage_name/name/id).",
+      });
+      return;
+    }
+
+    // Note: we keep no-repeat memory client-side, but do NOT send excludeQuestions anymore.
     const isNewAttempt = options.newAttempt === true;
-    const excludeQuestions = isNewAttempt ? loadSeen(selection.bookGroupId).slice(-200) : [];
+    const seen = isNewAttempt ? loadSeen(selection.bookGroupId).slice(-200) : [];
 
     try {
       btn.disabled = true;
       btn.classList.add("busy");
       setStatus("Generating…");
+      clearResults(qList);
 
+      // ✅ CONTRACT FIX: send ONLY { parts, count }
       const payload = {
-        bookGroupId: selection.bookGroupId,
-        displayTitle: selection.displayTitle,
         parts,
-        excludeQuestions,
         count: QUESTION_COUNT,
-        mode: "BOOK_ONLY",
-        attemptNonce: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
       };
 
+      // Log payload before sending (requested)
+      console.log("[RoofVault] /api/exam payload:", payload);
+
       showDiag({
-        selection,
-        parts,
+        selection: {
+          bookGroupId: selection.bookGroupId,
+          displayTitle: selection.displayTitle,
+        },
+        partsCount: parts.length,
         newAttempt: isNewAttempt,
-        excludeCount: excludeQuestions.length,
-        payload,
+        seenCountClientOnly: seen.length,
+        payloadSent: payload,
       });
 
       const res = await safeFetch(API_URL, {
@@ -303,50 +330,68 @@
 
       if (!res.ok) {
         const txt = await res.text().catch(() => "");
-        showDiag({
+        setVisibleError("Error: Exam API request failed.", {
           error: "API request failed",
           status: res.status,
           statusText: res.statusText || "",
           body: txt,
-          selection,
-          parts,
-          newAttempt: isNewAttempt,
-          excludeCount: excludeQuestions.length,
-          payload,
+          payloadSent: payload,
         });
-        setStatus("Error");
         return;
       }
 
-      const data = await res.json();
+      // Try JSON parse; if it fails, surface raw text
+      let data;
+      try {
+        data = await res.json();
+      } catch (e) {
+        const raw = await res.text().catch(() => "");
+        setVisibleError("Error: API returned non-JSON response.", {
+          error: "Non-JSON response",
+          message: e?.message || String(e),
+          raw,
+        });
+        return;
+      }
 
-      let items = Array.isArray(data.items) ? data.items : data.questions;
+      // ✅ Require items[]
+      let items = Array.isArray(data?.items) ? data.items : (Array.isArray(data?.questions) ? data.questions : []);
       items = normalizeAndFilterItems(items, selection);
       items = markRwcMultiSelect(items, selection);
 
-      // Save these questions as “seen” AFTER a successful response
+      if (!Array.isArray(items) || items.length === 0) {
+        clearResults(qList);
+        setVisibleError("Error: Exam API returned no questions.", {
+          error: "Missing/empty items[]",
+          receivedKeys: data && typeof data === "object" ? Object.keys(data) : typeof data,
+          dataPreview: data,
+          payloadSent: payload,
+          note: "If the response is echoing payload, backend is short-circuiting due to contract mismatch. Payload is now minimized—if echo still happens, backend routing/deploy may be wrong.",
+        });
+        return;
+      }
+
+      // Save these questions as “seen” AFTER successful response
       addSeen(selection.bookGroupId, items);
 
-      qList.textContent = "";
-
+      // Render
       if (typeof window.renderQuiz === "function") {
         window.renderQuiz(items);
       } else {
         qList.textContent = JSON.stringify(items, null, 2);
       }
 
-      // If backend returns message + empty, show it
-      if (!items.length && data && data.message) {
-        setStatus("No items");
-        showDiag(data);
-        return;
-      }
-
       setStatus(`Ready • ${items.length} questions`);
-      showDiag("✅ Exam generated.");
+      showDiag({
+        ok: true,
+        message: "✅ Exam generated.",
+        itemsCount: items.length,
+        sourcesCount: Array.isArray(data?.sources) ? data.sources.length : 0,
+        debug: data?.debug || null,
+      });
     } catch (e) {
-      showDiag({ error: "genExam failed", message: e?.message || String(e) });
-      setStatus("Error");
+      clearResults(qList);
+      setVisibleError("Error: Exam generation failed.", { error: "genExam failed", message: e?.message || String(e) });
     } finally {
       btn.disabled = false;
       btn.classList.remove("busy");
@@ -362,10 +407,11 @@
 
     showDiag("✅ gen-exam.js loaded. Click Generate to test.");
 
-    // Main Generate button = FIRST EXAM (excludeQuestions should be empty)
+    // Main Generate button = FIRST EXAM
     ui.btn.onclick = () => genExam({ newAttempt: false });
 
-    // "New 25Q Practice Exam" button = NEW ATTEMPT (excludeQuestions should be loaded)
+    // "New 25Q Practice Exam" button = NEW ATTEMPT
+    // Note: no-repeat exclusion is currently client-only; backend does not accept excludeQuestions.
     if (!window.__rvNewExamClickWired) {
       window.__rvNewExamClickWired = true;
 
