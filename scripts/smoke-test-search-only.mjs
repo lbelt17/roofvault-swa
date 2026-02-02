@@ -1,6 +1,7 @@
 // scripts/smoke-test-search-only.mjs
 // RoofVault: Search-only smoke test (NO OpenAI calls).
 // Reads book definitions from ./books.js (root) and checks Azure AI Search top=1 per part.
+//
 // Usage:
 //   SEARCH_ENDPOINT="https://<your-search>.search.windows.net" \
 //   SEARCH_API_KEY="<your-key>" \
@@ -23,24 +24,63 @@ if (!SEARCH_ENDPOINT || !SEARCH_API_KEY) {
   process.exit(2);
 }
 
+function makeNoopElement() {
+  return {
+    style: {},
+    classList: { add() {}, remove() {}, toggle() {} },
+    appendChild() {},
+    removeChild() {},
+    setAttribute() {},
+    getAttribute() { return null; },
+    querySelector() { return null; },
+    querySelectorAll() { return []; },
+    addEventListener() {},
+    removeEventListener() {},
+    innerHTML: "",
+    textContent: "",
+    value: "",
+  };
+}
+
 function safeRunBooksJs(filePath) {
   const code = fs.readFileSync(filePath, "utf8");
 
-  // minimal browser-like sandbox
+  // Minimal browser-like sandbox so books.js can run without crashing.
   const sandbox = {
-    window: {},
-    document: {
-      // Some scripts may read document.getElementById; provide harmless stubs
-      getElementById: () => null,
-      querySelector: () => null,
-    },
     console,
+    setTimeout,
+    clearTimeout,
+
+    window: {
+      location: { href: "" },
+      addEventListener() {},
+      removeEventListener() {},
+      dispatchEvent() {},
+    },
+
+    document: {
+      addEventListener() {},
+      removeEventListener() {},
+      dispatchEvent() {},
+      getElementById() { return null; },
+      querySelector() { return null; },
+      querySelectorAll() { return []; },
+      createElement() { return makeNoopElement(); },
+    },
+
+    // Some scripts use Event/CustomEvent
+    Event: class Event {
+      constructor(type) { this.type = type; }
+    },
+    CustomEvent: class CustomEvent {
+      constructor(type, detail) { this.type = type; this.detail = detail; }
+    },
   };
 
   vm.createContext(sandbox);
   vm.runInContext(code, sandbox, { filename: filePath });
 
-  // books.js might store books on one of these
+  // books.js might store the books array on one of these.
   const candidates = [
     sandbox.window.__rvBooks,
     sandbox.window.rvBooks,
@@ -53,7 +93,9 @@ function safeRunBooksJs(filePath) {
   if (!books) {
     throw new Error(
       `Could not find a books array after running ${filePath}.
-Looked for: window.__rvBooks / rvBooks / BOOKS / books / __books`
+Looked for: window.__rvBooks / window.rvBooks / window.BOOKS / window.books / window.__books
+
+If your books list is stored under a different variable, tell me what it is and I will update the script.`
     );
   }
   return books;
@@ -92,14 +134,14 @@ function label(book) {
   );
 }
 
-function searchUrl() {
+function buildSearchUrl() {
   const base = SEARCH_ENDPOINT.replace(/\/$/, "");
   return `${base}/indexes/${encodeURIComponent(
     SEARCH_INDEX_CONTENT
   )}/docs/search?api-version=2023-11-01`;
 }
 
-async function topHit(url, query) {
+async function topHit(searchUrl, query) {
   const payload = {
     search: query,
     top: 1,
@@ -107,7 +149,7 @@ async function topHit(url, query) {
     select: "metadata_storage_name,metadata_storage_path,metadata_storage_url,@search.score",
   };
 
-  const res = await fetch(url, {
+  const res = await fetch(searchUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -132,16 +174,16 @@ async function topHit(url, query) {
 
 (async function main() {
   const books = safeRunBooksJs(BOOKS_JS_PATH);
-  const url = searchUrl();
+  const searchUrl = buildSearchUrl();
 
   const results = [];
   let partsChecked = 0;
 
-  for (const b of books) {
-    const name = label(b);
-    const groupId = b.bookGroupId || b.id || "";
+  for (const book of books) {
+    const name = label(book);
+    const groupId = book.bookGroupId || book.id || "";
 
-    const partsAll = normalizeParts(b);
+    const partsAll = normalizeParts(book);
     if (!partsAll.length) {
       results.push({ name, groupId, pass: false, reason: "NO_PARTS", hits: 0, partsUsed: 0 });
       continue;
@@ -152,13 +194,12 @@ async function topHit(url, query) {
 
     for (const p of parts) {
       partsChecked++;
-      const r = await topHit(url, p);
+      const r = await topHit(searchUrl, p);
       if (r.ok && r.hit) hits++;
     }
 
-    // pass = at least 1 part returns a hit
-    const pass = hits > 0;
-    const weak = hits < parts.length;
+    const pass = hits > 0;        // at least 1 part searchable
+    const weak = hits < parts.length; // some parts didn’t hit
 
     results.push({
       name,
@@ -192,7 +233,9 @@ async function topHit(url, query) {
   if (weak.length) {
     console.log("\n--- WEAK (hits < partsUsed) ---");
     for (const w of weak) {
-      console.log(`- ${w.name} (${w.groupId}) :: hits=${w.hits}/${w.partsUsed} (partsTotal=${w.partsTotal})`);
+      console.log(
+        `- ${w.name} (${w.groupId}) :: hits=${w.hits}/${w.partsUsed} (partsTotal=${w.partsTotal})`
+      );
     }
   }
 
