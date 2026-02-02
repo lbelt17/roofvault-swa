@@ -1,10 +1,10 @@
 ﻿// api/exam/index.js
-// Step: Book-wide multi-part support (stable citations: SOURCE 1..SOURCE 8)
-// - Uses up to 8 parts max (1 top chunk per part) to preserve cite constraints.
+// Step: Book-wide multi-part support (stability-first, NO sources returned)
+// - Uses up to 8 parts max (1 top chunk per part) for speed + grounding.
 // - Keeps single-part mode working.
-// - Adds sources[] metadata for auditability.
+// - Does NOT return sources[] or cite fields (cleaner + faster).
 
-const DEPLOY_TAG = "DEPLOY_TAG__2026-01-30__MULTIPART_BOOKWIDE_A";
+const DEPLOY_TAG = "DEPLOY_TAG__2026-02-02__MULTIPART_BOOKWIDE_NO_SOURCES_A";
 
 process.on("unhandledRejection", (err) => console.error("[unhandledRejection]", err));
 process.on("uncaughtException", (err) => console.error("[uncaughtException]", err));
@@ -26,7 +26,11 @@ function getEnv(name) {
 function safeJsonParse(value) {
   if (!value) return null;
   if (typeof value === "object") return value;
-  try { return JSON.parse(value); } catch { return null; }
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
 }
 
 function uniqStrings(arr) {
@@ -43,6 +47,35 @@ function uniqStrings(arr) {
   return out;
 }
 
+function firstTextFromDoc(doc) {
+  if (!doc) return "";
+  const t =
+    doc.content ||
+    doc.text ||
+    doc.chunk ||
+    doc.pageContent ||
+    doc.merged_content ||
+    "";
+  if (t && String(t).trim()) return String(t);
+  // last resort: safe-ish stringify
+  try {
+    return JSON.stringify(doc);
+  } catch {
+    return String(doc);
+  }
+}
+
+// Extract a JSON object even if the model wraps it with extra text.
+// We keep this conservative to avoid weird parse failures.
+function extractFirstJsonObject(s) {
+  const str = String(s || "");
+  const start = str.indexOf("{");
+  const end = str.lastIndexOf("}");
+  if (start === -1 || end === -1 || end <= start) return null;
+  const candidate = str.slice(start, end + 1);
+  return safeJsonParse(candidate);
+}
+
 module.exports = async function (context, req) {
   try {
     if (req.method === "GET") {
@@ -50,7 +83,8 @@ module.exports = async function (context, req) {
         ok: true,
         deployTag: DEPLOY_TAG,
         method: "GET",
-        hint: 'POST { "parts":["<part1>","<part2>"], "count":25, "mode":"BOOK_ONLY" }',
+        hint: 'POST { "parts":["<part1>","<part2>"], "count":25 }',
+        note: "Exam endpoint is multi-part grounded; sources are not returned.",
       });
     }
 
@@ -74,8 +108,10 @@ module.exports = async function (context, req) {
 
     const partsRaw = Array.isArray(body.parts) ? body.parts : [];
     const partsAll = uniqStrings(partsRaw);
+
     const countRaw = Number.isFinite(body.count) ? body.count : parseInt(body.count, 10);
-    const desiredCount = Number.isFinite(countRaw) && countRaw > 0 ? Math.min(countRaw, 50) : 25;
+    const desiredCount =
+      Number.isFinite(countRaw) && countRaw > 0 ? Math.min(countRaw, 50) : 25;
 
     if (!partsAll.length) {
       return jsonRes(context, 400, {
@@ -85,8 +121,7 @@ module.exports = async function (context, req) {
       });
     }
 
-    // IMPORTANT: keep cites limited to SOURCE 1..SOURCE 8.
-    // So we sample up to 8 parts and take 1 best hit per part.
+    // Stability/perf: up to 8 parts
     const parts = partsAll.slice(0, 8);
 
     // --- 1) Search: 1 best chunk per part (top=1) ---
@@ -101,6 +136,7 @@ module.exports = async function (context, req) {
     const hitsByPart = [];
     for (const partName of parts) {
       const searchPayload = {
+        // Keep it simple and stable; this matches your existing approach.
         search: partName,
         top: 1,
         queryType: "simple",
@@ -130,44 +166,18 @@ module.exports = async function (context, req) {
       hitsByPart.push({ partName, doc: docs[0] || null });
     }
 
-    // Build up to 8 SOURCES (one per part). Keep total under ~11k chars.
-    const sourcesMeta = [];
-    const sourcePieces = [];
-
-    for (let i = 0; i < hitsByPart.length; i++) {
-      const { partName, doc } = hitsByPart[i];
-      const sourceId = `SOURCE ${i + 1}`;
-
-      let text = "";
-      if (doc) {
-        text =
-          doc.content ||
-          doc.text ||
-          doc.chunk ||
-          doc.pageContent ||
-          doc.merged_content ||
-          "";
-        if (!text) text = JSON.stringify(doc);
-      } else {
-        text = "(No search hit returned for this part query.)";
-      }
-
-      const piece = `${sourceId}\nPART: ${partName}\n${String(text)}`.slice(0, 2500);
-      sourcePieces.push(piece);
-
-      sourcesMeta.push({
-        sourceId,
-        part: partName,
-        // These fields exist in many Azure Blob indexers; include if present.
-        metadata_storage_name: doc?.metadata_storage_name,
-        metadata_storage_path: doc?.metadata_storage_path,
-        metadata_storage_url: doc?.metadata_storage_url,
-        score: doc?.["@search.score"],
-      });
+    // Build a compact grounded context (no SOURCE labels).
+    // Keep under ~11k chars to avoid huge prompts.
+    const contextPieces = [];
+    for (const { partName, doc } of hitsByPart) {
+      const text = doc ? firstTextFromDoc(doc) : "(No search hit returned for this part query.)";
+      // cap each part chunk
+      const chunk = String(text).slice(0, 2400);
+      contextPieces.push(`PART: ${partName}\n${chunk}`);
     }
 
-    let sources = sourcePieces.join("\n\n");
-    if (sources.length > 11000) sources = sources.slice(0, 11000);
+    let groundedContext = contextPieces.join("\n\n");
+    if (groundedContext.length > 11000) groundedContext = groundedContext.slice(0, 11000);
 
     // --- 2) AOAI batching ---
     const AOAI_ENDPOINT = getEnv("AOAI_ENDPOINT");
@@ -181,37 +191,45 @@ module.exports = async function (context, req) {
         AOAI_API_VERSION
       )}`;
 
-    const system = `You generate exam questions. Output MUST be valid JSON only. No markdown.`;
+    const system = [
+      "You generate multiple-choice exam questions.",
+      "Output MUST be valid JSON only (no markdown, no extra text).",
+      "Questions must be grounded ONLY in the provided CONTEXT.",
+      "Do not invent facts not present in CONTEXT.",
+    ].join(" ");
 
     const BATCH_SIZE = 6;
-    const batches = Math.ceil(desiredCount / BATCH_SIZE);
+    const batchesPlanned = Math.ceil(desiredCount / BATCH_SIZE);
 
     const items = [];
-    for (let b = 0; b < batches; b++) {
+    for (let b = 0; b < batchesPlanned; b++) {
       const remaining = desiredCount - items.length;
       if (remaining <= 0) break;
 
       const want = Math.min(BATCH_SIZE, remaining);
 
+      // Keep "already used" small to reduce token bloat; last ~20 is enough to avoid repeats.
+      const avoid = items.slice(-20).map((q) => `- ${q.question}`).join("\n");
+
       const user = `
-Create ${want} multiple-choice questions from the sources below.
+Create ${want} multiple-choice questions from the CONTEXT below.
+
+Output ONLY JSON with this exact shape:
+{ "items": [ { "id":"1", "type":"mcq", "question":"...", "options":[{"id":"A","text":"..."},{"id":"B","text":"..."},{"id":"C","text":"..."},{"id":"D","text":"..."}], "answer":"A" } ] }
 
 Rules:
-- Output ONLY JSON with this exact shape:
-  { "items": [ { "id":"1", "type":"mcq", "question":"...", "options":[{"id":"A","text":"..."},{"id":"B","text":"..."},{"id":"C","text":"..."},{"id":"D","text":"..."}], "answer":"A", "cite":"SOURCE 1" } ] }
-- Each cite MUST be one of: "SOURCE 1" .. "SOURCE ${Math.min(parts.length, 8)}"
+- Questions must be grounded in CONTEXT only.
 - Keep questions specific and useful.
 - Do NOT repeat previous questions.
-- IMPORTANT: Questions must be grounded in the provided SOURCES only. If unsure, ask about what IS in the sources.
 
 BOOK / PARTS:
 ${parts.join("\n")}
 
-SOURCES:
-${sources}
+CONTEXT:
+${groundedContext}
 
 Already used questions (avoid repeating these exact questions):
-${items.map((q) => `- ${q.question}`).join("\n")}
+${avoid}
 `.trim();
 
       const aoaiPayload = {
@@ -220,7 +238,7 @@ ${items.map((q) => `- ${q.question}`).join("\n")}
           { role: "user", content: user },
         ],
         temperature: 0.4,
-        max_tokens: 1200,
+        max_tokens: 1100,
       };
 
       const aoaiResp = await fetch(aoaiUrl, {
@@ -243,7 +261,7 @@ ${items.map((q) => `- ${q.question}`).join("\n")}
 
       const aoaiJson = safeJsonParse(aoaiText) || {};
       const content = aoaiJson?.choices?.[0]?.message?.content || "";
-      const parsed = safeJsonParse(content);
+      const parsed = extractFirstJsonObject(content) || safeJsonParse(content);
 
       if (!parsed?.items || !Array.isArray(parsed.items)) {
         return jsonRes(context, 500, {
@@ -258,11 +276,23 @@ ${items.map((q) => `- ${q.question}`).join("\n")}
 
       for (const it of parsed.items) {
         if (items.length >= desiredCount) break;
-        items.push({ ...it, id: String(items.length + 1) });
+
+        // Enforce expected shape lightly (stability)
+        const q = {
+          id: String(items.length + 1),
+          type: "mcq",
+          question: String(it?.question || "").trim(),
+          options: Array.isArray(it?.options) ? it.options : [],
+          answer: String(it?.answer || "").trim(),
+        };
+
+        // Skip malformed entries rather than failing the whole request.
+        if (!q.question || !q.options?.length || !q.answer) continue;
+
+        items.push(q);
       }
     }
 
-    // Respond with a “book-wide” label when multiple parts are used.
     const partLabel = parts.length === 1 ? parts[0] : `${parts[0]} (+${parts.length - 1} more parts)`;
 
     return jsonRes(context, 200, {
@@ -271,16 +301,15 @@ ${items.map((q) => `- ${q.question}`).join("\n")}
       model: AOAI_DEPLOYMENT,
       part: partLabel,
       debug: {
-        hits: hitsByPart.filter(x => !!x.doc).length,
-        sourceChars: sources.length,
+        hits: hitsByPart.filter((x) => !!x.doc).length,
+        contextChars: groundedContext.length,
         desiredCount,
         batchSize: BATCH_SIZE,
-        batchesPlanned: batches,
+        batchesPlanned,
         batchesUsed: Math.ceil(items.length / BATCH_SIZE),
         partsUsed: parts.length,
-        partsTruncated: partsAll.length - parts.length,
+        partsTruncated: Math.max(0, partsAll.length - parts.length),
       },
-      sources: sourcesMeta,
       items,
     });
   } catch (err) {
