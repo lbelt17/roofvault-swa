@@ -469,80 +469,90 @@
   <script src="auth.js?v=1"></script>
   <script src="/gen-exam.js?v=4"></script>
 
-  <!-- Auth + navigation wiring (UNCHANGED; cosmetics step only) -->
-  <script>
-    function updateExamAccess(isLoggedIn) {
-      const genBtn = document.getElementById('btnGenExam50ByBook');
-      if (!genBtn) return;
+  <!-- Auth + navigation wiring (DEMO MODE: exam auth disabled) -->
+<script>
+  // ===== DEMO MODE FLAG =====
+  // Set to false after demo to re-enable auth gating
+  const DEMO_MODE_DISABLE_EXAM_AUTH = true;
 
-      if (isLoggedIn) {
-        genBtn.disabled = false;
-        genBtn.title = 'Generate a 25-question practice exam.';
-        genBtn.textContent = 'Generate 25Q Practice Exam';
-        genBtn.style.cursor = 'pointer';
-      } else {
-        genBtn.disabled = true;
-        genBtn.title = 'Please log in to generate exams.';
-        genBtn.textContent = '🔒 Generate 25Q Practice Exam';
-        genBtn.style.cursor = 'not-allowed';
-      }
+  function updateExamAccess(isLoggedIn) {
+    // Correct button ID
+    const genBtn = document.getElementById('btnGenExam25ByBook');
+    if (!genBtn) return;
+
+    // DEMO MODE: always allow
+    if (DEMO_MODE_DISABLE_EXAM_AUTH) {
+      genBtn.disabled = false;
+      genBtn.title = 'Generate a 25-question practice exam.';
+      genBtn.style.cursor = 'pointer';
+      return;
     }
 
-    async function loadAuthState() {
-      const userEmailLabel = document.getElementById('userEmailLabel');
-      const subscriptionLabel = document.getElementById('subscriptionLabel');
-      const btnLogin = document.getElementById('btnLogin');
-      const btnLogout = document.getElementById('btnLogout');
+    // Normal behavior (post-demo)
+    if (isLoggedIn) {
+      genBtn.disabled = false;
+      genBtn.title = 'Generate a 25-question practice exam.';
+      genBtn.style.cursor = 'pointer';
+    } else {
+      genBtn.disabled = true;
+      genBtn.title = 'Please log in to generate exams.';
+      genBtn.style.cursor = 'not-allowed';
+    }
+  }
 
-      try {
-        const res = await fetch('/api/auth-me', { credentials: 'include' });
-        if (!res.ok) throw new Error('No auth info');
+  async function loadAuthState() {
+    const userEmailLabel = document.getElementById('userEmailLabel');
+    const subscriptionLabel = document.getElementById('subscriptionLabel');
+    const btnLogin = document.getElementById('btnLogin');
+    const btnLogout = document.getElementById('btnLogout');
 
-        const data = await res.json();
+    // DEMO MODE: skip auth fetch entirely
+    if (DEMO_MODE_DISABLE_EXAM_AUTH) {
+      updateExamAccess(true);
+      return;
+    }
 
-        window.isLoggedIn = !!data.isLoggedIn;
-window.plan = data.plan || 'free';
-window.roles = data.roles || [];
+    try {
+      const res = await fetch('/api/auth-me', { credentials: 'include' });
+      if (!res.ok) throw new Error('No auth info');
 
-if (!data.isLoggedIn) {
-  // Logged out = Free User
-  userEmailLabel.textContent = 'Free User';
-  subscriptionLabel.classList.add('hidden');
-  btnLogin.classList.remove('hidden');
-  btnLogout.classList.add('hidden');
-  updateExamAccess(false);
-  return;
-}
+      const data = await res.json();
 
+      window.isLoggedIn = !!data.isLoggedIn;
+      window.plan = data.plan || 'free';
+      window.roles = data.roles || [];
 
-        userEmailLabel.textContent = data.email || '';
-
-if (window.roles.includes('owner')) {
-  subscriptionLabel.textContent = 'Owner Access';
-} else if (window.plan === 'premium') {
-  subscriptionLabel.textContent = 'Premium';
-} else {
-  subscriptionLabel.textContent = 'Free User';
-}
-
-        subscriptionLabel.classList.remove('hidden');
-        btnLogin.classList.add('hidden');
-        btnLogout.classList.remove('hidden');
-        updateExamAccess(true);
-
-      } catch (err) {
-        console.error('loadAuthState error:', err);
-
-        window.isLoggedIn = false;
-        window.subscriptionTier = 'free';
-        userEmailLabel.textContent = 'Not signed in';
-        subscriptionLabel.textContent = 'Free (guest)';
+      if (!data.isLoggedIn) {
+        userEmailLabel.textContent = 'Free User';
         subscriptionLabel.classList.add('hidden');
         btnLogin.classList.remove('hidden');
         btnLogout.classList.add('hidden');
         updateExamAccess(false);
+        return;
       }
+
+      userEmailLabel.textContent = data.email || '';
+
+      if (window.roles.includes('owner')) {
+        subscriptionLabel.textContent = 'Owner Access';
+      } else if (window.plan === 'premium') {
+        subscriptionLabel.textContent = 'Premium';
+      } else {
+        subscriptionLabel.textContent = 'Free User';
+      }
+
+      subscriptionLabel.classList.remove('hidden');
+      btnLogin.classList.add('hidden');
+      btnLogout.classList.remove('hidden');
+      updateExamAccess(true);
+
+    } catch (err) {
+      console.error('loadAuthState error:', err);
+      updateExamAccess(false);
     }
+  }
+</script>
+
 
     document.addEventListener('DOMContentLoaded', function () {
       // Wire chat button
