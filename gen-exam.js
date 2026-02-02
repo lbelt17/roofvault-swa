@@ -1,12 +1,16 @@
 ﻿// gen-exam.js — RoofVault Practice Exam wiring (stable + "New 25Q" works + no-repeat memory)
-// Contract fix (CRITICAL):
+//
+// CRITICAL CONTRACT (NORMAL MODE):
 // - /api/exam expects ONLY: { parts: [...], count: 25 }
 // - Do NOT send bookGroupId, displayTitle, mode, excludeQuestions, attemptNonce, etc.
 //
-// Requirements:
-// - HTML has: #bookMount, #btnGenExam25ByBook, #qList (optional), #status (optional), #diag (optional)
-// - books.js sets window.__rvSelectedBook = { bookGroupId, displayTitle, parts: [string|object] }
-// - renderQuiz(items) exists (preferred). If not, we print JSON into #qList.
+// SPECIAL CASE (RWC BANK MODE):
+// - If selected book is the RWC Study Guide, call:
+//   GET /api/exam?bank=rwc&count=25
+// - Items may include exhibitImage (render it).
+//
+// DEMO MODE:
+// - If window.DEMO_MODE_DISABLE_EXAM_AUTH === true, do NOT block generation on auth.
 
 (function () {
   "use strict";
@@ -53,7 +57,6 @@
   }
 
   function setVisibleError(message, extra) {
-    // Prefer #status for a human-facing message, and #diag for detail
     setStatus(message || "Error");
     if (extra) showDiag(extra);
   }
@@ -66,7 +69,7 @@
       return null;
     }
 
-    // Ensure qList exists (your HTML already has it, but keep safe)
+    // Ensure qList exists
     let qList = $("qList");
     if (!qList) {
       qList = el("div", { id: "qList" });
@@ -79,25 +82,38 @@
       bookMount.parentNode?.appendChild(qList);
     }
 
-    // Require the HTML button to exist
     const btn = $("btnGenExam25ByBook");
     if (!btn) {
-      showDiag("❌ Missing #btnGenExam25ByBook in index.html. Add id to your existing button.");
+      showDiag("❌ Missing #btnGenExam25ByBook. Add id to your existing button.");
       return null;
     }
 
     return { bookMount, qList, btn };
   }
 
+  // ================== DEMO MODE FLAG ==================
+  // Prefer a global set by exams.html.
+  // If not present, default false (normal behavior).
+  function isDemoMode() {
+    return window.DEMO_MODE_DISABLE_EXAM_AUTH === true;
+  }
+
   // ================== AUTH ==================
   async function refreshButtonAuth(btn) {
+    // DEMO MODE: always allow
+    if (isDemoMode()) {
+      btn.disabled = false;
+      btn.title = "";
+      return true;
+    }
+
     try {
       if (typeof window.getAuthState !== "function") {
         btn.disabled = true;
         btn.title = "Auth system not loaded (getAuthState missing).";
         showDiag({
           error: "getAuthState is not defined on this page.",
-          fix: "Make sure your auth script is loaded before gen-exam.js",
+          fix: "Make sure your auth script is loaded before gen-exam.js OR enable demo mode via window.DEMO_MODE_DISABLE_EXAM_AUTH = true.",
         });
         return false;
       }
@@ -133,7 +149,6 @@
         .map((p) => {
           if (typeof p === "string") return p;
 
-          // object form: extract best identifier
           if (p && typeof p === "object") {
             return (
               p.metadata_storage_name ||
@@ -146,19 +161,30 @@
               ""
             );
           }
-
           return "";
         })
         .map((s) => String(s).trim())
         .filter(Boolean);
     }
 
-    // Fallback to bookGroupId (only if present)
     return [String(selection?.bookGroupId || "").trim()].filter(Boolean);
   }
 
+  // ================== RWC BANK DETECTION ==================
+  function isRwcStudyGuide(selection) {
+    const title = String(selection?.displayTitle || "").toLowerCase();
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+
+    // Match your actual selection values:
+    // bookGroupId: "iibec-rwc-study-guide-docx"
+    // displayTitle: "IIBEC - RWC Study Guide.docx"
+    if (group === "iibec-rwc-study-guide-docx") return true;
+    if (title.includes("iibec") && title.includes("rwc") && title.includes("study guide")) return true;
+
+    return false;
+  }
+
   // ================== NO-REPEAT MEMORY (client-side only) ==================
-  // We KEEP this, but we DO NOT send excludeQuestions to the backend anymore.
   function normQ(s) {
     return String(s || "")
       .toLowerCase()
@@ -256,6 +282,92 @@
     if (qList) qList.textContent = "";
   }
 
+  // ================== RENDER (SAFE + EXHIBIT SUPPORT) ==================
+  function renderItemsFallback(qList, items) {
+    if (!qList) return;
+    qList.innerHTML = "";
+
+    const wrap = el("div", { class: "rv-qwrap" });
+    wrap.style.display = "flex";
+    wrap.style.flexDirection = "column";
+    wrap.style.gap = "10px";
+
+    items.forEach((q, idx) => {
+      const card = el("div", { class: "rv-qcard" });
+      card.style.border = "1px solid rgba(70,80,110,0.6)";
+      card.style.background = "rgba(20, 26, 40, 0.96)";
+      card.style.borderRadius = "12px";
+      card.style.padding = "12px";
+
+      const title = el("div", { class: "rv-qtitle" }, [
+        el("strong", { text: `${idx + 1}. ` }),
+        el("span", { text: String(q.question || "") }),
+      ]);
+      title.style.marginBottom = "10px";
+      title.style.lineHeight = "1.45";
+
+      card.appendChild(title);
+
+      const imgUrl = (q.exhibitImage || q.imageRef || "").trim();
+      if (imgUrl) {
+        const imgBox = el("div", { class: "rv-exhibit" });
+        imgBox.style.margin = "10px 0 12px 0";
+        imgBox.style.padding = "10px";
+        imgBox.style.borderRadius = "10px";
+        imgBox.style.border = "1px solid rgba(120,135,170,0.35)";
+        imgBox.style.background = "rgba(15, 19, 30, 0.65)";
+
+        const img = el("img", {
+          src: imgUrl,
+          alt: `Exhibit for question ${idx + 1}`,
+        });
+        img.style.width = "100%";
+        img.style.maxWidth = "720px";
+        img.style.display = "block";
+        img.style.borderRadius = "8px";
+
+        imgBox.appendChild(img);
+        card.appendChild(imgBox);
+      }
+
+      const opts = el("div", { class: "rv-opts" });
+      opts.style.display = "grid";
+      opts.style.gridTemplateColumns = "1fr";
+      opts.style.gap = "8px";
+
+      (Array.isArray(q.options) ? q.options : []).forEach((o) => {
+        const row = el("div", { class: "rv-opt" }, [
+          el("strong", { text: `${String(o.id || "").toUpperCase()}. ` }),
+          el("span", { text: String(o.text || "") }),
+        ]);
+        row.style.padding = "10px";
+        row.style.borderRadius = "10px";
+        row.style.background = "rgba(12, 15, 20, 0.75)";
+        row.style.border = "1px solid rgba(37, 42, 54, 0.9)";
+        opts.appendChild(row);
+      });
+
+      card.appendChild(opts);
+      wrap.appendChild(card);
+    });
+
+    qList.appendChild(wrap);
+  }
+
+  function renderItems(qList, items) {
+    // If your existing renderer exists, use it.
+    // But if it throws, fall back safely.
+    if (typeof window.renderQuiz === "function") {
+      try {
+        window.renderQuiz(items);
+        return;
+      } catch (e) {
+        showDiag({ warning: "renderQuiz failed; using fallback renderer.", message: e?.message || String(e) });
+      }
+    }
+    renderItemsFallback(qList, items);
+  }
+
   // ================== MAIN ==================
   async function genExam(options = {}) {
     const ui = ensureUI();
@@ -263,36 +375,19 @@
 
     const { qList, btn } = ui;
 
-    // Auth gate
+    // Auth gate (skipped in demo mode)
     const authed = await refreshButtonAuth(btn);
     if (!authed) return;
 
-    // Book selection
     const selection = getBookSelection();
     if (!selection || !selection.bookGroupId) {
       setVisibleError("Error: No book selected.", {
         error: "No valid book selection found for exam generation.",
         fix: "Expose window.__rvSelectedBook (or window.getSelectedBook()) with {bookGroupId, displayTitle, parts?}.",
-        hint: "Your dropdown is working, but gen-exam.js needs a JS object representing the selected book.",
       });
       return;
     }
 
-    const parts = normalizeParts(selection);
-
-    // HARD-FAIL: parts[] must exist and be non-empty
-    if (!Array.isArray(parts) || parts.length === 0) {
-      clearResults(qList);
-      setVisibleError("Error: This book has no parts[] available.", {
-        error: "parts[] is missing/empty after normalization.",
-        selection,
-        normalizedParts: parts,
-        fix: "Ensure books.js sets selectedBook.parts as an array (strings or objects with metadata_storage_name/name/id).",
-      });
-      return;
-    }
-
-    // Note: we keep no-repeat memory client-side, but do NOT send excludeQuestions anymore.
     const isNewAttempt = options.newAttempt === true;
     const seen = isNewAttempt ? loadSeen(selection.bookGroupId).slice(-200) : [];
 
@@ -302,31 +397,59 @@
       setStatus("Generating…");
       clearResults(qList);
 
-      // ✅ CONTRACT FIX: send ONLY { parts, count }
-      const payload = {
-        parts,
-        count: QUESTION_COUNT,
-      };
+      const useBank = isRwcStudyGuide(selection);
 
-      // Log payload before sending (requested)
-      console.log("[RoofVault] /api/exam payload:", payload);
+      let res;
+      let payload = null;
 
-      showDiag({
-        selection: {
-          bookGroupId: selection.bookGroupId,
-          displayTitle: selection.displayTitle,
-        },
-        partsCount: parts.length,
-        newAttempt: isNewAttempt,
-        seenCountClientOnly: seen.length,
-        payloadSent: payload,
-      });
+      if (useBank) {
+        // RWC bank mode (GET)
+        const url = `${API_URL}?bank=rwc&count=${encodeURIComponent(QUESTION_COUNT)}`;
+        console.log("[RoofVault] /api/exam (BANK) url:", url);
 
-      const res = await safeFetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+        showDiag({
+          mode: "bank",
+          selection: { bookGroupId: selection.bookGroupId, displayTitle: selection.displayTitle },
+          newAttempt: isNewAttempt,
+          seenCountClientOnly: seen.length,
+          url,
+        });
+
+        res = await safeFetch(url, { method: "GET" });
+      } else {
+        // NORMAL mode (POST) — keep contract EXACT
+        const parts = normalizeParts(selection);
+
+        if (!Array.isArray(parts) || parts.length === 0) {
+          clearResults(qList);
+          setVisibleError("Error: This book has no parts[] available.", {
+            error: "parts[] is missing/empty after normalization.",
+            selection,
+            normalizedParts: parts,
+            fix: "Ensure books.js sets selectedBook.parts as an array (strings or objects with metadata_storage_name/name/id).",
+          });
+          return;
+        }
+
+        payload = { parts, count: QUESTION_COUNT };
+
+        console.log("[RoofVault] /api/exam payload:", payload);
+
+        showDiag({
+          mode: "normal",
+          selection: { bookGroupId: selection.bookGroupId, displayTitle: selection.displayTitle },
+          partsCount: parts.length,
+          newAttempt: isNewAttempt,
+          seenCountClientOnly: seen.length,
+          payloadSent: payload,
+        });
+
+        res = await safeFetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
 
       if (!res.ok) {
         const txt = await res.text().catch(() => "");
@@ -336,11 +459,11 @@
           statusText: res.statusText || "",
           body: txt,
           payloadSent: payload,
+          bankMode: useBank,
         });
         return;
       }
 
-      // Try JSON parse; if it fails, surface raw text
       let data;
       try {
         data = await res.json();
@@ -354,8 +477,10 @@
         return;
       }
 
-      // ✅ Require items[]
-      let items = Array.isArray(data?.items) ? data.items : (Array.isArray(data?.questions) ? data.questions : []);
+      let items = Array.isArray(data?.items)
+        ? data.items
+        : (Array.isArray(data?.questions) ? data.questions : []);
+
       items = normalizeAndFilterItems(items, selection);
       items = markRwcMultiSelect(items, selection);
 
@@ -366,32 +491,32 @@
           receivedKeys: data && typeof data === "object" ? Object.keys(data) : typeof data,
           dataPreview: data,
           payloadSent: payload,
-          note: "If the response is echoing payload, backend is short-circuiting due to contract mismatch. Payload is now minimized—if echo still happens, backend routing/deploy may be wrong.",
+          bankMode: useBank,
         });
         return;
       }
 
-      // Save these questions as “seen” AFTER successful response
+      // Save as seen AFTER successful response
       addSeen(selection.bookGroupId, items);
 
-      // Render
-      if (typeof window.renderQuiz === "function") {
-        window.renderQuiz(items);
-      } else {
-        qList.textContent = JSON.stringify(items, null, 2);
-      }
+      // Render (includes exhibitImage support via fallback)
+      renderItems(qList, items);
 
       setStatus(`Ready • ${items.length} questions`);
       showDiag({
         ok: true,
+        mode: useBank ? "bank" : "normal",
         message: "✅ Exam generated.",
         itemsCount: items.length,
-        sourcesCount: Array.isArray(data?.sources) ? data.sources.length : 0,
+        hasAnyExhibitImages: !!items.some((q) => (q.exhibitImage || q.imageRef || "").trim()),
         debug: data?.debug || null,
       });
     } catch (e) {
       clearResults(qList);
-      setVisibleError("Error: Exam generation failed.", { error: "genExam failed", message: e?.message || String(e) });
+      setVisibleError("Error: Exam generation failed.", {
+        error: "genExam failed",
+        message: e?.message || String(e),
+      });
     } finally {
       btn.disabled = false;
       btn.classList.remove("busy");
@@ -407,11 +532,8 @@
 
     showDiag("✅ gen-exam.js loaded. Click Generate to test.");
 
-    // Main Generate button = FIRST EXAM
     ui.btn.onclick = () => genExam({ newAttempt: false });
 
-    // "New 25Q Practice Exam" button = NEW ATTEMPT
-    // Note: no-repeat exclusion is currently client-only; backend does not accept excludeQuestions.
     if (!window.__rvNewExamClickWired) {
       window.__rvNewExamClickWired = true;
 
@@ -431,10 +553,8 @@
       });
     }
 
-    // Initialize auth state
     await refreshButtonAuth(ui.btn);
 
-    // Keep auth state accurate on book changes
     window.addEventListener("rv:bookChanged", async () => {
       const ui2 = ensureUI();
       if (ui2?.btn) await refreshButtonAuth(ui2.btn);
