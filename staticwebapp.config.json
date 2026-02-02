@@ -3,9 +3,9 @@
     "identityProviders": {
       "azureActiveDirectory": {
         "registration": {
-          "clientId": "Pc3f95c65-1e20-43b3-a1aa-6c693f58a65c",
-          "clientSecretSettingName": "AAD_CLIENT_SECRET",
-          "openIdIssuer": "https://login.microsoftonline.com/7cabcb45-ad35-4319-8d40-137f881f0d98/v2.0"
+          "openIdIssuer": "https://login.microsoftonline.com/7cabcb45-ad35-4319-8d40-137f881f0d98/v2.0",
+          "clientIdSettingName": "AZURE_CLIENT_ID",
+          "clientSecretSettingName": "AZURE_CLIENT_SECRET"
         }
       }
     }
@@ -23,7 +23,7 @@
     },
     {
       "route": "/api/*",
-      "allowedRoles": [ "anonymous" ]
+      "allowedRoles": ["anonymous"]
     }
   ]
 }
