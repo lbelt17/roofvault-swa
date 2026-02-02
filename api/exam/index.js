@@ -3,8 +3,11 @@
 // - Uses up to 8 parts max (1 top chunk per part) for speed + grounding.
 // - Keeps single-part mode working.
 // - Does NOT return sources[] or cite fields (cleaner + faster).
+//
+// ✅ Quality guardrails added (no "chapter/section/page" questions)
+// ✅ Reject + regenerate safety net (won't return TOC/navigation questions)
 
-const DEPLOY_TAG = "DEPLOY_TAG__2026-02-02__MULTIPART_BOOKWIDE_NO_SOURCES_A";
+const DEPLOY_TAG = "DEPLOY_TAG__2026-02-02__MULTIPART_BOOKWIDE_NO_SOURCES__NO_TOC_QS_B";
 
 process.on("unhandledRejection", (err) => console.error("[unhandledRejection]", err));
 process.on("uncaughtException", (err) => console.error("[uncaughtException]", err));
@@ -57,7 +60,6 @@ function firstTextFromDoc(doc) {
     doc.merged_content ||
     "";
   if (t && String(t).trim()) return String(t);
-  // last resort: safe-ish stringify
   try {
     return JSON.stringify(doc);
   } catch {
@@ -66,7 +68,6 @@ function firstTextFromDoc(doc) {
 }
 
 // Extract a JSON object even if the model wraps it with extra text.
-// We keep this conservative to avoid weird parse failures.
 function extractFirstJsonObject(s) {
   const str = String(s || "");
   const start = str.indexOf("{");
@@ -75,6 +76,91 @@ function extractFirstJsonObject(s) {
   const candidate = str.slice(start, end + 1);
   return safeJsonParse(candidate);
 }
+
+// ---------- Quality guardrails (TOC/navigation ban) ----------
+
+function normalizeText(s) {
+  return String(s || "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function looksLikeTocOrNavigationQuestion(q) {
+  const t = normalizeText(q).toLowerCase();
+
+  // Strong bans: "which chapter", "in chapter 3", "what section", "appendix", "table of contents", etc.
+  const bannedPatterns = [
+    /\bwhich\s+chapter\b/i,
+    /\bwhat\s+chapter\b/i,
+    /\bin\s+chapter\b/i,
+    /\bchapter\s+\d+\b/i,
+    /\bchapter\s+(one|two|three|four|five|six|seven|eight|nine|ten)\b/i,
+
+    /\bwhich\s+section\b/i,
+    /\bwhat\s+section\b/i,
+    /\bin\s+section\b/i,
+    /\bsection\s+\d+(\.\d+)*\b/i,
+
+    /\bappendix\b/i,
+    /\btable\s+of\s+contents\b/i,
+    /\bcontents\s+page\b/i,
+    /\bpage\s+\d+\b/i,
+    /\bfigure\s+\d+\b/i,
+    /\btable\s+\d+\b/i,
+    /\bwhere\s+in\s+the\s+(manual|document|book)\b/i,
+    /\bwhich\s+part\s+of\s+the\s+(manual|document|book)\b/i,
+    /\bwhat\s+is\s+covered\s+in\b/i,
+    /\bdiscuss(?:es|ed)\s+in\s+chapter\b/i,
+  ];
+
+  for (const re of bannedPatterns) {
+    if (re.test(t)) return true;
+  }
+
+  return false;
+}
+
+function looksMalformedMcq(q) {
+  if (!q || typeof q !== "object") return true;
+  const question = normalizeText(q.question);
+  const answer = normalizeText(q.answer);
+  if (!question || !answer) return true;
+  if (!Array.isArray(q.options) || q.options.length < 4) return true;
+
+  // Must have A-D (or at least 4 options)
+  const ids = q.options.map((o) => String(o?.id || "").toUpperCase());
+  const hasA = ids.includes("A");
+  const hasB = ids.includes("B");
+  const hasC = ids.includes("C");
+  const hasD = ids.includes("D");
+  if (!(hasA && hasB && hasC && hasD)) return true;
+
+  if (!["A", "B", "C", "D"].includes(answer.toUpperCase())) return true;
+
+  // Avoid empty option texts
+  for (const o of q.options) {
+    if (!normalizeText(o?.text)) return true;
+  }
+
+  return false;
+}
+
+function normalizeMcq(it, nextId) {
+  return {
+    id: String(nextId),
+    type: "mcq",
+    question: normalizeText(it?.question),
+    options: Array.isArray(it?.options)
+      ? it.options.map((o) => ({
+          id: String(o?.id || "").toUpperCase().trim(),
+          text: normalizeText(o?.text),
+        }))
+      : [],
+    answer: normalizeText(it?.answer).toUpperCase(),
+  };
+}
+
+// ---------- Main ----------
 
 module.exports = async function (context, req) {
   try {
@@ -136,7 +222,6 @@ module.exports = async function (context, req) {
     const hitsByPart = [];
     for (const partName of parts) {
       const searchPayload = {
-        // Keep it simple and stable; this matches your existing approach.
         search: partName,
         top: 1,
         queryType: "simple",
@@ -166,12 +251,10 @@ module.exports = async function (context, req) {
       hitsByPart.push({ partName, doc: docs[0] || null });
     }
 
-    // Build a compact grounded context (no SOURCE labels).
-    // Keep under ~11k chars to avoid huge prompts.
+    // Build compact grounded context
     const contextPieces = [];
     for (const { partName, doc } of hitsByPart) {
       const text = doc ? firstTextFromDoc(doc) : "(No search hit returned for this part query.)";
-      // cap each part chunk
       const chunk = String(text).slice(0, 2400);
       contextPieces.push(`PART: ${partName}\n${chunk}`);
     }
@@ -196,19 +279,28 @@ module.exports = async function (context, req) {
       "Output MUST be valid JSON only (no markdown, no extra text).",
       "Questions must be grounded ONLY in the provided CONTEXT.",
       "Do not invent facts not present in CONTEXT.",
+      "",
+      "QUALITY RULES (STRICT):",
+      "- Do NOT write questions about chapter numbers, sections, appendices, page numbers, figure/table numbers, or where information appears in the document.",
+      "- Do NOT ask 'which chapter/section' or 'what is covered in chapter X'.",
+      "- Ask applied, real-world knowledge questions based on the content (definitions, requirements, procedures, calculations/loads if present, best practices, failure modes).",
+      "- If the CONTEXT includes headings like 'Chapter 3' or a table of contents, ignore them and focus on the technical content.",
     ].join(" ");
 
     const BATCH_SIZE = 6;
-    const batchesPlanned = Math.ceil(desiredCount / BATCH_SIZE);
+
+    // Regeneration safety cap (prevents infinite loops)
+    // We'll try a bit harder than before to ensure we fill desiredCount with valid items.
+    const MAX_TOTAL_CALLS = Math.max(6, Math.ceil(desiredCount / BATCH_SIZE) + 6);
 
     const items = [];
-    for (let b = 0; b < batchesPlanned; b++) {
-      const remaining = desiredCount - items.length;
-      if (remaining <= 0) break;
+    let totalCalls = 0;
 
+    while (items.length < desiredCount && totalCalls < MAX_TOTAL_CALLS) {
+      const remaining = desiredCount - items.length;
       const want = Math.min(BATCH_SIZE, remaining);
 
-      // Keep "already used" small to reduce token bloat; last ~20 is enough to avoid repeats.
+      // Avoid list: last ~20 questions to reduce repeats
       const avoid = items.slice(-20).map((q) => `- ${q.question}`).join("\n");
 
       const user = `
@@ -217,9 +309,12 @@ Create ${want} multiple-choice questions from the CONTEXT below.
 Output ONLY JSON with this exact shape:
 { "items": [ { "id":"1", "type":"mcq", "question":"...", "options":[{"id":"A","text":"..."},{"id":"B","text":"..."},{"id":"C","text":"..."},{"id":"D","text":"..."}], "answer":"A" } ] }
 
-Rules:
+STRICT RULES:
 - Questions must be grounded in CONTEXT only.
-- Keep questions specific and useful.
+- Do NOT invent facts not present in CONTEXT.
+- Do NOT ask about: chapter numbers, sections, appendices, page numbers, figure/table numbers, or "where in the document" something is.
+- Do NOT ask "Which chapter/section..." or "What is covered in chapter..."
+- Prefer applied roofing questions: definitions, installation requirements, materials behavior, drainage/flashings, fastening, underlayment, detailing, design/load concepts if present, safety/quality requirements if present.
 - Do NOT repeat previous questions.
 
 BOOK / PARTS:
@@ -237,9 +332,11 @@ ${avoid}
           { role: "system", content: system },
           { role: "user", content: user },
         ],
-        temperature: 0.4,
+        temperature: 0.3,
         max_tokens: 1100,
       };
+
+      totalCalls += 1;
 
       const aoaiResp = await fetch(aoaiUrl, {
         method: "POST",
@@ -253,7 +350,7 @@ ${avoid}
           ok: false,
           deployTag: DEPLOY_TAG,
           stage: "aoai",
-          batch: b + 1,
+          call: totalCalls,
           error: `AOAI failed: HTTP ${aoaiResp.status}`,
           raw: aoaiText.slice(0, 2000),
         });
@@ -264,35 +361,31 @@ ${avoid}
       const parsed = extractFirstJsonObject(content) || safeJsonParse(content);
 
       if (!parsed?.items || !Array.isArray(parsed.items)) {
-        return jsonRes(context, 500, {
-          ok: false,
-          deployTag: DEPLOY_TAG,
-          stage: "parse",
-          batch: b + 1,
-          error: "Model returned invalid JSON.",
-          raw: String(content).slice(0, 2000),
-        });
+        // If the model glitched, keep stability: try again until cap
+        continue;
       }
 
       for (const it of parsed.items) {
         if (items.length >= desiredCount) break;
 
-        // Enforce expected shape lightly (stability)
-        const q = {
-          id: String(items.length + 1),
-          type: "mcq",
-          question: String(it?.question || "").trim(),
-          options: Array.isArray(it?.options) ? it.options : [],
-          answer: String(it?.answer || "").trim(),
-        };
+        const q = normalizeMcq(it, items.length + 1);
 
-        // Skip malformed entries rather than failing the whole request.
-        if (!q.question || !q.options?.length || !q.answer) continue;
+        // Skip malformed
+        if (looksMalformedMcq(q)) continue;
+
+        // Hard-ban TOC/navigation questions
+        if (looksLikeTocOrNavigationQuestion(q.question)) continue;
+
+        // Light de-dupe guard
+        const key = q.question.toLowerCase();
+        const dup = items.some((x) => x.question.toLowerCase() === key);
+        if (dup) continue;
 
         items.push(q);
       }
     }
 
+    // If we still couldn't fill (rare), return what we have but be explicit in debug.
     const partLabel = parts.length === 1 ? parts[0] : `${parts[0]} (+${parts.length - 1} more parts)`;
 
     return jsonRes(context, 200, {
@@ -305,10 +398,11 @@ ${avoid}
         contextChars: groundedContext.length,
         desiredCount,
         batchSize: BATCH_SIZE,
-        batchesPlanned,
-        batchesUsed: Math.ceil(items.length / BATCH_SIZE),
+        callsUsed: totalCalls,
         partsUsed: parts.length,
         partsTruncated: Math.max(0, partsAll.length - parts.length),
+        filteredTocQPolicy: true,
+        returnedCount: items.length,
       },
       items,
     });
