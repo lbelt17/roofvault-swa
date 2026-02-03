@@ -51,7 +51,6 @@
 
   // ---------- Quality helpers (safe UI-only) ----------
   function normalizeText(s) {
-    // Normalize unicode (handles “smart” punctuation), lower-case, strip punctuation-ish, collapse whitespace.
     return String(s || "")
       .normalize("NFKC")
       .toLowerCase()
@@ -62,19 +61,13 @@
   }
 
   function fingerprintItem(item) {
-    // Primary key: normalized question text
     const q = normalizeText(item && item.question);
-
-    // Secondary: include option texts to reduce false positives when different questions share similar stems
     const opts = Array.isArray(item && item.options) ? item.options : [];
     const optSig = opts
       .map((o) => normalizeText((o && o.text) || ""))
       .filter(Boolean)
       .join("|");
-
-    // Include exhibit ref (rare, but helps prevent collisions)
     const img = normalizeText((item && (item.imageRef || item.exhibitImage)) || "");
-
     return `${q}::${optSig}::${img}`;
   }
 
@@ -86,7 +79,6 @@
     for (const it of items) {
       const key = fingerprintItem(it);
 
-      // If question is empty, don't dedupe it (keep as-is)
       if (!normalizeText(it && it.question)) {
         kept.push(it);
         continue;
@@ -101,6 +93,36 @@
     }
 
     return { kept, removed };
+  }
+
+  // NEW: shuffle questions so "New 25Q" feels fresh even for bank mode
+  function cryptoRandInt(maxExclusive) {
+    // maxExclusive must be > 0
+    if (maxExclusive <= 1) return 0;
+    if (window.crypto && window.crypto.getRandomValues) {
+      const buf = new Uint32Array(1);
+      // Avoid modulo bias (simple rejection sampling)
+      const limit = Math.floor(0xffffffff / maxExclusive) * maxExclusive;
+      let x;
+      do {
+        window.crypto.getRandomValues(buf);
+        x = buf[0];
+      } while (x >= limit);
+      return x % maxExclusive;
+    }
+    // Fallback (still fine for demo)
+    return Math.floor(Math.random() * maxExclusive);
+  }
+
+  function shuffleCopy(arr) {
+    const a = Array.isArray(arr) ? arr.slice() : [];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = cryptoRandInt(i + 1);
+      const tmp = a[i];
+      a[i] = a[j];
+      a[j] = tmp;
+    }
+    return a;
   }
 
   // ---------- Scoring helpers ----------
@@ -124,12 +146,10 @@
   // Global-ish state for the current exam
   const ExamState = {
     items: [],
-    results: [], // { answered: bool, correct: bool }
+    results: [],
     currentIndex: 0,
-    // metadata for citations
     sourceTitle: null,
     sourceYear: null,
-    // UI-only quality info
     dedupeRemoved: 0
   };
 
@@ -138,11 +158,8 @@
     if (!p) {
       p = el("div", { id: "examProgress", class: "rv-progress" });
       const qList = $("qList");
-      if (qList && qList.parentElement) {
-        qList.parentElement.appendChild(p);
-      } else {
-        document.body.appendChild(p);
-      }
+      if (qList && qList.parentElement) qList.parentElement.appendChild(p);
+      else document.body.appendChild(p);
     }
     return p;
   }
@@ -161,9 +178,7 @@
     }
 
     const dedupeNote =
-      ExamState.dedupeRemoved > 0
-        ? ` • Deduped: ${ExamState.dedupeRemoved}`
-        : "";
+      ExamState.dedupeRemoved > 0 ? ` • Deduped: ${ExamState.dedupeRemoved}` : "";
 
     if (!answered) {
       p.textContent = `Progress: 0 / ${total} answered • Current score: 0 / 0 (0%) • Grade: -${dedupeNote}`;
@@ -172,7 +187,6 @@
     }
   }
 
-  // ---------- Summary / finish screen ----------
   function renderSummary(mount) {
     const total = ExamState.items.length || 0;
     const answered = ExamState.results.filter((r) => r.answered).length;
@@ -194,10 +208,7 @@
     });
 
     const actions = el("div", { class: "rv-summary-actions" });
-    const newBtn = el("button", {
-      class: "rv-nav",
-      text: "New 25Q Practice Exam"
-    });
+    const newBtn = el("button", { class: "rv-nav", text: "New 25Q Practice Exam" });
 
     newBtn.onclick = () => {
       const genBtn = document.getElementById("btnGenExam50ByBook");
@@ -211,23 +222,19 @@
     };
 
     actions.appendChild(newBtn);
-
     box.appendChild(big);
     box.appendChild(line1);
     box.appendChild(line2);
     box.appendChild(actions);
-
     mount.appendChild(box);
   }
 
-  // ---------- Core renderer ----------
   function renderOne(mount, item, idx, total, onNav, onFinish) {
     mount.innerHTML = "";
 
     const optionsArr = Array.isArray(item.options) ? item.options : [];
     const hasOptions = optionsArr.length > 0;
 
-    // Correct letters / multi-select metadata
     let correctLetters = [];
     const correctIdxs = Array.isArray(item.correctIndexes) ? item.correctIndexes : [];
 
@@ -269,7 +276,6 @@
     const box = el("div", { class: "rv-q" });
     const title = el("h3", { text: item.question || "(no question)" });
 
-    // Build a nice tag line with question number, book source, and optional per-question ref
     const tagParts = [`Question ${idx + 1} of ${total}`];
 
     if (ExamState.sourceTitle) {
@@ -280,27 +286,16 @@
       }
     }
 
-    // Keep any short citation/ref string coming from the backend, if present
-    if (item.cite) {
-      tagParts.push(`Ref: ${item.cite}`);
-    }
-
-    if (isMulti) {
-      tagParts.push(`Multi-select: choose ${expectedSelectionsRaw}`);
-    }
+    if (item.cite) tagParts.push(`Ref: ${item.cite}`);
+    if (isMulti) tagParts.push(`Multi-select: choose ${expectedSelectionsRaw}`);
 
     const tag = el("div", { class: "rv-tag", text: tagParts.join(" • ") });
 
     box.appendChild(title);
 
-    // Show exhibit image if present (imageRef or exhibitImage)
     const imgSrc = item.imageRef || item.exhibitImage;
     if (imgSrc) {
-      const img = el("img", {
-        src: imgSrc,
-        alt: "Exhibit image",
-        class: "rv-img"
-      });
+      const img = el("img", { src: imgSrc, alt: "Exhibit image", class: "rv-img" });
       const cap = el("div", {
         class: "rv-img-caption",
         text: "Refer to this exhibit while answering the question."
@@ -330,11 +325,10 @@
     };
 
     const selectedLetters = [];
-
     function toggleSelection(letter, btnEl) {
-      const idx = selectedLetters.indexOf(letter);
-      if (idx >= 0) {
-        selectedLetters.splice(idx, 1);
+      const i = selectedLetters.indexOf(letter);
+      if (i >= 0) {
+        selectedLetters.splice(i, 1);
         btnEl.classList.remove("selected");
       } else {
         selectedLetters.push(letter);
@@ -342,7 +336,6 @@
       }
     }
 
-    // If this question has no options, show a note and don't try to grade it.
     if (!hasOptions) {
       const msg = el("div", {
         class: "rv-hint",
@@ -351,21 +344,18 @@
       });
       box.appendChild(msg);
     } else {
-      // Build answer buttons
-      (optionsArr || []).forEach((opt) => {
+      optionsArr.forEach((opt) => {
         const letter = String(opt.id || "").trim().toUpperCase();
         const b = el("button", { class: "rv-btn" });
         b.setAttribute("data-letter", letter);
         b.innerHTML = `<strong>${letter}.</strong> ${opt.text || ""}`;
 
         if (isMulti) {
-          // Multi-select: toggle, grading happens on "Check answer"
           b.onclick = () => {
             if (answeredHere) return;
             toggleSelection(letter, b);
           };
         } else {
-          // Single-choice: grade immediately on click
           b.onclick = () => {
             if (answeredHere) return;
             answeredHere = true;
@@ -374,25 +364,18 @@
 
             [...optsWrap.querySelectorAll(".rv-btn")].forEach((btn) => {
               const l = String(btn.getAttribute("data-letter") || "").toUpperCase();
-
-              if (correctSet.has(l)) {
-                btn.classList.add("correct");
-              }
-              if (!correctSet.has(l) && l === chosenLetter) {
-                btn.classList.add("incorrect");
-              }
+              if (correctSet.has(l)) btn.classList.add("correct");
+              if (!correctSet.has(l) && l === chosenLetter) btn.classList.add("incorrect");
               btn.disabled = true;
             });
 
-            if (!isChosenCorrect) {
-              exp.textContent = item.explanation || "No explanation provided.";
-              exp.style.display = "block";
-              expShown = true;
-            } else {
-              exp.textContent = "Correct!";
-              exp.style.display = "block";
-              exp.appendChild(whyBtn);
-            }
+            exp.textContent = isChosenCorrect
+              ? "Correct!"
+              : (item.explanation || "No explanation provided.");
+            exp.style.display = "block";
+
+            if (isChosenCorrect) exp.appendChild(whyBtn);
+            else expShown = true;
 
             ExamState.results[idx].answered = true;
             ExamState.results[idx].correct = isChosenCorrect;
@@ -409,7 +392,6 @@
 
     const ctrls = el("div", { class: "rv-ctr" });
 
-    // Multi-select "Check answer" button (only if we have options)
     if (isMulti && hasOptions) {
       const checkBtn = el("button", { class: "rv-nav", text: "Check answer" });
       checkBtn.onclick = () => {
@@ -432,28 +414,18 @@
         [...optsWrap.querySelectorAll(".rv-btn")].forEach((btn) => {
           const l = String(btn.getAttribute("data-letter") || "").toUpperCase();
           btn.classList.remove("selected");
-
-          if (correctSet.has(l)) {
-            btn.classList.add("correct");
-          }
-          if (!correctSet.has(l) && selSet.has(l)) {
-            btn.classList.add("incorrect");
-          }
-
+          if (correctSet.has(l)) btn.classList.add("correct");
+          if (!correctSet.has(l) && selSet.has(l)) btn.classList.add("incorrect");
           btn.disabled = true;
         });
 
-        if (allCorrect) {
-          exp.textContent = "Correct!";
-          exp.style.display = "block";
-          exp.appendChild(whyBtn);
-        } else {
-          exp.textContent =
-            item.explanation ||
-            "Review the correct combination based on the study guide.";
-          exp.style.display = "block";
-          expShown = true;
-        }
+        exp.textContent = allCorrect
+          ? "Correct!"
+          : (item.explanation || "Review the correct combination based on the study guide.");
+        exp.style.display = "block";
+
+        if (allCorrect) exp.appendChild(whyBtn);
+        else expShown = true;
 
         ExamState.results[idx].answered = true;
         ExamState.results[idx].correct = allCorrect;
@@ -464,16 +436,12 @@
 
     const backBtn = el("button", { class: "rv-nav", text: "Back" });
     const isLast = idx === total - 1;
-    const nextLabel = isLast ? "Finish" : "Next";
-    const nextBtn = el("button", { class: "rv-nav", text: nextLabel });
+    const nextBtn = el("button", { class: "rv-nav", text: isLast ? "Finish" : "Next" });
 
     backBtn.onclick = () => onNav(idx - 1);
     nextBtn.onclick = () => {
-      if (isLast && typeof onFinish === "function") {
-        onFinish();
-      } else {
-        onNav(idx + 1);
-      }
+      if (isLast && typeof onFinish === "function") onFinish();
+      else onNav(idx + 1);
     };
 
     ctrls.appendChild(backBtn);
@@ -503,20 +471,17 @@
       return;
     }
 
-    // UI-only: remove exact/near-identical duplicates for a cleaner exam (does NOT touch backend)
-    const { kept, removed } = dedupeItems(items);
-    ExamState.dedupeRemoved = removed;
+    // NEW: shuffle first so “New 25Q” doesn’t feel identical (especially bank mode)
+    const shuffled = shuffleCopy(items);
 
-    // Keep behavior stable: render what we have (no extra API calls)
-    if (removed > 0) {
-      console.warn(`[RoofVault Exam] Deduped ${removed} repeated question(s) in UI.`);
-    }
+    // UI-only: remove duplicates after shuffle (keeps variety high)
+    const { kept, removed } = dedupeItems(shuffled);
+    ExamState.dedupeRemoved = removed;
 
     ExamState.items = kept;
     ExamState.results = kept.map(() => ({ answered: false, correct: false }));
     ExamState.currentIndex = 0;
 
-    // NEW: work out the book source title/year for this quiz, so each question can show it
     try {
       const selectedBook = window.getSelectedBook ? window.getSelectedBook() : null;
       const meta =
