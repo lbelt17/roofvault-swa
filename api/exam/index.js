@@ -7,7 +7,7 @@
 // ✅ Quality guardrails added (no "chapter/section/page" questions)
 // ✅ Reject + regenerate safety net (won't return TOC/navigation questions)
 //
-// ✅ DEMO/TEST: GET /api/exam?bank=rwc&count=25 returns the RWC question bank (incl. exhibit images)
+// ✅ GET /api/exam?bank=rwc&count=25 returns RANDOM unique questions from the RWC bank (incl. exhibit images)
 //    (Does NOT affect POST behavior)
 
 const DEPLOY_TAG =
@@ -159,7 +159,7 @@ function normalizeMcq(it, nextId) {
   };
 }
 
-// ---------- Bank loader (RWC) ----------
+// ---------- Bank loader + sampling (RWC) ----------
 
 function safeInt(n, fallback) {
   const x = parseInt(String(n ?? ""), 10);
@@ -167,13 +167,47 @@ function safeInt(n, fallback) {
 }
 
 function loadRwcBank() {
-  // File path: api/exam/rwc-question-bank-full.js
-  // Must export object with { book, questions: [...] }
-  // (Your file already does module.exports = RWC_QUESTION_BANK_FULL;)
-  // If this require fails, we return null and expose error in GET response.
-  // NOTE: require is cached; good for performance.
   // eslint-disable-next-line global-require
   return require("./rwc-question-bank-full.js");
+}
+
+// crypto-safe random int in [0, maxExclusive)
+function randInt(maxExclusive) {
+  if (maxExclusive <= 1) return 0;
+
+  try {
+    // Azure Functions Node supports global crypto in modern runtimes, but not guaranteed.
+    // Use whichever is available.
+    // eslint-disable-next-line no-undef
+    const c = typeof crypto !== "undefined" ? crypto : null;
+    if (c && typeof c.getRandomValues === "function") {
+      const buf = new Uint32Array(1);
+      const limit = Math.floor(0xffffffff / maxExclusive) * maxExclusive;
+      let x;
+      do {
+        c.getRandomValues(buf);
+        x = buf[0];
+      } while (x >= limit);
+      return x % maxExclusive;
+    }
+  } catch {
+    // fall through to Math.random
+  }
+
+  return Math.floor(Math.random() * maxExclusive);
+}
+
+// Sample N unique items without replacement (Fisher-Yates partial shuffle)
+function sampleUnique(arr, n) {
+  const a = Array.isArray(arr) ? arr.slice() : [];
+  const take = Math.min(Math.max(n, 0), a.length);
+  for (let i = 0; i < take; i += 1) {
+    const j = i + randInt(a.length - i);
+    const tmp = a[i];
+    a[i] = a[j];
+    a[j] = tmp;
+  }
+  return a.slice(0, take);
 }
 
 // ---------- Main ----------
@@ -185,14 +219,16 @@ module.exports = async function (context, req) {
       const bank = String(req.query?.bank || "").toLowerCase();
       const count = Math.min(Math.max(safeInt(req.query?.count, 25), 1), 200);
 
-      // DEMO/TEST: return RWC bank (so you can confirm exhibit images are coming through)
       if (bank === "rwc") {
         try {
           const bankObj = loadRwcBank();
           const questions = Array.isArray(bankObj?.questions) ? bankObj.questions : [];
 
-          // Return BOTH exhibitImage + imageRef for compatibility with whatever the UI expects.
-          const items = questions.slice(0, count).map((q, idx) => ({
+          // ✅ TRUE FIX: sample unique random questions each request
+          const sampled = sampleUnique(questions, count);
+
+          // Return BOTH exhibitImage + imageRef for compatibility with UI.
+          const items = sampled.map((q, idx) => ({
             id: String(q.id || idx + 1),
             type: q.type || "mcq",
             question: q.question || "",
@@ -203,7 +239,6 @@ module.exports = async function (context, req) {
             expectedSelections: q.expectedSelections,
             cite: q.cite || bankObj?.book || "RWC Bank",
             explanation: q.explanation || "",
-            // compatibility
             exhibitImage: q.exhibitImage || "",
             imageRef: q.imageRef || q.exhibitImage || "",
           }));
@@ -216,6 +251,7 @@ module.exports = async function (context, req) {
             book: bankObj?.book || "IIBEC - RWC Study Guide.docx",
             countRequested: count,
             returned: items.length,
+            bankTotal: questions.length,
             hasAnyExhibitImages: items.some((x) => !!x.exhibitImage || !!x.imageRef),
             items,
           });
@@ -238,7 +274,7 @@ module.exports = async function (context, req) {
         method: "GET",
         hint: 'POST { "parts":["<part1>","<part2>"], "count":25 }',
         note:
-          "Exam endpoint is multi-part grounded; sources are not returned. For RWC bank test: GET /api/exam?bank=rwc&count=25",
+          "Exam endpoint is multi-part grounded; sources are not returned. For RWC bank: GET /api/exam?bank=rwc&count=25",
       });
     }
 
