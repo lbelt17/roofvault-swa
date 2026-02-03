@@ -91,48 +91,23 @@
     return { bookMount, qList, btn };
   }
 
-  // ================== DEMO MODE FLAG ==================
-  // Prefer a global set by exams.html.
-  // If not present, default false (normal behavior).
-  function isDemoMode() {
-    return window.DEMO_MODE_DISABLE_EXAM_AUTH === true;
+  // ================== DEMO / AUTH (DISABLED) ==================
+// For demo stability: exam generation is ALWAYS allowed.
+// No auth, no subscription, no async checks, no button locking.
+
+function isDemoMode() {
+  return true;
+}
+
+async function refreshButtonAuth(btn) {
+  if (btn) {
+    btn.disabled = false;
+    btn.title = "Generate a 25-question practice exam.";
+    btn.style.cursor = "pointer";
   }
+  return true;
+}
 
-  // ================== AUTH ==================
-  async function refreshButtonAuth(btn) {
-    // DEMO MODE: always allow
-    if (isDemoMode()) {
-      btn.disabled = false;
-      btn.title = "";
-      return true;
-    }
-
-    try {
-      if (typeof window.getAuthState !== "function") {
-        btn.disabled = true;
-        btn.title = "Auth system not loaded (getAuthState missing).";
-        showDiag({
-          error: "getAuthState is not defined on this page.",
-          fix: "Make sure your auth script is loaded before gen-exam.js OR enable demo mode via window.DEMO_MODE_DISABLE_EXAM_AUTH = true.",
-        });
-        return false;
-      }
-
-      const auth = await window.getAuthState();
-      const ok = !!auth?.isAuthenticated;
-
-      btn.disabled = !ok;
-      btn.title = ok ? "" : "Please log in to generate exams.";
-
-      if (!ok) showDiag({ message: "Not logged in.", auth });
-      return ok;
-    } catch (e) {
-      btn.disabled = true;
-      btn.title = "Auth check failed.";
-      showDiag({ error: "refreshButtonAuth failed", message: e?.message || String(e) });
-      return false;
-    }
-  }
 
   // ================== BOOK SELECTION ==================
   function getBookSelection() {
