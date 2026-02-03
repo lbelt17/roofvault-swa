@@ -49,6 +49,60 @@
     return n;
   }
 
+  // ---------- Quality helpers (safe UI-only) ----------
+  function normalizeText(s) {
+    // Normalize unicode (handles “smart” punctuation), lower-case, strip punctuation-ish, collapse whitespace.
+    return String(s || "")
+      .normalize("NFKC")
+      .toLowerCase()
+      .replace(/[\u2018\u2019\u201C\u201D]/g, '"')
+      .replace(/[^a-z0-9\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function fingerprintItem(item) {
+    // Primary key: normalized question text
+    const q = normalizeText(item && item.question);
+
+    // Secondary: include option texts to reduce false positives when different questions share similar stems
+    const opts = Array.isArray(item && item.options) ? item.options : [];
+    const optSig = opts
+      .map((o) => normalizeText((o && o.text) || ""))
+      .filter(Boolean)
+      .join("|");
+
+    // Include exhibit ref (rare, but helps prevent collisions)
+    const img = normalizeText((item && (item.imageRef || item.exhibitImage)) || "");
+
+    return `${q}::${optSig}::${img}`;
+  }
+
+  function dedupeItems(items) {
+    const seen = new Set();
+    const kept = [];
+    let removed = 0;
+
+    for (const it of items) {
+      const key = fingerprintItem(it);
+
+      // If question is empty, don't dedupe it (keep as-is)
+      if (!normalizeText(it && it.question)) {
+        kept.push(it);
+        continue;
+      }
+
+      if (seen.has(key)) {
+        removed += 1;
+        continue;
+      }
+      seen.add(key);
+      kept.push(it);
+    }
+
+    return { kept, removed };
+  }
+
   // ---------- Scoring helpers ----------
   function letterGrade(pct) {
     if (isNaN(pct)) return "-";
@@ -72,11 +126,12 @@
     items: [],
     results: [], // { answered: bool, correct: bool }
     currentIndex: 0,
-    // New: metadata for citations
+    // metadata for citations
     sourceTitle: null,
-    sourceYear: null
+    sourceYear: null,
+    // UI-only quality info
+    dedupeRemoved: 0
   };
-
 
   function ensureProgressElement() {
     let p = $("examProgress");
@@ -105,10 +160,15 @@
       return;
     }
 
+    const dedupeNote =
+      ExamState.dedupeRemoved > 0
+        ? ` • Deduped: ${ExamState.dedupeRemoved}`
+        : "";
+
     if (!answered) {
-      p.textContent = `Progress: 0 / ${total} answered • Current score: 0 / 0 (0%) • Grade: -`;
+      p.textContent = `Progress: 0 / ${total} answered • Current score: 0 / 0 (0%) • Grade: -${dedupeNote}`;
     } else {
-      p.innerHTML = `Progress: <strong>${answered} / ${total}</strong> answered • Current score: <strong>${correct} / ${answered}</strong> (${pct}%) • Grade: <strong>${grade}</strong>`;
+      p.innerHTML = `Progress: <strong>${answered} / ${total}</strong> answered • Current score: <strong>${correct} / ${answered}</strong> (${pct}%) • Grade: <strong>${grade}</strong>${dedupeNote}`;
     }
   }
 
@@ -230,7 +290,6 @@
     }
 
     const tag = el("div", { class: "rv-tag", text: tagParts.join(" • ") });
-
 
     box.appendChild(title);
 
@@ -439,14 +498,25 @@
       mount.textContent = "(No items)";
       ExamState.items = [];
       ExamState.results = [];
+      ExamState.dedupeRemoved = 0;
       updateProgress();
       return;
     }
 
-    ExamState.items = items;
-    ExamState.results = items.map(() => ({ answered: false, correct: false }));
+    // UI-only: remove exact/near-identical duplicates for a cleaner exam (does NOT touch backend)
+    const { kept, removed } = dedupeItems(items);
+    ExamState.dedupeRemoved = removed;
+
+    // Keep behavior stable: render what we have (no extra API calls)
+    if (removed > 0) {
+      console.warn(`[RoofVault Exam] Deduped ${removed} repeated question(s) in UI.`);
+    }
+
+    ExamState.items = kept;
+    ExamState.results = kept.map(() => ({ answered: false, correct: false }));
     ExamState.currentIndex = 0;
-// NEW: work out the book source title/year for this quiz, so each question can show it
+
+    // NEW: work out the book source title/year for this quiz, so each question can show it
     try {
       const selectedBook = window.getSelectedBook ? window.getSelectedBook() : null;
       const meta =
@@ -463,6 +533,7 @@
       ExamState.sourceTitle = "Selected book";
       ExamState.sourceYear = "Year not specified";
     }
+
     const nav = (next) => {
       const lastIdx = ExamState.items.length - 1;
       if (next < 0) next = 0;
