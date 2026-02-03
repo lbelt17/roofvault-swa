@@ -39,7 +39,6 @@
       margin: 0;
       min-height: 100vh;
 
-      /* Match homepage vibe */
       background:
         radial-gradient(1200px 800px at 25% 0%, rgba(33,179,255,0.14), transparent 60%),
         radial-gradient(900px 700px at 70% 10%, rgba(104,64,255,0.12), transparent 62%),
@@ -51,7 +50,6 @@
       justify-content: flex-start;
     }
 
-    /* ---------- Top auth/nav (kept; cosmetics only) ---------- */
     header {
       width: 100%;
       padding: 6px 2px 0;
@@ -99,17 +97,6 @@
       justify-content: flex-end;
     }
 
-    .user-label { color: var(--muted); }
-
-    .tier-pill {
-      padding: 5px 10px;
-      border-radius: 999px;
-      background: rgba(15, 19, 30, 0.78);
-      border: 1px solid rgba(120, 135, 170, 0.45);
-      color: var(--muted);
-      backdrop-filter: blur(10px);
-    }
-
     .btn {
       padding: 7px 11px;
       border-radius: 999px;
@@ -128,9 +115,6 @@
     .btn-text { border-color: transparent; background: transparent; color: var(--muted); }
     .btn-text:hover { color: rgba(232,237,246,0.85); }
 
-    .hidden { display: none; }
-
-    /* ---------- Main shell (homepage-like centered module panel) ---------- */
     .shell {
       width: min(1040px, 100%);
       margin-top: 14px;
@@ -215,7 +199,6 @@
       color: #a2b7ff;
     }
 
-    /* ---------- Sections (clean cards) ---------- */
     .grid {
       display: grid;
       grid-template-columns: 1fr;
@@ -252,7 +235,6 @@
 
     #bookMount { margin: 6px 0 0; }
 
-    /* Buttons */
     .controls-row {
       display: flex;
       align-items: center;
@@ -296,7 +278,6 @@
       filter: brightness(1.02);
     }
 
-    /* Status + error (demo-safe; no logic changes required) */
     .statusbar {
       margin-top: 12px;
       display: flex;
@@ -311,7 +292,7 @@
       padding: 10px 12px;
       font-size: 12px;
       color: var(--muted);
-      display: none; /* shown if any script toggles it later */
+      display: none;
     }
 
     .status strong { color: rgba(232,237,246,0.88); }
@@ -323,10 +304,9 @@
       padding: 10px 12px;
       font-size: 12px;
       color: rgba(255, 199, 208, 0.90);
-      display: none; /* shown if any script toggles it later */
+      display: none;
     }
 
-    /* Question list container (cleaner, less "dev panel") */
     #qList {
       margin-top: 12px;
       background: rgba(10, 12, 18, 0.55);
@@ -342,17 +322,6 @@
 
     .q-empty { color: var(--muted); }
 
-    .q-item {
-      margin-bottom: 10px;
-      padding: 10px 10px;
-      border-radius: 12px;
-      background: rgba(14, 17, 25, 0.86);
-      border: 1px solid rgba(90,105,140,0.28);
-    }
-
-    .q-item strong { color: #f6f7ff; }
-
-    /* Diagnostics: keep node for scripts, but hide for demo */
     #diag {
       display: none !important;
       visibility: hidden !important;
@@ -381,7 +350,6 @@
 </head>
 
 <body>
-  <!-- Top auth bar (kept; cosmetics only) -->
   <header>
     <div class="nav">
       <div class="nav-left">
@@ -393,15 +361,11 @@
       </div>
 
       <div class="nav-right">
-  <button id="btnBackHome" class="btn btn-text">
-    ⬅ Back to Library
-  </button>
-</div>
-
+        <button id="btnBackHome" class="btn btn-text">⬅ Back to Library</button>
+      </div>
     </div>
   </header>
 
-  <!-- Main panel -->
   <main class="shell">
     <div class="hero">
       <div class="hero-left">
@@ -419,7 +383,6 @@
     </div>
 
     <div class="grid">
-      <!-- Book selection -->
       <section class="card" aria-label="choose a book">
         <div class="card-head">
           <div class="card-title">1. Choose a book</div>
@@ -428,7 +391,6 @@
         <div id="bookMount"></div>
       </section>
 
-      <!-- Generate + output -->
       <section class="card" aria-label="generate exam">
         <div class="card-head">
           <div class="card-title">2. Generate</div>
@@ -441,7 +403,6 @@
           </button>
         </div>
 
-        <!-- Dedicated status + error areas (safe; scripts may toggle later) -->
         <div class="statusbar" aria-label="status and errors">
           <div id="genStatus" class="status"><strong>Generating…</strong> This can take a moment.</div>
           <div id="genError" class="error">Something went wrong. Please try again.</div>
@@ -453,7 +414,6 @@
           </div>
         </div>
 
-        <!-- Diagnostics node kept for scripts, hidden for demo -->
         <pre id="diag">Ready.</pre>
 
         <div class="footer-hint">
@@ -463,73 +423,29 @@
     </div>
   </main>
 
-  <!-- Existing logic (unchanged) -->
+  <!-- Core scripts (keep existing behavior) -->
   <script src="/interactive-exam.js?v=4"></script>
   <script src="/books.js?v=4"></script>
-  <script src="auth.js?v=1"></script>
   <script src="/gen-exam.js?v=4"></script>
 
-  <!-- Auth + navigation wiring (DEMO MODE: exam auth disabled) -->
-<script>
-  // ===== DEMO MODE FLAG =====
-  // Set to false after demo to re-enable auth gating
-  const DEMO_MODE_DISABLE_EXAM_AUTH = true;
+  <!-- Demo-safe navigation + ensure initial button is enabled -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const btnBackHome = document.getElementById('btnBackHome');
+      if (btnBackHome) {
+        btnBackHome.addEventListener('click', function () {
+          window.location.href = 'library.html';
+        });
+      }
 
-  function updateExamAccess(isLoggedIn) {
-    // Correct button ID used by gen-exam.js
-    const genBtn = document.getElementById('btnGenExam25ByBook');
-    if (!genBtn) return;
-
-    // DEMO MODE: always allow generating exams
-    if (DEMO_MODE_DISABLE_EXAM_AUTH) {
-      genBtn.disabled = false;
-      genBtn.title = 'Generate a 25-question practice exam.';
-      genBtn.style.cursor = 'pointer';
-      return;
-    }
-
-    // Normal behavior (post-demo)
-    if (isLoggedIn) {
-      genBtn.disabled = false;
-      genBtn.title = 'Generate a 25-question practice exam.';
-      genBtn.style.cursor = 'pointer';
-    } else {
-      genBtn.disabled = true;
-      genBtn.title = 'Please log in to generate exams.';
-      genBtn.style.cursor = 'not-allowed';
-    }
-  }
-
-  async function loadAuthState() {
-    // DEMO MODE: skip auth fetch entirely
-    if (DEMO_MODE_DISABLE_EXAM_AUTH) {
-      updateExamAccess(true);
-      return;
-    }
-
-    try {
-      const res = await fetch('/api/auth-me', { credentials: 'include' });
-      if (!res.ok) throw new Error('No auth info');
-      const data = await res.json();
-      updateExamAccess(!!data.isLoggedIn);
-    } catch (err) {
-      console.error('loadAuthState error:', err);
-      updateExamAccess(false);
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', function () {
-    // Back to Library only (demo-clean)
-    const btnBackHome = document.getElementById('btnBackHome');
-    if (btnBackHome) {
-      btnBackHome.addEventListener('click', function () {
-        window.location.href = 'library.html';
-      });
-    }
-
-    // Default: allow in demo
-    updateExamAccess(false);
-    loadAuthState();
-  });
-</script>
-
+      // Demo: always start enabled. gen-exam.js may still temporarily disable during generation (expected).
+      const genBtn = document.getElementById('btnGenExam25ByBook');
+      if (genBtn) {
+        genBtn.disabled = false;
+        genBtn.title = 'Generate a 25-question practice exam.';
+        genBtn.style.cursor = 'pointer';
+      }
+    });
+  </script>
+</body>
+</html>
