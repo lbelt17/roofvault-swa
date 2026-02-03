@@ -7,7 +7,10 @@
 // ✅ Quality guardrails added (no "chapter/section/page" questions)
 // ✅ Reject + regenerate safety net (won't return TOC/navigation questions)
 //
-// ✅ GET /api/exam?bank=rwc&count=25 returns RANDOM unique questions from the RWC bank (incl. exhibit images)
+// ✅ GET /api/exam?bank=rwc&count=25 returns RANDOM UNIQUE "PRO MODE" questions from RWC bank:
+//    - Filters OUT optionless items (opt0)
+//    - Filters OUT True/False (opt2) for pro impression (4-option MCQ only)
+//    - Tries to include exhibit questions when available
 //    (Does NOT affect POST behavior)
 
 const DEPLOY_TAG =
@@ -171,13 +174,18 @@ function loadRwcBank() {
   return require("./rwc-question-bank-full.js");
 }
 
+function optCount(q) {
+  return Array.isArray(q?.options) ? q.options.length : 0;
+}
+function hasExhibit(q) {
+  return !!(q?.exhibitImage || q?.imageRef);
+}
+
 // crypto-safe random int in [0, maxExclusive)
 function randInt(maxExclusive) {
   if (maxExclusive <= 1) return 0;
 
   try {
-    // Azure Functions Node supports global crypto in modern runtimes, but not guaranteed.
-    // Use whichever is available.
     // eslint-disable-next-line no-undef
     const c = typeof crypto !== "undefined" ? crypto : null;
     if (c && typeof c.getRandomValues === "function") {
@@ -191,7 +199,7 @@ function randInt(maxExclusive) {
       return x % maxExclusive;
     }
   } catch {
-    // fall through to Math.random
+    // fall through
   }
 
   return Math.floor(Math.random() * maxExclusive);
@@ -210,6 +218,31 @@ function sampleUnique(arr, n) {
   return a.slice(0, take);
 }
 
+// Pro-mode selection: prefer 4-option MCQ only, sprinkle exhibits if possible
+function selectRwcPro(questions, count) {
+  const exhibits = questions.filter((q) => hasExhibit(q) && optCount(q) >= 4);
+  const mcq4 = questions.filter((q) => !hasExhibit(q) && optCount(q) >= 4);
+
+  // include up to 2 exhibits if available (bank only has 4 total)
+  const wantEx = Math.min(2, exhibits.length, count);
+  const picked = [];
+
+  picked.push(...sampleUnique(exhibits, wantEx));
+
+  const remaining = count - picked.length;
+  picked.push(...sampleUnique(mcq4, remaining));
+
+  // If somehow still short (shouldn't happen with 39 4-option MCQs),
+  // fill from any >=4 options remaining (including nonstandard)
+  if (picked.length < count) {
+    const pickedIds = new Set(picked.map((x) => x.id));
+    const any4 = questions.filter((q) => optCount(q) >= 4 && !pickedIds.has(q.id));
+    picked.push(...sampleUnique(any4, count - picked.length));
+  }
+
+  return picked.slice(0, count);
+}
+
 // ---------- Main ----------
 
 module.exports = async function (context, req) {
@@ -222,13 +255,12 @@ module.exports = async function (context, req) {
       if (bank === "rwc") {
         try {
           const bankObj = loadRwcBank();
-          const questions = Array.isArray(bankObj?.questions) ? bankObj.questions : [];
+          const questionsAll = Array.isArray(bankObj?.questions) ? bankObj.questions : [];
 
-          // ✅ TRUE FIX: sample unique random questions each request
-          const sampled = sampleUnique(questions, count);
+          // ✅ PRO MODE: only 4-option+ questions, random each request
+          const selected = selectRwcPro(questionsAll, count);
 
-          // Return BOTH exhibitImage + imageRef for compatibility with UI.
-          const items = sampled.map((q, idx) => ({
+          const items = selected.map((q, idx) => ({
             id: String(q.id || idx + 1),
             type: q.type || "mcq",
             question: q.question || "",
@@ -251,8 +283,9 @@ module.exports = async function (context, req) {
             book: bankObj?.book || "IIBEC - RWC Study Guide.docx",
             countRequested: count,
             returned: items.length,
-            bankTotal: questions.length,
+            bankTotal: questionsAll.length,
             hasAnyExhibitImages: items.some((x) => !!x.exhibitImage || !!x.imageRef),
+            qualityMode: "pro-mcq-only",
             items,
           });
         } catch (e) {
