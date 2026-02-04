@@ -126,77 +126,42 @@
       backdrop-filter: blur(14px);
     }
 
-    .hero {
+    /* ✅ NEW: inside-module "liquid glass" wrapper */
+    .module-glass {
+      border-radius: var(--radius-xl);
+      padding: 16px;
+      border: 1px solid rgba(120,135,170,0.22);
+      background:
+        radial-gradient(900px 320px at 20% 0%, rgba(33,179,255,0.12), transparent 60%),
+        radial-gradient(760px 320px at 80% 10%, rgba(104,64,255,0.10), transparent 62%),
+        linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      box-shadow: 0 18px 40px rgba(0,0,0,0.42);
+      backdrop-filter: blur(16px);
+    }
+
+    /* ✅ NEW: compact top row (no redundant header/pills) */
+    .module-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 14px;
-      margin-bottom: 18px;
+      gap: 12px;
+      margin-bottom: 12px;
     }
 
-    .hero-left {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      min-width: 280px;
-    }
-
-    .logo {
-      width: 44px;
-      height: 44px;
-      border-radius: 14px;
-      background: radial-gradient(circle at 30% 0, #46cdff 0, #008dff 45%, #0046b3 100%);
-      display: grid;
-      place-items: center;
-      color: #02111c;
-      font-weight: 900;
-      font-size: 18px;
-      letter-spacing: 0.06em;
-      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.55);
-      flex: 0 0 auto;
-    }
-
-    .hero-title {
-      font-size: 18px;
-      font-weight: 750;
-      letter-spacing: 0.2px;
+    .module-title {
       margin: 0;
-      line-height: 1.2;
+      font-size: 14px;
+      font-weight: 760;
+      letter-spacing: 0.2px;
+      color: rgba(232,237,246,0.92);
     }
 
-    .hero-sub {
+    .module-sub {
       margin: 4px 0 0;
       font-size: 12px;
       color: var(--muted);
       line-height: 1.35;
-      max-width: 58ch;
-    }
-
-    .hero-chips {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .pill {
-      font-size: 11px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(120, 135, 170, 0.40);
-      background: rgba(15, 19, 30, 0.62);
-      color: var(--muted);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      white-space: nowrap;
-      backdrop-filter: blur(10px);
-    }
-
-    .pill code {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size: 11px;
-      color: #a2b7ff;
+      max-width: 64ch;
     }
 
     .grid {
@@ -235,6 +200,67 @@
 
     #bookMount { margin: 6px 0 0; }
 
+    /* ✅ NEW: Search-first selector placeholders (no JS wiring yet) */
+    .book-search {
+      display: grid;
+      gap: 10px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(120,135,170,0.26);
+      background: rgba(10, 12, 18, 0.42);
+      color: rgba(232,237,246,0.92);
+      outline: none;
+      backdrop-filter: blur(12px);
+    }
+
+    .search-input::placeholder { color: rgba(232,237,246,0.45); }
+
+    .search-input:focus {
+      border-color: rgba(33,179,255,0.55);
+      box-shadow: 0 0 0 4px rgba(33,179,255,0.12);
+    }
+
+    .search-results {
+      display: none; /* wired later */
+      border-radius: 14px;
+      border: 1px solid rgba(120,135,170,0.20);
+      background: rgba(10, 12, 18, 0.38);
+      overflow: hidden;
+    }
+
+    .selected-chip {
+      display: none; /* wired later */
+      align-items: center;
+      gap: 10px;
+      width: fit-content;
+      max-width: 100%;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(120,135,170,0.26);
+      background: rgba(15, 19, 30, 0.62);
+      color: rgba(232,237,246,0.88);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.28);
+    }
+
+    .chip-x {
+      border: 0;
+      background: rgba(255,255,255,0.08);
+      color: rgba(232,237,246,0.85);
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      line-height: 1;
+    }
+
     .controls-row {
       display: flex;
       align-items: center;
@@ -266,16 +292,30 @@
       filter: none;
     }
 
+    /* ✅ UPDATED: Apple-like glossy primary */
     .btn-primary {
-      color: #041018;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      box-shadow: 0 12px 26px rgba(0, 0, 0, 0.50);
+      color: rgba(255,255,255,0.96);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.06)) ,
+        linear-gradient(135deg, #2cc3ff, #1679ff);
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow:
+        0 16px 34px rgba(0, 0, 0, 0.55),
+        inset 0 1px 0 rgba(255,255,255,0.20);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
     }
 
     .btn-primary:hover:not(:disabled) {
       transform: translateY(-1px);
-      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.60);
-      filter: brightness(1.02);
+      box-shadow:
+        0 18px 38px rgba(0, 0, 0, 0.62),
+        inset 0 1px 0 rgba(255,255,255,0.24);
+      filter: brightness(1.03);
+    }
+
+    .btn-primary:active:not(:disabled) {
+      transform: translateY(0px);
+      filter: brightness(0.98);
     }
 
     .statusbar {
@@ -342,8 +382,7 @@
     @media (max-width: 720px) {
       .nav { flex-direction: column; align-items: flex-start; }
       .shell { padding: 18px 16px 16px; }
-      .hero { flex-direction: column; align-items: flex-start; }
-      .hero-chips { justify-content: flex-start; }
+      .module-glass { padding: 12px; }
       #qList { max-height: 62vh; }
     }
   </style>
@@ -367,59 +406,67 @@
   </header>
 
   <main class="shell">
-    <div class="hero">
-      <div class="hero-left">
-        <div class="logo">RV</div>
+    <!-- ✅ REMOVED redundant hero header + pills.
+         ✅ NEW: subtle module top line + glass wrapper -->
+    <div class="module-glass">
+      <div class="module-top">
         <div>
-          <h1 class="hero-title">Practice Exam Generator</h1>
-          <p class="hero-sub">Choose a book, then generate a 25-question practice exam.</p>
+          <h1 class="module-title">Practice Exams</h1>
+          <p class="module-sub">Search a book, select it, then generate a 25-question practice exam.</p>
         </div>
       </div>
 
-      <div class="hero-chips" aria-label="system info">
-        <div class="pill">Search <code>azureblob-index</code></div>
-        <div class="pill">Model <code>AOAI_DEPLOYMENT</code></div>
-      </div>
-    </div>
-
-    <div class="grid">
-      <section class="card" aria-label="choose a book">
-        <div class="card-head">
-          <div class="card-title">1. Choose a book</div>
-          <div class="card-hint">Search and select from your library.</div>
-        </div>
-        <div id="bookMount"></div>
-      </section>
-
-      <section class="card" aria-label="generate exam">
-        <div class="card-head">
-          <div class="card-title">2. Generate</div>
-          <div class="card-hint">One click. No extra steps.</div>
-        </div>
-
-        <div class="controls-row">
-          <button id="btnGenExam25ByBook" class="btn-primary">
-            <span>Generate 25Q Practice Exam</span>
-          </button>
-        </div>
-
-        <div class="statusbar" aria-label="status and errors">
-          <div id="genStatus" class="status"><strong>Generating…</strong> This can take a moment.</div>
-          <div id="genError" class="error">Something went wrong. Please try again.</div>
-        </div>
-
-        <div id="qList" aria-label="questions">
-          <div class="q-empty">
-            Pick a book above, then click <strong>“Generate 25Q Practice Exam”</strong>.
+      <div class="grid">
+        <section class="card" aria-label="choose a book">
+          <div class="card-head">
+            <div class="card-title">1. Choose a book</div>
+            <div class="card-hint">Search-first selector (wiring next).</div>
           </div>
-        </div>
 
-        <pre id="diag">Ready.</pre>
+          <!-- ✅ NEW placeholders (no JS wiring yet) -->
+          <div class="book-search">
+            <input id="bookSearchInput" class="search-input" type="search" placeholder="Search books…" autocomplete="off" />
+            <div id="selectedBookChip" class="selected-chip" aria-label="selected book">
+              <span id="selectedBookChipText">Selected Book</span>
+              <button type="button" class="chip-x" aria-label="Clear selection">✕</button>
+            </div>
+            <div id="bookSearchResults" class="search-results" aria-label="book search results"></div>
+          </div>
 
-        <div class="footer-hint">
-          <span>Tip: Click Generate again for a fresh randomized exam from the same book.</span>
-        </div>
-      </section>
+          <!-- ✅ Keep existing mount for current dropdown/list (still used by books.js) -->
+          <div id="bookMount"></div>
+        </section>
+
+        <section class="card" aria-label="generate exam">
+          <div class="card-head">
+            <div class="card-title">2. Generate</div>
+            <div class="card-hint">One click. No extra steps.</div>
+          </div>
+
+          <div class="controls-row">
+            <button id="btnGenExam25ByBook" class="btn-primary">
+              <span>Generate Practice Exam (25 Questions)</span>
+            </button>
+          </div>
+
+          <div class="statusbar" aria-label="status and errors">
+            <div id="genStatus" class="status"><strong>Generating…</strong> This can take a moment.</div>
+            <div id="genError" class="error">Something went wrong. Please try again.</div>
+          </div>
+
+          <div id="qList" aria-label="questions">
+            <div class="q-empty">
+              Pick a book above, then click <strong>“Generate Practice Exam (25 Questions)”</strong>.
+            </div>
+          </div>
+
+          <pre id="diag">Ready.</pre>
+
+          <div class="footer-hint">
+            <span>Tip: Click Generate again for a fresh randomized exam from the same book.</span>
+          </div>
+        </section>
+      </div>
     </div>
   </main>
 
