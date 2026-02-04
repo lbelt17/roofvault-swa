@@ -7,7 +7,6 @@
 
   <style>
     :root {
-      /* Homepage-like "Apple dark" palette */
       --bg-0: #05060a;
       --bg-1: #070a12;
       --bg-2: #0b1220;
@@ -19,9 +18,6 @@
 
       --text: #e8edf6;
       --muted: rgba(232, 237, 246, 0.68);
-
-      --accent: #21b3ff;
-      --accent-2: #1a8ee0;
 
       --shadow: 0 22px 45px rgba(0,0,0,0.55);
       --radius-xl: 22px;
@@ -49,10 +45,7 @@
       justify-content: flex-start;
     }
 
-    header {
-      width: 100%;
-      padding: 6px 2px 0;
-    }
+    header { width: 100%; padding: 6px 2px 0; }
 
     .nav {
       max-width: 1040px;
@@ -125,7 +118,6 @@
       backdrop-filter: blur(14px);
     }
 
-    /* ✅ inside-module "liquid glass" wrapper */
     .module-glass {
       border-radius: var(--radius-xl);
       padding: 18px;
@@ -138,7 +130,6 @@
       backdrop-filter: blur(16px);
     }
 
-    /* ✅ Spotlight-like centered header */
     .module-top {
       display: flex;
       flex-direction: column;
@@ -165,13 +156,12 @@
       max-width: 70ch;
     }
 
-    /* ✅ Center the whole module content like Spotlight */
     .grid {
       display: grid;
       grid-template-columns: 1fr;
       gap: 14px;
       width: 100%;
-      max-width: 780px; /* centered column */
+      max-width: 780px;
       margin: 0 auto;
     }
 
@@ -204,13 +194,14 @@
       white-space: nowrap;
     }
 
-    /* ✅ NEW: Search-first selector (centered) */
+    /* Search-first selector (centered) */
     .book-search {
       display: grid;
       gap: 10px;
       width: 100%;
       max-width: 560px;
       margin: 0 auto;
+      position: relative;
     }
 
     .search-input {
@@ -238,15 +229,37 @@
     }
 
     .search-results {
-      display: none; /* wired later */
+      display: none;
       border-radius: 16px;
       border: 1px solid rgba(120,135,170,0.20);
-      background: rgba(10, 12, 18, 0.38);
+      background: rgba(10, 12, 18, 0.66);
       overflow: hidden;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 22px 45px rgba(0,0,0,0.55);
+    }
+
+    .result-item {
+      padding: 10px 12px;
+      cursor: pointer;
+      font-size: 12px;
+      color: rgba(232,237,246,0.90);
+      border-top: 1px solid rgba(120,135,170,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .result-item:first-child { border-top: 0; }
+    .result-item:hover { background: rgba(255,255,255,0.06); }
+    .result-sub {
+      color: rgba(232,237,246,0.55);
+      font-size: 11px;
+      white-space: nowrap;
     }
 
     .selected-chip {
-      display: none; /* wired later */
+      display: none;
       align-items: center;
       gap: 10px;
       width: fit-content;
@@ -278,7 +291,7 @@
     .controls-row {
       display: flex;
       align-items: center;
-      justify-content: center; /* ✅ centered like Spotlight */
+      justify-content: center;
       gap: 10px;
       flex-wrap: wrap;
       margin-top: 6px;
@@ -306,18 +319,17 @@
       filter: none;
     }
 
-    /* ✅ Apple-like glossy primary */
     .btn-primary {
       color: rgba(255,255,255,0.96);
       background:
-        linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.06)) ,
+        linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.06)),
         linear-gradient(135deg, #2cc3ff, #1679ff);
       border: 1px solid rgba(255,255,255,0.14);
       box-shadow:
         0 16px 34px rgba(0, 0, 0, 0.55),
         inset 0 1px 0 rgba(255,255,255,0.20);
       text-shadow: 0 1px 0 rgba(0,0,0,0.35);
-      min-width: 320px; /* ✅ feels like a Spotlight action button */
+      min-width: 320px;
       justify-content: center;
     }
 
@@ -396,7 +408,7 @@
       justify-content: flex-end;
     }
 
-    /* ✅ CRITICAL: remove old dropdown + old search UI completely from view */
+    /* Keep old UI mount for JS safety, but hide it */
     #bookMount { display: none !important; }
 
     @media (max-width: 720px) {
@@ -438,20 +450,21 @@
         <section class="card" aria-label="choose a book">
           <div class="card-head">
             <div class="card-title">Choose a book</div>
-            <div class="card-hint">Search-first selector (wiring next).</div>
+            <div class="card-hint">Type to search. Click to select.</div>
           </div>
 
-          <!-- New Spotlight-like centered search (wired later) -->
           <div class="book-search">
             <input id="bookSearchInput" class="search-input" type="search" placeholder="Search books…" autocomplete="off" />
+
             <div id="selectedBookChip" class="selected-chip" aria-label="selected book">
               <span id="selectedBookChipText">Selected Book</span>
-              <button type="button" class="chip-x" aria-label="Clear selection">✕</button>
+              <button id="selectedBookClear" type="button" class="chip-x" aria-label="Clear selection">✕</button>
             </div>
+
             <div id="bookSearchResults" class="search-results" aria-label="book search results"></div>
           </div>
 
-          <!-- Old UI mount (kept for JS safety, but fully hidden via CSS) -->
+          <!-- Old selector mount (books.js populates this) -->
           <div id="bookMount"></div>
         </section>
 
@@ -493,7 +506,7 @@
   <script src="/books.js?v=4"></script>
   <script src="/gen-exam.js?v=4"></script>
 
-  <!-- Demo-safe navigation + ensure initial button is enabled -->
+  <!-- ✅ NEW: wire Spotlight search to the hidden dropdown populated by books.js -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const btnBackHome = document.getElementById('btnBackHome');
@@ -503,13 +516,201 @@
         });
       }
 
-      // Demo: always start enabled. gen-exam.js may still temporarily disable during generation (expected).
+      // Keep generate button enabled at start (existing behavior)
       const genBtn = document.getElementById('btnGenExam25ByBook');
       if (genBtn) {
         genBtn.disabled = false;
         genBtn.title = 'Generate a 25-question practice exam.';
         genBtn.style.cursor = 'pointer';
       }
+
+      const input = document.getElementById('bookSearchInput');
+      const results = document.getElementById('bookSearchResults');
+      const chip = document.getElementById('selectedBookChip');
+      const chipText = document.getElementById('selectedBookChipText');
+      const chipClear = document.getElementById('selectedBookClear');
+      const mount = document.getElementById('bookMount');
+
+      if (!input || !results || !chip || !chipText || !chipClear || !mount) return;
+
+      let selectEl = null;
+      let optionsCache = [];
+
+      function normalize(s) {
+        return String(s || '').toLowerCase().trim();
+      }
+
+      function hideResults() {
+        results.style.display = 'none';
+        results.innerHTML = '';
+      }
+
+      function showChip(text) {
+        chipText.textContent = text;
+        chip.style.display = 'inline-flex';
+      }
+
+      function hideChip() {
+        chip.style.display = 'none';
+      }
+
+      function dispatchChange(el) {
+        try {
+          const evt = new Event('change', { bubbles: true });
+          el.dispatchEvent(evt);
+        } catch (e) {
+          // fallback for older browsers
+          const evt = document.createEvent('HTMLEvents');
+          evt.initEvent('change', true, false);
+          el.dispatchEvent(evt);
+        }
+      }
+
+      function buildOptionsFromSelect() {
+        if (!selectEl) return [];
+        const opts = Array.from(selectEl.querySelectorAll('option'))
+          .map(o => ({ value: o.value, label: (o.textContent || '').trim() }))
+          .filter(o => o.value && o.label && !/select a book/i.test(o.label));
+        return opts;
+      }
+
+      function findSelectWithRetry() {
+        // books.js may populate after DOMContentLoaded; poll briefly.
+        const start = Date.now();
+        const interval = setInterval(() => {
+          const sel = mount.querySelector('select');
+          if (sel) {
+            clearInterval(interval);
+            selectEl = sel;
+            optionsCache = buildOptionsFromSelect();
+          } else if (Date.now() - start > 7000) {
+            clearInterval(interval);
+          }
+        }, 120);
+      }
+
+      function renderResults(list) {
+        if (!list.length) {
+          hideResults();
+          return;
+        }
+        results.innerHTML = '';
+        list.forEach(item => {
+          const row = document.createElement('div');
+          row.className = 'result-item';
+          row.setAttribute('role', 'button');
+          row.tabIndex = 0;
+
+          const left = document.createElement('div');
+          left.textContent = item.label;
+
+          const right = document.createElement('div');
+          right.className = 'result-sub';
+          right.textContent = 'Select';
+
+          row.appendChild(left);
+          row.appendChild(right);
+
+          function pick() {
+            if (!selectEl) return;
+            selectEl.value = item.value;
+            dispatchChange(selectEl);
+            showChip(item.label);
+            input.value = item.label;
+            hideResults();
+          }
+
+          row.addEventListener('click', pick);
+          row.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              pick();
+            }
+          });
+
+          results.appendChild(row);
+        });
+
+        results.style.display = 'block';
+      }
+
+      input.addEventListener('input', () => {
+        const q = normalize(input.value);
+        if (!q) { hideResults(); return; }
+
+        // Refresh cache lazily in case books were loaded after first open
+        if (!optionsCache.length && selectEl) optionsCache = buildOptionsFromSelect();
+
+        const filtered = optionsCache
+          .filter(o => normalize(o.label).includes(q))
+          .slice(0, 12);
+
+        renderResults(filtered);
+      });
+
+      input.addEventListener('focus', () => {
+        const q = normalize(input.value);
+        if (q && optionsCache.length) {
+          const filtered = optionsCache
+            .filter(o => normalize(o.label).includes(q))
+            .slice(0, 12);
+          renderResults(filtered);
+        }
+      });
+
+      document.addEventListener('click', (e) => {
+        const target = e.target;
+        if (!target) return;
+        if (results.contains(target) || input.contains(target)) return;
+        hideResults();
+      });
+
+      chipClear.addEventListener('click', () => {
+        if (selectEl) {
+          selectEl.value = '';
+          dispatchChange(selectEl);
+        }
+        hideChip();
+        input.value = '';
+        hideResults();
+        input.focus();
+      });
+
+      // Sync chip if user refreshes and select already has a value
+      function syncChipFromSelect() {
+        if (!selectEl) return;
+        const selected = selectEl.options && selectEl.options[selectEl.selectedIndex];
+        const label = selected ? (selected.textContent || '').trim() : '';
+        if (selectEl.value && label) {
+          showChip(label);
+          input.value = label;
+        } else {
+          hideChip();
+        }
+      }
+
+      // When underlying select changes (from any existing logic), sync our UI
+      function attachSelectListener() {
+        if (!selectEl) return;
+        selectEl.addEventListener('change', () => {
+          optionsCache = buildOptionsFromSelect();
+          syncChipFromSelect();
+        });
+        // Initial sync
+        optionsCache = buildOptionsFromSelect();
+        syncChipFromSelect();
+      }
+
+      findSelectWithRetry();
+
+      // Attach listener once the select exists
+      const attachInterval = setInterval(() => {
+        if (selectEl) {
+          clearInterval(attachInterval);
+          attachSelectListener();
+        }
+      }, 120);
+      setTimeout(() => clearInterval(attachInterval), 7000);
     });
   </script>
 </body>
