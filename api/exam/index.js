@@ -120,9 +120,9 @@ function looksLikeTocOrNavigationQuestion(q) {
   ];
 
   for (const re of bannedPatterns) {
-    if (re.test(t)) return true;
-  }
-  return false;
+  if (re.test(t)) return true;
+}
+return false;
 }
 
 function looksMalformedMcq(q) {
@@ -147,20 +147,69 @@ function looksMalformedMcq(q) {
   return false;
 }
 
+/**
+ * Shuffle MCQ options and remap the correct answer safely
+ */
+function shuffleAndRemapOptions(options, answerLetter) {
+  if (!Array.isArray(options) || options.length < 4) {
+    return { options, answer: answerLetter };
+  }
+
+  const upperAnswer = String(answerLetter || "").toUpperCase().trim();
+  const correctOpt = options.find(
+    (o) => String(o?.id || "").toUpperCase().trim() === upperAnswer
+  );
+  const correctText = normalizeText(correctOpt?.text);
+
+  // Fisher–Yates shuffle (copy first)
+  const shuffled = options.map((o) => ({ ...o }));
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = randInt(i + 1);
+    const tmp = shuffled[i];
+    shuffled[i] = shuffled[j];
+    shuffled[j] = tmp;
+  }
+
+  // Reassign A–D labels after shuffle
+  const letters = ["A", "B", "C", "D"];
+  const relabeled = shuffled.map((o, idx) => ({
+    id: letters[idx],
+    text: normalizeText(o?.text),
+  }));
+
+  // Find new correct answer by matching text
+  let newAnswer = upperAnswer;
+  if (correctText) {
+    const found = relabeled.find(
+      (o) => normalizeText(o.text) === correctText
+    );
+    if (found?.id) newAnswer = found.id;
+  }
+
+  return { options: relabeled, answer: newAnswer };
+}
+
 function normalizeMcq(it, nextId) {
+  const baseOptions = Array.isArray(it?.options)
+    ? it.options.map((o) => ({
+        id: String(o?.id || "").toUpperCase().trim(),
+        text: normalizeText(o?.text),
+      }))
+    : [];
+
+  const baseAnswer = normalizeText(it?.answer).toUpperCase().trim();
+
+  const { options, answer } = shuffleAndRemapOptions(baseOptions, baseAnswer);
+
   return {
     id: String(nextId),
     type: "mcq",
     question: normalizeText(it?.question),
-    options: Array.isArray(it?.options)
-      ? it.options.map((o) => ({
-          id: String(o?.id || "").toUpperCase().trim(),
-          text: normalizeText(o?.text),
-        }))
-      : [],
-    answer: normalizeText(it?.answer).toUpperCase(),
+    options,
+    answer,
   };
 }
+
 
 // ---------- Bank loader + sampling (RWC) ----------
 
