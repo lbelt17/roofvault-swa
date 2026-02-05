@@ -1,8 +1,12 @@
-﻿// books.js — RoofVault grouped book dropdown + search (CLEAN + FIXED)
+﻿// books.js — RoofVault grouped book dropdown + search (PERF-OPT SAFE)
 // Uses /api/books -> body.books[] when available (grouped), fallback to body.values[] (raw)
 //
 // Goal: Blobs named like "Example Book - Part 01", "Example Book - Part 02", ...
 // This script shows ONE clean title and stores the full parts list in window.__rvSelectedBook
+//
+// PERF NOTES:
+// - Avoids building a full title->parts index for ALL values[] when only a few grouped books are missing parts.
+// - Batches <option> creation with DocumentFragment to reduce DOM churn.
 
 (function () {
   "use strict";
@@ -66,14 +70,12 @@
 
     return parts
       .map((p) => {
-        // already a string
         if (typeof p === "string") return p;
 
-        // object: pick best-known fields
         if (p && typeof p === "object") {
           return (
-            p.fileName ||               // ✅ books-v2
-            p.raw ||                    // ✅ books-v2
+            p.fileName ||
+            p.raw ||
             p.metadata_storage_name ||
             p.name ||
             p.id ||
@@ -107,27 +109,27 @@
   // ---------- Fallback if /api/books only returns raw filenames ----------
   function buildFallbackOptions(json) {
     const vals = Array.isArray(json?.values) ? json.values : [];
-
-    // Map cleaned title -> grouped entry
     const map = new Map();
 
-    vals.forEach((v) => {
-      const raw = String(v || "").trim();
-      if (!raw) return;
+    for (let i = 0; i < vals.length; i++) {
+      const raw = String(vals[i] || "").trim();
+      if (!raw) continue;
 
       const title = cleanDisplayTitle(raw);
-      if (!title) return;
+      if (!title) continue;
 
-      if (!map.has(title)) {
-        map.set(title, {
+      let entry = map.get(title);
+      if (!entry) {
+        entry = {
           bookGroupId: title, // stable id in fallback mode
           displayTitle: title,
           parts: []
-        });
+        };
+        map.set(title, entry);
       }
 
-      map.get(title).parts.push(raw);
-    });
+      entry.parts.push(raw);
+    }
 
     return Array.from(map.values()).sort((a, b) =>
       a.displayTitle.localeCompare(b.displayTitle)
@@ -151,26 +153,47 @@
       el("option", { value: "", text: "Select a book…" })
     ]);
 
+    // Sort once
     const sorted = options.slice().sort((a, b) =>
       a.displayTitle.localeCompare(b.displayTitle)
     );
+
+    // Map for selection lookup (same as before)
     const byId = new Map(sorted.map((b) => [b.bookGroupId, b]));
 
+    // Precompute lowercase titles once for filtering
+    const sortedWithLC = sorted.map((b) => ({
+      b,
+      lc: (b.displayTitle || "").toLowerCase()
+    }));
+
     function fill(list) {
-      select.length = 1; // keep placeholder
-      list.forEach((b) => {
-        select.appendChild(
-          el("option", { value: b.bookGroupId, text: b.displayTitle })
-        );
-      });
+      // keep placeholder
+      select.length = 1;
+
+      const frag = document.createDocumentFragment();
+      for (let i = 0; i < list.length; i++) {
+        const b = list[i];
+        // Faster than createElement+setAttribute loops
+        frag.appendChild(new Option(b.displayTitle, b.bookGroupId));
+      }
+      select.appendChild(frag);
     }
 
     fill(sorted);
 
+    // Simple, safe filter (same behavior)
     search.addEventListener("input", () => {
       const q = search.value.trim().toLowerCase();
       if (!q) return fill(sorted);
-      fill(sorted.filter((b) => b.displayTitle.toLowerCase().includes(q)));
+
+      // Filter without re-lowercasing every title each keystroke
+      const out = [];
+      for (let i = 0; i < sortedWithLC.length; i++) {
+        const item = sortedWithLC[i];
+        if (item.lc.includes(q)) out.push(item.b);
+      }
+      fill(out);
     });
 
     select.addEventListener("change", () => {
@@ -204,44 +227,62 @@
 
     try {
       const json = await fetchBooks();
-
-      // 1) Build grouped options if available
-      const grouped = buildGroupedOptions(json);
-
-      // 2) If grouped exists but some books have no parts, rebuild missing parts from values[]
-      if (grouped.length && Array.isArray(json?.values) && json.values.length) {
-        const raw = json.values
-          .map((v) => String(v || "").trim())
-          .filter(Boolean);
-
-        // map normalizedTitle -> list of raw part strings
-        const titleToParts = new Map();
-
-        raw.forEach((name) => {
-          const title = cleanDisplayTitle(name);
-          const key = keyifyTitle(title);
-          if (!key) return;
-
-          if (!titleToParts.has(key)) titleToParts.set(key, []);
-          titleToParts.get(key).push(name);
-        });
-
-        grouped.forEach((b) => {
-          if (!Array.isArray(b.parts) || b.parts.length === 0) {
-            const guessTitle = cleanDisplayTitle(b.displayTitle);
-            const key = keyifyTitle(guessTitle);
-            const parts = titleToParts.get(key) || [];
-            b.parts = parts; // ✅ now single-file books get a 1-item parts array
-          }
-        });
-      }
-
-      const options = grouped.length ? grouped : buildFallbackOptions(json);
-      renderDropdown(mount, options);
+      console.time("books.js:build");
 
       // Initialize selection empty (keeps state consistent)
       window.__rvSelectedBook = { bookGroupId: "", displayTitle: "", parts: [] };
       window.__rvBookSelection = window.__rvSelectedBook;
+
+      // 1) Build grouped options if available
+      const grouped = buildGroupedOptions(json);
+
+      // 2) If grouped exists but some books have no parts, rebuild ONLY missing parts from values[]
+      if (grouped.length && Array.isArray(json?.values) && json.values.length) {
+        // Determine which grouped books need parts
+        const neededKeys = new Set();
+        for (let i = 0; i < grouped.length; i++) {
+          const b = grouped[i];
+          if (!Array.isArray(b.parts) || b.parts.length === 0) {
+            const key = keyifyTitle(cleanDisplayTitle(b.displayTitle));
+            if (key) neededKeys.add(key);
+          }
+        }
+
+        // Only scan values[] if we actually need to fill something
+        if (neededKeys.size > 0) {
+          const titleToParts = new Map(); // key -> string[]
+          const vals = json.values;
+
+          for (let i = 0; i < vals.length; i++) {
+            const name = String(vals[i] || "").trim();
+            if (!name) continue;
+
+            const title = cleanDisplayTitle(name);
+            const key = keyifyTitle(title);
+            if (!key || !neededKeys.has(key)) continue;
+
+            let arr = titleToParts.get(key);
+            if (!arr) {
+              arr = [];
+              titleToParts.set(key, arr);
+            }
+            arr.push(name);
+          }
+
+          // Assign rebuilt parts back to grouped list
+          for (let i = 0; i < grouped.length; i++) {
+            const b = grouped[i];
+            if (!Array.isArray(b.parts) || b.parts.length === 0) {
+              const key = keyifyTitle(cleanDisplayTitle(b.displayTitle));
+              b.parts = titleToParts.get(key) || [];
+            }
+          }
+        }
+      }
+
+      const options = grouped.length ? grouped : buildFallbackOptions(json);
+      console.timeEnd("books.js:build");
+      renderDropdown(mount, options);
     } catch (e) {
       console.error(e);
       mount.innerHTML = "";
