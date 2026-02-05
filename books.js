@@ -306,13 +306,25 @@
           const found = titleToParts.get(key) || [];
 
           if (found.length) {
-            const set = new Set(normalizeParts(b.parts));
-            for (let j = 0; j < found.length; j++) set.add(String(found[j]).trim());
-            b.parts = sortParts(Array.from(set));
-          } else {
-            // still sort whatever we have
-            b.parts = sortParts(b.parts);
-          }
+  const existing = normalizeParts(b.parts);
+  const set = new Set(existing);
+  for (let j = 0; j < found.length; j++) set.add(String(found[j]).trim());
+
+  // ✅ Keep ONLY one naming family (the family already used by grouped data)
+  // Use the first existing part as the "truth" for the desired prefix
+  const first = existing[0] || "";
+  const desiredPrefix = first.split(" - Part")[0]; // everything before " - Part"
+
+  const filtered = Array.from(set).filter((p) => {
+    // must match the same prefix family
+    return desiredPrefix && p.startsWith(desiredPrefix);
+  });
+
+  b.parts = sortParts(filtered);
+} else {
+  b.parts = sortParts(b.parts);
+}
+
         }
       }
 
