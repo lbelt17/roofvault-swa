@@ -1,12 +1,14 @@
-<script>
-  window.OWNER_EMAILS = window.OWNER_EMAILS || [];
-</script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>RoofVault Library</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <script>
+    // Keep this available globally (even if empty)
+    window.OWNER_EMAILS = window.OWNER_EMAILS || [];
+  </script>
 
   <!-- Simple, self-contained styles -->
   <style>
@@ -23,26 +25,21 @@
       --radius-pill: 999px;
       --shadow-soft: 0 20px 40px rgba(15, 23, 42, 0.7);
       --transition-fast: 150ms ease-out;
-      /* Hide the exam dropdown UI when inside the library page */
-#bookSelect,
-#bookSearchInput,
-label[for="bookSelect"] {
-  display: none !important;
-}
-
-
-
     }
 
-    * {
-      box-sizing: border-box;
+    /* Hide any legacy exam dropdown UI if present */
+    #bookSelect,
+    #bookSearchInput,
+    label[for="bookSelect"] {
+      display: none !important;
     }
+
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-        "Segoe UI", sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
       background:
         radial-gradient(circle at top left, rgba(59, 130, 246, 0.15), transparent 55%),
         radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.12), transparent 55%),
@@ -52,7 +49,6 @@ label[for="bookSelect"] {
       flex-direction: column;
     }
 
-    /* Top navigation */
     header {
       position: sticky;
       top: 0;
@@ -97,22 +93,9 @@ label[for="bookSelect"] {
       box-shadow: 0 10px 30px rgba(56, 189, 248, 0.55);
     }
 
-    .brand-text {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .brand-title {
-      font-weight: 600;
-      letter-spacing: 0.03em;
-      font-size: 0.98rem;
-    }
-
-    .brand-subtitle {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-    }
+    .brand-text { display: flex; flex-direction: column; gap: 2px; }
+    .brand-title { font-weight: 600; letter-spacing: 0.03em; font-size: 0.98rem; }
+    .brand-subtitle { font-size: 0.78rem; color: var(--text-muted); }
 
     .nav-right {
       display: flex;
@@ -120,34 +103,6 @@ label[for="bookSelect"] {
       gap: 0.5rem;
       flex-wrap: wrap;
       justify-content: flex-end;
-    }
-
-    .user-label {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      padding: 0.3rem 0.75rem;
-      border-radius: var(--radius-pill);
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      background: radial-gradient(
-        circle at top left,
-        rgba(56, 189, 248, 0.12),
-        rgba(15, 23, 42, 0.85)
-      );
-      max-width: 230px;
-      text-overflow: ellipsis;
-      overflow: hidden;
-      white-space: nowrap;
-    }
-
-    .tier-pill {
-      font-size: 0.72rem;
-      padding: 0.25rem 0.6rem;
-      border-radius: var(--radius-pill);
-      border: 1px solid rgba(56, 189, 248, 0.45);
-      background: rgba(8, 47, 73, 0.9);
-      color: #e0f2fe;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
     }
 
     .btn {
@@ -169,14 +124,6 @@ label[for="bookSelect"] {
       white-space: nowrap;
     }
 
-    .btn-primary {
-      border-color: rgba(56, 189, 248, 0.75);
-      background: radial-gradient(circle at top left, #38bdf8, #0ea5e9);
-      color: #0b1120;
-      font-weight: 600;
-      box-shadow: 0 12px 30px rgba(56, 189, 248, 0.5);
-    }
-
     .btn:hover {
       transform: translateY(-1px);
       border-color: rgba(148, 163, 184, 0.8);
@@ -184,34 +131,20 @@ label[for="bookSelect"] {
       box-shadow: 0 14px 32px rgba(15, 23, 42, 0.9);
     }
 
-    .btn-primary:hover {
-      box-shadow: 0 18px 40px rgba(56, 189, 248, 0.75);
-    }
-
-    .btn:active {
-      transform: translateY(0);
-      box-shadow: none;
-    }
-
-    .btn-secondary {
-      background: rgba(15, 23, 42, 0.9);
-    }
+    .btn:active { transform: translateY(0); box-shadow: none; }
 
     .btn-text {
       background: transparent;
       border-color: transparent;
       padding-inline: 0.2rem;
     }
-
     .btn-text:hover {
       background: rgba(15, 23, 42, 0.8);
       border-color: transparent;
       box-shadow: none;
     }
 
-    .hidden {
-      display: none !important;
-    }
+    .hidden { display: none !important; }
 
     main {
       max-width: 1120px;
@@ -224,16 +157,9 @@ label[for="bookSelect"] {
     .hero-card {
       border-radius: 24px;
       padding: 1.4rem 1.4rem 1.1rem 1.4rem;
-      background: radial-gradient(
-          circle at top left,
-          rgba(56, 189, 248, 0.18),
-          rgba(15, 23, 42, 0.96)
-        ),
-        radial-gradient(
-          circle at bottom right,
-          rgba(129, 140, 248, 0.22),
-          rgba(15, 23, 42, 0.98)
-        );
+      background:
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), rgba(15, 23, 42, 0.96)),
+        radial-gradient(circle at bottom right, rgba(129, 140, 248, 0.22), rgba(15, 23, 42, 0.98));
       border: 1px solid rgba(148, 163, 184, 0.4);
       box-shadow: var(--shadow-soft);
       display: flex;
@@ -250,24 +176,10 @@ label[for="bookSelect"] {
       flex-wrap: wrap;
     }
 
-    .hero-title {
-      font-size: 1.35rem;
-      font-weight: 650;
-      letter-spacing: 0.03em;
-    }
+    .hero-title { font-size: 1.35rem; font-weight: 650; letter-spacing: 0.03em; }
+    .hero-subtitle { font-size: 0.9rem; color: var(--text-muted); max-width: 520px; }
 
-    .hero-subtitle {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      max-width: 520px;
-    }
-
-    .hero-badges {
-      display: flex;
-      gap: 0.4rem;
-      flex-wrap: wrap;
-      align-items: center;
-    }
+    .hero-badges { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; }
 
     .badge {
       font-size: 0.7rem;
@@ -281,53 +193,21 @@ label[for="bookSelect"] {
       gap: 0.3rem;
     }
 
-    .search-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.6rem;
-      align-items: center;
-      margin-top: 0.2rem;
-    }
-
-    .search-wrapper {
-      flex: 1 1 230px;
-      position: relative;
-    }
+    .search-row { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin-top: 0.2rem; }
+    .search-wrapper { flex: 1 1 230px; position: relative; }
 
     .search-input {
       width: 100%;
       padding: 0.65rem 0.85rem 0.65rem 2.1rem;
       border-radius: var(--radius-pill);
       border: 1px solid rgba(148, 163, 184, 0.7);
-      background: radial-gradient(
-        circle at top left,
-        rgba(15, 23, 42, 0.97),
-        rgba(15, 23, 42, 0.9)
-      );
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.97), rgba(15, 23, 42, 0.9));
       color: var(--text-main);
       font-size: 0.86rem;
       outline: none;
-      transition: border-color var(--transition-fast),
-        box-shadow var(--transition-fast),
-        background var(--transition-fast),
-        transform var(--transition-fast);
     }
 
-    .search-input::placeholder {
-      color: var(--text-muted);
-    }
-
-    .search-input:focus {
-      border-color: rgba(56, 189, 248, 0.85);
-      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.5),
-        0 20px 45px rgba(15, 23, 42, 0.9);
-      background: radial-gradient(
-        circle at top left,
-        rgba(15, 23, 42, 0.98),
-        rgba(15, 23, 42, 0.96)
-      );
-      transform: translateY(-0.5px);
-    }
+    .search-input::placeholder { color: var(--text-muted); }
 
     .search-icon {
       position: absolute;
@@ -339,215 +219,12 @@ label[for="bookSelect"] {
       pointer-events: none;
     }
 
-    .result-count {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-    }
+    .result-count { font-size: 0.78rem; color: var(--text-muted); }
 
-    .library-layout {
-      margin-top: 1.1rem;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr);
-      gap: 0.85rem;
-    }
+    .library-layout { margin-top: 1.1rem; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.85rem; }
+    .shelf-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); margin-bottom: 0.25rem; }
 
-    .shelf-label {
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--text-muted);
-      margin-bottom: 0.25rem;
-    }
-
-    .book-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 0.9rem;
-    }
-
-    .book-card {
-      border-radius: var(--radius-xl);
-      background: var(--card-bg);
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      padding: 0.85rem 0.85rem 0.8rem 0.85rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.55rem;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.85);
-      transition: transform var(--transition-fast),
-        box-shadow var(--transition-fast),
-        border-color var(--transition-fast),
-        background var(--transition-fast);
-    }
-
-    .book-card::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(
-        circle at top left,
-        rgba(56, 189, 248, 0.18),
-        transparent 55%
-      );
-      opacity: 0;
-      transition: opacity var(--transition-fast);
-      pointer-events: none;
-    }
-
-    .book-card:hover {
-      transform: translateY(-2px) translateZ(0);
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.95);
-      border-color: rgba(56, 189, 248, 0.85);
-      background: radial-gradient(
-          circle at top left,
-          rgba(30, 64, 175, 0.5),
-          transparent 55%
-        ),
-        rgba(15, 23, 42, 1);
-    }
-
-    .book-card:hover::before {
-      opacity: 1;
-    }
-
-    .book-main {
-      display: flex;
-      gap: 0.6rem;
-    }
-
-    .book-thumbnail {
-      width: 54px;
-      height: 74px;
-      border-radius: 9px;
-      background: linear-gradient(
-        145deg,
-        rgba(59, 130, 246, 0.25),
-        rgba(56, 189, 248, 0.4)
-      );
-      border: 1px solid rgba(56, 189, 248, 0.65);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #0b1120;
-      font-weight: 700;
-      font-size: 1rem;
-      box-shadow: 0 18px 35px rgba(56, 189, 248, 0.55);
-      flex-shrink: 0;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .book-thumbnail::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        120deg,
-        rgba(248, 250, 252, 0.24),
-        transparent 50%
-      );
-      mix-blend-mode: screen;
-      opacity: 0.75;
-    }
-
-    .book-info {
-      display: flex;
-      flex-direction: column;
-      gap: 0.2rem;
-      min-width: 0;
-    }
-
-    .book-title {
-      font-size: 0.92rem;
-      font-weight: 600;
-      line-height: 1.25;
-    }
-
-    .book-meta {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-
-    .book-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.3rem;
-      margin-top: 0.1rem;
-    }
-
-    .tag {
-      font-size: 0.68rem;
-      padding: 0.18rem 0.5rem;
-      border-radius: var(--radius-pill);
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      color: var(--text-muted);
-    }
-
-    .book-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 0.4rem;
-      margin-top: 0.25rem;
-    }
-
-    .book-footer-left {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      flex-wrap: wrap;
-    }
-
-    .pill-soft {
-      padding: 0.18rem 0.45rem;
-      border-radius: var(--radius-pill);
-      background: rgba(15, 23, 42, 0.98);
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      font-size: 0.68rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.22rem;
-      color: var(--text-muted);
-    }
-
-    .btn-view {
-      font-size: 0.78rem;
-      padding: 0.34rem 0.9rem;
-      border-radius: var(--radius-pill);
-      border: 1px solid rgba(56, 189, 248, 0.85);
-      background: radial-gradient(
-        circle at top left,
-        rgba(56, 189, 248, 0.98),
-        rgba(14, 165, 233, 0.98)
-      );
-      color: #0b1120;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.3rem;
-      cursor: pointer;
-      box-shadow: 0 10px 25px rgba(56, 189, 248, 0.65);
-      transition: transform var(--transition-fast),
-        box-shadow var(--transition-fast),
-        filter var(--transition-fast);
-      white-space: nowrap;
-    }
-
-    .btn-view:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 16px 35px rgba(56, 189, 248, 0.85);
-      filter: brightness(1.03);
-    }
-
-    .btn-view:active {
-      transform: translateY(0);
-      box-shadow: none;
-    }
+    .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.9rem; }
 
     .empty-state {
       border-radius: var(--radius-xl);
@@ -560,10 +237,6 @@ label[for="bookSelect"] {
       align-items: center;
       gap: 0.75rem;
       margin-top: 0.7rem;
-    }
-
-    .empty-icon {
-      font-size: 1.3rem;
     }
 
     footer {
@@ -579,91 +252,51 @@ label[for="bookSelect"] {
       flex-wrap: wrap;
       opacity: 0.85;
     }
-
-    @media (max-width: 720px) {
-      .nav {
-        align-items: flex-start;
-      }
-
-      .nav-right {
-        justify-content: flex-start;
-      }
-
-      .hero-card {
-        padding: 1.1rem 1rem 0.95rem 1rem;
-      }
-
-      .book-card {
-        padding: 0.75rem;
-      }
-    }
   </style>
 </head>
+
 <body>
-  <!-- Top navigation -->
   <header>
     <div class="nav">
       <div class="nav-left">
         <div class="logo-pill">RV</div>
         <div class="brand-text">
           <div class="brand-title">RoofVault Library</div>
-          <div class="brand-subtitle">
-            Search your roofing manuals & study guides in one place.
-          </div>
+          <div class="brand-subtitle">Search your roofing manuals & study guides in one place.</div>
         </div>
       </div>
+
       <div class="nav-right">
-        <span id="userEmailLabel" class="user-label">Not signed in</span>
-        <span id="subscriptionLabel" class="tier-pill hidden"></span>
-
-        <button id="btnLogin" class="btn btn-secondary">
-          <span>🔓 Login</span>
-        </button>
-        <button id="btnLogout" class="btn btn-secondary hidden">
-          <span>🚪 Logout</span>
-        </button>
-
-        <button id="btnBackHome" class="btn btn-text">
+        <button id="btnBackHome" class="btn btn-text" type="button">
           ⬅ Back to Exams
         </button>
       </div>
     </div>
   </header>
 
-  <!-- Main content -->
   <main>
     <section class="hero-card">
       <div class="hero-header">
         <div>
           <h1 class="hero-title">Your Roofing Reference Shelf</h1>
           <p class="hero-subtitle">
-            Browse RoofVault's library of technical manuals, study guides, and reference
-            PDFs. Use the search bar to filter by title, system, or keyword.
+            Browse RoofVault's library of technical manuals, study guides, and reference PDFs.
+            Use the search bar to filter by title, system, or keyword.
           </p>
         </div>
         <div class="hero-badges">
-          <span class="badge">
-            📚 <span id="badgeBookCount">0 manuals</span>
-          </span>
-          <span class="badge">
-            🧠 AI-ready content
-          </span>
+          <span class="badge">📚 <span id="badgeBookCount">0 manuals</span></span>
+          <span class="badge">🧠 AI-ready content</span>
         </div>
       </div>
 
       <div class="search-row">
         <div class="search-wrapper">
           <span class="search-icon">🔍</span>
-          <input
-            id="searchInput"
-            class="search-input"
-            type="text"
-            placeholder="Search by book title, system, or keyword…"
-          />
+          <input id="searchInput" class="search-input" type="text"
+                 placeholder="Search by book title, system, or keyword…" />
         </div>
-        <div class="result-count" id="resultCount">
-          Loading library…
-        </div>
+        <div class="result-count" id="resultCount">Loading library…</div>
       </div>
     </section>
 
@@ -671,11 +304,11 @@ label[for="bookSelect"] {
       <div>
         <div class="shelf-label">All Books</div>
         <div id="bookGrid" class="book-grid"></div>
+
         <div id="emptyState" class="empty-state hidden">
           <div class="empty-icon">🕵️‍♂️</div>
           <div>
-            No books matched your search. Try a different keyword, or clear the search
-            box to see the full RoofVault library again.
+            No books matched your search. Try a different keyword, or clear the search box to see the full RoofVault library again.
           </div>
         </div>
       </div>
@@ -687,264 +320,25 @@ label[for="bookSelect"] {
     <span>Library preview &mdash; book viewing limits come in a later step.</span>
   </footer>
 
-  <!-- Load your books + logic -->
-<!-- Make sure books.js is in the same folder as library.html -->
-<script src="books.js"></script>
+  <!-- Books + renderer logic -->
+  <script src="books.js"></script>
 
-<script>
-  // ---------------------------
-  // Demo / No-Auth Mode
-  // ---------------------------
-  // Auth is intentionally disabled for demo.
-  // Library is fully accessible without login.
+  <script>
+    // Demo / No-Auth Mode: remove login chrome safely
+    window.isLoggedIn = true;
+    window.subscriptionTier = "demo";
 
-  window.isLoggedIn = true;
-  window.subscriptionTier = 'demo';
-
-  // Safely hide auth UI if it exists in the DOM
-  const userEmailLabel = document.getElementById('userEmailLabel');
-  const subscriptionLabel = document.getElementById('subscriptionLabel');
-  const btnLogin = document.getElementById('btnLogin');
-  const btnLogout = document.getElementById('btnLogout');
-
-  if (userEmailLabel) userEmailLabel.textContent = '';
-  if (subscriptionLabel) subscriptionLabel.classList.add('hidden');
-  if (btnLogin) btnLogin.classList.add('hidden');
-  if (btnLogout) btnLogout.classList.add('hidden');
-
-  // Back button (if present) still works
-  const btnBackHome = document.getElementById('btnBackHome');
-  if (btnBackHome) {
-    btnBackHome.addEventListener('click', () => {
-      window.location.href = '/';
-    });
-  }
-</script>
-
-
-    
-  
-    
-// ---------------------------
-// RoofVault Library Renderer
-// Loads books from /api/books (Azure Search → Blob Storage)
-// ---------------------------
-
-const bookGrid = document.getElementById("bookGrid");
-const searchInput = document.getElementById("searchInput");
-const resultCount = document.getElementById("resultCount");
-const emptyState = document.getElementById("emptyState");
-const badgeBookCount = document.getElementById("badgeBookCount");
-
-let ALL_BOOKS = [];
-
-// ---- helpers ----
-function safeStr(v) {
-  return String(v ?? "").trim();
-}
-
-function getTitle(book) {
-  // books-v2 uses displayTitle; fallback to legacy title
-  return safeStr(book?.displayTitle || book?.title || "Untitled Manual");
-}
-
-function getParts(book) {
-  // books-v2 parts are objects like { raw, fileName, partLabel } OR strings
-  const parts = Array.isArray(book?.parts) ? book.parts : [];
-  return parts
-    .map((p) => {
-      if (typeof p === "string") return safeStr(p);
-      if (p && typeof p === "object") return safeStr(p.fileName || p.raw || "");
-      return "";
-    })
-    .filter(Boolean);
-}
-
-function getPrimaryBlobName(book) {
-  // Prefer first part's filename/raw; fallback to legacy fileName
-  const legacy = safeStr(book?.fileName);
-  if (legacy) return legacy;
-
-  const parts = getParts(book);
-  return parts[0] || "";
-}
-
-// Extract year if found inside the title (optional, not required)
-function extractYear(text) {
-  const match = safeStr(text).match(/(19|20)\d{2}/);
-  return match ? match[0] : null;
-}
-
-// ---- Search filter (GROUPED books) ----
-function filterBooks(query) {
-  if (!query) return ALL_BOOKS;
-
-  const q = query.toLowerCase();
-
-  return ALL_BOOKS.filter((b) => {
-    const title = getTitle(b).toLowerCase();
-    if (title.includes(q)) return true;
-
-    // allow matching on any underlying part blob name
-    const parts = getParts(b);
-    return parts.some((p) => p.toLowerCase().includes(q));
-  });
-}
-
-// ---- Build each grouped book card ----
-function createBookCard(book) {
-  const title = getTitle(book);
-  const firstLetter = title.charAt(0).toUpperCase() || "R";
-
-  const parts = getParts(book);
-  const partCount = parts.length;
-
-  const blobName = getPrimaryBlobName(book); // raw blob name (NO .pdf)
-  const year = extractYear(title);
-
-  const card = document.createElement("article");
-  card.className = "book-card";
-
-  card.innerHTML = `
-    <div class="book-main">
-      <div class="book-thumbnail">
-        <span>${firstLetter}</span>
-      </div>
-      <div class="book-info">
-        <div class="book-title">${title}</div>
-        <div class="book-meta">
-          ${partCount ? `${partCount} part${partCount === 1 ? "" : "s"}` : "PDF"}
-          ${year ? ` • ${year}` : ""}
-        </div>
-      </div>
-    </div>
-
-    <div class="book-footer">
-      <div class="book-footer-left">
-        <span class="pill-soft">
-          <span>📘</span>
-          <span>${partCount ? "Combined Volume" : "PDF"}</span>
-        </span>
-      </div>
-
-      <button class="btn-view" type="button" ${blobName ? "" : "disabled"}>
-        <span>${blobName ? "Read" : "Unavailable"}</span>
-        <span>➜</span>
-      </button>
-    </div>
-  `;
-
-  const btn = card.querySelector(".btn-view");
-  if (blobName) {
-    btn.addEventListener("click", async () => {
-      // Safari popup-safe: open immediately on click
-      const newTab = window.open("about:blank", "_blank");
-      if (!newTab) {
-        alert("Pop-up blocked. Please allow pop-ups for RoofVault and try again.");
-        return;
-      }
-
-      try {
-        newTab.document.write(
-          "<p style='font-family: system-ui; padding: 16px;'>Loading PDF…</p>"
-        );
-
-        const res = await fetch(`/api/book?name=${encodeURIComponent(blobName)}`);
-        const data = await res.json();
-
-        if (!res.ok || !data?.ok || !data?.url) {
-          newTab.close();
-          alert("Could not open this book. Please try again.");
-          return;
-        }
-
-        newTab.location.href = data.url;
-      } catch (err) {
-        console.error("Open book failed:", err);
-        newTab.close();
-        alert("Could not open this book. Please try again.");
-      }
-    });
-  } else {
-    console.warn("No blobName found for book:", book);
-  }
-
-  return card;
-}
-
-
-
-// Render list
-function renderBooks(list) {
-  bookGrid.innerHTML = "";
-
-  if (!Array.isArray(list) || list.length === 0) {
-    bookGrid.classList.add("hidden");
-    emptyState.classList.remove("hidden");
-    resultCount.textContent = "No books found.";
-    return;
-  }
-
-  emptyState.classList.add("hidden");
-  bookGrid.classList.remove("hidden");
-
-  list.forEach((b) => {
-    const card = createBookCard(b);
-    bookGrid.appendChild(card);
-  });
-
-  resultCount.textContent =
-    list.length === 1 ? "1 book found" : `${list.length} books found`;
-}
-
-
-
-// Load books from your Azure Search API route (GROUPED books-v2)
-async function loadBooks() {
-  try {
-    const res = await fetch("/api/books");
-    if (!res.ok) throw new Error(`books api failed: ${res.status}`);
-
-    const data = await res.json();
-
-    // ✅ PRIMARY: use grouped books-v2
-    if (Array.isArray(data.books) && data.books.length > 0) {
-      ALL_BOOKS = data.books;
-    }
-    // ⛑️ FALLBACK: legacy flat filenames (should rarely happen now)
-    else if (Array.isArray(data.values)) {
-      ALL_BOOKS = data.values.map((fn) => ({
-        title: cleanTitle(fn),
-        fileName: fn,
-        parts: [fn]
-      }));
-    } else {
-      ALL_BOOKS = [];
+    // Back button
+    const btnBackHome = document.getElementById("btnBackHome");
+    if (btnBackHome) {
+      btnBackHome.addEventListener("click", () => {
+        window.location.href = "/exams.html";
+      });
     }
 
-    badgeBookCount.textContent =
-      ALL_BOOKS.length === 1 ? "1 manual" : `${ALL_BOOKS.length} manuals`;
-
-    renderBooks(ALL_BOOKS);
-  } catch (err) {
-    console.error("Library load error:", err);
-    resultCount.textContent = "Could not load library.";
-  }
-}
-
-
-// Initialize page
-document.addEventListener("DOMContentLoaded", () => {
-  loadAuthState();
-  loadBooks();
-
-  if (searchInput) {
-    searchInput.addEventListener("input", (e) => {
-      const filtered = filterBooks(e.target.value.trim());
-      renderBooks(filtered);
-    });
-  }
-});
-</script>
+    // IMPORTANT:
+    // Do NOT inline the library renderer here.
+    // books.js owns the renderer to prevent accidental plaintext rendering.
+  </script>
 </body>
 </html>
