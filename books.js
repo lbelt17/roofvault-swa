@@ -61,6 +61,28 @@
       .replace(/[^a-z0-9]/g, ""); // remove punctuation/hyphens
   }
 
+  // IMPORTANT:
+  // NRCA has two naming conventions in your system for the same books:
+  // - "NRCA - Membrane Roof Systems 2019"
+  // - "NRCA-Roofing-Manual-Membrane-Roof-Systems-2019"
+  //
+  // They refer to the same material, but keyifyTitle() produces different keys because of "roofingmanual".
+  // canonicalKey() normalizes that difference for NRCA titles ONLY (low risk).
+  function canonicalKey(title) {
+    const k = keyifyTitle(title);
+
+    // If the key starts with "nrcaroofingmanual...", treat it as "nrca..."
+    // This makes:
+    //   nrcaroofingmanualmembraneroofsystems2019
+    // match
+    //   nrcamembraneroofsystems2019
+    if (k.startsWith("nrcaroofingmanual")) {
+      return "nrca" + k.slice("nrcaroofingmanual".length);
+    }
+
+    return k;
+  }
+
   // ---------- Normalize parts ----------
   // Ensures we always store an array of STRING blob names in selection.parts
   // Supports books-v2 parts objects like:
@@ -91,6 +113,20 @@
       })
       .map((s) => String(s).trim())
       .filter(Boolean);
+  }
+
+  // Try to sort parts by trailing "Part NN" if present, otherwise keep original order
+  function sortParts(parts) {
+    const copy = normalizeParts(parts);
+
+    function partNum(s) {
+      const m = String(s).match(/part\s*0*([0-9]+)\s*$/i);
+      if (!m) return Number.POSITIVE_INFINITY;
+      const n = parseInt(m[1], 10);
+      return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
+    }
+
+    return copy.slice().sort((a, b) => partNum(a) - partNum(b));
   }
 
   // ---------- Build options from /api/books (grouped) ----------
@@ -174,7 +210,6 @@
       const frag = document.createDocumentFragment();
       for (let i = 0; i < list.length; i++) {
         const b = list[i];
-        // Faster than createElement+setAttribute loops
         frag.appendChild(new Option(b.displayTitle, b.bookGroupId));
       }
       select.appendChild(frag);
@@ -187,7 +222,6 @@
       const q = search.value.trim().toLowerCase();
       if (!q) return fill(sorted);
 
-      // Filter without re-lowercasing every title each keystroke
       const out = [];
       for (let i = 0; i < sortedWithLC.length; i++) {
         const item = sortedWithLC[i];
@@ -203,7 +237,7 @@
         ? {
             bookGroupId: picked.bookGroupId || "",
             displayTitle: picked.displayTitle || "",
-            parts: normalizeParts(picked.parts)
+            parts: sortParts(picked.parts)
           }
         : { bookGroupId: "", displayTitle: "", parts: [] };
 
@@ -233,49 +267,51 @@
       window.__rvSelectedBook = { bookGroupId: "", displayTitle: "", parts: [] };
       window.__rvBookSelection = window.__rvSelectedBook;
 
-      // 1) Build grouped options if available
       const grouped = buildGroupedOptions(json);
 
-      // 2) If grouped exists but some books have no parts, rebuild ONLY missing parts from values[]
+      // If grouped exists and we have values[], merge parts from values[] (not only when empty)
+      // This is important because grouped may be missing Part 02, etc.
       if (grouped.length && Array.isArray(json?.values) && json.values.length) {
-        // Determine which grouped books need parts
+        const vals = json.values;
+
+        // Only build an index for titles that are actually present in grouped
         const neededKeys = new Set();
         for (let i = 0; i < grouped.length; i++) {
           const b = grouped[i];
-          if (!Array.isArray(b.parts) || b.parts.length === 0) {
-            const key = keyifyTitle(cleanDisplayTitle(b.displayTitle));
-            if (key) neededKeys.add(key);
-          }
+          const key = canonicalKey(cleanDisplayTitle(b.displayTitle));
+          if (key) neededKeys.add(key);
         }
 
-        // Only scan values[] if we actually need to fill something
-        if (neededKeys.size > 0) {
-          const titleToParts = new Map(); // key -> string[]
-          const vals = json.values;
+        const titleToParts = new Map(); // key -> string[]
+        for (let i = 0; i < vals.length; i++) {
+          const name = String(vals[i] || "").trim();
+          if (!name) continue;
 
-          for (let i = 0; i < vals.length; i++) {
-            const name = String(vals[i] || "").trim();
-            if (!name) continue;
+          const title = cleanDisplayTitle(name);
+          const key = canonicalKey(title);
+          if (!key || !neededKeys.has(key)) continue;
 
-            const title = cleanDisplayTitle(name);
-            const key = keyifyTitle(title);
-            if (!key || !neededKeys.has(key)) continue;
-
-            let arr = titleToParts.get(key);
-            if (!arr) {
-              arr = [];
-              titleToParts.set(key, arr);
-            }
-            arr.push(name);
+          let arr = titleToParts.get(key);
+          if (!arr) {
+            arr = [];
+            titleToParts.set(key, arr);
           }
+          arr.push(name);
+        }
 
-          // Assign rebuilt parts back to grouped list
-          for (let i = 0; i < grouped.length; i++) {
-            const b = grouped[i];
-            if (!Array.isArray(b.parts) || b.parts.length === 0) {
-              const key = keyifyTitle(cleanDisplayTitle(b.displayTitle));
-              b.parts = titleToParts.get(key) || [];
-            }
+        // Merge (union) discovered parts into grouped parts
+        for (let i = 0; i < grouped.length; i++) {
+          const b = grouped[i];
+          const key = canonicalKey(cleanDisplayTitle(b.displayTitle));
+          const found = titleToParts.get(key) || [];
+
+          if (found.length) {
+            const set = new Set(normalizeParts(b.parts));
+            for (let j = 0; j < found.length; j++) set.add(String(found[j]).trim());
+            b.parts = sortParts(Array.from(set));
+          } else {
+            // still sort whatever we have
+            b.parts = sortParts(b.parts);
           }
         }
       }
