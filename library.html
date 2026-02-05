@@ -403,79 +403,87 @@
     }
 
     function createBookCard(book) {
-      const title = getTitle(book);
-      const firstLetter = title.charAt(0).toUpperCase() || "R";
+  const title = getTitle(book);
+  const firstLetter = title.charAt(0).toUpperCase() || "R";
 
-      const parts = getParts(book);
-      const partCount = parts.length;
+  const parts = getParts(book);
+  const partCount = parts.length;
 
-      const blobName = getPrimaryBlobName(book);
-      const year = extractYear(title);
+  const blobName = getPrimaryBlobName(book);
+  const year = extractYear(title);
 
-      const card = document.createElement("article");
-      card.className = "book-card";
+  const card = document.createElement("article");
+  card.className = "book-card";
 
-      card.innerHTML = `
-        <div class="book-main">
-          <div class="book-thumbnail"><span>${firstLetter}</span></div>
-          <div class="book-info">
-            <div class="book-title">${title}</div>
-            <div class="book-meta">
-              ${partCount ? `${partCount} part${partCount === 1 ? "" : "s"}` : "PDF"}
-              ${year ? ` • ${year}` : ""}
-            </div>
-          </div>
+  card.innerHTML = `
+    <div class="book-main">
+      <div class="book-thumbnail">
+        <span>${firstLetter}</span>
+      </div>
+
+      <div class="book-info">
+        <div class="book-title">${title}</div>
+        <div class="book-meta">
+          ${partCount ? `${partCount} part${partCount === 1 ? "" : "s"}` : "PDF"}
+          ${year ? ` • ${year}` : ""}
         </div>
 
-        <div class="book-footer">
-          <div class="book-footer-left">
-            <span class="pill-soft">
-              <span>📘</span>
-              <span>${partCount ? "Combined Volume" : "PDF"}</span>
-            </span>
-          </div>
-
-          <button class="btn-view" type="button" ${blobName ? "" : "disabled"}>
-            <span>${blobName ? "Read" : "Unavailable"}</span>
-            <span>➜</span>
-          </button>
+        <div class="book-tags">
+          <span class="tag">${partCount ? "Combined Volume" : "PDF"}</span>
         </div>
-      `;
+      </div>
+    </div>
 
-      const btn = card.querySelector(".btn-view");
-      if (blobName) {
-        btn.addEventListener("click", async () => {
-          const newTab = window.open("about:blank", "_blank");
-          if (!newTab) {
-            alert("Pop-up blocked. Please allow pop-ups for RoofVault and try again.");
-            return;
-          }
+    <div class="book-footer">
+      <div class="book-footer-left">
+        <span class="pill-soft">
+          <span>📘</span>
+          <span>${partCount ? "Combined Volume" : "PDF"}</span>
+        </span>
+      </div>
 
-          try {
-            newTab.document.write(
-              "<p style='font-family: system-ui; padding: 16px;'>Loading PDF…</p>"
-            );
+      <button class="btn-view" type="button" ${blobName ? "" : "disabled"}>
+        <span>${blobName ? "Read" : "Unavailable"}</span>
+        <span>➜</span>
+      </button>
+    </div>
+  `;
 
-            const res = await fetch(`/api/book?name=${encodeURIComponent(blobName)}`);
-            const data = await res.json();
-
-            if (!res.ok || !data?.ok || !data?.url) {
-              newTab.close();
-              alert("Could not open this book. Please try again.");
-              return;
-            }
-
-            newTab.location.href = data.url;
-          } catch (err) {
-            console.error("Open book failed:", err);
-            newTab.close();
-            alert("Could not open this book. Please try again.");
-          }
-        });
+  const btn = card.querySelector(".btn-view");
+  if (blobName) {
+    btn.addEventListener("click", async () => {
+      const newTab = window.open("about:blank", "_blank");
+      if (!newTab) {
+        alert("Pop-up blocked. Please allow pop-ups for RoofVault and try again.");
+        return;
       }
 
-      return card;
-    }
+      try {
+        newTab.document.write(
+          "<p style='font-family: system-ui; padding: 16px;'>Loading PDF…</p>"
+        );
+
+        const res = await fetch(`/api/book?name=${encodeURIComponent(blobName)}`);
+        const data = await res.json();
+
+        if (!res.ok || !data?.ok || !data?.url) {
+          newTab.close();
+          alert("Could not open this book. Please try again.");
+          return;
+        }
+
+        newTab.location.href = data.url;
+      } catch (err) {
+        console.error("Open book failed:", err);
+        newTab.close();
+        alert("Could not open this book. Please try again.");
+      }
+    });
+  }
+
+  return card;
+}
+
 
     function renderBooks(list) {
       bookGrid.innerHTML = "";
