@@ -91,23 +91,122 @@
     return { bookMount, qList, btn };
   }
 
-  // ================== DEMO / AUTH (DISABLED) ==================
-// For demo stability: exam generation is ALWAYS allowed.
-// No auth, no subscription, no async checks, no button locking.
+  // ================== LOADER (SAFE, FRONTEND-ONLY) ==================
+  function ensureSpinnerStyles() {
+    if (document.getElementById("rvSpinnerStyles")) return;
 
-function isDemoMode() {
-  return true;
-}
-
-async function refreshButtonAuth(btn) {
-  if (btn) {
-    btn.disabled = false;
-    btn.title = "Generate a 25-question practice exam.";
-    btn.style.cursor = "pointer";
+    const style = document.createElement("style");
+    style.id = "rvSpinnerStyles";
+    style.textContent = `
+      @keyframes rv-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      @keyframes rv-pulse { 0% { opacity: .55; } 50% { opacity: 1; } 100% { opacity: .55; } }
+    `;
+    document.head.appendChild(style);
   }
-  return true;
-}
 
+  function showLoader(qList, message) {
+    if (!qList) return { hide() {} };
+
+    ensureSpinnerStyles();
+
+    // Make qList a positioning context
+    const prevPos = qList.style.position;
+    if (!prevPos || prevPos === "static") qList.style.position = "relative";
+
+    // Remove any existing loader
+    const existing = qList.querySelector(".rv-loading-overlay");
+    if (existing) existing.remove();
+
+    const overlay = el("div", { class: "rv-loading-overlay" });
+    overlay.style.position = "absolute";
+    overlay.style.inset = "0";
+    overlay.style.display = "flex";
+    overlay.style.alignItems = "center";
+    overlay.style.justifyContent = "center";
+    overlay.style.padding = "18px";
+    overlay.style.borderRadius = "12px";
+    overlay.style.background = "rgba(10, 12, 18, 0.78)";
+    overlay.style.backdropFilter = "blur(10px)";
+    overlay.style.webkitBackdropFilter = "blur(10px)";
+    overlay.style.border = "1px solid rgba(70, 80, 110, 0.25)";
+    overlay.style.zIndex = "5";
+
+    const card = el("div", { class: "rv-loading-card" });
+    card.style.display = "flex";
+    card.style.flexDirection = "column";
+    card.style.alignItems = "center";
+    card.style.gap = "10px";
+    card.style.padding = "16px 18px";
+    card.style.borderRadius = "14px";
+    card.style.background = "rgba(15, 19, 30, 0.72)";
+    card.style.border = "1px solid rgba(120,135,170,0.25)";
+    card.style.boxShadow = "0 10px 30px rgba(0,0,0,0.35)";
+    card.style.minWidth = "240px";
+    card.style.maxWidth = "520px";
+    card.style.textAlign = "center";
+
+    const spinner = el("div", { class: "rv-spinner" });
+    spinner.style.width = "34px";
+    spinner.style.height = "34px";
+    spinner.style.borderRadius = "50%";
+    spinner.style.border = "3px solid rgba(160, 180, 220, 0.25)";
+    spinner.style.borderTopColor = "rgba(160, 180, 220, 0.9)";
+    spinner.style.animation = "rv-spin 0.9s linear infinite";
+
+    const title = el("div", { class: "rv-loading-title", text: message || "Generating exam…" });
+    title.style.fontSize = "14px";
+    title.style.fontWeight = "600";
+    title.style.letterSpacing = "0.2px";
+    title.style.color = "rgba(235, 245, 255, 0.92)";
+
+    const sub = el("div", { class: "rv-loading-sub", text: "This can take ~10–20 seconds depending on the book." });
+    sub.style.fontSize = "12.5px";
+    sub.style.color = "rgba(210, 220, 240, 0.75)";
+    sub.style.animation = "rv-pulse 1.6s ease-in-out infinite";
+
+    card.appendChild(spinner);
+    card.appendChild(title);
+    card.appendChild(sub);
+    overlay.appendChild(card);
+
+    qList.appendChild(overlay);
+
+    let dots = 0;
+    const base = message || "Generating exam";
+    const dotTimer = setInterval(() => {
+      dots = (dots + 1) % 4;
+      title.textContent = base + ".".repeat(dots);
+    }, 450);
+
+    let slowTimer = setTimeout(() => {
+      sub.textContent = "Still working… pulling the best questions from the selected book.";
+    }, 8500);
+
+    function hide() {
+      clearInterval(dotTimer);
+      clearTimeout(slowTimer);
+      if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      // Keep position as-is (safe); don't reset in case page relies on it
+    }
+
+    return { hide };
+  }
+
+  // ================== DEMO / AUTH (DISABLED) ==================
+  // For demo stability: exam generation is ALWAYS allowed.
+  // No auth, no subscription, no async checks, no button locking.
+  function isDemoMode() {
+    return true;
+  }
+
+  async function refreshButtonAuth(btn) {
+    if (btn) {
+      btn.disabled = false;
+      btn.title = "Generate a 25-question practice exam.";
+      btn.style.cursor = "pointer";
+    }
+    return true;
+  }
 
   // ================== BOOK SELECTION ==================
   function getBookSelection() {
@@ -366,11 +465,18 @@ async function refreshButtonAuth(btn) {
     const isNewAttempt = options.newAttempt === true;
     const seen = isNewAttempt ? loadSeen(selection.bookGroupId).slice(-200) : [];
 
+    let loader = null;
+
     try {
       btn.disabled = true;
       btn.classList.add("busy");
+      btn.setAttribute("aria-busy", "true");
+
       setStatus("Generating…");
       clearResults(qList);
+
+      // Show loader overlay (safe UX only)
+      loader = showLoader(qList, "Generating exam");
 
       const useBank = isRwcStudyGuide(selection);
 
@@ -493,8 +599,11 @@ async function refreshButtonAuth(btn) {
         message: e?.message || String(e),
       });
     } finally {
+      // Always hide loader and restore button state
+      try { loader?.hide?.(); } catch {}
       btn.disabled = false;
       btn.classList.remove("busy");
+      btn.removeAttribute("aria-busy");
     }
   }
 
