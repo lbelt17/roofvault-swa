@@ -1,7 +1,7 @@
 ﻿// api/exam/index.js
 // Step: Book-wide multi-part support (stability-first, NO sources returned)
 // - Uses up to 8 parts max (1 top chunk per part) for speed + grounding.
-// - Keeps single-part mode working.
+// - Keeps single-part mode working (via parts[] still).
 // - Does NOT return sources[] or cite fields (cleaner + faster).
 //
 // ✅ Quality guardrails added (no "chapter/section/page" questions)
@@ -13,6 +13,8 @@
 //    - Tries to include exhibit questions when available
 //    (Does NOT affect POST behavior)
 
+"use strict";
+
 const DEPLOY_TAG =
   "DEPLOY_TAG__2026-02-02__MULTIPART_BOOKWIDE_NO_SOURCES__NO_TOC_QS_B__BANK_RWC_TEST_C";
 
@@ -22,7 +24,10 @@ process.on("uncaughtException", (err) => console.error("[uncaughtException]", er
 function jsonRes(context, status, obj) {
   context.res = {
     status,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "no-store",
+    },
     body: JSON.stringify(obj),
   };
 }
@@ -87,9 +92,7 @@ function extractFirstJsonObject(s) {
 // ---------- Quality guardrails (TOC/navigation ban) ----------
 
 function normalizeText(s) {
-  return String(s || "")
-    .replace(/\s+/g, " ")
-    .trim();
+  return String(s || "").replace(/\s+/g, " ").trim();
 }
 
 function looksLikeTocOrNavigationQuestion(q) {
@@ -120,26 +123,28 @@ function looksLikeTocOrNavigationQuestion(q) {
   ];
 
   for (const re of bannedPatterns) {
-  if (re.test(t)) return true;
-}
-return false;
+    if (re.test(t)) return true;
+  }
+  return false;
 }
 
 function looksMalformedMcq(q) {
   if (!q || typeof q !== "object") return true;
+
   const question = normalizeText(q.question);
   const answer = normalizeText(q.answer);
+
   if (!question || !answer) return true;
   if (!Array.isArray(q.options) || q.options.length < 4) return true;
 
-  const ids = q.options.map((o) => String(o?.id || "").toUpperCase());
+  const ids = q.options.map((o) => String(o?.id || "").toUpperCase().trim());
   const hasA = ids.includes("A");
   const hasB = ids.includes("B");
   const hasC = ids.includes("C");
   const hasD = ids.includes("D");
   if (!(hasA && hasB && hasC && hasD)) return true;
 
-  if (!["A", "B", "C", "D"].includes(answer.toUpperCase())) return true;
+  if (!["A", "B", "C", "D"].includes(answer.toUpperCase().trim())) return true;
 
   for (const o of q.options) {
     if (!normalizeText(o?.text)) return true;
@@ -148,45 +153,56 @@ function looksMalformedMcq(q) {
 }
 
 /**
- * Shuffle MCQ options and remap the correct answer safely
+ * Shuffle MCQ options and remap the correct answer safely.
+ * - Never throws (cannot crash function)
+ * - Uses Math.random only (runtime-safe)
+ * - Re-labels A-D after shuffle
+ * - Remaps answer letter by matching the correct option text
  */
 function shuffleAndRemapOptions(options, answerLetter) {
-  if (!Array.isArray(options) || options.length < 4) {
-    return { options, answer: answerLetter };
-  }
+  try {
+    if (!Array.isArray(options) || options.length < 4) {
+      return { options, answer: String(answerLetter || "").toUpperCase().trim() };
+    }
 
-  const upperAnswer = String(answerLetter || "").toUpperCase().trim();
-  const correctOpt = options.find(
-    (o) => String(o?.id || "").toUpperCase().trim() === upperAnswer
-  );
-  const correctText = normalizeText(correctOpt?.text);
-
-  // Fisher–Yates shuffle (copy first)
-  const shuffled = options.map((o) => ({ ...o }));
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = randInt(i + 1);
-    const tmp = shuffled[i];
-    shuffled[i] = shuffled[j];
-    shuffled[j] = tmp;
-  }
-
-  // Reassign A–D labels after shuffle
-  const letters = ["A", "B", "C", "D"];
-  const relabeled = shuffled.map((o, idx) => ({
-    id: letters[idx],
-    text: normalizeText(o?.text),
-  }));
-
-  // Find new correct answer by matching text
-  let newAnswer = upperAnswer;
-  if (correctText) {
-    const found = relabeled.find(
-      (o) => normalizeText(o.text) === correctText
+    const upperAnswer = String(answerLetter || "").toUpperCase().trim();
+    const correctOpt = options.find(
+      (o) => String(o?.id || "").toUpperCase().trim() === upperAnswer
     );
-    if (found?.id) newAnswer = found.id;
-  }
+    const correctText = normalizeText(correctOpt?.text);
 
-  return { options: relabeled, answer: newAnswer };
+    // Fisher–Yates shuffle (copy first)
+    const shuffled = options.map((o) => ({
+      id: String(o?.id || "").toUpperCase().trim(),
+      text: normalizeText(o?.text),
+    }));
+
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = shuffled[i];
+      shuffled[i] = shuffled[j];
+      shuffled[j] = tmp;
+    }
+
+    // Re-label A–D after shuffle (first 4 only)
+    const letters = ["A", "B", "C", "D"];
+    const relabeled = shuffled.slice(0, 4).map((o, idx) => ({
+      id: letters[idx],
+      text: normalizeText(o?.text),
+    }));
+
+    // Remap answer by matching correctText to new labeled options
+    let newAnswer = upperAnswer;
+    if (correctText) {
+      const found = relabeled.find((o) => normalizeText(o.text) === correctText);
+      if (found?.id) newAnswer = found.id;
+    }
+
+    return { options: relabeled, answer: newAnswer };
+  } catch (e) {
+    // Never let option shuffle break the API
+    return { options, answer: String(answerLetter || "").toUpperCase().trim() };
+  }
 }
 
 function normalizeMcq(it, nextId) {
@@ -198,7 +214,6 @@ function normalizeMcq(it, nextId) {
     : [];
 
   const baseAnswer = normalizeText(it?.answer).toUpperCase().trim();
-
   const { options, answer } = shuffleAndRemapOptions(baseOptions, baseAnswer);
 
   return {
@@ -209,7 +224,6 @@ function normalizeMcq(it, nextId) {
     answer,
   };
 }
-
 
 // ---------- Bank loader + sampling (RWC) ----------
 
@@ -230,36 +244,12 @@ function hasExhibit(q) {
   return !!(q?.exhibitImage || q?.imageRef);
 }
 
-// crypto-safe random int in [0, maxExclusive)
-function randInt(maxExclusive) {
-  if (maxExclusive <= 1) return 0;
-
-  try {
-    // eslint-disable-next-line no-undef
-    const c = typeof crypto !== "undefined" ? crypto : null;
-    if (c && typeof c.getRandomValues === "function") {
-      const buf = new Uint32Array(1);
-      const limit = Math.floor(0xffffffff / maxExclusive) * maxExclusive;
-      let x;
-      do {
-        c.getRandomValues(buf);
-        x = buf[0];
-      } while (x >= limit);
-      return x % maxExclusive;
-    }
-  } catch {
-    // fall through
-  }
-
-  return Math.floor(Math.random() * maxExclusive);
-}
-
 // Sample N unique items without replacement (Fisher-Yates partial shuffle)
 function sampleUnique(arr, n) {
   const a = Array.isArray(arr) ? arr.slice() : [];
   const take = Math.min(Math.max(n, 0), a.length);
   for (let i = 0; i < take; i += 1) {
-    const j = i + randInt(a.length - i);
+    const j = i + Math.floor(Math.random() * (a.length - i));
     const tmp = a[i];
     a[i] = a[j];
     a[j] = tmp;
@@ -281,8 +271,7 @@ function selectRwcPro(questions, count) {
   const remaining = count - picked.length;
   picked.push(...sampleUnique(mcq4, remaining));
 
-  // If somehow still short (shouldn't happen with 39 4-option MCQs),
-  // fill from any >=4 options remaining (including nonstandard)
+  // If somehow still short, fill from any >=4 options remaining
   if (picked.length < count) {
     const pickedIds = new Set(picked.map((x) => x.id));
     const any4 = questions.filter((q) => optCount(q) >= 4 && !pickedIds.has(q.id));
@@ -360,7 +349,7 @@ module.exports = async function (context, req) {
       });
     }
 
-    // ---------- POST (UNCHANGED BEHAVIOR) ----------
+    // ---------- POST ----------
     if (req.method !== "POST") {
       return jsonRes(context, 405, {
         ok: false,
@@ -394,6 +383,7 @@ module.exports = async function (context, req) {
       });
     }
 
+    // stability: max 8 parts
     const parts = partsAll.slice(0, 8);
 
     // --- 1) Search: 1 best chunk per part (top=1) ---
