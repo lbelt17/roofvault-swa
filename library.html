@@ -320,11 +320,13 @@
     <span>Library preview &mdash; book viewing limits come in a later step.</span>
   </footer>
 
-  <!-- Books + renderer logic -->
+    <!-- Books + renderer logic -->
   <script src="books.js"></script>
 
   <script>
-    // Demo / No-Auth Mode: remove login chrome safely
+    // ---------------------------
+    // Demo / No-Auth Mode (no login UI)
+    // ---------------------------
     window.isLoggedIn = true;
     window.subscriptionTier = "demo";
 
@@ -336,9 +338,204 @@
       });
     }
 
-    // IMPORTANT:
-    // Do NOT inline the library renderer here.
-    // books.js owns the renderer to prevent accidental plaintext rendering.
+    // ---------------------------
+    // RoofVault Library Renderer
+    // Loads books from /api/books (Azure Search → Blob Storage)
+    // ---------------------------
+
+    const bookGrid = document.getElementById("bookGrid");
+    const searchInput = document.getElementById("searchInput");
+    const resultCount = document.getElementById("resultCount");
+    const emptyState = document.getElementById("emptyState");
+    const badgeBookCount = document.getElementById("badgeBookCount");
+
+    let ALL_BOOKS = [];
+
+    function safeStr(v) {
+      return String(v ?? "").trim();
+    }
+
+    // If legacy filenames appear, this avoids crashes.
+    function cleanTitle(name) {
+      const s = safeStr(name)
+        .replace(/\.pdf$/i, "")
+        .replace(/\s+/g, " ")
+        .trim();
+      return s || "Untitled Manual";
+    }
+
+    function getTitle(book) {
+      return safeStr(book?.displayTitle || book?.title || "Untitled Manual");
+    }
+
+    function getParts(book) {
+      const parts = Array.isArray(book?.parts) ? book.parts : [];
+      return parts
+        .map((p) => {
+          if (typeof p === "string") return safeStr(p);
+          if (p && typeof p === "object") return safeStr(p.fileName || p.raw || "");
+          return "";
+        })
+        .filter(Boolean);
+    }
+
+    function getPrimaryBlobName(book) {
+      const legacy = safeStr(book?.fileName);
+      if (legacy) return legacy;
+      const parts = getParts(book);
+      return parts[0] || "";
+    }
+
+    function extractYear(text) {
+      const match = safeStr(text).match(/(19|20)\d{2}/);
+      return match ? match[0] : null;
+    }
+
+    function filterBooks(query) {
+      if (!query) return ALL_BOOKS;
+      const q = query.toLowerCase();
+      return ALL_BOOKS.filter((b) => {
+        const title = getTitle(b).toLowerCase();
+        if (title.includes(q)) return true;
+        const parts = getParts(b);
+        return parts.some((p) => p.toLowerCase().includes(q));
+      });
+    }
+
+    function createBookCard(book) {
+      const title = getTitle(book);
+      const firstLetter = title.charAt(0).toUpperCase() || "R";
+
+      const parts = getParts(book);
+      const partCount = parts.length;
+
+      const blobName = getPrimaryBlobName(book);
+      const year = extractYear(title);
+
+      const card = document.createElement("article");
+      card.className = "book-card";
+
+      card.innerHTML = `
+        <div class="book-main">
+          <div class="book-thumbnail"><span>${firstLetter}</span></div>
+          <div class="book-info">
+            <div class="book-title">${title}</div>
+            <div class="book-meta">
+              ${partCount ? `${partCount} part${partCount === 1 ? "" : "s"}` : "PDF"}
+              ${year ? ` • ${year}` : ""}
+            </div>
+          </div>
+        </div>
+
+        <div class="book-footer">
+          <div class="book-footer-left">
+            <span class="pill-soft">
+              <span>📘</span>
+              <span>${partCount ? "Combined Volume" : "PDF"}</span>
+            </span>
+          </div>
+
+          <button class="btn-view" type="button" ${blobName ? "" : "disabled"}>
+            <span>${blobName ? "Read" : "Unavailable"}</span>
+            <span>➜</span>
+          </button>
+        </div>
+      `;
+
+      const btn = card.querySelector(".btn-view");
+      if (blobName) {
+        btn.addEventListener("click", async () => {
+          const newTab = window.open("about:blank", "_blank");
+          if (!newTab) {
+            alert("Pop-up blocked. Please allow pop-ups for RoofVault and try again.");
+            return;
+          }
+
+          try {
+            newTab.document.write(
+              "<p style='font-family: system-ui; padding: 16px;'>Loading PDF…</p>"
+            );
+
+            const res = await fetch(`/api/book?name=${encodeURIComponent(blobName)}`);
+            const data = await res.json();
+
+            if (!res.ok || !data?.ok || !data?.url) {
+              newTab.close();
+              alert("Could not open this book. Please try again.");
+              return;
+            }
+
+            newTab.location.href = data.url;
+          } catch (err) {
+            console.error("Open book failed:", err);
+            newTab.close();
+            alert("Could not open this book. Please try again.");
+          }
+        });
+      }
+
+      return card;
+    }
+
+    function renderBooks(list) {
+      bookGrid.innerHTML = "";
+
+      if (!Array.isArray(list) || list.length === 0) {
+        bookGrid.classList.add("hidden");
+        emptyState.classList.remove("hidden");
+        resultCount.textContent = "No books found.";
+        return;
+      }
+
+      emptyState.classList.add("hidden");
+      bookGrid.classList.remove("hidden");
+
+      list.forEach((b) => bookGrid.appendChild(createBookCard(b)));
+
+      resultCount.textContent =
+        list.length === 1 ? "1 book found" : `${list.length} books found`;
+    }
+
+    async function loadBooks() {
+      try {
+        const res = await fetch("/api/books", { cache: "no-store" });
+        if (!res.ok) throw new Error(`books api failed: ${res.status}`);
+
+        const data = await res.json();
+
+        if (Array.isArray(data.books) && data.books.length > 0) {
+          ALL_BOOKS = data.books;
+        } else if (Array.isArray(data.values)) {
+          ALL_BOOKS = data.values.map((fn) => ({
+            title: cleanTitle(fn),
+            fileName: fn,
+            parts: [fn],
+          }));
+        } else {
+          ALL_BOOKS = [];
+        }
+
+        if (badgeBookCount) {
+          badgeBookCount.textContent =
+            ALL_BOOKS.length === 1 ? "1 manual" : `${ALL_BOOKS.length} manuals`;
+        }
+
+        renderBooks(ALL_BOOKS);
+      } catch (err) {
+        console.error("Library load error:", err);
+        resultCount.textContent = "Could not load library.";
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadBooks();
+      if (searchInput) {
+        searchInput.addEventListener("input", (e) => {
+          renderBooks(filterBooks(e.target.value.trim()));
+        });
+      }
+    });
   </script>
 </body>
 </html>
+
