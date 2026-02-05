@@ -688,135 +688,39 @@ label[for="bookSelect"] {
   </footer>
 
   <!-- Load your books + logic -->
-  <!-- Make sure books.js is in the same folder as library.html -->
-  <script src="books.js"></script>
+<!-- Make sure books.js is in the same folder as library.html -->
+<script src="books.js"></script>
 
-  <script>
-    // ---------------------------
-    // Auth + subscription basics
-    // ---------------------------
-
-    window.isLoggedIn = false;
-    window.subscriptionTier = 'free';
-
-    
-
-    const userEmailLabel = document.getElementById('userEmailLabel');
-    const subscriptionLabel = document.getElementById('subscriptionLabel');
-    const btnLogin = document.getElementById('btnLogin');
-    const btnLogout = document.getElementById('btnLogout');
-    const btnBackHome = document.getElementById('btnBackHome');
-
-   async function loadAuthState() {
-  try {
-    const res = await fetch('/api/auth-me', { credentials: 'include' });
-    if (!res.ok) throw new Error('No auth info');
-
-    const data = await res.json();
-
-    // Update global flags
-window.isLoggedIn = !!data.isLoggedIn;
-window.plan = data.plan || 'free';
-window.roles = data.roles || [];
-
-// If not logged in → Free User
-if (!data.isLoggedIn) {
-  userEmailLabel.textContent = 'Free User';
-  subscriptionLabel.classList.add('hidden');
-  btnLogin.classList.remove('hidden');
-  btnLogout.classList.add('hidden');
-  return;
-}
-
-
-    // Logged in user
-    userEmailLabel.textContent = data.email || '';
-
-if (window.roles.includes('owner')) {
-  subscriptionLabel.textContent = 'Owner Access';
-} else if (window.plan === 'premium') {
-  subscriptionLabel.textContent = 'Premium';
-} else {
-  subscriptionLabel.textContent = 'Free User';
-}
-
-
-    subscriptionLabel.classList.remove('hidden');
-    btnLogin.classList.add('hidden');
-    btnLogout.classList.remove('hidden');
-
-  } catch (err) {
-    console.error('loadAuthState error:', err);
-
-    // Fallback – treat as logged out
-    window.isLoggedIn = false;
-    window.subscriptionTier = 'free';
-    userEmailLabel.textContent = 'Not signed in';
-    subscriptionLabel.textContent = 'Free (guest)';
-    subscriptionLabel.classList.add('hidden');
-    btnLogin.classList.remove('hidden');
-    btnLogout.classList.add('hidden');
-  }
-}
-
-
-// ---- Safe auth state handling (Library page) ----
-try {
-  // principal may not exist on this page yet
-  const principal = window.principal || null;
-
-  const email =
-    principal?.userDetails ||
-    principal?.userId ||
-    'Signed in';
-
-  const isOwner =
-    email &&
-    typeof email === 'string' &&
-    OWNER_EMAILS.includes(email.toLowerCase());
+<script>
+  // ---------------------------
+  // Demo / No-Auth Mode
+  // ---------------------------
+  // Auth is intentionally disabled for demo.
+  // Library is fully accessible without login.
 
   window.isLoggedIn = true;
-  window.subscriptionTier = isOwner ? 'owner' : 'free';
+  window.subscriptionTier = 'demo';
 
-  userEmailLabel.textContent = email;
+  // Safely hide auth UI if it exists in the DOM
+  const userEmailLabel = document.getElementById('userEmailLabel');
+  const subscriptionLabel = document.getElementById('subscriptionLabel');
+  const btnLogin = document.getElementById('btnLogin');
+  const btnLogout = document.getElementById('btnLogout');
 
-  subscriptionLabel.textContent =
-    window.subscriptionTier === 'owner'
-      ? 'Owner Access'
-      : 'Free Tier';
+  if (userEmailLabel) userEmailLabel.textContent = '';
+  if (subscriptionLabel) subscriptionLabel.classList.add('hidden');
+  if (btnLogin) btnLogin.classList.add('hidden');
+  if (btnLogout) btnLogout.classList.add('hidden');
 
-  subscriptionLabel.classList.remove('hidden');
+  // Back button (if present) still works
+  const btnBackHome = document.getElementById('btnBackHome');
+  if (btnBackHome) {
+    btnBackHome.addEventListener('click', () => {
+      window.location.href = '/';
+    });
+  }
+</script>
 
-  btnLogin.classList.add('hidden');
-  btnLogout.classList.remove('hidden');
-
-} catch (err) {
-  console.error('loadAuthState error:', err);
-
-  // Treat as logged out / guest
-  window.isLoggedIn = false;
-  window.subscriptionTier = 'free';
-
-  userEmailLabel.textContent = 'Not signed in';
-
-  subscriptionLabel.textContent = 'Free (guest)';
-  subscriptionLabel.classList.add('hidden');
-
-  btnLogin.classList.remove('hidden');
-  btnLogout.classList.add('hidden');
-}
-
-btnLogin.addEventListener('click', () => {
-  window.location.href = '/login';
-});
-
-btnLogout.addEventListener('click', () => {
-  window.location.href = '/.auth/logout';
-});
-
-btnBackHome.addEventListener('click', () => {
-  window.location.href = '/';
-});
 
     
   
