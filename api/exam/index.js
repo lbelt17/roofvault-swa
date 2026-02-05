@@ -14,7 +14,7 @@
 //    (Does NOT affect POST behavior)
 
 const DEPLOY_TAG =
-  "DEPLOY_TAG__2026-02-02__MULTIPART_BOOKWIDE_NO_SOURCES__NO_TOC_QS_B__BANK_RWC_TEST_C";
+  "DEPLOY_TAG__2026-02-05__EXACT_MATCH_SEARCH_FIRST__GRACEFUL_NO_CONTENT__BANK_RWC_TEST_C";
 
 process.on("unhandledRejection", (err) => console.error("[unhandledRejection]", err));
 process.on("uncaughtException", (err) => console.error("[uncaughtException]", err));
@@ -223,7 +223,6 @@ function selectRwcPro(questions, count) {
   const exhibits = questions.filter((q) => hasExhibit(q) && optCount(q) >= 4);
   const mcq4 = questions.filter((q) => !hasExhibit(q) && optCount(q) >= 4);
 
-  // include up to 2 exhibits if available (bank only has 4 total)
   const wantEx = Math.min(2, exhibits.length, count);
   const picked = [];
 
@@ -232,8 +231,6 @@ function selectRwcPro(questions, count) {
   const remaining = count - picked.length;
   picked.push(...sampleUnique(mcq4, remaining));
 
-  // If somehow still short (shouldn't happen with 39 4-option MCQs),
-  // fill from any >=4 options remaining (including nonstandard)
   if (picked.length < count) {
     const pickedIds = new Set(picked.map((x) => x.id));
     const any4 = questions.filter((q) => optCount(q) >= 4 && !pickedIds.has(q.id));
@@ -241,6 +238,67 @@ function selectRwcPro(questions, count) {
   }
 
   return picked.slice(0, count);
+}
+
+// ---------- Search helpers (Exact match first, then fallback search) ----------
+
+function escapeODataString(s) {
+  return String(s || "").replace(/'/g, "''");
+}
+
+async function postSearch(searchUrl, apiKey, payload) {
+  const resp = await fetch(searchUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "api-key": apiKey },
+    body: JSON.stringify(payload),
+  });
+  const text = await resp.text();
+  const json = safeJsonParse(text);
+  return { ok: resp.ok, status: resp.status, text, json };
+}
+
+async function bestDocForPart(searchUrl, apiKey, partName) {
+  // Most Azure blob indexes store filename in metadata_storage_name
+  const filterField = process.env.SEARCH_FILTER_FIELD || "metadata_storage_name";
+
+  const candidates = [
+    String(partName || "").trim(),
+    `${String(partName || "").trim()}.pdf`,
+    `${String(partName || "").trim()}.docx`,
+  ].filter(Boolean);
+
+  // 1) Try exact-eq filter with search:"*"
+  for (const name of candidates) {
+    const filter = `${filterField} eq '${escapeODataString(name)}'`;
+    const payload = {
+      search: "*",
+      top: 1,
+      queryType: "simple",
+      select: "*",
+      filter,
+    };
+
+    const r = await postSearch(searchUrl, apiKey, payload);
+    if (!r.ok) continue;
+
+    const docs = Array.isArray(r.json?.value) ? r.json.value : [];
+    if (docs[0]) return { mode: "filter_eq", nameTried: name, doc: docs[0] };
+  }
+
+  // 2) Fallback: original behavior (text search by partName)
+  {
+    const payload = {
+      search: String(partName || "").trim(),
+      top: 1,
+      queryType: "simple",
+      select: "*",
+    };
+
+    const r = await postSearch(searchUrl, apiKey, payload);
+    if (!r.ok) return { mode: "fallback_search_error", status: r.status, raw: r.text.slice(0, 2000), doc: null };
+    const docs = Array.isArray(r.json?.value) ? r.json.value : [];
+    return { mode: "fallback_search", doc: docs[0] || null };
+  }
 }
 
 // ---------- Main ----------
@@ -257,7 +315,6 @@ module.exports = async function (context, req) {
           const bankObj = loadRwcBank();
           const questionsAll = Array.isArray(bankObj?.questions) ? bankObj.questions : [];
 
-          // ✅ PRO MODE: only 4-option+ questions, random each request
           const selected = selectRwcPro(questionsAll, count);
 
           const items = selected.map((q, idx) => ({
@@ -300,7 +357,6 @@ module.exports = async function (context, req) {
         }
       }
 
-      // Default GET (health)
       return jsonRes(context, 200, {
         ok: true,
         deployTag: DEPLOY_TAG,
@@ -311,7 +367,7 @@ module.exports = async function (context, req) {
       });
     }
 
-    // ---------- POST (UNCHANGED BEHAVIOR) ----------
+    // ---------- POST ----------
     if (req.method !== "POST") {
       return jsonRes(context, 405, {
         ok: false,
@@ -358,34 +414,47 @@ module.exports = async function (context, req) {
 
     const hitsByPart = [];
     for (const partName of parts) {
-      const searchPayload = {
-        search: partName,
-        top: 1,
-        queryType: "simple",
-        select: "*",
-      };
+      const r = await bestDocForPart(searchUrl, SEARCH_API_KEY, partName);
 
-      const searchResp = await fetch(searchUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "api-key": SEARCH_API_KEY },
-        body: JSON.stringify(searchPayload),
-      });
-
-      const searchText = await searchResp.text();
-      if (!searchResp.ok) {
+      // If the fallback search itself errored, return a real JSON error (no silent 500)
+      if (r && r.mode === "fallback_search_error") {
         return jsonRes(context, 500, {
           ok: false,
           deployTag: DEPLOY_TAG,
           stage: "search",
           partName,
-          error: `Search failed: HTTP ${searchResp.status}`,
-          raw: searchText.slice(0, 2000),
+          error: "Search failed during fallback search",
+          detail: { status: r.status, mode: r.mode },
+          raw: (r.raw || "").slice(0, 2000),
         });
       }
 
-      const searchJson = safeJsonParse(searchText) || {};
-      const docs = Array.isArray(searchJson.value) ? searchJson.value : [];
-      hitsByPart.push({ partName, doc: docs[0] || null });
+      hitsByPart.push({
+        partName,
+        doc: r?.doc || null,
+        searchMode: r?.mode || "unknown",
+        nameTried: r?.nameTried || null,
+      });
+    }
+
+    const hitCount = hitsByPart.filter((x) => !!x.doc).length;
+
+    // ✅ Graceful “no searchable content” instead of crashing the exam endpoint
+    if (hitCount === 0) {
+      return jsonRes(context, 422, {
+        ok: false,
+        deployTag: DEPLOY_TAG,
+        stage: "search",
+        error: "No searchable content found for the selected parts.",
+        hint: "This usually means the book/parts are not indexed well enough (OCR) or filenames don't match the index metadata.",
+        debug: {
+          partsRequested: partsAll.length,
+          partsUsed: parts.length,
+          partsTruncated: Math.max(0, partsAll.length - parts.length),
+          searchModes: hitsByPart.map((x) => ({ part: x.partName, mode: x.searchMode, nameTried: x.nameTried })),
+        },
+        items: [],
+      });
     }
 
     const contextPieces = [];
@@ -520,7 +589,7 @@ ${avoid}
       model: AOAI_DEPLOYMENT,
       part: partLabel,
       debug: {
-        hits: hitsByPart.filter((x) => !!x.doc).length,
+        hits: hitCount,
         contextChars: groundedContext.length,
         desiredCount,
         batchSize: BATCH_SIZE,
@@ -529,6 +598,7 @@ ${avoid}
         partsTruncated: Math.max(0, partsAll.length - parts.length),
         filteredTocQPolicy: true,
         returnedCount: items.length,
+        searchModes: hitsByPart.map((x) => ({ part: x.partName, mode: x.searchMode, nameTried: x.nameTried })),
       },
       items,
     });
