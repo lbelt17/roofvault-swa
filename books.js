@@ -11,6 +11,17 @@
 (function () {
   "use strict";
 
+  // ---------- Exam-only (client injected) books ----------
+  // These do NOT come from /api/books and should only exist for the Exam module UI.
+  // Bank-mode exams do not require parts[].
+  const EXAM_ONLY_BOOKS = [
+    {
+      bookGroupId: "rrc-study-guide",
+      displayTitle: "RRC Study Guide (Bank)",
+      parts: []
+    }
+  ];
+
   // ---------- DOM helpers ----------
   function $(id) {
     return document.getElementById(id);
@@ -306,29 +317,44 @@
           const found = titleToParts.get(key) || [];
 
           if (found.length) {
-  const existing = normalizeParts(b.parts);
-  const set = new Set(existing);
-  for (let j = 0; j < found.length; j++) set.add(String(found[j]).trim());
+            const existing = normalizeParts(b.parts);
+            const set = new Set(existing);
+            for (let j = 0; j < found.length; j++) set.add(String(found[j]).trim());
 
-  // ✅ Keep ONLY one naming family (the family already used by grouped data)
-  // Use the first existing part as the "truth" for the desired prefix
-  const first = existing[0] || "";
-  const desiredPrefix = first.split(" - Part")[0]; // everything before " - Part"
+            // ✅ Keep ONLY one naming family (the family already used by grouped data)
+            // Use the first existing part as the "truth" for the desired prefix
+            const first = existing[0] || "";
+            const desiredPrefix = first.split(" - Part")[0]; // everything before " - Part"
 
-  const filtered = Array.from(set).filter((p) => {
-    // must match the same prefix family
-    return desiredPrefix && p.startsWith(desiredPrefix);
-  });
+            const filtered = Array.from(set).filter((p) => {
+              // must match the same prefix family
+              return desiredPrefix && p.startsWith(desiredPrefix);
+            });
 
-  b.parts = sortParts(filtered);
-} else {
-  b.parts = sortParts(b.parts);
-}
-
+            b.parts = sortParts(filtered);
+          } else {
+            b.parts = sortParts(b.parts);
+          }
         }
       }
 
       const options = grouped.length ? grouped : buildFallbackOptions(json);
+
+      // ✅ EXAM-ONLY injection (minimal + safe)
+      // Add RRC Study Guide (Bank) to the dropdown/search without touching /api/books.
+      // Do not duplicate if it already exists.
+      for (let i = 0; i < EXAM_ONLY_BOOKS.length; i++) {
+        const extra = EXAM_ONLY_BOOKS[i];
+        const exists = options.some((b) => String(b?.bookGroupId || "") === extra.bookGroupId);
+        if (!exists) {
+          options.unshift({
+            bookGroupId: String(extra.bookGroupId || "").trim(),
+            displayTitle: String(extra.displayTitle || "").trim(),
+            parts: normalizeParts(extra.parts)
+          });
+        }
+      }
+
       console.timeEnd("books.js:build");
       renderDropdown(mount, options);
     } catch (e) {
