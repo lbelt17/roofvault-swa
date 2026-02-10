@@ -4,9 +4,11 @@
 // - /api/exam expects ONLY: { parts: [...], count: 25 }
 // - Do NOT send bookGroupId, displayTitle, mode, excludeQuestions, attemptNonce, etc.
 //
-// SPECIAL CASE (RWC BANK MODE):
+// SPECIAL CASE (BANK MODE):
 // - If selected book is the RWC Study Guide, call:
 //   GET /api/exam?bank=rwc&count=25
+// - If selected book is the RRC Study Guide (exam-only injected option), call:
+//   GET /api/exam?bank=rrc&count=25
 // - Items may include exhibitImage (render it).
 //
 // DEMO MODE:
@@ -19,6 +21,15 @@
   const QUESTION_COUNT = 25;
   const API_URL = "/api/exam";
   const FETCH_TIMEOUT_MS = 120000;
+
+  // Exam-only injected entries (NOT from /api/books)
+  const EXAM_ONLY_BANK_ENTRIES = [
+    {
+      key: "__rv_bank_rrc__",
+      label: "RRC Study Guide (Bank)",
+      selection: { bookGroupId: "rrc-study-guide", displayTitle: "RRC Study Guide" },
+    },
+  ];
 
   // ================== DOM HELPERS ==================
   function $(id) {
@@ -89,6 +100,61 @@
     }
 
     return { bookMount, qList, btn };
+  }
+
+  // ================== EXAM-ONLY DROPDOWN INJECTION ==================
+  function findBookSelect(bookMount) {
+    if (!bookMount) return null;
+    // Try common patterns: select inside mount
+    const sel = bookMount.querySelector("select");
+    return sel || null;
+  }
+
+  function injectExamOnlyBankOptions() {
+    const ui = ensureUI();
+    if (!ui) return;
+
+    const sel = findBookSelect(ui.bookMount);
+    if (!sel) {
+      // If the page uses a custom dropdown (not <select>), we do nothing safely.
+      // User can still set window.__rvSelectedBook manually if needed.
+      return;
+    }
+
+    // Avoid double-injecting
+    for (const entry of EXAM_ONLY_BANK_ENTRIES) {
+      const exists = Array.from(sel.options || []).some((o) => o && o.value === entry.key);
+      if (!exists) {
+        const opt = document.createElement("option");
+        opt.value = entry.key;
+        opt.textContent = entry.label;
+        sel.appendChild(opt);
+      }
+    }
+
+    // Wire a change handler that sets a synthetic selection when our exam-only option is chosen
+    if (!sel.__rvBankInjectedHandler) {
+      sel.__rvBankInjectedHandler = true;
+
+      sel.addEventListener("change", () => {
+        const v = String(sel.value || "");
+        const match = EXAM_ONLY_BANK_ENTRIES.find((e) => e.key === v);
+
+        if (match) {
+          // Set synthetic selection (exam-only)
+          window.__rvSelectedBook = {
+            ...match.selection,
+            // parts intentionally omitted: bank mode doesn't need it
+          };
+          // Notify any listeners
+          try {
+            window.dispatchEvent(new CustomEvent("rv:bookChanged"));
+          } catch {
+            // ignore
+          }
+        }
+      });
+    }
   }
 
   // ================== LOADER (SAFE, FRONTEND-ONLY) ==================
@@ -186,7 +252,6 @@
       clearInterval(dotTimer);
       clearTimeout(slowTimer);
       if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
-      // Keep position as-is (safe); don't reset in case page relies on it
     }
 
     return { hide };
@@ -194,7 +259,6 @@
 
   // ================== DEMO / AUTH (DISABLED) ==================
   // For demo stability: exam generation is ALWAYS allowed.
-  // No auth, no subscription, no async checks, no button locking.
   function isDemoMode() {
     return true;
   }
@@ -244,31 +308,35 @@
     return [String(selection?.bookGroupId || "").trim()].filter(Boolean);
   }
 
-  // ================== RWC BANK DETECTION ==================
+  // ================== BANK DETECTION ==================
   function isRwcStudyGuide(selection) {
     const title = String(selection?.displayTitle || "").toLowerCase();
     const group = String(selection?.bookGroupId || "").toLowerCase();
 
-    // Match your actual selection values:
     // bookGroupId: "iibec-rwc-study-guide-docx"
     // displayTitle: "IIBEC - RWC Study Guide.docx"
     if (group === "iibec-rwc-study-guide-docx") return true;
     if (title.includes("iibec") && title.includes("rwc") && title.includes("study guide")) return true;
 
     return false;
+  }
 
-  }// ================== RRC BANK DETECTION ==================
-function isRrcStudyGuide(selection) {
-  const title = String(selection?.displayTitle || "").toLowerCase();
-  const group = String(selection?.bookGroupId || "").toLowerCase();
+  function isRrcStudyGuide(selection) {
+    const title = String(selection?.displayTitle || "").toLowerCase();
+    const group = String(selection?.bookGroupId || "").toLowerCase();
 
-  // Bank-only (not in /api/books)
-  if (group === "rrc-study-guide") return true;
-  if (title.includes("rrc") && title.includes("study")) return true;
+    // Exam-only injected selection
+    if (group === "rrc-study-guide") return true;
+    if (title.includes("rrc") && title.includes("study")) return true;
 
-  return false;
-}
+    return false;
+  }
 
+  function bankKeyForSelection(selection) {
+    if (isRwcStudyGuide(selection)) return "rwc";
+    if (isRrcStudyGuide(selection)) return "rrc";
+    return "";
+  }
 
   // ================== NO-REPEAT MEMORY (client-side only) ==================
   function normQ(s) {
@@ -441,8 +509,6 @@ function isRrcStudyGuide(selection) {
   }
 
   function renderItems(qList, items) {
-    // If your existing renderer exists, use it.
-    // But if it throws, fall back safely.
     if (typeof window.renderQuiz === "function") {
       try {
         window.renderQuiz(items);
@@ -461,7 +527,6 @@ function isRrcStudyGuide(selection) {
 
     const { qList, btn } = ui;
 
-    // Auth gate (skipped in demo mode)
     const authed = await refreshButtonAuth(btn);
     if (!authed) return;
 
@@ -469,7 +534,7 @@ function isRrcStudyGuide(selection) {
     if (!selection || !selection.bookGroupId) {
       setVisibleError("Error: No book selected.", {
         error: "No valid book selection found for exam generation.",
-        fix: "Expose window.__rvSelectedBook (or window.getSelectedBook()) with {bookGroupId, displayTitle, parts?}.",
+        fix: "Select a book OR choose the injected 'RRC Study Guide (Bank)' option.",
       });
       return;
     }
@@ -487,22 +552,21 @@ function isRrcStudyGuide(selection) {
       setStatus("Generating…");
       clearResults(qList);
 
-      // Show loader overlay (safe UX only)
       loader = showLoader(qList, "Generating exam");
 
-      const useBank = isRwcStudyGuide(selection) || isRrcStudyGuide(selection);
-
+      const bankKey = bankKeyForSelection(selection);
+      const useBank = !!bankKey;
 
       let res;
       let payload = null;
 
       if (useBank) {
-        // RWC bank mode (GET)
-        const url = `${API_URL}?bank=rwc&count=${encodeURIComponent(QUESTION_COUNT)}`;
+        const url = `${API_URL}?bank=${encodeURIComponent(bankKey)}&count=${encodeURIComponent(QUESTION_COUNT)}`;
         console.log("[RoofVault] /api/exam (BANK) url:", url);
 
         showDiag({
           mode: "bank",
+          bank: bankKey,
           selection: { bookGroupId: selection.bookGroupId, displayTitle: selection.displayTitle },
           newAttempt: isNewAttempt,
           seenCountClientOnly: seen.length,
@@ -511,7 +575,6 @@ function isRrcStudyGuide(selection) {
 
         res = await safeFetch(url, { method: "GET" });
       } else {
-        // NORMAL mode (POST) — keep contract EXACT
         const parts = normalizeParts(selection);
 
         if (!Array.isArray(parts) || parts.length === 0) {
@@ -590,16 +653,15 @@ function isRrcStudyGuide(selection) {
         return;
       }
 
-      // Save as seen AFTER successful response
       addSeen(selection.bookGroupId, items);
 
-      // Render (includes exhibitImage support via fallback)
       renderItems(qList, items);
 
       setStatus(`Ready • ${items.length} questions`);
       showDiag({
         ok: true,
         mode: useBank ? "bank" : "normal",
+        bank: useBank ? bankKey : "",
         message: "✅ Exam generated.",
         itemsCount: items.length,
         hasAnyExhibitImages: !!items.some((q) => (q.exhibitImage || q.imageRef || "").trim()),
@@ -612,7 +674,6 @@ function isRrcStudyGuide(selection) {
         message: e?.message || String(e),
       });
     } finally {
-      // Always hide loader and restore button state
       try { loader?.hide?.(); } catch {}
       btn.disabled = false;
       btn.classList.remove("busy");
@@ -626,6 +687,9 @@ function isRrcStudyGuide(selection) {
   async function wire() {
     const ui = ensureUI();
     if (!ui) return;
+
+    // Inject the exam-only RRC option if the dropdown is a <select>
+    injectExamOnlyBankOptions();
 
     showDiag("✅ gen-exam.js loaded. Click Generate to test.");
 
