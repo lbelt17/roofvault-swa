@@ -290,42 +290,14 @@ module.exports = async function (context, req) {
       const bank = String(req.query?.bank || "").toLowerCase();
       const count = Math.min(Math.max(safeInt(req.query?.count, 25), 1), 200);
 
-      if (bank === "rwc") {
-        try {
-          const bankObj = loadRwcBank();
-          const questionsAll = Array.isArray(bankObj?.questions) ? bankObj.questions : [];
-
-          // ✅ PRO MODE: only 4-option+ questions, random each request
-          const selected = selectRwcPro(questionsAll, count);
-
-          const items = selected.map((q, idx) => ({
-            id: String(q.id || idx + 1),
-            type: q.type || "mcq",
-            question: q.question || "",
-            options: Array.isArray(q.options) ? q.options : [],
-            answer: q.answer || "",
-            multi: !!q.multi,
-            correctIndexes: Array.isArray(q.correctIndexes) ? q.correctIndexes : [],
-            expectedSelections: q.expectedSelections,
-            cite: q.cite || bankObj?.book || "RWC Bank",
-            explanation: q.explanation || "",
-            exhibitImage: q.exhibitImage || "",
-            imageRef: q.imageRef || q.exhibitImage || "",
-          }));
-
-if (bank === "rrc") {
+      // ================== BANK MODE ==================
+if (bank === "rwc") {
   try {
-    // Load RRC bank (BANK-ONLY, not in /api/books)
-    const bankObj = require("./rrc-question-bank-full");
+    const bankObj = loadRwcBank();
+    const questionsAll = Array.isArray(bankObj?.questions) ? bankObj.questions : [];
 
-    const questionsAll = Array.isArray(bankObj?.items)
-      ? bankObj.items
-      : [];
-
-    // Simple random selection (no pro filtering yet)
-    const selected = questionsAll
-      .sort(() => 0.5 - Math.random())
-      .slice(0, count);
+    // ✅ PRO MODE: only 4-option+ questions, random each request
+    const selected = selectRwcPro(questionsAll, count);
 
     const items = selected.map((q, idx) => ({
       id: String(q.id || idx + 1),
@@ -333,12 +305,10 @@ if (bank === "rrc") {
       question: q.question || "",
       options: Array.isArray(q.options) ? q.options : [],
       answer: q.answer || "",
-      multi: q.type === "multi",
-      correctIndexes: Array.isArray(q.correctIndexes)
-        ? q.correctIndexes
-        : [],
-      expectedSelections: q.expectedSelections || 1,
-      cite: q.cite || bankObj?.book || "RRC Study Guide",
+      multi: !!q.multi,
+      correctIndexes: Array.isArray(q.correctIndexes) ? q.correctIndexes : [],
+      expectedSelections: q.expectedSelections,
+      cite: q.cite || bankObj?.book || "RWC Bank",
       explanation: q.explanation || "",
       exhibitImage: q.exhibitImage || "",
       imageRef: q.imageRef || q.exhibitImage || "",
@@ -346,44 +316,93 @@ if (bank === "rrc") {
 
     return jsonRes(context, 200, {
       ok: true,
-      bank: "rrc",
+      deployTag: DEPLOY_TAG,
+      method: "GET",
+      bank: "rwc",
       count: items.length,
       items,
     });
-  } catch (err) {
-    console.error("[RRC BANK ERROR]", err);
+  } catch (e) {
     return jsonRes(context, 500, {
       ok: false,
-      error: "Failed to load RRC question bank",
-      detail: err?.message || String(err),
+      deployTag: DEPLOY_TAG,
+      error: "Failed to load RWC bank",
+      message: e?.message || String(e),
     });
   }
 }
 
-          return jsonRes(context, 200, {
-            ok: true,
-            deployTag: DEPLOY_TAG,
-            mode: "bank",
-            bank: "rwc",
-            book: bankObj?.book || "IIBEC - RWC Study Guide.docx",
-            countRequested: count,
-            returned: items.length,
-            bankTotal: questionsAll.length,
-            hasAnyExhibitImages: items.some((x) => !!x.exhibitImage || !!x.imageRef),
-            qualityMode: "pro-mcq-only",
-            items,
-          });
-        } catch (e) {
-          return jsonRes(context, 500, {
-            ok: false,
-            deployTag: DEPLOY_TAG,
-            mode: "bank",
-            bank: "rwc",
-            error: "Failed to load rwc-question-bank-full.js",
-            detail: e?.message || String(e),
-          });
-        }
-      }
+if (bank === "rrc") {
+  try {
+    const bankObj = require("./rrc-question-bank-full");
+
+    // Your RRC file is { book, items: [...] }
+    const questionsAll = Array.isArray(bankObj?.items) ? bankObj.items : [];
+
+    // Random unique selection (stable shuffle)
+    const take = Math.max(1, Math.min(Number(count) || 25, 200, questionsAll.length));
+    const shuffled = questionsAll.slice();
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    const selected = shuffled.slice(0, take);
+
+    const items = selected.map((q, idx) => {
+      const opts = Array.isArray(q?.options) ? q.options : [];
+
+      // Normalize options to {id, text}
+      const normOpts = opts.map((o, i2) => ({
+        id: String(o?.id || String.fromCharCode(65 + i2)),
+        text: String(o?.text ?? "").trim(),
+      }));
+
+      // Determine correct letters (your file has correctOptions + answer)
+      const correctLetters = Array.isArray(q?.correctOptions) && q.correctOptions.length
+        ? q.correctOptions.map((x) => String(x).toUpperCase().trim()).filter(Boolean)
+        : (q?.answer ? String(q.answer).toUpperCase().split("").filter(Boolean) : []);
+
+      const isMulti = q?.type === "multi" || correctLetters.length > 1;
+
+      // Map letters -> indexes for interactive-exam.js compatibility
+      const correctIndexes = correctLetters
+        .map((L) => L.charCodeAt(0) - 65)
+        .filter((n) => Number.isFinite(n) && n >= 0 && n < normOpts.length);
+
+      return {
+        id: String(q?.id || `RRC-${idx + 1}`),
+        type: isMulti ? "multi" : (q?.type || "mcq"),
+        question: String(q?.question || "").trim(),
+        options: normOpts,
+        answer: isMulti ? correctLetters.join("") : (correctLetters[0] || "A"),
+        multi: isMulti,
+        correctIndexes,
+        expectedSelections: Number(q?.expectedSelections || (isMulti ? correctLetters.length : 1)),
+        cite: String(q?.cite || bankObj?.book || "RRC Study Guide"),
+        explanation: String(q?.explanation || ""),
+        exhibitImage: String(q?.exhibitImage || ""),
+        imageRef: String(q?.imageRef || q?.exhibitImage || ""),
+      };
+    });
+
+    return jsonRes(context, 200, {
+      ok: true,
+      deployTag: DEPLOY_TAG,
+      method: "GET",
+      bank: "rrc",
+      count: items.length,
+      items,
+    });
+  } catch (e) {
+    return jsonRes(context, 500, {
+      ok: false,
+      deployTag: DEPLOY_TAG,
+      error: "Failed to load RRC bank",
+      message: e?.message || String(e),
+    });
+  }
+}
+
 
       // Default GET (health)
       return jsonRes(context, 200, {
