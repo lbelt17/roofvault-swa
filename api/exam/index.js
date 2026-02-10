@@ -312,7 +312,7 @@ module.exports = async function (context, req) {
             exhibitImage: q.exhibitImage || "",
             imageRef: q.imageRef || q.exhibitImage || "",
           }));
-          
+
 if (bank === "rrc") {
   try {
     // Load RRC bank (BANK-ONLY, not in /api/books)
@@ -392,7 +392,7 @@ if (bank === "rrc") {
         method: "GET",
         hint: 'POST { "parts":["<part1>","<part2>"], "count":25 }',
         note:
-          "Exam endpoint is multi-part grounded; sources are not returned. For RWC bank: GET /api/exam?bank=rwc&count=25",
+          "Exam endpoint is multi-part grounded; sources are not returned. Bank mode: GET /api/exam?bank=rwc|rrc&count=25",
       });
     }
 
