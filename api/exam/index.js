@@ -312,6 +312,53 @@ module.exports = async function (context, req) {
             exhibitImage: q.exhibitImage || "",
             imageRef: q.imageRef || q.exhibitImage || "",
           }));
+          
+if (bank === "rrc") {
+  try {
+    // Load RRC bank (BANK-ONLY, not in /api/books)
+    const bankObj = require("./rrc-question-bank-full");
+
+    const questionsAll = Array.isArray(bankObj?.items)
+      ? bankObj.items
+      : [];
+
+    // Simple random selection (no pro filtering yet)
+    const selected = questionsAll
+      .sort(() => 0.5 - Math.random())
+      .slice(0, count);
+
+    const items = selected.map((q, idx) => ({
+      id: String(q.id || idx + 1),
+      type: q.type || "mcq",
+      question: q.question || "",
+      options: Array.isArray(q.options) ? q.options : [],
+      answer: q.answer || "",
+      multi: q.type === "multi",
+      correctIndexes: Array.isArray(q.correctIndexes)
+        ? q.correctIndexes
+        : [],
+      expectedSelections: q.expectedSelections || 1,
+      cite: q.cite || bankObj?.book || "RRC Study Guide",
+      explanation: q.explanation || "",
+      exhibitImage: q.exhibitImage || "",
+      imageRef: q.imageRef || q.exhibitImage || "",
+    }));
+
+    return jsonRes(context, 200, {
+      ok: true,
+      bank: "rrc",
+      count: items.length,
+      items,
+    });
+  } catch (err) {
+    console.error("[RRC BANK ERROR]", err);
+    return jsonRes(context, 500, {
+      ok: false,
+      error: "Failed to load RRC question bank",
+      detail: err?.message || String(err),
+    });
+  }
+}
 
           return jsonRes(context, 200, {
             ok: true,

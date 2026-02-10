@@ -256,7 +256,19 @@
     if (title.includes("iibec") && title.includes("rwc") && title.includes("study guide")) return true;
 
     return false;
-  }
+
+  }// ================== RRC BANK DETECTION ==================
+function isRrcStudyGuide(selection) {
+  const title = String(selection?.displayTitle || "").toLowerCase();
+  const group = String(selection?.bookGroupId || "").toLowerCase();
+
+  // Bank-only (not in /api/books)
+  if (group === "rrc-study-guide") return true;
+  if (title.includes("rrc") && title.includes("study")) return true;
+
+  return false;
+}
+
 
   // ================== NO-REPEAT MEMORY (client-side only) ==================
   function normQ(s) {
@@ -478,7 +490,8 @@
       // Show loader overlay (safe UX only)
       loader = showLoader(qList, "Generating exam");
 
-      const useBank = isRwcStudyGuide(selection);
+      const useBank = isRwcStudyGuide(selection) || isRrcStudyGuide(selection);
+
 
       let res;
       let payload = null;
