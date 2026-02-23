@@ -1,4 +1,4 @@
-﻿// api/exam/index.js
+// api/exam/index.js
 // Step: Book-wide multi-part support (stability-first, NO sources returned)
 // - Uses up to 8 parts max (1 top chunk per part) for speed + grounding.
 // - Keeps single-part mode working (via parts[] still).
@@ -334,7 +334,7 @@ if (bank === "rwc") {
 
 if (bank === "rrc") {
   try {
-    const bankObj = require("./rrc-question-bank-full");
+    const bankObj = require("./rrc-question-bank-2026");
 
     // Your RRC file is { book, items: [...] }
     const questionsAll = Array.isArray(bankObj?.items) ? bankObj.items : [];
