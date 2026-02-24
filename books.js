@@ -1,4 +1,4 @@
-﻿// books.js — RoofVault grouped book dropdown + search (PERF-OPT SAFE)
+// books.js — RoofVault grouped book dropdown + search (PERF-OPT SAFE)
 // Uses /api/books -> body.books[] when available (grouped), fallback to body.values[] (raw)
 //
 // Goal: Blobs named like "Example Book - Part 01", "Example Book - Part 02", ...
@@ -18,6 +18,11 @@
     {
       bookGroupId: "rrc-study-guide",
       displayTitle: "RRC Study Guide (Bank)",
+      parts: []
+    },
+    {
+      bookGroupId: "rwc-study-guide",
+      displayTitle: "RWC Study Guide (Bank)",
       parts: []
     }
   ];
@@ -145,11 +150,15 @@
     const books = Array.isArray(json?.books) ? json.books : [];
     // Expect each: { bookGroupId, displayTitle, parts[] }
     return books
-      .map((b) => ({
-        bookGroupId: String(b?.bookGroupId || "").trim(),
-        displayTitle: cleanDisplayTitle(b?.displayTitle || ""),
-        parts: normalizeParts(b?.parts)
-      }))
+      .map((b) => {
+        let gid = String(b?.bookGroupId || "").trim();
+        let title = cleanDisplayTitle(b?.displayTitle || "");
+        if (gid === "iibec-rwc-study-guide-docx") {
+          gid = "rwc-study-guide";
+          title = "RWC Study Guide (Bank)";
+        }
+        return { bookGroupId: gid, displayTitle: title, parts: normalizeParts(b?.parts) };
+      })
       .filter((b) => b.bookGroupId && b.displayTitle);
   }
 
