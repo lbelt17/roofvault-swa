@@ -1,4 +1,4 @@
-﻿// gen-exam.js — RoofVault Practice Exam wiring (stable + "New 25Q" works + no-repeat memory)
+// gen-exam.js — RoofVault Practice Exam wiring (stable + "New 25Q" works + no-repeat memory)
 //
 // CRITICAL CONTRACT (NORMAL MODE):
 // - /api/exam expects ONLY: { parts: [...], count: 25 }
@@ -28,6 +28,11 @@
       key: "__rv_bank_rrc__",
       label: "RRC Study Guide (Bank)",
       selection: { bookGroupId: "rrc-study-guide", displayTitle: "RRC Study Guide" },
+    },
+    {
+      key: "__rv_bank_rwc__",
+      label: "RWC Study Guide (Bank)",
+      selection: { bookGroupId: "rwc-study-guide", displayTitle: "RWC Study Guide" },
     },
   ];
 
@@ -313,10 +318,11 @@
     const title = String(selection?.displayTitle || "").toLowerCase();
     const group = String(selection?.bookGroupId || "").toLowerCase();
 
-    // bookGroupId: "iibec-rwc-study-guide-docx"
-    // displayTitle: "IIBEC - RWC Study Guide.docx"
+    // Injected bank entry
+    if (group === "rwc-study-guide") return true;
+    // Legacy DOCX-based entry (kept for backward compat until removed from Search)
     if (group === "iibec-rwc-study-guide-docx") return true;
-    if (title.includes("iibec") && title.includes("rwc") && title.includes("study guide")) return true;
+    if (title.includes("rwc") && title.includes("study")) return true;
 
     return false;
   }
