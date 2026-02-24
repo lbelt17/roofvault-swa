@@ -234,7 +234,7 @@ function safeInt(n, fallback) {
 
 function loadRwcBank() {
   // eslint-disable-next-line global-require
-  return require("./rwc-question-bank-full.js");
+  return require("./rwc-question-bank-2026.js");
 }
 
 function optCount(q) {
@@ -292,6 +292,7 @@ module.exports = async function (context, req) {
 
       // ================== BANK MODE ==================
 if (bank === "rwc") {
+  const bankSource = "rwc-question-bank-2026.js";
   try {
     const bankObj = loadRwcBank();
     const questionsAll = Array.isArray(bankObj?.questions) ? bankObj.questions : [];
@@ -314,7 +315,7 @@ if (bank === "rwc") {
       imageRef: q.imageRef || q.exhibitImage || "",
     }));
 
-    return jsonRes(context, 200, {
+    jsonRes(context, 200, {
       ok: true,
       deployTag: DEPLOY_TAG,
       method: "GET",
@@ -322,6 +323,9 @@ if (bank === "rwc") {
       count: items.length,
       items,
     });
+    context.res.headers["x-roofvault-bank-source"] = bankSource;
+    context.res.headers["x-roofvault-bank-name"] = "rwc";
+    return;
   } catch (e) {
     return jsonRes(context, 500, {
       ok: false,
@@ -333,6 +337,7 @@ if (bank === "rwc") {
 }
 
 if (bank === "rrc") {
+  const bankSource = "rrc-question-bank-2026.js";
   try {
     const bankObj = require("./rrc-question-bank-2026");
 
@@ -385,7 +390,7 @@ if (bank === "rrc") {
       };
     });
 
-    return jsonRes(context, 200, {
+    jsonRes(context, 200, {
       ok: true,
       deployTag: DEPLOY_TAG,
       method: "GET",
@@ -393,6 +398,9 @@ if (bank === "rrc") {
       count: items.length,
       items,
     });
+    context.res.headers["x-roofvault-bank-source"] = bankSource;
+    context.res.headers["x-roofvault-bank-name"] = "rrc";
+    return;
   } catch (e) {
     return jsonRes(context, 500, {
       ok: false,
