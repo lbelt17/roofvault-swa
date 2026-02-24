@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -104,6 +104,16 @@
         const res = await fetch("/api/books");
         const data = await res.json(); // { field, values, books }
         const field = data.field || null;
+
+        // Normalize legacy RWC DOCX entry to bank label
+        if (Array.isArray(data.books)) {
+          data.books.forEach(b => {
+            if (b.bookGroupId === "iibec-rwc-study-guide-docx") {
+              b.bookGroupId = "rwc-study-guide";
+              b.displayTitle = "RWC Study Guide (Bank)";
+            }
+          });
+        }
 
         // Prefer grouped books; fallback to legacy values
         const items = (Array.isArray(data.books) && data.books.length)
