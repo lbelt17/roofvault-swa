@@ -710,15 +710,14 @@ const RWC_QUESTION_BANK_2026_RAW = {
     options: [
       { id: "A", text: "Presence of corrosive soil chemicals" },
       { id: "B", text: "Exposure to freeze-thaw cycling" },
-      { id: "C", text: "Low interior humidity requirement" },
-      { id: "A", text: "True" },
-      { id: "B", text: "False" }
+      { id: "C", text: "Low interior humidity requirement" }
     ],
     answer: "A",
     explanation: "",
     cite: "RWC Study Guide 2026",
     exhibitImage: "",
-    imageRef: ""
+    imageRef: "",
+    needsReview: true
   },
   {
     id: "RWC-043",
@@ -727,15 +726,14 @@ const RWC_QUESTION_BANK_2026_RAW = {
     options: [
       { id: "A", text: "Liquid Applied Membranes. (LAM)" },
       { id: "B", text: "Bentonite" },
-      { id: "C", text: "Self-adhering Sheets (SBS)" },
-      { id: "A", text: "True" },
-      { id: "B", text: "False" }
+      { id: "C", text: "Self-adhering Sheets (SBS)" }
     ],
     answer: "A",
     explanation: "",
     cite: "RWC Study Guide 2026",
     exhibitImage: "",
-    imageRef: ""
+    imageRef: "",
+    needsReview: true
   },
   {
     id: "RWC-044",
@@ -761,15 +759,14 @@ const RWC_QUESTION_BANK_2026_RAW = {
     options: [
       { id: "A", text: "Elastomeric" },
       { id: "B", text: "Thermoplastic" },
-      { id: "C", text: "Modified Bitumen" },
-      { id: "A", text: "True" },
-      { id: "B", text: "False" }
+      { id: "C", text: "Modified Bitumen" }
     ],
     answer: "A",
     explanation: "",
     cite: "RWC Study Guide 2026",
     exhibitImage: "",
-    imageRef: ""
+    imageRef: "",
+    needsReview: true
   },
   {
     id: "RWC-046",
@@ -819,15 +816,14 @@ const RWC_QUESTION_BANK_2026_RAW = {
     question: "Adhered waterproofing membranes offer two advantages:",
     options: [
       { id: "A", text: "Easier leak detection" },
-      { id: "B", text: "Less probability of slippage during backfilling or settlement of poorly compacted fill" },
-      { id: "A", text: "True" },
-      { id: "B", text: "False" }
+      { id: "B", text: "Less probability of slippage during backfilling or settlement of poorly compacted fill" }
     ],
     answer: "A",
     explanation: "",
     cite: "RWC Study Guide 2026",
     exhibitImage: "",
-    imageRef: ""
+    imageRef: "",
+    needsReview: true
   },
   {
     id: "RWC-050",
@@ -949,15 +945,14 @@ const RWC_QUESTION_BANK_2026_RAW = {
       { id: "A", text: "Pinholing. (wet substrate MVT)" },
       { id: "B", text: "Cratering. (poor surface prep)" },
       { id: "C", text: "Wrinkling. (poor surface prep)" },
-      { id: "D", text: "Blistering. (moisture migration through coating)" },
-      { id: "A", text: "True" },
-      { id: "B", text: "False" }
+      { id: "D", text: "Blistering. (moisture migration through coating)" }
     ],
     answer: "A",
     explanation: "",
     cite: "RWC Study Guide 2026",
     exhibitImage: "",
-    imageRef: ""
+    imageRef: "",
+    needsReview: true
   },
   {
     id: "RWC-059",
@@ -1120,15 +1115,14 @@ const RWC_QUESTION_BANK_2026_RAW = {
     options: [
       { id: "A", text: "Design error. (architect and engineers not coordinating)" },
       { id: "B", text: "Negligent construction practices. (not using protection & drainage boards)" },
-      { id: "C", text: "Defective materials (manufacturer)" },
-      { id: "A", text: "True" },
-      { id: "B", text: "False" }
+      { id: "C", text: "Defective materials (manufacturer)" }
     ],
     answer: "A",
     explanation: "",
     cite: "RWC Study Guide 2026",
     exhibitImage: "",
-    imageRef: ""
+    imageRef: "",
+    needsReview: true
   },
   {
     id: "RWC-071",
@@ -1236,15 +1230,14 @@ const RWC_QUESTION_BANK_2026_RAW = {
       { id: "A", text: "Metallic" },
       { id: "B", text: "Capillary Systems" },
       { id: "C", text: "Chemical Additive" },
-      { id: "D", text: "Acrylic Modified" },
-      { id: "A", text: "True" },
-      { id: "B", text: "False" }
+      { id: "D", text: "Acrylic Modified" }
     ],
     answer: "A",
     explanation: "",
     cite: "RWC Study Guide 2026",
     exhibitImage: "",
-    imageRef: ""
+    imageRef: "",
+    needsReview: true
   },
   {
     id: "RWC-079",
