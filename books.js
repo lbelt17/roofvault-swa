@@ -24,6 +24,36 @@
       bookGroupId: "rwc-study-guide",
       displayTitle: "RWC Study Guide (Bank)",
       parts: []
+    },
+    {
+      bookGroupId: "frsa-general-1-3",
+      displayTitle: "FRSA \u2013 General Sections 1\u20133 (Bank)",
+      parts: []
+    },
+    {
+      bookGroupId: "frsa-steep-slope-4-8",
+      displayTitle: "FRSA \u2013 Steep Slope Sections 4\u20138 (Bank)",
+      parts: []
+    },
+    {
+      bookGroupId: "frsa-low-slope-9-11",
+      displayTitle: "FRSA \u2013 Low Slope Sections 9\u201311 (Bank)",
+      parts: []
+    },
+    {
+      bookGroupId: "frsa-modified-11-13",
+      displayTitle: "FRSA \u2013 Modified/Liquid/Coatings 11\u201313 (Bank)",
+      parts: []
+    },
+    {
+      bookGroupId: "frsa-reroofing-14",
+      displayTitle: "FRSA \u2013 Reroofing Section 14 (Bank)",
+      parts: []
+    },
+    {
+      bookGroupId: "frsa-maintenance-15",
+      displayTitle: "FRSA \u2013 Maintenance Section 15 (Bank)",
+      parts: []
     }
   ];
 

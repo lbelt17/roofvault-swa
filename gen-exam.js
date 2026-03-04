@@ -34,6 +34,36 @@
       label: "RWC Study Guide (Bank)",
       selection: { bookGroupId: "rwc-study-guide", displayTitle: "RWC Study Guide" },
     },
+    {
+      key: "__rv_bank_frsa_g13__",
+      label: "FRSA \u2013 General Sections 1\u20133 (Bank)",
+      selection: { bookGroupId: "frsa-general-1-3", displayTitle: "FRSA \u2013 General Sections 1\u20133" },
+    },
+    {
+      key: "__rv_bank_frsa_ss48__",
+      label: "FRSA \u2013 Steep Slope Sections 4\u20138 (Bank)",
+      selection: { bookGroupId: "frsa-steep-slope-4-8", displayTitle: "FRSA \u2013 Steep Slope Sections 4\u20138" },
+    },
+    {
+      key: "__rv_bank_frsa_ls911__",
+      label: "FRSA \u2013 Low Slope Sections 9\u201311 (Bank)",
+      selection: { bookGroupId: "frsa-low-slope-9-11", displayTitle: "FRSA \u2013 Low Slope Sections 9\u201311" },
+    },
+    {
+      key: "__rv_bank_frsa_mod1113__",
+      label: "FRSA \u2013 Modified/Liquid/Coatings 11\u201313 (Bank)",
+      selection: { bookGroupId: "frsa-modified-11-13", displayTitle: "FRSA \u2013 Modified/Liquid/Coatings 11\u201313" },
+    },
+    {
+      key: "__rv_bank_frsa_rr14__",
+      label: "FRSA \u2013 Reroofing Section 14 (Bank)",
+      selection: { bookGroupId: "frsa-reroofing-14", displayTitle: "FRSA \u2013 Reroofing Section 14" },
+    },
+    {
+      key: "__rv_bank_frsa_maint15__",
+      label: "FRSA \u2013 Maintenance Section 15 (Bank)",
+      selection: { bookGroupId: "frsa-maintenance-15", displayTitle: "FRSA \u2013 Maintenance Section 15" },
+    },
   ];
 
   // ================== DOM HELPERS ==================
@@ -338,9 +368,45 @@
     return false;
   }
 
+  function isFrsaGeneral13(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "frsa-general-1-3";
+  }
+
+  function isFrsaSteepSlope48(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "frsa-steep-slope-4-8";
+  }
+
+  function isFrsaLowSlope911(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "frsa-low-slope-9-11";
+  }
+
+  function isFrsaModified1113(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "frsa-modified-11-13";
+  }
+
+  function isFrsaReroofing14(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "frsa-reroofing-14";
+  }
+
+  function isFrsaMaintenance15(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "frsa-maintenance-15";
+  }
+
   function bankKeyForSelection(selection) {
     if (isRwcStudyGuide(selection)) return "rwc";
     if (isRrcStudyGuide(selection)) return "rrc";
+    if (isFrsaGeneral13(selection)) return "frsa_g13";
+    if (isFrsaSteepSlope48(selection)) return "frsa_ss48";
+    if (isFrsaLowSlope911(selection)) return "frsa_ls911";
+    if (isFrsaModified1113(selection)) return "frsa_mod1113";
+    if (isFrsaReroofing14(selection)) return "frsa_rr14";
+    if (isFrsaMaintenance15(selection)) return "frsa_maint15";
     return "";
   }
 
