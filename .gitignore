@@ -6,3 +6,6 @@ npm-debug.log*
 api.zip
 api_min.zip
 *.zip
+
+# Local Azure Functions settings (never commit)
+api/local.settings.json
