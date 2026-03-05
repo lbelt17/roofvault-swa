@@ -609,11 +609,14 @@
         const data = await res.json();
 
         if (Array.isArray(data.books) && data.books.length > 0) {
-          ALL_BOOKS = data.books;
+          ALL_BOOKS = [...data.books, ...(data.libraryOnlyBooks || [])];
         } else if (Array.isArray(data.values)) {
-          ALL_BOOKS = data.values.map((fn) => ({ title: cleanTitle(fn), fileName: fn, parts: [fn] }));
+          ALL_BOOKS = [
+            ...data.values.map((fn) => ({ title: cleanTitle(fn), fileName: fn, parts: [fn] })),
+            ...(data.libraryOnlyBooks || []),
+          ];
         } else {
-          ALL_BOOKS = [];
+          ALL_BOOKS = [...(data.libraryOnlyBooks || [])];
         }
 
         badgeBookCount.textContent = ALL_BOOKS.length === 1 ? "1 manual" : `${ALL_BOOKS.length} manuals`;

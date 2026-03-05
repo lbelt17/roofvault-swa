@@ -1,4 +1,4 @@
-﻿// force redeploy
+// force redeploy
 /**
  * /api/books — list distinct document names by selecting likely fields.
  * Env:
@@ -364,6 +364,17 @@ module.exports = async function (context, req) {
         .sort((x, y) => String(x.fileName).localeCompare(String(y.fileName)));
     }
 
+    // Library-only books (shown in Library, NOT in Exam dropdown)
+    const libraryOnlyBooks = [
+      {
+        bookGroupId: "frsa-full-manual",
+        displayTitle: "FRSA \u2013 Introduction to Roofing Technology (Full Manual)",
+        title: "FRSA \u2013 Introduction to Roofing Technology (Full Manual)",
+        fileName: "FRSA - Introduction to Roofing Technology 1st Edition.pdf",
+        parts: ["FRSA - Introduction to Roofing Technology 1st Edition.pdf"],
+      },
+    ];
+
     context.res = {
       headers: {
         "Content-Type": "application/json",
@@ -375,6 +386,7 @@ module.exports = async function (context, req) {
         field: picked || "metadata_storage_name",
         values, // keep old output so frontend doesn't break
         books,  // new grouped output (clean dropdown)
+        libraryOnlyBooks,
       },
     };
   } catch (e) {
