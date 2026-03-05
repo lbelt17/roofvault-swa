@@ -373,6 +373,20 @@ module.exports = async function (context, req) {
         fileName: "FRSA - Introduction to Roofing Technology 1st Edition.pdf",
         parts: ["FRSA - Introduction to Roofing Technology 1st Edition.pdf"],
       },
+      {
+        bookGroupId: "astm-d5898",
+        displayTitle: "ASTM D5898 \u2013 Roofing Membrane Guide",
+        title: "ASTM D5898 \u2013 Roofing Membrane Guide",
+        fileName: "ASTM D5898.pdf",
+        parts: ["ASTM D5898.pdf"],
+      },
+      {
+        bookGroupId: "astm-hydrotech-design",
+        displayTitle: "Hydrotech ASTM Design Guide",
+        title: "Hydrotech ASTM Design Guide",
+        fileName: "hydrotech_ASTM_Desig (5).pdf",
+        parts: ["hydrotech_ASTM_Desig (5).pdf"],
+      },
     ];
 
     context.res = {
