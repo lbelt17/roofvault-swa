@@ -387,7 +387,17 @@
         }
       }
 
-      const options = grouped.length ? grouped : buildFallbackOptions(json);
+      let options = grouped.length ? grouped : buildFallbackOptions(json);
+
+      // Exclude Hydrotech PDF blob from Practice Exams only (books.js runs here).
+      // Library/Chat use library.html and merge books+libraryOnlyBooks separately.
+      options = options.filter((b) => {
+        const parts = normalizeParts(b.parts);
+        const hasHydrotech = parts.some((p) =>
+          String(p || "").toLowerCase().includes("hydrotech_astm_desig")
+        );
+        return !hasHydrotech;
+      });
 
       // ✅ EXAM-ONLY injection (minimal + safe)
       // Add RRC Study Guide (Bank) to the dropdown/search without touching /api/books.
