@@ -1,4 +1,4 @@
-﻿// api/rvchat/index.js
+// api/rvchat/index.js
 // RoofVault Chat API (STRICT doc-grounded for roofing questions)
 // mode: "doc" | "general" | "web"
 //
@@ -27,7 +27,6 @@ const {
   // Azure AI Search (docs)
   SEARCH_ENDPOINT,
   SEARCH_KEY,
-  SEARCH_INDEX,
 
   // Azure OpenAI (doc/general completion)
   AOAI_ENDPOINT,
@@ -44,6 +43,10 @@ const {
   AZURE_CLIENT_ID,
   AZURE_CLIENT_SECRET,
 } = process.env;
+
+// Chat must use the CONTENT index (chunk text). Do not point at metadata-only index (e.g. azureblob-index-meta).
+const INDEX_FOR_CHAT =
+  process.env.SEARCH_INDEX_CONTENT || process.env.SEARCH_INDEX || "azureblob-index-content";
 
 // -------------------------
 // Instance-level throttle fuse
@@ -256,12 +259,12 @@ async function validateSourcesServerSide(
 // Azure AI Search (docs)
 // -------------------------
 async function searchDocs(query, { top = 6 } = {}) {
-  if (!SEARCH_ENDPOINT || !SEARCH_KEY || !SEARCH_INDEX) {
+  if (!SEARCH_ENDPOINT || !SEARCH_KEY || !INDEX_FOR_CHAT) {
     return { ok: false, error: "Missing SEARCH_* env vars", chunks: [] };
   }
 
   const url =
-    `${SEARCH_ENDPOINT}/indexes/${encodeURIComponent(SEARCH_INDEX)}/docs/search?api-version=2023-11-01`;
+    `${SEARCH_ENDPOINT}/indexes/${encodeURIComponent(INDEX_FOR_CHAT)}/docs/search?api-version=2023-11-01`;
 
   const payload = {
     search: query,
