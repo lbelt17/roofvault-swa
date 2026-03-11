@@ -54,6 +54,11 @@
       bookGroupId: "frsa-maintenance-15",
       displayTitle: "FRSA \u2013 Maintenance Section 15 (Bank)",
       parts: []
+    },
+    {
+      bookGroupId: "astm-d5898",
+      displayTitle: "ASTM D5898 (Bank)",
+      parts: []
     }
   ];
 

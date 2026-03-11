@@ -64,6 +64,11 @@
       label: "FRSA \u2013 Maintenance Section 15 (Bank)",
       selection: { bookGroupId: "frsa-maintenance-15", displayTitle: "FRSA \u2013 Maintenance Section 15" },
     },
+    {
+      key: "__rv_bank_astm_d5898__",
+      label: "ASTM D5898 (Bank)",
+      selection: { bookGroupId: "astm-d5898", displayTitle: "ASTM D5898" },
+    },
   ];
 
   // ================== DOM HELPERS ==================
@@ -398,6 +403,11 @@
     return group === "frsa-maintenance-15";
   }
 
+  function isAstmD5898(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "astm-d5898";
+  }
+
   function bankKeyForSelection(selection) {
     if (isRwcStudyGuide(selection)) return "rwc";
     if (isRrcStudyGuide(selection)) return "rrc";
@@ -407,6 +417,7 @@
     if (isFrsaModified1113(selection)) return "frsa_mod1113";
     if (isFrsaReroofing14(selection)) return "frsa_rr14";
     if (isFrsaMaintenance15(selection)) return "frsa_maint15";
+    if (isAstmD5898(selection)) return "astm_d5898";
     return "";
   }
 
