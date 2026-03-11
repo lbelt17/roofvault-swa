@@ -69,6 +69,11 @@
       label: "ASTM D5898 (Bank)",
       selection: { bookGroupId: "astm-d5898", displayTitle: "ASTM D5898" },
     },
+    {
+      key: "__rv_bank_astm_d4263__",
+      label: "ASTM D4263 (Bank)",
+      selection: { bookGroupId: "astm-d4263", displayTitle: "ASTM D4263" },
+    },
   ];
 
   // ================== DOM HELPERS ==================
@@ -408,6 +413,11 @@
     return group === "astm-d5898";
   }
 
+  function isAstmD4263(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "astm-d4263";
+  }
+
   function bankKeyForSelection(selection) {
     if (isRwcStudyGuide(selection)) return "rwc";
     if (isRrcStudyGuide(selection)) return "rrc";
@@ -418,6 +428,7 @@
     if (isFrsaReroofing14(selection)) return "frsa_rr14";
     if (isFrsaMaintenance15(selection)) return "frsa_maint15";
     if (isAstmD5898(selection)) return "astm_d5898";
+    if (isAstmD4263(selection)) return "astm_d4263";
     return "";
   }
 

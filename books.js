@@ -59,6 +59,11 @@
       bookGroupId: "astm-d5898",
       displayTitle: "ASTM D5898 (Bank)",
       parts: []
+    },
+    {
+      bookGroupId: "astm-d4263",
+      displayTitle: "ASTM D4263 (Bank)",
+      parts: []
     }
   ];
 
