@@ -1109,6 +1109,16 @@ module.exports = async function (context, req) {
       const answer = String(aoai.text || "").trim();
 
       if (answer === "No support in the provided sources.") {
+        const ch0 = chunks && chunks[0];
+        const _diagPost = debugFlag
+          ? {
+              chunksCount: Array.isArray(chunks) ? chunks.length : 0,
+              chunk0Keys: ch0 ? Object.keys(ch0) : [],
+              chunk0ContentLen: ch0 ? String(ch0?.content || "").trim().length : 0,
+              chunk0Title: ch0 ? String(ch0?.metadata_storage_name || "").trim() : "",
+              topUsed: 6,
+            }
+          : undefined;
         return jsonResponse(context, 200, {
           ok: true,
           deployTag: DEPLOY_TAG,
@@ -1118,6 +1128,7 @@ module.exports = async function (context, req) {
           needsConsentForWeb: true,
           web: { eligible: true, creditsMax: 5 },
           sources: [],
+          ...(debugFlag ? { _diag: _diagPost } : {}),
         });
       }
 
