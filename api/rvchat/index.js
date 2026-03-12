@@ -18,7 +18,7 @@
 // C) Never emit needsConsentForWeb for valid picker/selection flows
 // D) Selection summary upgraded: harvest enough chunks from the exact selected title
 
-const DEPLOY_TAG = "RVCHAT__2026-03-12__CHUNKED_INDEX__D";
+const DEPLOY_TAG = "RVCHAT__2026-03-12__CHUNKED_INDEX__E";
 
 // -------------------------
 // Env
@@ -44,9 +44,8 @@ const {
   AZURE_CLIENT_SECRET,
 } = process.env;
 
-// Chat must use the CONTENT index (chunk text). Do not point at metadata-only index (e.g. azureblob-index-meta).
-const INDEX_FOR_CHAT =
-  process.env.SEARCH_INDEX_CONTENT || process.env.SEARCH_INDEX || "azureblob-index-content-chunked";
+// Chat must use the CONTENT index (chunk text). Temporary hardcode for demo; restore env precedence later.
+const INDEX_FOR_CHAT = "azureblob-index-content-chunked";
 
 // -------------------------
 // Instance-level throttle fuse
