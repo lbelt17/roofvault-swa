@@ -18,7 +18,7 @@
 // C) Never emit needsConsentForWeb for valid picker/selection flows
 // D) Selection summary upgraded: harvest enough chunks from the exact selected title
 
-const DEPLOY_TAG = "RVCHAT__2026-01-30__IIBEC_PICKER_PARTFIX__B";
+const DEPLOY_TAG = "RVCHAT__2026-03-12__INDEX_FIX_DEBUG_PROOF__C";
 
 // -------------------------
 // Env
