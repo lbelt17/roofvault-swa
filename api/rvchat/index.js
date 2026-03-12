@@ -1,4 +1,4 @@
-﻿// api/rvchat/index.js
+// api/rvchat/index.js
 // RoofVault Chat API (STRICT doc-grounded for roofing questions)
 // mode: "doc" | "general" | "web"
 //
@@ -18,7 +18,7 @@
 // C) Never emit needsConsentForWeb for valid picker/selection flows
 // D) Selection summary upgraded: harvest enough chunks from the exact selected title
 
-const DEPLOY_TAG = "RVCHAT__2026-01-30__IIBEC_PICKER_PARTFIX__B";
+const DEPLOY_TAG = "RVCHAT__2026-03-12__CHUNKED_INDEX__E";
 
 // -------------------------
 // Env
@@ -27,7 +27,6 @@ const {
   // Azure AI Search (docs)
   SEARCH_ENDPOINT,
   SEARCH_KEY,
-  SEARCH_INDEX,
 
   // Azure OpenAI (doc/general completion)
   AOAI_ENDPOINT,
@@ -44,6 +43,9 @@ const {
   AZURE_CLIENT_ID,
   AZURE_CLIENT_SECRET,
 } = process.env;
+
+// Chat must use the CONTENT index (chunk text). Temporary hardcode for demo; restore env precedence later.
+const INDEX_FOR_CHAT = "azureblob-index-content-chunked";
 
 // -------------------------
 // Instance-level throttle fuse
@@ -256,12 +258,12 @@ async function validateSourcesServerSide(
 // Azure AI Search (docs)
 // -------------------------
 async function searchDocs(query, { top = 6 } = {}) {
-  if (!SEARCH_ENDPOINT || !SEARCH_KEY || !SEARCH_INDEX) {
+  if (!SEARCH_ENDPOINT || !SEARCH_KEY || !INDEX_FOR_CHAT) {
     return { ok: false, error: "Missing SEARCH_* env vars", chunks: [] };
   }
 
   const url =
-    `${SEARCH_ENDPOINT}/indexes/${encodeURIComponent(SEARCH_INDEX)}/docs/search?api-version=2023-11-01`;
+    `${SEARCH_ENDPOINT}/indexes/${encodeURIComponent(INDEX_FOR_CHAT)}/docs/search?api-version=2023-11-01`;
 
   const payload = {
     search: query,
@@ -1032,6 +1034,16 @@ module.exports = async function (context, req) {
       const supported = hasAdequateSupport(chunks);
 
       if (!supported) {
+        const ch0 = chunks && chunks[0];
+        const _diagPre = debugFlag
+          ? {
+              chunksCount: Array.isArray(chunks) ? chunks.length : 0,
+              chunk0Keys: ch0 ? Object.keys(ch0) : [],
+              chunk0ContentLen: ch0 ? String(ch0?.content || "").trim().length : 0,
+              chunk0Title: ch0 ? String(ch0?.metadata_storage_name || "").trim() : "",
+              topUsed: 6,
+            }
+          : undefined;
         return jsonResponse(context, 200, {
           ok: true,
           deployTag: DEPLOY_TAG,
@@ -1041,6 +1053,7 @@ module.exports = async function (context, req) {
           needsConsentForWeb: true,
           web: { eligible: true, creditsMax: 5 },
           sources: [],
+          ...(debugFlag ? { _diag: _diagPre } : {}),
         });
       }
 
@@ -1095,6 +1108,16 @@ module.exports = async function (context, req) {
       const answer = String(aoai.text || "").trim();
 
       if (answer === "No support in the provided sources.") {
+        const ch0 = chunks && chunks[0];
+        const _diagPost = debugFlag
+          ? {
+              chunksCount: Array.isArray(chunks) ? chunks.length : 0,
+              chunk0Keys: ch0 ? Object.keys(ch0) : [],
+              chunk0ContentLen: ch0 ? String(ch0?.content || "").trim().length : 0,
+              chunk0Title: ch0 ? String(ch0?.metadata_storage_name || "").trim() : "",
+              topUsed: 6,
+            }
+          : undefined;
         return jsonResponse(context, 200, {
           ok: true,
           deployTag: DEPLOY_TAG,
@@ -1104,6 +1127,7 @@ module.exports = async function (context, req) {
           needsConsentForWeb: true,
           web: { eligible: true, creditsMax: 5 },
           sources: [],
+          ...(debugFlag ? { _diag: _diagPost } : {}),
         });
       }
 
