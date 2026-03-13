@@ -48,9 +48,9 @@ module.exports = async function (context, req) {
       return;
     }
 
-    const conn = process.env.AZURE_STORAGE_CONNECTION_STRING;
+    const conn = process.env.TABLES_CONNECTION_STRING || process.env.AZURE_STORAGE_CONNECTION_STRING;
     if (!conn || !String(conn).trim()) {
-      context.log.error("terms-status: AZURE_STORAGE_CONNECTION_STRING missing");
+      context.log.error("terms-status: TABLES_CONNECTION_STRING / AZURE_STORAGE_CONNECTION_STRING missing");
       context.res = { status: 500, body: ERROR_BODY };
       return;
     }
