@@ -283,7 +283,7 @@
         if (!res.ok) throw new Error("terms-status " + res.status);
         var data = await res.json();
         if (!data.accepted) {
-          var version = data.currentTermsVersion || "2026-03-23-v2";
+          var version = data.currentTermsVersion || "2026-03-23-v3";
           overlay.classList.add("visible");
           btnAccept.addEventListener("click", async function () {
             btnAccept.disabled = true;
