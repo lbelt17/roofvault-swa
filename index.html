@@ -1,4 +1,4 @@
-﻿<!-- no-op: trigger redeploy -->
+<!-- no-op: trigger redeploy -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -174,7 +174,7 @@
 
 <body>
   <main class="wrap">
-    <section class="shell" aria-label="RoofVault hub">
+    <section class="shell" aria-label="RoofVault hub" style="display:none">
       <div class="brand">
         <div class="logo" aria-label="RoofVault logo">
           <img src="/static/roofvault-logo.png" alt="RoofVault" />
@@ -205,5 +205,29 @@
       <footer>© RoofVault</footer>
     </section>
   </main>
+
+  <script src="/auth.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async function () {
+      var shell = document.querySelector(".shell");
+      try {
+        var auth = await window.getAuthState(true);
+        if (!auth || !auth.isAuthenticated) {
+          window.location.replace("/.auth/login/aad?post_login_redirect_uri=/");
+          return;
+        }
+        var res = await fetch("/api/terms-status", { credentials: "include" });
+        if (!res.ok) throw new Error("terms-status " + res.status);
+        var data = await res.json();
+        if (!data.accepted) {
+          window.location.replace("/terms.html?return=/");
+          return;
+        }
+        if (shell) shell.style.display = "";
+      } catch (err) {
+        console.error("[RoofVault] gate error:", err);
+      }
+    });
+  </script>
 </body>
 </html>
