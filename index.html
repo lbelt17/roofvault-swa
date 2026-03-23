@@ -169,6 +169,71 @@
       .grid{ grid-template-columns: 1fr; }
       .logo{ width: 96px; height: 96px; border-radius: 20px; }
     }
+
+    /* ── Terms modal ── */
+    .terms-overlay{
+      display:none;
+      position:fixed; inset:0; z-index:1000;
+      background:rgba(0,0,0,.45);
+      backdrop-filter:blur(40px) saturate(1.4);
+      -webkit-backdrop-filter:blur(40px) saturate(1.4);
+      align-items:center; justify-content:center;
+      padding:24px;
+    }
+    .terms-overlay.visible{ display:flex; }
+    .terms-card{
+      width:100%; max-width:460px;
+      background:
+        linear-gradient(168deg,rgba(255,255,255,.08) 0%,rgba(255,255,255,.03) 50%,rgba(255,255,255,.01) 100%),
+        rgba(18,22,36,.82);
+      border:1px solid rgba(255,255,255,.1);
+      border-top-color:rgba(255,255,255,.18);
+      border-radius:24px;
+      box-shadow:
+        0 0 0 0.5px rgba(255,255,255,.06),
+        0 8px 32px rgba(0,0,0,.35),
+        0 32px 72px rgba(0,0,0,.25);
+      padding:40px 36px 32px;
+      text-align:center;
+      color:var(--text);
+    }
+    .terms-card h2{
+      margin:0 0 6px; font-size:22px; font-weight:700;
+      letter-spacing:-.3px;
+      background:linear-gradient(180deg,#fff 20%,rgba(200,210,230,.85));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+    .terms-card .terms-summary{
+      font-size:13.5px; line-height:1.7; color:rgba(180,195,220,.78);
+      margin-bottom:24px; text-align:left; letter-spacing:.1px;
+    }
+    .terms-card .terms-actions{ display:flex; flex-direction:column; align-items:center; gap:12px; }
+    .terms-accept-btn{
+      width:100%; padding:14px 0; font-size:15px; font-weight:600;
+      color:#fff; letter-spacing:.1px;
+      background:linear-gradient(180deg,rgba(255,255,255,.14),transparent),
+                  rgba(255,255,255,.1);
+      border:1px solid rgba(255,255,255,.15);
+      border-radius:14px; cursor:pointer;
+      transition:all .18s ease;
+      backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+    }
+    .terms-accept-btn:hover{
+      background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,.04)),
+                  rgba(255,255,255,.14);
+      border-color:rgba(255,255,255,.22);
+      box-shadow:0 2px 16px rgba(255,255,255,.06);
+    }
+    .terms-accept-btn:disabled{ opacity:.35; cursor:wait; }
+    .terms-link{
+      font-size:12px; color:rgba(160,175,200,.55); text-decoration:none;
+      letter-spacing:.2px; transition:color .15s;
+    }
+    .terms-link:hover{ color:rgba(220,225,240,.8); }
+    .terms-error{
+      font-size:12px; color:#f87171; margin-top:8px; min-height:18px;
+    }
   </style>
 </head>
 
@@ -206,10 +271,31 @@
     </section>
   </main>
 
+  <!-- Terms acceptance modal -->
+  <div class="terms-overlay" id="termsOverlay" role="dialog" aria-modal="true" aria-label="Terms of Use">
+    <div class="terms-card">
+      <h2>RoofVault Terms</h2>
+      <div class="terms-summary">
+        RoofVault is an educational platform only. It does not provide engineering,
+        legal, or construction advice. All exams are practice simulations — not official
+        certifications. You assume full responsibility for how you use the information
+        provided. By continuing, you accept these terms.
+      </div>
+      <div class="terms-actions">
+        <button class="terms-accept-btn" id="btnTermsAccept">Accept and Continue</button>
+        <a class="terms-link" href="/terms.html" target="_blank" rel="noopener">View Full Terms</a>
+      </div>
+      <div class="terms-error" id="termsError"></div>
+    </div>
+  </div>
+
   <script src="/auth.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", async function () {
       var shell = document.querySelector(".shell");
+      var overlay = document.getElementById("termsOverlay");
+      var btnAccept = document.getElementById("btnTermsAccept");
+      var errEl = document.getElementById("termsError");
       try {
         var auth = await window.getAuthState(true);
         if (!auth || !auth.isAuthenticated) {
@@ -220,7 +306,29 @@
         if (!res.ok) throw new Error("terms-status " + res.status);
         var data = await res.json();
         if (!data.accepted) {
-          window.location.replace("/terms.html?return=/");
+          var version = data.currentTermsVersion || "2026-03-23-v3";
+          overlay.classList.add("visible");
+          btnAccept.addEventListener("click", async function () {
+            btnAccept.disabled = true;
+            errEl.textContent = "";
+            try {
+              var r = await fetch("/api/terms-accept", {
+                method: "POST", credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ termsVersion: version })
+              });
+              var d = await r.json();
+              if (d.ok) {
+                overlay.classList.remove("visible");
+                if (shell) shell.style.display = "";
+                return;
+              }
+              throw new Error(d.error || "Acceptance failed");
+            } catch (e) {
+              errEl.textContent = "Something went wrong. Please try again.";
+              btnAccept.disabled = false;
+            }
+          });
           return;
         }
         if (shell) shell.style.display = "";

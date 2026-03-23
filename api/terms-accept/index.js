@@ -3,7 +3,7 @@
 
 const { TableClient } = require("@azure/data-tables");
 
-const CURRENT_TERMS_VERSION = "2026-03-23-v2";
+const CURRENT_TERMS_VERSION = "2026-03-23-v3";
 const TABLE_NAME = "TermsAcceptance";
 const ROW_KEY = "terms";
 
