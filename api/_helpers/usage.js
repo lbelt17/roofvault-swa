@@ -47,6 +47,7 @@ async function logUsage(context, req, fieldName) {
     }
 
     const client = TableClient.fromConnectionString(conn, TABLE_NAME);
+    await client.createTable().catch(function () {});
 
     let existing;
     try {
