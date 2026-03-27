@@ -93,7 +93,6 @@ function jsonResponse(context, status, body) {
     },
     body,
   };
-  if (status === 200) context.log("USAGE_LOG_TRIGGERED rvchat", { status: status, hasReq: !!context.req, hasPrincipal: !!(context.req && context.req.headers && context.req.headers["x-ms-client-principal"]) });
   if (status === 200) logUsage(context, context.req, "chatQuestion").catch(function () {});
   return context.res;
 }

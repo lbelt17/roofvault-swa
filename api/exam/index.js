@@ -31,7 +31,6 @@ function jsonRes(context, status, obj) {
     },
     body: JSON.stringify(obj),
   };
-  if (status === 200) context.log("USAGE_LOG_TRIGGERED exam", { status: status, hasReq: !!context.req, hasPrincipal: !!(context.req && context.req.headers && context.req.headers["x-ms-client-principal"]) });
   if (status === 200) logUsage(context, context.req, "examGenerate").catch(function () {});
 }
 
