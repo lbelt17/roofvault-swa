@@ -19,6 +19,7 @@
 // D) Selection summary upgraded: harvest enough chunks from the exact selected title
 
 const DEPLOY_TAG = "RVCHAT__2026-03-12__CHUNKED_INDEX__E";
+const { logUsage } = require("../_helpers/usage");
 
 // -------------------------
 // Env
@@ -92,6 +93,7 @@ function jsonResponse(context, status, body) {
     },
     body,
   };
+  if (status === 200) logUsage(context, context.req, "chatQuestion").catch(function () {});
   return context.res;
 }
 

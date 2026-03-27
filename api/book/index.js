@@ -5,6 +5,7 @@ const {
   SASProtocol,
   StorageSharedKeyCredential,
 } = require("@azure/storage-blob");
+const { logUsage } = require("../_helpers/usage");
 
 module.exports = async function (context, req) {
   try {
@@ -110,6 +111,8 @@ module.exports = async function (context, req) {
       },
       body: { ok: true, name: foundBlobName, url },
     };
+
+    logUsage(context, req, "bookView").catch(function () {});
   } catch (e) {
     context.res = {
       status: 500,

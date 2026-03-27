@@ -14,6 +14,7 @@
 //    (Does NOT affect POST behavior)
 
 "use strict";
+const { logUsage } = require("../_helpers/usage");
 
 const DEPLOY_TAG =
   "DEPLOY_TAG__2026-02-02__MULTIPART_BOOKWIDE_NO_SOURCES__NO_TOC_QS_B__BANK_RWC_TEST_C";
@@ -30,6 +31,7 @@ function jsonRes(context, status, obj) {
     },
     body: JSON.stringify(obj),
   };
+  if (status === 200) logUsage(context, context.req, "examGenerate").catch(function () {});
 }
 
 function getEnv(name) {
