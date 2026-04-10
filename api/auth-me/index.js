@@ -33,12 +33,7 @@ module.exports = async function (context, req) {
       return;
     }
 
-    const OWNER_EMAILS = [
-      "msaulnier@cncflorida.com",
-      "joesorentino10@gmail.com",
-      "jbelt@beltengineering.com",
-      "lbelt17@outlook.com",
-    ].map((e) => e.toLowerCase());
+    const { OWNER_EMAILS } = require("../_helpers/owners");
 
     const body = {
       ...baseBody,
