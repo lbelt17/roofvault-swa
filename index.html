@@ -234,10 +234,109 @@
     .terms-error{
       font-size:12px; color:#f87171; margin-top:8px; min-height:18px;
     }
+
+    /* ── Support button ── */
+    .support-btn{
+      position:fixed; top:18px; right:18px; z-index:900;
+      padding:8px 16px; font-size:13px; font-weight:600;
+      color:rgba(200,210,230,.8); letter-spacing:.2px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:10px; cursor:pointer;
+      backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+      transition:all .15s ease;
+    }
+    .support-btn:hover{
+      background:rgba(255,255,255,.1);
+      border-color:rgba(255,255,255,.18);
+      color:#fff;
+    }
+
+    /* ── Support modal ── */
+    .support-overlay{
+      display:none;
+      position:fixed; inset:0; z-index:1100;
+      background:rgba(0,0,0,.45);
+      backdrop-filter:blur(40px) saturate(1.4);
+      -webkit-backdrop-filter:blur(40px) saturate(1.4);
+      align-items:center; justify-content:center;
+      padding:24px;
+    }
+    .support-overlay.visible{ display:flex; }
+    .support-card{
+      width:100%; max-width:460px;
+      background:
+        linear-gradient(168deg,rgba(255,255,255,.08) 0%,rgba(255,255,255,.03) 50%,rgba(255,255,255,.01) 100%),
+        rgba(18,22,36,.82);
+      border:1px solid rgba(255,255,255,.1);
+      border-top-color:rgba(255,255,255,.18);
+      border-radius:24px;
+      box-shadow:
+        0 0 0 0.5px rgba(255,255,255,.06),
+        0 8px 32px rgba(0,0,0,.35),
+        0 32px 72px rgba(0,0,0,.25);
+      padding:32px 32px 28px;
+      color:var(--text);
+      position:relative;
+    }
+    .support-close{
+      position:absolute; top:14px; right:16px;
+      background:none; border:none; color:rgba(180,195,220,.5);
+      font-size:20px; cursor:pointer; line-height:1;
+      transition:color .12s;
+    }
+    .support-close:hover{ color:#fff; }
+    .support-card h2{
+      margin:0 0 18px; font-size:20px; font-weight:700;
+      letter-spacing:-.2px;
+      background:linear-gradient(180deg,#fff 20%,rgba(200,210,230,.85));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+    .support-card h3{
+      margin:0 0 10px; font-size:13px; font-weight:600;
+      color:rgba(180,195,220,.6); text-transform:uppercase;
+      letter-spacing:.8px;
+    }
+    .faq-item{
+      padding:10px 0; border-bottom:1px solid rgba(255,255,255,.06);
+      font-size:13.5px; color:rgba(180,195,220,.78);
+      line-height:1.5;
+    }
+    .faq-item:last-child{ border-bottom:none; }
+    .faq-q{ font-weight:600; color:rgba(220,225,240,.85); margin-bottom:3px; }
+    .faq-a{ font-size:12.5px; color:rgba(160,175,200,.6); }
+    .support-textarea{
+      width:100%; min-height:80px; margin:14px 0 12px;
+      padding:12px 14px; font-size:13.5px; font-family:inherit;
+      color:var(--text); line-height:1.55;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:12px; resize:vertical;
+      outline:none; transition:border-color .15s;
+    }
+    .support-textarea::placeholder{ color:rgba(160,175,200,.4); }
+    .support-textarea:focus{ border-color:rgba(255,255,255,.22); }
+    .support-email-btn{
+      width:100%; padding:13px 0; font-size:14px; font-weight:600;
+      color:#fff; letter-spacing:.1px;
+      background:linear-gradient(180deg,rgba(255,255,255,.14),transparent),
+                  rgba(255,255,255,.1);
+      border:1px solid rgba(255,255,255,.15);
+      border-radius:12px; cursor:pointer;
+      transition:all .18s ease;
+    }
+    .support-email-btn:hover{
+      background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,.04)),
+                  rgba(255,255,255,.14);
+      border-color:rgba(255,255,255,.22);
+    }
   </style>
 </head>
 
 <body>
+  <button class="support-btn" id="btnSupport">Support</button>
+
   <main class="wrap">
     <section class="shell" aria-label="RoofVault hub" style="display:none">
       <div class="brand">
@@ -289,8 +388,57 @@
     </div>
   </div>
 
+  <!-- Support modal -->
+  <div class="support-overlay" id="supportOverlay">
+    <div class="support-card">
+      <button class="support-close" id="btnSupportClose" aria-label="Close">&#x2715;</button>
+      <h2>Customer Support</h2>
+
+      <h3>FAQ</h3>
+      <div class="faq-item">
+        <div class="faq-q">Why is the app loading slow?</div>
+        <div class="faq-a">This can happen during peak hours or if your connection is unstable. Try refreshing or switching networks.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Why can't I access exams?</div>
+        <div class="faq-a">Make sure you are signed in and have accepted the Terms of Use. If the issue persists, contact support below.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Why am I not seeing results?</div>
+        <div class="faq-a">Results depend on having source materials indexed. If a book was recently added, it may take a few minutes to appear.</div>
+      </div>
+
+      <h3 style="margin-top:18px">Describe Your Issue</h3>
+      <textarea class="support-textarea" id="supportMsg" placeholder="Describe your issue..."></textarea>
+      <button class="support-email-btn" id="btnSupportEmail">Email Support</button>
+    </div>
+  </div>
+
   <script src="/auth.js"></script>
   <script>
+    (function () {
+      var supportBtn = document.getElementById("btnSupport");
+      var supportOverlay = document.getElementById("supportOverlay");
+      var supportClose = document.getElementById("btnSupportClose");
+      var supportEmail = document.getElementById("btnSupportEmail");
+      var supportMsg = document.getElementById("supportMsg");
+
+      supportBtn.addEventListener("click", function () {
+        supportOverlay.classList.add("visible");
+      });
+      supportClose.addEventListener("click", function () {
+        supportOverlay.classList.remove("visible");
+      });
+      supportOverlay.addEventListener("click", function (e) {
+        if (e.target === supportOverlay) supportOverlay.classList.remove("visible");
+      });
+      supportEmail.addEventListener("click", function () {
+        var body = supportMsg.value.trim();
+        if (!body) { alert("Please describe your issue before sending."); return; }
+        window.location.href = "mailto:roofvaultsupport@gmail.com?subject=RoofVault%20Support%20Request&body=" + encodeURIComponent(body);
+      });
+    })();
+
     document.addEventListener("DOMContentLoaded", async function () {
       var shell = document.querySelector(".shell");
       var overlay = document.getElementById("termsOverlay");
