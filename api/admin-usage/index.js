@@ -1,5 +1,4 @@
 const { TableClient } = require("@azure/data-tables");
-const { OWNER_EMAILS } = require("../_helpers/owners");
 
 const TABLE_NAME = "Usage";
 
@@ -22,6 +21,15 @@ module.exports = async function (context, req) {
   var principal = parsePrincipal(req);
   if (!principal || !principal.email) {
     context.res = { status: 401, headers: JSON_HEADERS, body: { ok: false, error: "Authentication required" } };
+    return;
+  }
+
+  var OWNER_EMAILS;
+  try {
+    OWNER_EMAILS = require("../_helpers/owners").OWNER_EMAILS;
+  } catch (err) {
+    context.log.error("admin-usage: failed to load owners helper", err);
+    context.res = { status: 500, headers: JSON_HEADERS, body: { ok: false, error: "Internal configuration error" } };
     return;
   }
 
