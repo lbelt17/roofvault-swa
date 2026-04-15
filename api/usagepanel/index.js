@@ -1,6 +1,6 @@
 module.exports = async function (context, req) {
   context.res = {
     status: 200,
-    body: { ok: true, route: "adminusage" }
+    body: { ok: true, route: "usagepanel" }
   };
 };
