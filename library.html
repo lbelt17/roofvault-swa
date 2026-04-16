@@ -218,8 +218,38 @@
 
     .result-count { font-size: 0.78rem; color: var(--text-muted); }
 
-    .library-layout { margin-top: 1.1rem; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.85rem; }
+    .library-layout { margin-top: 1.1rem; display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.4rem; }
     .shelf-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); margin-bottom: 0.25rem; }
+    .group-section { }
+    .group-heading {
+      font-size: 0.92rem; font-weight: 650; letter-spacing: 0.02em;
+      color: var(--text-main); margin: 0;
+      padding: 0.65rem 0.85rem;
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.5);
+      display: flex; align-items: center; gap: 0.5rem;
+      cursor: pointer; user-select: none;
+      transition: background var(--transition-fast), border-color var(--transition-fast);
+    }
+    .group-heading:hover {
+      background: rgba(15, 23, 42, 0.75);
+      border-color: rgba(148, 163, 184, 0.35);
+    }
+    .group-chevron {
+      font-size: 0.7rem; color: var(--text-muted);
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+    }
+    .group-section.open .group-chevron { transform: rotate(90deg); }
+    .group-count {
+      font-size: 0.72rem; font-weight: 500; color: var(--text-muted);
+      letter-spacing: 0.03em; margin-left: auto;
+    }
+    .group-body {
+      display: none; margin-top: 0.7rem;
+    }
+    .group-section.open .group-body { display: block; }
 
     .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.9rem; }
 
@@ -428,16 +458,11 @@
       </div>
     </section>
 
-    <section class="library-layout">
-      <div>
-        <div class="shelf-label">All Books</div>
-        <div id="bookGrid" class="book-grid"></div>
-
-        <div id="emptyState" class="empty-state hidden">
-          <div class="empty-icon">🕵️‍♂️</div>
-          <div>
-            No books matched your search. Try a different keyword, or clear the search box to see the full RoofVault library again.
-          </div>
+    <section class="library-layout" id="libraryLayout">
+      <div id="emptyState" class="empty-state hidden">
+        <div class="empty-icon">🕵️‍♂️</div>
+        <div>
+          No books matched your search. Try a different keyword, or clear the search box to see the full RoofVault library again.
         </div>
       </div>
     </section>
@@ -461,7 +486,7 @@
       });
     }
 
-    const bookGrid = document.getElementById("bookGrid");
+    const libraryLayout = document.getElementById("libraryLayout");
     const searchInput = document.getElementById("searchInput");
     const resultCount = document.getElementById("resultCount");
     const emptyState = document.getElementById("emptyState");
@@ -584,20 +609,90 @@
       return card;
     }
 
-    function renderBooks(list) {
-      bookGrid.innerHTML = "";
+    var GROUP_RULES = [
+      { key: "IIBEC",     match: /^iibec\b/i },
+      { key: "NRCA",      match: /^nrca\b/i },
+      { key: "RCI",       match: /^rci\b/i },
+      { key: "SMACNA",    match: /^smacna\b/i },
+      { key: "ASTM",      match: /^astm\b/i },
+      { key: "FRSA",      match: /^frsa\b/i },
+      { key: "IBHS",      match: /^ibhs\b/i },
+      { key: "ANSI",      match: /^ansi\b/i },
+      { key: "AIA",       match: /^aia\b/i },
+      { key: "ASCE",      match: /^asce\b/i },
+      { key: "FM",        match: /^fm\b/i },
+      { key: "GAF",       match: /^gaf\b/i },
+      { key: "IBC",       match: /^ibc\b/i },
+      { key: "Hydrotech", match: /^hydrotech\b/i },
+    ];
+    var GROUP_ORDER = [
+      "IIBEC", "NRCA", "RCI", "SMACNA", "ASTM", "FRSA", "IBHS",
+      "ANSI", "AIA", "ASCE", "FM", "GAF", "IBC", "Hydrotech", "Other"
+    ];
+
+    function getGroupKey(book) {
+      var title = getTitle(book);
+      for (var i = 0; i < GROUP_RULES.length; i++) {
+        if (GROUP_RULES[i].match.test(title)) return GROUP_RULES[i].key;
+      }
+      return "Other";
+    }
+
+    function groupBooks(list) {
+      var map = {};
+      for (var i = 0; i < list.length; i++) {
+        var key = getGroupKey(list[i]);
+        if (!map[key]) map[key] = [];
+        map[key].push(list[i]);
+      }
+      var ordered = [];
+      for (var g = 0; g < GROUP_ORDER.length; g++) {
+        var k = GROUP_ORDER[g];
+        if (map[k] && map[k].length) ordered.push({ key: k, books: map[k] });
+      }
+      return ordered;
+    }
+
+    function renderBooks(list, isSearching) {
+      var existing = libraryLayout.querySelectorAll(".group-section");
+      for (var i = 0; i < existing.length; i++) existing[i].remove();
 
       if (!Array.isArray(list) || list.length === 0) {
-        bookGrid.classList.add("hidden");
         emptyState.classList.remove("hidden");
         resultCount.textContent = "No books found.";
         return;
       }
 
       emptyState.classList.add("hidden");
-      bookGrid.classList.remove("hidden");
 
-      list.forEach((b) => bookGrid.appendChild(createBookCard(b)));
+      var groups = groupBooks(list);
+      for (var g = 0; g < groups.length; g++) {
+        var section = document.createElement("div");
+        section.className = "group-section" + (isSearching ? " open" : "");
+
+        var heading = document.createElement("div");
+        heading.className = "group-heading";
+        heading.innerHTML =
+          "<span class='group-chevron'>▶</span> " +
+          groups[g].key +
+          " <span class='group-count'>" + groups[g].books.length + " book" +
+          (groups[g].books.length === 1 ? "" : "s") + "</span>";
+        heading.addEventListener("click", (function (sec) {
+          return function () { sec.classList.toggle("open"); };
+        })(section));
+        section.appendChild(heading);
+
+        var body = document.createElement("div");
+        body.className = "group-body";
+        var grid = document.createElement("div");
+        grid.className = "book-grid";
+        for (var b = 0; b < groups[g].books.length; b++) {
+          grid.appendChild(createBookCard(groups[g].books[b]));
+        }
+        body.appendChild(grid);
+        section.appendChild(body);
+        libraryLayout.appendChild(section);
+      }
 
       resultCount.textContent = list.length === 1 ? "1 book found" : `${list.length} books found`;
     }
@@ -631,7 +726,8 @@
       loadBooks();
       if (searchInput) {
         searchInput.addEventListener("input", (e) => {
-          renderBooks(filterBooks(e.target.value.trim()));
+          var q = e.target.value.trim();
+          renderBooks(filterBooks(q), q.length > 0);
         });
       }
     });
