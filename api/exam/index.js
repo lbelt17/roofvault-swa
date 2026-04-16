@@ -287,6 +287,10 @@ function selectRwcPro(questions, count) {
 
 module.exports = async function (context, req) {
   try {
+    var _allowed = true;
+    try { _allowed = await require("../_helpers/access").isUserAllowed(context, req); } catch (e) {}
+    if (!_allowed) return jsonRes(context, 403, { ok: false, error: "Access denied" });
+
     // ---------- GET ----------
     if (req.method === "GET") {
       const bank = String(req.query?.bank || "").toLowerCase();
