@@ -331,6 +331,55 @@
                   rgba(255,255,255,.14);
       border-color:rgba(255,255,255,.22);
     }
+
+    /* ── Admin panel ── */
+    .admin-panel{ display:none; width:100%; margin-top:28px; }
+    .admin-panel.visible{ display:block; }
+    .admin-toggle{
+      padding:8px 16px; font-size:13px; font-weight:600;
+      color:rgba(200,210,230,.8); letter-spacing:.2px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:10px; cursor:pointer;
+      transition:all .15s ease;
+    }
+    .admin-toggle:hover{ background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.18); color:#fff; }
+    .admin-table-wrap{
+      margin-top:14px; overflow-x:auto;
+      border-radius:14px; border:1px solid rgba(255,255,255,.08);
+      background:rgba(10,15,26,.6);
+    }
+    .admin-table{ width:100%; border-collapse:collapse; font-size:12.5px; }
+    .admin-table th{
+      text-align:left; padding:10px 12px; font-weight:600; font-size:11px;
+      color:rgba(160,175,200,.55); text-transform:uppercase; letter-spacing:.6px;
+      border-bottom:1px solid rgba(255,255,255,.07);
+    }
+    .admin-table td{
+      padding:9px 12px; border-bottom:1px solid rgba(255,255,255,.04);
+      color:rgba(220,225,240,.8); white-space:nowrap;
+    }
+    .admin-table tr:last-child td{ border-bottom:none; }
+    .admin-badge{
+      display:inline-block; padding:2px 8px; border-radius:6px;
+      font-size:11px; font-weight:600; letter-spacing:.3px;
+    }
+    .admin-badge.allowed{ background:rgba(34,197,94,.15); color:#4ade80; }
+    .admin-badge.blocked{ background:rgba(239,68,68,.15); color:#f87171; }
+    .admin-badge.suspended{ background:rgba(250,204,21,.15); color:#facc15; }
+    .admin-action-btn{
+      padding:4px 12px; font-size:11px; font-weight:600;
+      border-radius:7px; cursor:pointer; border:1px solid; transition:all .15s;
+    }
+    .admin-action-btn.block-btn{
+      color:#f87171; border-color:rgba(239,68,68,.3); background:rgba(239,68,68,.08);
+    }
+    .admin-action-btn.block-btn:hover{ background:rgba(239,68,68,.2); border-color:rgba(239,68,68,.5); }
+    .admin-action-btn.unblock-btn{
+      color:#4ade80; border-color:rgba(34,197,94,.3); background:rgba(34,197,94,.08);
+    }
+    .admin-action-btn.unblock-btn:hover{ background:rgba(34,197,94,.2); border-color:rgba(34,197,94,.5); }
+    .admin-action-btn:disabled{ opacity:.4; cursor:wait; }
   </style>
 </head>
 
@@ -367,6 +416,29 @@
       </div>
 
       <footer>© RoofVault</footer>
+
+      <div class="admin-panel" id="adminPanel">
+        <button class="admin-toggle" id="btnAdminToggle">Admin Panel ▸</button>
+        <div id="adminContent" style="display:none">
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Chat</th>
+                  <th>Exams</th>
+                  <th>Library</th>
+                  <th>Tokens (P/C)</th>
+                  <th>Last Active</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="adminRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -480,10 +552,95 @@
           return;
         }
         if (shell) shell.style.display = "";
+        initAdminPanel(auth);
       } catch (err) {
         console.error("[RoofVault] gate error:", err);
       }
     });
+
+    var OWNER_EMAILS = ["labelt.cid@gmail.com"];
+
+    function initAdminPanel(auth) {
+      var email = (auth.userDetails || "").toLowerCase();
+      if (OWNER_EMAILS.indexOf(email) === -1) return;
+
+      var panel = document.getElementById("adminPanel");
+      var toggle = document.getElementById("btnAdminToggle");
+      var content = document.getElementById("adminContent");
+      var tbody = document.getElementById("adminRows");
+      panel.classList.add("visible");
+
+      var expanded = false;
+      toggle.addEventListener("click", function () {
+        expanded = !expanded;
+        content.style.display = expanded ? "" : "none";
+        toggle.textContent = expanded ? "Admin Panel ▾" : "Admin Panel ▸";
+        if (expanded && !tbody.hasChildNodes()) loadPanel();
+      });
+
+      function loadPanel() {
+        tbody.innerHTML = "<tr><td colspan='8' style='color:rgba(160,175,200,.5)'>Loading…</td></tr>";
+        fetch("/api/usagepanel", { credentials: "include" }).then(function (r) { return r.json(); }).then(function (data) {
+          if (!data.ok) { tbody.innerHTML = "<tr><td colspan='8'>Error: " + (data.error || "unknown") + "</td></tr>"; return; }
+          var users = data.users || [];
+          if (!users.length) { tbody.innerHTML = "<tr><td colspan='8' style='color:rgba(160,175,200,.5)'>No users yet</td></tr>"; return; }
+          var accessPromises = users.map(function (u) {
+            return fetch("/api/useraccess?userId=" + encodeURIComponent(u.userId), { credentials: "include" })
+              .then(function (r) { return r.json(); })
+              .then(function (d) { return d.ok ? d.accessState : "allowed"; })
+              .catch(function () { return "allowed"; });
+          });
+          Promise.all(accessPromises).then(function (states) {
+            tbody.innerHTML = "";
+            users.forEach(function (u, i) {
+              var state = states[i] || "allowed";
+              var tr = document.createElement("tr");
+              var la = u.lastActive ? new Date(u.lastActive).toLocaleDateString() : "—";
+              var pt = (u.totalPromptTokens || 0).toLocaleString();
+              var ct = (u.totalCompletionTokens || 0).toLocaleString();
+              var isBlocked = state === "blocked" || state === "suspended";
+              tr.innerHTML =
+                "<td>" + esc(u.userEmail || u.userId) + "</td>" +
+                "<td>" + (u.chatQuestion || 0) + "</td>" +
+                "<td>" + (u.examGenerate || 0) + "</td>" +
+                "<td>" + (u.bookView || 0) + "</td>" +
+                "<td>" + pt + " / " + ct + "</td>" +
+                "<td>" + la + "</td>" +
+                "<td><span class='admin-badge " + state + "'>" + state + "</span></td>" +
+                "<td></td>";
+              var btn = document.createElement("button");
+              btn.className = "admin-action-btn " + (isBlocked ? "unblock-btn" : "block-btn");
+              btn.textContent = isBlocked ? "Unblock" : "Block";
+              btn.addEventListener("click", function () { toggleAccess(u, isBlocked, btn); });
+              tr.lastChild.appendChild(btn);
+              tbody.appendChild(tr);
+            });
+          });
+        }).catch(function (err) {
+          tbody.innerHTML = "<tr><td colspan='8'>Failed to load: " + esc(err.message) + "</td></tr>";
+        });
+      }
+
+      function toggleAccess(user, currentlyBlocked, btn) {
+        var newState = currentlyBlocked ? "allowed" : "blocked";
+        btn.disabled = true;
+        btn.textContent = "…";
+        fetch("/api/useraccess", {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.userId, userEmail: user.userEmail || null, accessState: newState })
+        }).then(function (r) { return r.json(); }).then(function (d) {
+          if (!d.ok) { alert("Failed: " + (d.error || "unknown")); btn.disabled = false; btn.textContent = currentlyBlocked ? "Unblock" : "Block"; return; }
+          loadPanel();
+        }).catch(function (err) {
+          alert("Error: " + err.message);
+          btn.disabled = false;
+          btn.textContent = currentlyBlocked ? "Unblock" : "Block";
+        });
+      }
+
+      function esc(s) { var d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
+    }
   </script>
 </body>
 </html>
