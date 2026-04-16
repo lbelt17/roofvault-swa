@@ -58,6 +58,8 @@ module.exports = async function (context, req) {
           bookView: 0,
           chatQuestion: 0,
           examGenerate: 0,
+          totalPromptTokens: 0,
+          totalCompletionTokens: 0,
           lastActive: null,
         };
       }
@@ -69,6 +71,8 @@ module.exports = async function (context, req) {
       user.bookView += typeof entity.bookView === "number" ? entity.bookView : 0;
       user.chatQuestion += typeof entity.chatQuestion === "number" ? entity.chatQuestion : 0;
       user.examGenerate += typeof entity.examGenerate === "number" ? entity.examGenerate : 0;
+      user.totalPromptTokens += typeof entity.totalPromptTokens === "number" ? entity.totalPromptTokens : 0;
+      user.totalCompletionTokens += typeof entity.totalCompletionTokens === "number" ? entity.totalCompletionTokens : 0;
 
       var rk = entity.rowKey;
       if (!user.latestMonth || rk > user.latestMonth) user.latestMonth = rk;

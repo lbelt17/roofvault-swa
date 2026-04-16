@@ -82,7 +82,7 @@ const WEB_FALLBACK_ALLOWLIST = [
 // -------------------------
 // Small utilities
 // -------------------------
-function jsonResponse(context, status, body) {
+function jsonResponse(context, status, body, extras) {
   context.res = {
     status,
     headers: {
@@ -93,7 +93,7 @@ function jsonResponse(context, status, body) {
     },
     body,
   };
-  if (status === 200) logUsage(context, context.req, "chatQuestion").catch(function () {});
+  if (status === 200) logUsage(context, context.req, "chatQuestion", extras || undefined).catch(function () {});
   return context.res;
 }
 
@@ -377,7 +377,9 @@ async function callAOAI(messages, { temperature = 0.2, maxTokens = 320 } = {}) {
   const data = await res.json().catch(() => ({}));
   const text =
     data?.choices?.[0]?.message?.content != null ? String(data.choices[0].message.content) : "";
-  return { ok: true, status: 200, text };
+  const promptTokens = typeof data?.usage?.prompt_tokens === "number" ? data.usage.prompt_tokens : 0;
+  const completionTokens = typeof data?.usage?.completion_tokens === "number" ? data.usage.completion_tokens : 0;
+  return { ok: true, status: 200, text, promptTokens, completionTokens };
 }
 
 // -------------------------
@@ -701,6 +703,10 @@ module.exports = async function (context, req) {
   try {
     if (req.method === "OPTIONS") return jsonResponse(context, 204, "");
 
+    var _allowed = true;
+    try { _allowed = await require("../_helpers/access").isUserAllowed(context, req); } catch (e) {}
+    if (!_allowed) return jsonResponse(context, 403, { ok: false, error: "Access denied" });
+
     const body = req.body || safeJsonParse(req.rawBody, {}) || {};
     const mode = normalizeMode(body.mode);
     const question = String(body.question || "").trim();
@@ -969,6 +975,7 @@ module.exports = async function (context, req) {
         }
 
         const answer = String(aoai.text || "").trim();
+        const _tokensA = { promptTokens: aoai.promptTokens, completionTokens: aoai.completionTokens };
 
         if (answer === "No support in the provided sources.") {
           return jsonResponse(context, 200, {
@@ -980,7 +987,7 @@ module.exports = async function (context, req) {
               `I can’t summarize ${partText} because the retrieved sources don’t contain enough content.`,
             sources: [],
             ...(debugFlag ? { _diag } : {}),
-          });
+          }, _tokensA);
         }
 
         return jsonResponse(context, 200, {
@@ -1008,7 +1015,7 @@ module.exports = async function (context, req) {
 
             return { id: c.id, title, url, publisher: "", pageNumber: null, chunk_id };
           }),
-        });
+        }, _tokensA);
       }
 
       // C) Normal doc flow
@@ -1108,6 +1115,7 @@ module.exports = async function (context, req) {
       }
 
       const answer = String(aoai.text || "").trim();
+      const _tokensB = { promptTokens: aoai.promptTokens, completionTokens: aoai.completionTokens };
 
       if (answer === "No support in the provided sources.") {
         const ch0 = chunks && chunks[0];
@@ -1130,7 +1138,7 @@ module.exports = async function (context, req) {
           web: { eligible: true, creditsMax: 5 },
           sources: [],
           ...(debugFlag ? { _diag: _diagPost } : {}),
-        });
+        }, _tokensB);
       }
 
       const _diag = debugFlag
@@ -1165,7 +1173,7 @@ module.exports = async function (context, req) {
 
           return { id: c.id, title, url, publisher: "", pageNumber: null, chunk_id };
         }),
-      });
+      }, _tokensB);
     }
 
     // -------------------------
@@ -1202,6 +1210,7 @@ module.exports = async function (context, req) {
         });
       }
 
+      var _tokensC = { promptTokens: aoai.promptTokens, completionTokens: aoai.completionTokens };
       return jsonResponse(context, 200, {
         ok: true,
         deployTag: DEPLOY_TAG,
@@ -1209,7 +1218,7 @@ module.exports = async function (context, req) {
         question,
         answer: String(aoai.text || "").trim(),
         sources: [],
-      });
+      }, _tokensC);
     }
 
     return jsonResponse(context, 400, {

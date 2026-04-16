@@ -27,7 +27,7 @@ function currentYYYYMM() {
   return `${y}${m}`;
 }
 
-async function logUsage(context, req, fieldName) {
+async function logUsage(context, req, fieldName, extras) {
   try {
     const principal = parsePrincipal(req);
     if (!principal) return;
@@ -46,6 +46,11 @@ async function logUsage(context, req, fieldName) {
       entity.userEmail = principal.userDetails;
     }
 
+    var pt = extras && typeof extras.promptTokens === "number" ? extras.promptTokens : 0;
+    var ct = extras && typeof extras.completionTokens === "number" ? extras.completionTokens : 0;
+    if (pt > 0) entity.totalPromptTokens = pt;
+    if (ct > 0) entity.totalCompletionTokens = ct;
+
     const client = TableClient.fromConnectionString(conn, TABLE_NAME);
     await client.createTable().catch(function () {});
 
@@ -58,6 +63,12 @@ async function logUsage(context, req, fieldName) {
 
     if (existing && typeof existing[fieldName] === "number") {
       entity[fieldName] = existing[fieldName] + 1;
+    }
+    if (existing && pt > 0 && typeof existing.totalPromptTokens === "number") {
+      entity.totalPromptTokens = existing.totalPromptTokens + pt;
+    }
+    if (existing && ct > 0 && typeof existing.totalCompletionTokens === "number") {
+      entity.totalCompletionTokens = existing.totalCompletionTokens + ct;
     }
 
     await client.upsertEntity(entity, "Merge");
