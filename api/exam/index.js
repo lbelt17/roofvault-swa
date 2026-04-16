@@ -22,7 +22,7 @@ const DEPLOY_TAG =
 process.on("unhandledRejection", (err) => console.error("[unhandledRejection]", err));
 process.on("uncaughtException", (err) => console.error("[uncaughtException]", err));
 
-function jsonRes(context, status, obj) {
+function jsonRes(context, status, obj, extras) {
   context.res = {
     status,
     headers: {
@@ -31,7 +31,7 @@ function jsonRes(context, status, obj) {
     },
     body: JSON.stringify(obj),
   };
-  if (status === 200) logUsage(context, context.req, "examGenerate").catch(function () {});
+  if (status === 200) logUsage(context, context.req, "examGenerate", extras || undefined).catch(function () {});
 }
 
 function getEnv(name) {
@@ -781,6 +781,8 @@ if (bank === "frsa_g13" || bank === "frsa_ss48" || bank === "frsa_ls911" || bank
 
     const items = [];
     let totalCalls = 0;
+    let totalPromptTokens = 0;
+    let totalCompletionTokens = 0;
 
     while (items.length < desiredCount && totalCalls < MAX_TOTAL_CALLS) {
       const remaining = desiredCount - items.length;
@@ -842,6 +844,8 @@ ${avoid}
       }
 
       const aoaiJson = safeJsonParse(aoaiText) || {};
+      if (typeof aoaiJson?.usage?.prompt_tokens === "number") totalPromptTokens += aoaiJson.usage.prompt_tokens;
+      if (typeof aoaiJson?.usage?.completion_tokens === "number") totalCompletionTokens += aoaiJson.usage.completion_tokens;
       const content = aoaiJson?.choices?.[0]?.message?.content || "";
       const parsed = extractFirstJsonObject(content) || safeJsonParse(content);
 
@@ -884,7 +888,7 @@ ${avoid}
         returnedCount: items.length,
       },
       items,
-    });
+    }, { promptTokens: totalPromptTokens, completionTokens: totalCompletionTokens });
   } catch (err) {
     return jsonRes(context, 500, {
       ok: false,
