@@ -610,18 +610,25 @@
     }
 
     var GROUP_RULES = [
-      { key: "IIBEC",  match: /^iibec\b/i },
-      { key: "NRCA",   match: /^nrca\b/i },
-      { key: "SMACNA", match: /^smacna\b/i },
-      { key: "ASTM",   match: /^astm\b/i },
-      { key: "FRSA",   match: /^frsa\b/i },
-      { key: "IBHS",   match: /^ibhs\b/i },
-      { key: "ICC / IBC / IEBC", match: /^(icc|ibc|iebc)\b/i },
-      { key: "FM Global", match: /^fm\s?global\b/i },
+      { key: "IIBEC",     match: /^iibec\b/i },
+      { key: "NRCA",      match: /^nrca\b/i },
+      { key: "RCI",       match: /^rci\b/i },
+      { key: "SMACNA",    match: /^smacna\b/i },
+      { key: "ASTM",      match: /^astm\b/i },
+      { key: "FRSA",      match: /^frsa\b/i },
+      { key: "IBHS",      match: /^ibhs\b/i },
+      { key: "ANSI",      match: /^ansi\b/i },
+      { key: "AIA",       match: /^aia\b/i },
+      { key: "ASCE",      match: /^asce\b/i },
+      { key: "FM",        match: /^fm\b/i },
+      { key: "GAF",       match: /^gaf\b/i },
+      { key: "IBC",       match: /^ibc\b/i },
       { key: "Hydrotech", match: /^hydrotech\b/i },
     ];
-    var GROUP_ORDER = GROUP_RULES.map(function (r) { return r.key; });
-    GROUP_ORDER.push("Other");
+    var GROUP_ORDER = [
+      "IIBEC", "NRCA", "RCI", "SMACNA", "ASTM", "FRSA", "IBHS",
+      "ANSI", "AIA", "ASCE", "FM", "GAF", "IBC", "Hydrotech", "Other"
+    ];
 
     function getGroupKey(book) {
       var title = getTitle(book);
