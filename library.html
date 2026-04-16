@@ -218,8 +218,20 @@
 
     .result-count { font-size: 0.78rem; color: var(--text-muted); }
 
-    .library-layout { margin-top: 1.1rem; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.85rem; }
+    .library-layout { margin-top: 1.1rem; display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.4rem; }
     .shelf-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); margin-bottom: 0.25rem; }
+    .group-section { }
+    .group-heading {
+      font-size: 0.92rem; font-weight: 650; letter-spacing: 0.02em;
+      color: var(--text-main); margin: 0 0 0.6rem 0;
+      padding-bottom: 0.45rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+      display: flex; align-items: baseline; gap: 0.5rem;
+    }
+    .group-count {
+      font-size: 0.72rem; font-weight: 500; color: var(--text-muted);
+      letter-spacing: 0.03em;
+    }
 
     .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.9rem; }
 
@@ -428,16 +440,11 @@
       </div>
     </section>
 
-    <section class="library-layout">
-      <div>
-        <div class="shelf-label">All Books</div>
-        <div id="bookGrid" class="book-grid"></div>
-
-        <div id="emptyState" class="empty-state hidden">
-          <div class="empty-icon">🕵️‍♂️</div>
-          <div>
-            No books matched your search. Try a different keyword, or clear the search box to see the full RoofVault library again.
-          </div>
+    <section class="library-layout" id="libraryLayout">
+      <div id="emptyState" class="empty-state hidden">
+        <div class="empty-icon">🕵️‍♂️</div>
+        <div>
+          No books matched your search. Try a different keyword, or clear the search box to see the full RoofVault library again.
         </div>
       </div>
     </section>
@@ -461,7 +468,7 @@
       });
     }
 
-    const bookGrid = document.getElementById("bookGrid");
+    const libraryLayout = document.getElementById("libraryLayout");
     const searchInput = document.getElementById("searchInput");
     const resultCount = document.getElementById("resultCount");
     const emptyState = document.getElementById("emptyState");
@@ -584,20 +591,74 @@
       return card;
     }
 
+    var GROUP_RULES = [
+      { key: "IIBEC",  match: /^iibec\b/i },
+      { key: "NRCA",   match: /^nrca\b/i },
+      { key: "SMACNA", match: /^smacna\b/i },
+      { key: "ASTM",   match: /^astm\b/i },
+      { key: "FRSA",   match: /^frsa\b/i },
+      { key: "IBHS",   match: /^ibhs\b/i },
+      { key: "ICC / IBC / IEBC", match: /^(icc|ibc|iebc)\b/i },
+      { key: "FM Global", match: /^fm\s?global\b/i },
+      { key: "Hydrotech", match: /^hydrotech\b/i },
+    ];
+    var GROUP_ORDER = GROUP_RULES.map(function (r) { return r.key; });
+    GROUP_ORDER.push("Other");
+
+    function getGroupKey(book) {
+      var title = getTitle(book);
+      for (var i = 0; i < GROUP_RULES.length; i++) {
+        if (GROUP_RULES[i].match.test(title)) return GROUP_RULES[i].key;
+      }
+      return "Other";
+    }
+
+    function groupBooks(list) {
+      var map = {};
+      for (var i = 0; i < list.length; i++) {
+        var key = getGroupKey(list[i]);
+        if (!map[key]) map[key] = [];
+        map[key].push(list[i]);
+      }
+      var ordered = [];
+      for (var g = 0; g < GROUP_ORDER.length; g++) {
+        var k = GROUP_ORDER[g];
+        if (map[k] && map[k].length) ordered.push({ key: k, books: map[k] });
+      }
+      return ordered;
+    }
+
     function renderBooks(list) {
-      bookGrid.innerHTML = "";
+      var existing = libraryLayout.querySelectorAll(".group-section");
+      for (var i = 0; i < existing.length; i++) existing[i].remove();
 
       if (!Array.isArray(list) || list.length === 0) {
-        bookGrid.classList.add("hidden");
         emptyState.classList.remove("hidden");
         resultCount.textContent = "No books found.";
         return;
       }
 
       emptyState.classList.add("hidden");
-      bookGrid.classList.remove("hidden");
 
-      list.forEach((b) => bookGrid.appendChild(createBookCard(b)));
+      var groups = groupBooks(list);
+      for (var g = 0; g < groups.length; g++) {
+        var section = document.createElement("div");
+        section.className = "group-section";
+
+        var heading = document.createElement("div");
+        heading.className = "group-heading";
+        heading.innerHTML = groups[g].key +
+          " <span class='group-count'>(" + groups[g].books.length + ")</span>";
+        section.appendChild(heading);
+
+        var grid = document.createElement("div");
+        grid.className = "book-grid";
+        for (var b = 0; b < groups[g].books.length; b++) {
+          grid.appendChild(createBookCard(groups[g].books[b]));
+        }
+        section.appendChild(grid);
+        libraryLayout.appendChild(section);
+      }
 
       resultCount.textContent = list.length === 1 ? "1 book found" : `${list.length} books found`;
     }
