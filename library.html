@@ -223,15 +223,33 @@
     .group-section { }
     .group-heading {
       font-size: 0.92rem; font-weight: 650; letter-spacing: 0.02em;
-      color: var(--text-main); margin: 0 0 0.6rem 0;
-      padding-bottom: 0.45rem;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.15);
-      display: flex; align-items: baseline; gap: 0.5rem;
+      color: var(--text-main); margin: 0;
+      padding: 0.65rem 0.85rem;
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.5);
+      display: flex; align-items: center; gap: 0.5rem;
+      cursor: pointer; user-select: none;
+      transition: background var(--transition-fast), border-color var(--transition-fast);
     }
+    .group-heading:hover {
+      background: rgba(15, 23, 42, 0.75);
+      border-color: rgba(148, 163, 184, 0.35);
+    }
+    .group-chevron {
+      font-size: 0.7rem; color: var(--text-muted);
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+    }
+    .group-section.open .group-chevron { transform: rotate(90deg); }
     .group-count {
       font-size: 0.72rem; font-weight: 500; color: var(--text-muted);
-      letter-spacing: 0.03em;
+      letter-spacing: 0.03em; margin-left: auto;
     }
+    .group-body {
+      display: none; margin-top: 0.7rem;
+    }
+    .group-section.open .group-body { display: block; }
 
     .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.9rem; }
 
@@ -628,7 +646,7 @@
       return ordered;
     }
 
-    function renderBooks(list) {
+    function renderBooks(list, isSearching) {
       var existing = libraryLayout.querySelectorAll(".group-section");
       for (var i = 0; i < existing.length; i++) existing[i].remove();
 
@@ -643,20 +661,29 @@
       var groups = groupBooks(list);
       for (var g = 0; g < groups.length; g++) {
         var section = document.createElement("div");
-        section.className = "group-section";
+        section.className = "group-section" + (isSearching ? " open" : "");
 
         var heading = document.createElement("div");
         heading.className = "group-heading";
-        heading.innerHTML = groups[g].key +
-          " <span class='group-count'>(" + groups[g].books.length + ")</span>";
+        heading.innerHTML =
+          "<span class='group-chevron'>▶</span> " +
+          groups[g].key +
+          " <span class='group-count'>" + groups[g].books.length + " book" +
+          (groups[g].books.length === 1 ? "" : "s") + "</span>";
+        heading.addEventListener("click", (function (sec) {
+          return function () { sec.classList.toggle("open"); };
+        })(section));
         section.appendChild(heading);
 
+        var body = document.createElement("div");
+        body.className = "group-body";
         var grid = document.createElement("div");
         grid.className = "book-grid";
         for (var b = 0; b < groups[g].books.length; b++) {
           grid.appendChild(createBookCard(groups[g].books[b]));
         }
-        section.appendChild(grid);
+        body.appendChild(grid);
+        section.appendChild(body);
         libraryLayout.appendChild(section);
       }
 
@@ -692,7 +719,8 @@
       loadBooks();
       if (searchInput) {
         searchInput.addEventListener("input", (e) => {
-          renderBooks(filterBooks(e.target.value.trim()));
+          var q = e.target.value.trim();
+          renderBooks(filterBooks(q), q.length > 0);
         });
       }
     });
