@@ -270,8 +270,7 @@ async function searchDocs(query, { top = 12 } = {}) {
   const payload = {
     search: query,
     top,
-    queryType: "semantic",
-    semanticConfiguration: "default",
+    queryType: "simple",
   };
 
   const res = await fetch(url, {
@@ -286,15 +285,7 @@ async function searchDocs(query, { top = 12 } = {}) {
   }
 
   const data = await res.json().catch(() => ({}));
-  const allChunks = Array.isArray(data?.value) ? data.value : [];
-
-  const MIN_SCORE = 0.5;
-  const filtered = allChunks.filter(function (c) {
-    var score = c["@search.score"];
-    return typeof score === "number" && score >= MIN_SCORE;
-  });
-
-  var chunks = filtered.length >= 1 ? filtered : allChunks;
+  const chunks = Array.isArray(data?.value) ? data.value : [];
   return { ok: true, chunks };
 }
 
