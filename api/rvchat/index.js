@@ -322,9 +322,9 @@ function buildCitationsFromChunks(chunks) {
 }
 
 function buildSourcesBlockForAOAI(citations) {
-  const MAX_SOURCES = 4;
-  const MAX_CHARS_PER_SOURCE = 900;
-  const MAX_TOTAL_CHARS = 3200;
+  const MAX_SOURCES = 6;
+  const MAX_CHARS_PER_SOURCE = 1400;
+  const MAX_TOTAL_CHARS = 6000;
 
   const picked = (citations || []).slice(0, MAX_SOURCES);
 
@@ -752,7 +752,7 @@ module.exports = async function (context, req) {
           { role: "system", content: system },
           { role: "user", content: user },
         ],
-        { temperature: 0.1, maxTokens: 320 }
+        { temperature: 0.1, maxTokens: 480 }
       );
 
       if (!aoai.ok) {
