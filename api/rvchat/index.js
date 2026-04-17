@@ -259,7 +259,7 @@ async function validateSourcesServerSide(
 // -------------------------
 // Azure AI Search (docs)
 // -------------------------
-async function searchDocs(query, { top = 6 } = {}) {
+async function searchDocs(query, { top = 12 } = {}) {
   if (!SEARCH_ENDPOINT || !SEARCH_KEY || !INDEX_FOR_CHAT) {
     return { ok: false, error: "Missing SEARCH_* env vars", chunks: [] };
   }
@@ -270,7 +270,9 @@ async function searchDocs(query, { top = 6 } = {}) {
   const payload = {
     search: query,
     top,
-    queryType: "simple",
+    queryType: "semantic",
+    semanticConfiguration: "default",
+    queryLanguage: "en-us",
   };
 
   const res = await fetch(url, {
@@ -285,7 +287,15 @@ async function searchDocs(query, { top = 6 } = {}) {
   }
 
   const data = await res.json().catch(() => ({}));
-  const chunks = Array.isArray(data?.value) ? data.value : [];
+  const allChunks = Array.isArray(data?.value) ? data.value : [];
+
+  const MIN_SCORE = 0.5;
+  const filtered = allChunks.filter(function (c) {
+    var score = c["@search.score"];
+    return typeof score === "number" && score >= MIN_SCORE;
+  });
+
+  var chunks = filtered.length >= 1 ? filtered : allChunks;
   return { ok: true, chunks };
 }
 
