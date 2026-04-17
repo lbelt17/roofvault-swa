@@ -272,7 +272,6 @@ async function searchDocs(query, { top = 12 } = {}) {
     top,
     queryType: "semantic",
     semanticConfiguration: "default",
-    queryLanguage: "en-us",
   };
 
   const res = await fetch(url, {
