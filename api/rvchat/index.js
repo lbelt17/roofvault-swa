@@ -270,7 +270,8 @@ async function searchDocs(query, { top = 12 } = {}) {
   const payload = {
     search: query,
     top,
-    queryType: "simple",
+    queryType: "semantic",
+    semanticConfiguration: "default",
   };
 
   const res = await fetch(url, {
