@@ -329,13 +329,41 @@ function selectRankedDocChunks(chunks, { maxKeep = 6, minContentChars = 180 } = 
     else scoreFloor = top.primary * 0.48;
   }
 
-  const out = [];
+  const eligible = [];
   for (const r of rows) {
     if (r.textLen < minContentChars) continue;
     if (r.primary < scoreFloor) continue;
-    out.push(r.c);
-    if (out.length >= maxKeep) break;
+    eligible.push(r);
   }
+
+  function familyKey(c) {
+    const name = String(c?.metadata_storage_name || "").trim();
+    if (name) return name;
+    const path = String(c?.metadata_storage_path || "").trim();
+    if (path) return path;
+    const bg = String(c?.bookGroupId || "").trim();
+    if (bg) return bg;
+    return "__unknown__";
+  }
+
+  const out = [];
+  const usedFamilies = new Set();
+  for (const r of eligible) {
+    if (out.length >= maxKeep) break;
+    const key = familyKey(r.c);
+    if (usedFamilies.has(key)) continue;
+    usedFamilies.add(key);
+    out.push(r.c);
+  }
+
+  const inOut = new Set(out);
+  for (const r of eligible) {
+    if (out.length >= maxKeep) break;
+    if (inOut.has(r.c)) continue;
+    out.push(r.c);
+    inOut.add(r.c);
+  }
+
   return out;
 }
 
