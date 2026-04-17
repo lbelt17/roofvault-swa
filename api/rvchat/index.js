@@ -823,6 +823,7 @@ module.exports = async function (context, req) {
         `Only include causes, problems, or explanations that are clearly supported by the sources. Do not infer or expand beyond them.`,
         `If the answer is not supported by the sources, respond exactly: 'No support in the provided sources.'`,
         `Do not invent facts, numbers, standards, or code language not present in the sources.`,
+        `Prefer practical field language over specification-style or code-style wording. Avoid sounding like a manual; sound like someone who has seen these failures in real projects.`,
         `Cite sources inline like [S1], [S2] wherever you use them.`,
       ].join("\n");
 
