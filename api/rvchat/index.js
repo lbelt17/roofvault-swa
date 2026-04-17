@@ -369,7 +369,37 @@ function buildCitationsFromChunks(chunks) {
   });
 }
 
-function buildSourcesBlockForAOAI(citations) {
+function extractRelevantExcerpt(content, question) {
+  if (!content || !question) return content;
+
+  const STOPWORDS = new Set([
+    "the", "is", "a", "an", "and", "or", "of", "to", "in", "on", "for", "with", "by", "at", "from", "as", "it", "this", "that", "are", "be", "was", "were"
+  ]);
+
+  const keywords = question
+    .toLowerCase()
+    .split(/\W+/)
+    .filter((w) => w && !STOPWORDS.has(w));
+
+  const sentences = content.split(/(?<=[.!?])\s+/);
+
+  const scored = sentences.map((s) => {
+    const lower = s.toLowerCase();
+    let score = 0;
+    for (const k of keywords) {
+      if (lower.includes(k)) score++;
+    }
+    return { s, score };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+
+  const top = scored.slice(0, 3).map((x) => x.s.trim());
+
+  return top.join(" ");
+}
+
+function buildSourcesBlockForAOAI(citations, question) {
   const MAX_SOURCES = 6;
   const MAX_CHARS_PER_SOURCE = 1400;
   const MAX_TOTAL_CHARS = 6000;
@@ -378,7 +408,7 @@ function buildSourcesBlockForAOAI(citations) {
 
   let out = "";
   for (const c of picked) {
-    const piece = `${c.label}\n${clampText(c.content, MAX_CHARS_PER_SOURCE)}\n\n---\n\n`;
+    const piece = `${c.label}\n${clampText(extractRelevantExcerpt(c.content, question), MAX_CHARS_PER_SOURCE)}\n\n---\n\n`;
     if (out.length + piece.length > MAX_TOTAL_CHARS) break;
     out += piece;
   }
@@ -783,16 +813,21 @@ module.exports = async function (context, req) {
       const citations = buildCitationsFromChunks(chunks);
 
       const system = [
-        `You are RoofVault Chat. Write as an experienced commercial roofing professional: practical, direct, and confident—how you would answer a sharp question on a jobsite walk, not how you would write a textbook.`,
-        `Prioritize what matters in the real world (installation, inspection, sequencing, common failure modes, critical details) only when the sources actually say so. No vague generalities or stiff academic phrasing.`,
-        `Be concise: short paragraphs and tight bullets beat long formal prose.`,
+        `You are RoofVault Chat. Answer like an experienced commercial roofing professional speaking on a jobsite — direct, practical, and confident.`,
+        `Start answers with a clear, direct statement of the issue — no filler or generic introductions.`,
+        `Be concise: short paragraphs and tight bullets. No long explanations.`,
+        `Prioritize real-world causes and conditions first. Lead with what actually goes wrong in practice, not theoretical possibilities.`,
+        `Group related causes together. Do not list minor or secondary factors unless clearly supported and important.`,
+        `Explain things the way a roofer would on a walk — what failed, why it failed, and what it leads to.`,
         `You MUST be strictly grounded in the provided sources. Do not use outside knowledge.`,
-        `If the answer is not supported by the sources, respond exactly: "No support in the provided sources."`,
+        `Only include causes, problems, or explanations that are clearly supported by the sources. Do not infer or expand beyond them.`,
+        `If the answer is not supported by the sources, respond exactly: 'No support in the provided sources.'`,
         `Do not invent facts, numbers, standards, or code language not present in the sources.`,
+        `Prefer practical field language over specification-style or code-style wording. Avoid sounding like a manual; sound like someone who has seen these failures in real projects.`,
         `Cite sources inline like [S1], [S2] wherever you use them.`,
       ].join("\n");
 
-      const sourcesBlock = buildSourcesBlockForAOAI(citations);
+      const sourcesBlock = buildSourcesBlockForAOAI(citations, question);
       const user = [`Question: ${question}`, ``, `Sources:`, sourcesBlock].join("\n");
 
       const aoai = await callAOAI(
