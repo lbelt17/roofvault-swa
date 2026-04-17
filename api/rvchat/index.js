@@ -291,6 +291,54 @@ function hasAdequateSupport(chunks) {
   return good.length >= 1;
 }
 
+function chunkSearchRankParts(c) {
+  const rerank = c?.["@search.rerankerScore"];
+  const bm = c?.["@search.score"];
+  const hasRerank = typeof rerank === "number" && !Number.isNaN(rerank);
+  return {
+    rerank: hasRerank,
+    primary: hasRerank ? rerank : typeof bm === "number" && !Number.isNaN(bm) ? bm : 0,
+    secondary: typeof bm === "number" && !Number.isNaN(bm) ? bm : 0,
+  };
+}
+
+/**
+ * Re-order and narrow Azure Search hits using @search.rerankerScore / @search.score
+ * plus minimum text signal. Keeps chunk order aligned for citations/sources mapping.
+ */
+function selectRankedDocChunks(chunks, { maxKeep = 6, minContentChars = 180 } = {}) {
+  const arr = Array.isArray(chunks) ? chunks.slice() : [];
+  if (!arr.length) return [];
+
+  const rows = arr.map((c) => {
+    const p = chunkSearchRankParts(c);
+    const textLen = String(c?.content || "").trim().length;
+    return { c, ...p, textLen };
+  });
+
+  rows.sort((a, b) => {
+    const d = b.primary - a.primary;
+    if (d !== 0) return d;
+    return b.secondary - a.secondary;
+  });
+
+  const top = rows[0];
+  let scoreFloor = 0;
+  if (top.primary > 0) {
+    if (top.rerank) scoreFloor = Math.max(0.45, top.primary - 1.05);
+    else scoreFloor = top.primary * 0.48;
+  }
+
+  const out = [];
+  for (const r of rows) {
+    if (r.textLen < minContentChars) continue;
+    if (r.primary < scoreFloor) continue;
+    out.push(r.c);
+    if (out.length >= maxKeep) break;
+  }
+  return out;
+}
+
 function buildCitationsFromChunks(chunks) {
   return (chunks || []).map((c, i) => {
     const title =
@@ -694,7 +742,7 @@ module.exports = async function (context, req) {
 
     if (mode === "doc" || (mode === "general" && roofing)) {
       // C) Normal doc flow
-      const search = await searchDocs(question, { top: 6 });
+      const search = await searchDocs(question, { top: 20 });
       if (!search.ok) {
         return jsonResponse(context, 502, {
           ok: false,
@@ -704,7 +752,7 @@ module.exports = async function (context, req) {
         });
       }
 
-      let chunks = search.chunks || [];
+      let chunks = selectRankedDocChunks(search.chunks || []);
 
       const supported = hasAdequateSupport(chunks);
 
