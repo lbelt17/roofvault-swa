@@ -12,11 +12,7 @@
 // ✅ Demo-stable web fallback when validation returns too few links (validated-first, then safe fallback)
 // ✅ Anti-429 stability fixes (prompt cap + max_tokens + throttle fuse)
 //
-// ✅ FIXES IN THIS VERSION
-// A) Robust IIBEC Manual-of-Practice picker (high-top search + strict filter + numeric sort)
-// B) “Part 03” treated as doc selection → targeted search + grounded summary (doc-only)
-// C) Never emit needsConsentForWeb for valid picker/selection flows
-// D) Selection summary upgraded: harvest enough chunks from the exact selected title
+// Doc mode: single Azure Search + AOAI grounded path for all roofing questions.
 
 const DEPLOY_TAG = "RVCHAT__2026-03-12__CHUNKED_INDEX__E";
 const { logUsage } = require("../_helpers/usage");
@@ -259,7 +255,7 @@ async function validateSourcesServerSide(
 // -------------------------
 // Azure AI Search (docs)
 // -------------------------
-async function searchDocs(query, { top = 6 } = {}) {
+async function searchDocs(query, { top = 12 } = {}) {
   if (!SEARCH_ENDPOINT || !SEARCH_KEY || !INDEX_FOR_CHAT) {
     return { ok: false, error: "Missing SEARCH_* env vars", chunks: [] };
   }
@@ -270,7 +266,8 @@ async function searchDocs(query, { top = 6 } = {}) {
   const payload = {
     search: query,
     top,
-    queryType: "simple",
+    queryType: "semantic",
+    semanticConfiguration: "default",
   };
 
   const res = await fetch(url, {
@@ -292,6 +289,54 @@ async function searchDocs(query, { top = 6 } = {}) {
 function hasAdequateSupport(chunks) {
   const good = (chunks || []).filter((c) => String(c?.content || "").trim().length >= 180);
   return good.length >= 1;
+}
+
+function chunkSearchRankParts(c) {
+  const rerank = c?.["@search.rerankerScore"];
+  const bm = c?.["@search.score"];
+  const hasRerank = typeof rerank === "number" && !Number.isNaN(rerank);
+  return {
+    rerank: hasRerank,
+    primary: hasRerank ? rerank : typeof bm === "number" && !Number.isNaN(bm) ? bm : 0,
+    secondary: typeof bm === "number" && !Number.isNaN(bm) ? bm : 0,
+  };
+}
+
+/**
+ * Re-order and narrow Azure Search hits using @search.rerankerScore / @search.score
+ * plus minimum text signal. Keeps chunk order aligned for citations/sources mapping.
+ */
+function selectRankedDocChunks(chunks, { maxKeep = 6, minContentChars = 180 } = {}) {
+  const arr = Array.isArray(chunks) ? chunks.slice() : [];
+  if (!arr.length) return [];
+
+  const rows = arr.map((c) => {
+    const p = chunkSearchRankParts(c);
+    const textLen = String(c?.content || "").trim().length;
+    return { c, ...p, textLen };
+  });
+
+  rows.sort((a, b) => {
+    const d = b.primary - a.primary;
+    if (d !== 0) return d;
+    return b.secondary - a.secondary;
+  });
+
+  const top = rows[0];
+  let scoreFloor = 0;
+  if (top.primary > 0) {
+    if (top.rerank) scoreFloor = Math.max(0.45, top.primary - 1.05);
+    else scoreFloor = top.primary * 0.48;
+  }
+
+  const out = [];
+  for (const r of rows) {
+    if (r.textLen < minContentChars) continue;
+    if (r.primary < scoreFloor) continue;
+    out.push(r.c);
+    if (out.length >= maxKeep) break;
+  }
+  return out;
 }
 
 function buildCitationsFromChunks(chunks) {
@@ -325,9 +370,9 @@ function buildCitationsFromChunks(chunks) {
 }
 
 function buildSourcesBlockForAOAI(citations) {
-  const MAX_SOURCES = 4;
-  const MAX_CHARS_PER_SOURCE = 900;
-  const MAX_TOTAL_CHARS = 3200;
+  const MAX_SOURCES = 6;
+  const MAX_CHARS_PER_SOURCE = 1400;
+  const MAX_TOTAL_CHARS = 6000;
 
   const picked = (citations || []).slice(0, MAX_SOURCES);
 
@@ -624,79 +669,6 @@ function buildFinalWebSources(extractedSources, validatedSources) {
 }
 
 // -------------------------
-// IIBEC picker + selection helpers
-// -------------------------
-function normalizePart2(n) {
-  const num = Number(n);
-  if (!Number.isFinite(num) || num <= 0) return null;
-  return String(num).padStart(2, "0");
-}
-
-function extractPartSelection(question) {
-  const s = String(question || "").trim();
-  const m = s.match(/\bpart\s*[-#:]?\s*0*([0-9]{1,2})\b/i);
-  if (!m) return null;
-  const p = normalizePart2(m[1]);
-  return p ? `Part ${p}` : null;
-}
-
-function looksLikeIibecPickerRequest(question) {
-  const q = String(question || "").toLowerCase();
-  const mentionsIibec = q.includes("iibec") || q.includes("ibec");
-  if (!mentionsIibec) return false;
-
-  const mentionsSummary = q.includes("summary") || q.includes("summarize");
-  const mentionsDocContext =
-    q.includes("document") || q.includes("manual") || q.includes("library") || q.includes("in your library");
-
-  const hasPart = /\bpart\s*[-#:]?\s*0*[0-9]{1,2}\b/i.test(question);
-
-  return mentionsSummary && mentionsDocContext && !hasPart;
-}
-
-function isIibecManualOfPracticePartTitle(title) {
-  const t = String(title || "");
-  const u = t.toUpperCase();
-  if (!u.includes("IIBEC")) return false;
-  if (!u.includes("MANUAL-OF-PRACTICE-2020")) return false;
-  if (!/\bPART\s*0*[0-9]{1,2}\b/i.test(t)) return false;
-  return true;
-}
-
-function partNumberFromTitle(title) {
-  const m = String(title || "").match(/\bpart\s*0*([0-9]{1,2})\b/i);
-  if (!m) return null;
-  return normalizePart2(m[1]);
-}
-
-function buildIibecPickerFromChunks(chunks) {
-  const map = new Map();
-
-  for (const ch of chunks || []) {
-    const title = String(ch?.metadata_storage_name || "").trim();
-    if (!title) continue;
-    if (!isIibecManualOfPracticePartTitle(title)) continue;
-
-    const partNum = partNumberFromTitle(title);
-    if (!partNum) continue;
-
-    const url = String(ch?.metadata_storage_path || "").trim();
-    const key = title.toLowerCase();
-
-    if (!map.has(key)) {
-      map.set(key, { title, partNum, url: url || "" });
-    } else {
-      const cur = map.get(key);
-      if (cur && !cur.url && url) map.set(key, { ...cur, url });
-    }
-  }
-
-  const list = Array.from(map.values());
-  list.sort((a, b) => Number(a.partNum) - Number(b.partNum));
-  return list;
-}
-
-// -------------------------
 // Main handler
 // -------------------------
 module.exports = async function (context, req) {
@@ -769,257 +741,8 @@ module.exports = async function (context, req) {
     const roofing = isProbablyRoofingQuestion(question);
 
     if (mode === "doc" || (mode === "general" && roofing)) {
-      const wantsPicker = looksLikeIibecPickerRequest(question);
-      const partSelection = extractPartSelection(question); // "Part 03" or null
-      const isPartSelection = Boolean(partSelection);
-
-      // A) Picker request
-      if (wantsPicker) {
-        const pickerSearch = await searchDocs(`IIBEC Manual-of-Practice-2020 Part`, { top: 100 });
-        if (!pickerSearch.ok) {
-          return jsonResponse(context, 502, {
-            ok: false,
-            deployTag: DEPLOY_TAG,
-            mode: "doc",
-            error: pickerSearch.error || "Search failed",
-          });
-        }
-
-        const pickerList = buildIibecPickerFromChunks(pickerSearch.chunks || []);
-
-        const _diag = debugFlag
-          ? {
-              picker: {
-                query: `IIBEC Manual-of-Practice-2020 Part`,
-                chunksCount: Array.isArray(pickerSearch.chunks) ? pickerSearch.chunks.length : 0,
-                matchedTitles: pickerList.length,
-              },
-              chunk0Keys: pickerSearch.chunks && pickerSearch.chunks[0] ? Object.keys(pickerSearch.chunks[0]) : [],
-            }
-          : undefined;
-
-        if (!pickerList.length) {
-          return jsonResponse(context, 200, {
-            ok: true,
-            deployTag: DEPLOY_TAG,
-            mode: "doc",
-            question,
-            answer:
-              "I couldn’t find the IIBEC Manual-of-Practice-2020 parts in the current library index. If you believe they exist, the search index may be missing them or the titles don’t match the expected pattern.",
-            sources: [],
-            ...(debugFlag ? { _diag } : {}),
-          });
-        }
-
-        const answer =
-          "Which IIBEC Manual-of-Practice-2020 part should I summarize?\n" +
-          "Reply with a Part number (example: `Part 03`).\n\n" +
-          pickerList.map((x) => `- ${x.title}`).join("\n");
-
-        const sources = pickerList.slice(0, 25).map((x, i) => ({
-          id: `S${i + 1}`,
-          title: x.title,
-          url: x.url || "",
-          publisher: "",
-          pageNumber: null,
-          chunk_id: null,
-        }));
-
-        return jsonResponse(context, 200, {
-          ok: true,
-          deployTag: DEPLOY_TAG,
-          mode: "doc",
-          question,
-          answer,
-          sources,
-          ...(debugFlag ? { _diag } : {}),
-        });
-      }
-
-      // B) Part selection → harvest chunks from exact title (so we don’t summarize off 1 chunk)
-      if (isPartSelection) {
-        const partText = partSelection; // e.g., "Part 03"
-        const wantedPartNum = partText.split(" ")[1]; // "03"
-        const exactTitle = `IIBEC - Manual-of-Practice-2020 - ${partText}`;
-
-        // First pass: targeted query
-        const targetedQuery = `IIBEC "Manual-of-Practice-2020" "${partText}"`;
-        const selSearch = await searchDocs(targetedQuery, { top: 24 });
-        if (!selSearch.ok) {
-          return jsonResponse(context, 502, {
-            ok: false,
-            deployTag: DEPLOY_TAG,
-            mode: "doc",
-            error: selSearch.error || "Search failed",
-          });
-        }
-
-        // Strict keep from exact doc title
-        let chunks = (selSearch.chunks || []).filter(
-          (ch) => String(ch?.metadata_storage_name || "").trim() === exactTitle
-        );
-
-        // If too few chunks, run a second harvest search using the exact title and high top
-        let harvested = false;
-        if (chunks.length < 6) {
-          const harvestSearch = await searchDocs(`"${exactTitle}"`, { top: 100 });
-          if (harvestSearch.ok) {
-            const harvestedChunks = (harvestSearch.chunks || []).filter(
-              (ch) => String(ch?.metadata_storage_name || "").trim() === exactTitle
-            );
-            if (harvestedChunks.length > chunks.length) {
-              chunks = harvestedChunks;
-              harvested = true;
-            }
-          }
-        }
-
-        // Final fallback: if exactTitle match fails (title variance), allow IIBEC MOP 2020 + part-number match
-        if (!chunks.length) {
-          chunks = (selSearch.chunks || []).filter((ch) => {
-            const title = String(ch?.metadata_storage_name || "");
-            if (!isIibecManualOfPracticePartTitle(title)) return false;
-            const pn = partNumberFromTitle(title);
-            return pn === wantedPartNum;
-          });
-        }
-
-        // Keep a safe amount for summarization stability
-        chunks = (chunks || []).slice(0, 16);
-
-        const _diag = debugFlag
-          ? {
-              selection: {
-                part: partText,
-                exactTitle,
-                targetedQuery,
-                initialChunks: Array.isArray(selSearch.chunks) ? selSearch.chunks.length : 0,
-                keptChunks: Array.isArray(chunks) ? chunks.length : 0,
-                harvested,
-              },
-              chunk0Keys: selSearch.chunks && selSearch.chunks[0] ? Object.keys(selSearch.chunks[0]) : [],
-            }
-          : undefined;
-
-        // If still no support, doc-only helpful message (NO web modal for selection)
-        if (!hasAdequateSupport(chunks)) {
-          return jsonResponse(context, 200, {
-            ok: true,
-            deployTag: DEPLOY_TAG,
-            mode: "doc",
-            question,
-            answer:
-              `I couldn’t retrieve enough indexed content to summarize ${partText} right now. ` +
-              `Try the picker again and select the full title, or re-run with debug=1 to confirm indexing.`,
-            sources: [],
-            ...(debugFlag ? { _diag } : {}),
-          });
-        }
-
-        const citations = buildCitationsFromChunks(chunks);
-
-        const system = [
-          `You are RoofVault Chat.`,
-          `You MUST be strictly grounded in the provided sources.`,
-          `If the answer is not supported by the sources, respond exactly: "No support in the provided sources."`,
-          `Write a clear, structured summary (headings + bullets).`,
-          `Do NOT invent definitions. If a definition is not explicitly in sources, omit it.`,
-          `Cite sources inline like [S1], [S2].`,
-          `Do not use outside knowledge.`,
-        ].join("\n");
-
-        const sourcesBlock = buildSourcesBlockForAOAI(citations);
-
-        const user = [
-          `Task: Summarize ${partText} of the IIBEC Manual-of-Practice-2020.`,
-          `Focus on what the document actually covers: main sections, key concepts, recommended practices, cautions, and any checklists.`,
-          `Avoid legal/contract assumptions unless explicitly present in sources.`,
-          ``,
-          `Sources:`,
-          sourcesBlock,
-        ].join("\n");
-
-        const aoai = await callAOAI(
-          [
-            { role: "system", content: system },
-            { role: "user", content: user },
-          ],
-          { temperature: 0.1, maxTokens: 480 }
-        );
-
-        if (!aoai.ok) {
-          const errText = String(aoai.error || "");
-          const is429 =
-            aoai.status === 429 ||
-            errText.includes("AOAI error 429") ||
-            errText.includes("RateLimitReached") ||
-            errText.includes("fuse");
-
-          if (is429) {
-            return jsonResponse(context, 429, {
-              ok: false,
-              deployTag: DEPLOY_TAG,
-              mode: "doc",
-              error: "Rate limited by Azure OpenAI. Please retry in ~60 seconds.",
-              retryAfterSeconds: 60,
-              throttled: true,
-            });
-          }
-
-          return jsonResponse(context, 502, {
-            ok: false,
-            deployTag: DEPLOY_TAG,
-            mode: "doc",
-            error: aoai.error || "AOAI failed",
-          });
-        }
-
-        const answer = String(aoai.text || "").trim();
-        const _tokensA = { promptTokens: aoai.promptTokens, completionTokens: aoai.completionTokens };
-
-        if (answer === "No support in the provided sources.") {
-          return jsonResponse(context, 200, {
-            ok: true,
-            deployTag: DEPLOY_TAG,
-            mode: "doc",
-            question,
-            answer:
-              `I can’t summarize ${partText} because the retrieved sources don’t contain enough content.`,
-            sources: [],
-            ...(debugFlag ? { _diag } : {}),
-          }, _tokensA);
-        }
-
-        return jsonResponse(context, 200, {
-          ok: true,
-          deployTag: DEPLOY_TAG,
-          mode: "doc",
-          question,
-          answer,
-          ...(debugFlag ? { _diag } : {}),
-          sources: citations.map((c, i) => {
-            const ch = (chunks && chunks[i]) || {};
-            const title = String(
-              ch.metadata_storage_name ||
-                ch.title ||
-                ch.sourcefile ||
-                ch.sourceFile ||
-                ch.filename ||
-                ch.fileName ||
-                ""
-            ).trim();
-
-            const rawPath = String(ch.metadata_storage_path || ch.url || ch.sourceUrl || "").trim();
-            const url = rawPath.startsWith("http://") || rawPath.startsWith("https://") ? rawPath : "";
-            const chunk_id = ch.chunkId || ch.chunk_id || ch.id || null;
-
-            return { id: c.id, title, url, publisher: "", pageNumber: null, chunk_id };
-          }),
-        }, _tokensA);
-      }
-
       // C) Normal doc flow
-      const search = await searchDocs(question, { top: 6 });
+      const search = await searchDocs(question, { top: 20 });
       if (!search.ok) {
         return jsonResponse(context, 502, {
           ok: false,
@@ -1029,16 +752,7 @@ module.exports = async function (context, req) {
         });
       }
 
-      let chunks = search.chunks || [];
-
-      const qUpper = String(question || "").toUpperCase();
-      const wantsIIBEC = qUpper.includes("IIBEC");
-      if (wantsIIBEC && Array.isArray(chunks) && chunks.length) {
-        const filtered = chunks.filter((ch) =>
-          String(ch?.metadata_storage_name || "").toUpperCase().includes("IIBEC")
-        );
-        if (filtered.length) chunks = filtered;
-      }
+      let chunks = selectRankedDocChunks(search.chunks || []);
 
       const supported = hasAdequateSupport(chunks);
 
@@ -1069,11 +783,13 @@ module.exports = async function (context, req) {
       const citations = buildCitationsFromChunks(chunks);
 
       const system = [
-        `You are RoofVault Chat. You MUST be strictly grounded in the provided sources.`,
+        `You are RoofVault Chat. Write as an experienced commercial roofing professional: practical, direct, and confident—how you would answer a sharp question on a jobsite walk, not how you would write a textbook.`,
+        `Prioritize what matters in the real world (installation, inspection, sequencing, common failure modes, critical details) only when the sources actually say so. No vague generalities or stiff academic phrasing.`,
+        `Be concise: short paragraphs and tight bullets beat long formal prose.`,
+        `You MUST be strictly grounded in the provided sources. Do not use outside knowledge.`,
         `If the answer is not supported by the sources, respond exactly: "No support in the provided sources."`,
-        `Keep answers concise.`,
-        `Cite sources inline like [S1], [S2].`,
-        `Do not use outside knowledge.`,
+        `Do not invent facts, numbers, standards, or code language not present in the sources.`,
+        `Cite sources inline like [S1], [S2] wherever you use them.`,
       ].join("\n");
 
       const sourcesBlock = buildSourcesBlockForAOAI(citations);
@@ -1084,7 +800,7 @@ module.exports = async function (context, req) {
           { role: "system", content: system },
           { role: "user", content: user },
         ],
-        { temperature: 0.1, maxTokens: 320 }
+        { temperature: 0.1, maxTokens: 480 }
       );
 
       if (!aoai.ok) {
