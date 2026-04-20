@@ -350,24 +350,8 @@
 
       <div id="oneMonthView" style="display:none;" aria-hidden="true"></div>
 
-      <div class="events" role="list">
-        <div class="event-item" role="listitem">
-          <h3 class="event-title">NRCA Fall Conference</h3>
-          <p class="event-meta">October 14, 2026 · NRCA</p>
-          <p class="event-desc">Industry conference covering roofing trends, safety, and technical education.</p>
-        </div>
-
-        <div class="event-item" role="listitem">
-          <h3 class="event-title">FRSA Expo</h3>
-          <p class="event-meta">July 17, 2026 · FRSA</p>
-          <p class="event-desc">Regional roofing expo with product showcases, networking, and training sessions.</p>
-        </div>
-
-        <div class="event-item" role="listitem">
-          <h3 class="event-title">IIBEC Technical Seminar</h3>
-          <p class="event-meta">September 5, 2026 · IIBEC</p>
-          <p class="event-desc">Seminar focused on building enclosure and roofing best practices.</p>
-        </div>
+      <div class="events" id="eventsList" role="list">
+        <p class="muted" id="eventsStatus">Loading events…</p>
       </div>
     </section>
 
@@ -411,7 +395,7 @@
       var orgEl = document.getElementById("eventOrg");
       var descEl = document.getElementById("eventDesc");
 
-      submitBtn.addEventListener("click", function () {
+      submitBtn.addEventListener("click", async function () {
         var name = nameEl.value.trim();
         var date = dateEl.value.trim();
         var org = orgEl.value.trim();
@@ -422,32 +406,62 @@
           return;
         }
 
-        var prettyDate = new Date(date).toLocaleDateString(undefined, {
-          year: "numeric",
-          month: "long",
-          day: "numeric"
-        });
-
-        var body =
-          "Event Name: " + name + "\n" +
-          "Date: " + prettyDate + "\n" +
-          "Organization: " + org + "\n" +
-          "Description: " + desc;
-
-        window.location.href =
-          "mailto:roofvaultinc@gmail.com?subject=" +
-          encodeURIComponent("RoofVault Calendar Event Submission") +
-          "&body=" + encodeURIComponent(body);
+        submitBtn.disabled = true;
+        try {
+          var res = await fetch("/api/calendar-submit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: name,
+              date: date,
+              organization: org,
+              description: desc
+            })
+          });
+          if (!res.ok) throw new Error("submit " + res.status);
+          alert("Event submitted for approval");
+          nameEl.value = "";
+          dateEl.value = "";
+          orgEl.value = "";
+          descEl.value = "";
+        } catch (err) {
+          alert("Could not submit event. Please try again later.");
+        } finally {
+          submitBtn.disabled = false;
+        }
       });
     })();
 
     (function () {
-      var EVENT_DATES = [
-        { y: 2026, m: 7, d: 17 },
-        { y: 2026, m: 9, d: 5 },
-        { y: 2026, m: 10, d: 14 }
-      ];
       var DOWS = ["S", "M", "T", "W", "T", "F", "S"];
+      var EVENT_DATES = [];
+
+      function esc(s) {
+        return String(s == null ? "" : s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function parseDateParts(iso) {
+        if (!iso) return null;
+        var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso));
+        if (!m) return null;
+        return { y: +m[1], m: +m[2], d: +m[3] };
+      }
+
+      function formatPretty(iso) {
+        var p = parseDateParts(iso);
+        if (!p) return iso || "";
+        var dt = new Date(p.y, p.m - 1, p.d);
+        return dt.toLocaleDateString(undefined, {
+          year: "numeric",
+          month: "long",
+          day: "numeric"
+        });
+      }
 
       function isEventDay(year, m0, d) {
         for (var i = 0; i < EVENT_DATES.length; i++) {
@@ -485,25 +499,75 @@
         return html;
       }
 
-      var now = new Date();
-      var baseYear = now.getFullYear();
-      var baseMonth = now.getMonth();
+      function renderCalendars() {
+        var now = new Date();
+        var baseYear = now.getFullYear();
+        var baseMonth = now.getMonth();
 
-      var miniEl = document.getElementById("miniMonths");
-      if (miniEl) {
-        var threeHtml = "";
-        for (var i = 0; i < 3; i++) {
-          var offset = baseMonth + i;
-          var yr = baseYear + Math.floor(offset / 12);
-          var m0 = ((offset % 12) + 12) % 12;
-          threeHtml += renderMonth(yr, m0, "sm");
+        var miniEl = document.getElementById("miniMonths");
+        if (miniEl) {
+          var threeHtml = "";
+          for (var i = 0; i < 3; i++) {
+            var offset = baseMonth + i;
+            var yr = baseYear + Math.floor(offset / 12);
+            var m0 = ((offset % 12) + 12) % 12;
+            threeHtml += renderMonth(yr, m0, "sm");
+          }
+          miniEl.innerHTML = threeHtml;
         }
-        miniEl.innerHTML = threeHtml;
+
+        var oneEl = document.getElementById("oneMonthView");
+        if (oneEl) {
+          oneEl.innerHTML = renderMonth(baseYear, baseMonth, "lg");
+        }
       }
 
-      var oneEl = document.getElementById("oneMonthView");
-      if (oneEl) {
-        oneEl.innerHTML = renderMonth(baseYear, baseMonth, "lg");
+      function renderEventList(events) {
+        var listEl = document.getElementById("eventsList");
+        if (!listEl) return;
+        if (!events || events.length === 0) {
+          listEl.innerHTML = '<p class="muted">No approved events yet.</p>';
+          return;
+        }
+        var html = "";
+        for (var i = 0; i < events.length; i++) {
+          var ev = events[i];
+          var pretty = formatPretty(ev.date);
+          var meta = ev.organization ? (pretty + " · " + esc(ev.organization)) : pretty;
+          html += '<div class="event-item" role="listitem">';
+          html += '<h3 class="event-title">' + esc(ev.name) + '</h3>';
+          html += '<p class="event-meta">' + meta + '</p>';
+          if (ev.description) {
+            html += '<p class="event-desc">' + esc(ev.description) + '</p>';
+          }
+          html += '</div>';
+        }
+        listEl.innerHTML = html;
+      }
+
+      async function loadEvents() {
+        try {
+          var res = await fetch("/api/calendar-events", {
+            headers: { "Accept": "application/json" }
+          });
+          if (!res.ok) throw new Error("events " + res.status);
+          var data = await res.json();
+          var events = Array.isArray(data) ? data : [];
+          events.sort(function (a, b) {
+            return String(a.date || "").localeCompare(String(b.date || ""));
+          });
+
+          EVENT_DATES = events
+            .map(function (e) { return parseDateParts(e.date); })
+            .filter(function (p) { return !!p; });
+
+          renderCalendars();
+          renderEventList(events);
+        } catch (err) {
+          renderCalendars();
+          var listEl = document.getElementById("eventsList");
+          if (listEl) listEl.innerHTML = '<p class="muted">Could not load events.</p>';
+        }
       }
 
       var threeView = document.getElementById("threeMonthView");
@@ -525,6 +589,9 @@
 
       if (btn3) btn3.addEventListener("click", function () { setView("three"); });
       if (btn1) btn1.addEventListener("click", function () { setView("one"); });
+
+      renderCalendars();
+      loadEvents();
     })();
   </script>
 </body>
