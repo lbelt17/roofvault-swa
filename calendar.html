@@ -188,10 +188,65 @@
       color: var(--muted);
     }
 
+    .mini-months {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .mini-month {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 12px 14px;
+    }
+
+    .mini-month-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin: 0 0 10px;
+      text-align: center;
+    }
+
+    .mini-dow,
+    .mini-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .mini-dow-cell {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-align: center;
+      padding: 2px 0 6px;
+    }
+
+    .mini-day {
+      font-size: 13px;
+      text-align: center;
+      padding: 6px 0;
+      border-radius: 8px;
+      color: var(--text);
+    }
+
+    .mini-day.empty { visibility: hidden; }
+
+    .mini-day.has-event {
+      background: rgba(37, 99, 235, 0.12);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
     @media (max-width: 680px) {
       body { padding: 16px 10px 30px; }
       form { grid-template-columns: 1fr; }
       .title h1 { font-size: 20px; }
+      .mini-months { grid-template-columns: 1fr; }
+      .mini-day { font-size: 14px; padding: 8px 0; }
     }
   </style>
 </head>
@@ -206,6 +261,9 @@
 
     <section class="card" aria-label="Upcoming events">
       <h2>Upcoming Events</h2>
+
+      <div class="mini-months" id="miniMonths" aria-hidden="true"></div>
+
       <div class="events" role="list">
         <div class="event-item" role="listitem">
           <h3 class="event-title">NRCA Fall Conference</h3>
@@ -251,12 +309,102 @@
         </div>
 
         <div class="full actions">
-          <button type="button">Submit</button>
+          <button type="button" id="btnEventSubmit">Submit</button>
         </div>
       </form>
     </section>
 
     <footer>Events will be reviewed before being published</footer>
   </div>
+
+  <script>
+    (function () {
+      var submitBtn = document.getElementById("btnEventSubmit");
+      var nameEl = document.getElementById("eventName");
+      var dateEl = document.getElementById("eventDate");
+      var orgEl = document.getElementById("eventOrg");
+      var descEl = document.getElementById("eventDesc");
+
+      submitBtn.addEventListener("click", function () {
+        var name = nameEl.value.trim();
+        var date = dateEl.value.trim();
+        var org = orgEl.value.trim();
+        var desc = descEl.value.trim();
+
+        if (!name || !date) {
+          alert("Please fill in event name and date before submitting.");
+          return;
+        }
+
+        var prettyDate = new Date(date).toLocaleDateString(undefined, {
+          year: "numeric",
+          month: "long",
+          day: "numeric"
+        });
+
+        var body =
+          "Event Name: " + name + "\n" +
+          "Date: " + prettyDate + "\n" +
+          "Organization: " + org + "\n" +
+          "Description: " + desc;
+
+        window.location.href =
+          "mailto:roofvaultinc@gmail.com?subject=" +
+          encodeURIComponent("RoofVault Calendar Event Submission") +
+          "&body=" + encodeURIComponent(body);
+      });
+    })();
+
+    (function () {
+      var EVENT_DATES = [
+        { y: 2026, m: 7, d: 17 },
+        { y: 2026, m: 9, d: 5 },
+        { y: 2026, m: 10, d: 14 }
+      ];
+
+      var container = document.getElementById("miniMonths");
+      if (!container) return;
+
+      var now = new Date();
+      var baseYear = now.getFullYear();
+      var baseMonth = now.getMonth();
+      var dows = ["S", "M", "T", "W", "T", "F", "S"];
+      var html = "";
+
+      for (var i = 0; i < 3; i++) {
+        var offset = baseMonth + i;
+        var year = baseYear + Math.floor(offset / 12);
+        var m0 = ((offset % 12) + 12) % 12;
+        var first = new Date(year, m0, 1);
+        var daysInMonth = new Date(year, m0 + 1, 0).getDate();
+        var startDow = first.getDay();
+        var monthName = first.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+
+        html += '<div class="mini-month">';
+        html += '<div class="mini-month-title">' + monthName + '</div>';
+        html += '<div class="mini-dow">';
+        for (var k = 0; k < 7; k++) {
+          html += '<div class="mini-dow-cell">' + dows[k] + '</div>';
+        }
+        html += '</div>';
+
+        html += '<div class="mini-days">';
+        for (var b = 0; b < startDow; b++) {
+          html += '<div class="mini-day empty"></div>';
+        }
+        for (var d = 1; d <= daysInMonth; d++) {
+          var isEvent = false;
+          for (var e = 0; e < EVENT_DATES.length; e++) {
+            var ev = EVENT_DATES[e];
+            if (ev.y === year && ev.m === (m0 + 1) && ev.d === d) { isEvent = true; break; }
+          }
+          html += '<div class="mini-day' + (isEvent ? ' has-event' : '') + '">' + d + '</div>';
+        }
+        html += '</div></div>';
+      }
+
+      container.innerHTML = html;
+    })();
+  </script>
 </body>
 </html>
