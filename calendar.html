@@ -241,12 +241,89 @@
       font-weight: 700;
     }
 
+    .view-toggle {
+      display: inline-flex;
+      gap: 4px;
+      padding: 4px;
+      background: #f3f4f6;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      margin: 0 0 14px;
+    }
+
+    .view-toggle-btn {
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      background: transparent;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: none;
+    }
+
+    .view-toggle-btn.active {
+      background: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+    }
+
+    .one-month {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 16px 18px;
+      margin-bottom: 14px;
+    }
+
+    .one-month-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin: 0 0 14px;
+      text-align: center;
+    }
+
+    .one-dow,
+    .one-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+
+    .one-dow-cell {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      text-align: center;
+      padding: 4px 0 8px;
+    }
+
+    .one-day {
+      font-size: 16px;
+      text-align: center;
+      padding: 14px 0;
+      border-radius: 10px;
+      color: var(--text);
+      background: #f9fafb;
+    }
+
+    .one-day.empty { visibility: hidden; background: transparent; }
+
+    .one-day.has-event {
+      background: rgba(37, 99, 235, 0.14);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
     @media (max-width: 680px) {
       body { padding: 16px 10px 30px; }
       form { grid-template-columns: 1fr; }
       .title h1 { font-size: 20px; }
       .mini-months { grid-template-columns: 1fr; }
       .mini-day { font-size: 14px; padding: 8px 0; }
+      .one-day { font-size: 15px; padding: 12px 0; }
     }
   </style>
 </head>
@@ -262,7 +339,16 @@
     <section class="card" aria-label="Upcoming events">
       <h2>Upcoming Events</h2>
 
-      <div class="mini-months" id="miniMonths" aria-hidden="true"></div>
+      <div class="view-toggle" role="tablist" aria-label="Calendar view">
+        <button type="button" class="view-toggle-btn active" id="btnView3" role="tab" aria-selected="true">3 Months</button>
+        <button type="button" class="view-toggle-btn" id="btnView1" role="tab" aria-selected="false">1 Month</button>
+      </div>
+
+      <div id="threeMonthView">
+        <div class="mini-months" id="miniMonths" aria-hidden="true"></div>
+      </div>
+
+      <div id="oneMonthView" style="display:none;" aria-hidden="true"></div>
 
       <div class="events" role="list">
         <div class="event-item" role="listitem">
@@ -361,49 +447,84 @@
         { y: 2026, m: 9, d: 5 },
         { y: 2026, m: 10, d: 14 }
       ];
+      var DOWS = ["S", "M", "T", "W", "T", "F", "S"];
 
-      var container = document.getElementById("miniMonths");
-      if (!container) return;
+      function isEventDay(year, m0, d) {
+        for (var i = 0; i < EVENT_DATES.length; i++) {
+          var ev = EVENT_DATES[i];
+          if (ev.y === year && ev.m === (m0 + 1) && ev.d === d) return true;
+        }
+        return false;
+      }
 
-      var now = new Date();
-      var baseYear = now.getFullYear();
-      var baseMonth = now.getMonth();
-      var dows = ["S", "M", "T", "W", "T", "F", "S"];
-      var html = "";
-
-      for (var i = 0; i < 3; i++) {
-        var offset = baseMonth + i;
-        var year = baseYear + Math.floor(offset / 12);
-        var m0 = ((offset % 12) + 12) % 12;
+      function renderMonth(year, m0, size) {
+        var prefix = size === "lg" ? "one" : "mini";
+        var wrapClass = size === "lg" ? "one-month" : "mini-month";
         var first = new Date(year, m0, 1);
         var daysInMonth = new Date(year, m0 + 1, 0).getDate();
         var startDow = first.getDay();
         var monthName = first.toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
-        html += '<div class="mini-month">';
-        html += '<div class="mini-month-title">' + monthName + '</div>';
-        html += '<div class="mini-dow">';
+        var html = '<div class="' + wrapClass + '">';
+        html += '<div class="' + prefix + '-month-title">' + monthName + '</div>';
+        html += '<div class="' + prefix + '-dow">';
         for (var k = 0; k < 7; k++) {
-          html += '<div class="mini-dow-cell">' + dows[k] + '</div>';
+          html += '<div class="' + prefix + '-dow-cell">' + DOWS[k] + '</div>';
         }
         html += '</div>';
 
-        html += '<div class="mini-days">';
+        html += '<div class="' + prefix + '-days">';
         for (var b = 0; b < startDow; b++) {
-          html += '<div class="mini-day empty"></div>';
+          html += '<div class="' + prefix + '-day empty"></div>';
         }
         for (var d = 1; d <= daysInMonth; d++) {
-          var isEvent = false;
-          for (var e = 0; e < EVENT_DATES.length; e++) {
-            var ev = EVENT_DATES[e];
-            if (ev.y === year && ev.m === (m0 + 1) && ev.d === d) { isEvent = true; break; }
-          }
-          html += '<div class="mini-day' + (isEvent ? ' has-event' : '') + '">' + d + '</div>';
+          var cls = prefix + '-day' + (isEventDay(year, m0, d) ? ' has-event' : '');
+          html += '<div class="' + cls + '">' + d + '</div>';
         }
         html += '</div></div>';
+        return html;
       }
 
-      container.innerHTML = html;
+      var now = new Date();
+      var baseYear = now.getFullYear();
+      var baseMonth = now.getMonth();
+
+      var miniEl = document.getElementById("miniMonths");
+      if (miniEl) {
+        var threeHtml = "";
+        for (var i = 0; i < 3; i++) {
+          var offset = baseMonth + i;
+          var yr = baseYear + Math.floor(offset / 12);
+          var m0 = ((offset % 12) + 12) % 12;
+          threeHtml += renderMonth(yr, m0, "sm");
+        }
+        miniEl.innerHTML = threeHtml;
+      }
+
+      var oneEl = document.getElementById("oneMonthView");
+      if (oneEl) {
+        oneEl.innerHTML = renderMonth(baseYear, baseMonth, "lg");
+      }
+
+      var threeView = document.getElementById("threeMonthView");
+      var oneView = document.getElementById("oneMonthView");
+      var btn3 = document.getElementById("btnView3");
+      var btn1 = document.getElementById("btnView1");
+
+      function setView(mode) {
+        var isOne = mode === "one";
+        threeView.style.display = isOne ? "none" : "";
+        oneView.style.display = isOne ? "" : "none";
+        threeView.setAttribute("aria-hidden", isOne ? "true" : "false");
+        oneView.setAttribute("aria-hidden", isOne ? "false" : "true");
+        btn3.classList.toggle("active", !isOne);
+        btn1.classList.toggle("active", isOne);
+        btn3.setAttribute("aria-selected", !isOne);
+        btn1.setAttribute("aria-selected", isOne);
+      }
+
+      if (btn3) btn3.addEventListener("click", function () { setView("three"); });
+      if (btn1) btn1.addEventListener("click", function () { setView("one"); });
     })();
   </script>
 </body>
