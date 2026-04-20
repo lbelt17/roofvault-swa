@@ -368,6 +368,11 @@
           <input id="eventDate" name="eventDate" type="date" />
         </div>
 
+        <div>
+          <label for="eventTime">Time</label>
+          <input id="eventTime" name="eventTime" type="time" />
+        </div>
+
         <div class="full">
           <label for="eventOrg">Organization</label>
           <input id="eventOrg" name="eventOrg" type="text" autocomplete="organization" />
@@ -392,17 +397,19 @@
       var submitBtn = document.getElementById("btnEventSubmit");
       var nameEl = document.getElementById("eventName");
       var dateEl = document.getElementById("eventDate");
+      var timeEl = document.getElementById("eventTime");
       var orgEl = document.getElementById("eventOrg");
       var descEl = document.getElementById("eventDesc");
 
       submitBtn.addEventListener("click", async function () {
         var name = nameEl.value.trim();
         var date = dateEl.value.trim();
+        var time = timeEl.value.trim();
         var org = orgEl.value.trim();
         var desc = descEl.value.trim();
 
-        if (!name || !date) {
-          alert("Please fill in event name and date before submitting.");
+        if (!name || !date || !time) {
+          alert("Please fill in event name, date, and time before submitting.");
           return;
         }
 
@@ -414,6 +421,7 @@
             body: JSON.stringify({
               name: name,
               date: date,
+              time: time,
               organization: org,
               description: desc
             })
@@ -422,6 +430,7 @@
           alert("Event submitted for approval");
           nameEl.value = "";
           dateEl.value = "";
+          timeEl.value = "";
           orgEl.value = "";
           descEl.value = "";
         } catch (err) {
@@ -461,6 +470,19 @@
           month: "long",
           day: "numeric"
         });
+      }
+
+      function formatTime(t) {
+        if (!t) return "";
+        var m = /^(\d{1,2}):(\d{2})/.exec(String(t));
+        if (!m) return String(t);
+        var h = parseInt(m[1], 10);
+        var min = m[2];
+        if (isNaN(h)) return String(t);
+        var suffix = h >= 12 ? "PM" : "AM";
+        var h12 = h % 12;
+        if (h12 === 0) h12 = 12;
+        return h12 + ":" + min + " " + suffix;
       }
 
       function isEventDay(year, m0, d) {
@@ -533,7 +555,9 @@
         for (var i = 0; i < events.length; i++) {
           var ev = events[i];
           var pretty = formatPretty(ev.date);
-          var meta = ev.organization ? (pretty + " · " + esc(ev.organization)) : pretty;
+          var timePretty = formatTime(ev.time);
+          var when = timePretty ? (pretty + " · " + timePretty) : pretty;
+          var meta = ev.organization ? (when + " · " + esc(ev.organization)) : when;
           html += '<div class="event-item" role="listitem">';
           html += '<h3 class="event-title">' + esc(ev.name) + '</h3>';
           html += '<p class="event-meta">' + meta + '</p>';

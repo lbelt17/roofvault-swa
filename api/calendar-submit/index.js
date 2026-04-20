@@ -18,6 +18,7 @@ module.exports = async function (context, req) {
     const body = safeParseBody(req);
     const name = body && body.name ? String(body.name).trim() : "";
     const date = body && body.date ? String(body.date).trim() : "";
+    const time = body && body.time ? String(body.time).trim() : "";
     const organization = body && body.organization ? String(body.organization).trim() : "";
     const description = body && body.description ? String(body.description).trim() : "";
 
@@ -32,6 +33,7 @@ module.exports = async function (context, req) {
     await createEvent({
       name,
       date,
+      time,
       organization,
       description,
       status: "pending",
