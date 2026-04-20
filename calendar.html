@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RoofVault Calendar</title>
+  <style>
+    :root {
+      --bg: #f4f5f7;
+      --card-bg: #ffffff;
+      --border: #e1e4ea;
+      --text: #111827;
+      --muted: #6b7280;
+      --accent: #2563eb;
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 24px 16px 40px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 920px;
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .title {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .title h1 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: -0.01em;
+    }
+
+    .back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 14px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+    }
+
+    .back:hover {
+      color: var(--text);
+      border-color: var(--border);
+      background: #ffffff;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 18px 20px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.07);
+      margin-bottom: 14px;
+    }
+
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 16px;
+      letter-spacing: -0.01em;
+    }
+
+    .events {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .event-item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #ffffff;
+      padding: 12px 12px 13px;
+    }
+
+    .event-title {
+      margin: 0 0 6px;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .event-meta {
+      margin: 0 0 8px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .event-desc {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--text);
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .full { grid-column: 1 / -1; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin: 0 0 6px;
+    }
+
+    input, textarea {
+      width: 100%;
+      font-family: inherit;
+      font-size: 14px;
+      padding: 10px 11px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #f9fafb;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    input:focus, textarea:focus {
+      background: #ffffff;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.25);
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 2px;
+    }
+
+    button {
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid #3b82f6;
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+    }
+
+    footer {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .mini-months {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .mini-month {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 12px 14px;
+    }
+
+    .mini-month-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin: 0 0 10px;
+      text-align: center;
+    }
+
+    .mini-dow,
+    .mini-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .mini-dow-cell {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-align: center;
+      padding: 2px 0 6px;
+    }
+
+    .mini-day {
+      font-size: 13px;
+      text-align: center;
+      padding: 6px 0;
+      border-radius: 8px;
+      color: var(--text);
+    }
+
+    .mini-day.empty { visibility: hidden; }
+
+    .mini-day.has-event {
+      background: rgba(37, 99, 235, 0.12);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .view-toggle {
+      display: inline-flex;
+      gap: 4px;
+      padding: 4px;
+      background: #f3f4f6;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      margin: 0 0 14px;
+    }
+
+    .view-toggle-btn {
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      background: transparent;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: none;
+    }
+
+    .view-toggle-btn.active {
+      background: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+    }
+
+    .one-month {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 16px 18px;
+      margin-bottom: 14px;
+    }
+
+    .one-month-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin: 0 0 14px;
+      text-align: center;
+    }
+
+    .one-dow,
+    .one-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+
+    .one-dow-cell {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      text-align: center;
+      padding: 4px 0 8px;
+    }
+
+    .one-day {
+      font-size: 16px;
+      text-align: center;
+      padding: 14px 0;
+      border-radius: 10px;
+      color: var(--text);
+      background: #f9fafb;
+    }
+
+    .one-day.empty { visibility: hidden; background: transparent; }
+
+    .one-day.has-event {
+      background: rgba(37, 99, 235, 0.14);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    @media (max-width: 680px) {
+      body { padding: 16px 10px 30px; }
+      form { grid-template-columns: 1fr; }
+      .title h1 { font-size: 20px; }
+      .mini-months { grid-template-columns: 1fr; }
+      .mini-day { font-size: 14px; padding: 8px 0; }
+      .one-day { font-size: 15px; padding: 12px 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div class="title">
+        <h1>RoofVault Calendar</h1>
+      </div>
+      <a class="back" href="/index.html">← Back</a>
+    </div>
+
+    <section class="card" aria-label="Upcoming events">
+      <h2>Upcoming Events</h2>
+
+      <div class="view-toggle" role="tablist" aria-label="Calendar view">
+        <button type="button" class="view-toggle-btn active" id="btnView3" role="tab" aria-selected="true">3 Months</button>
+        <button type="button" class="view-toggle-btn" id="btnView1" role="tab" aria-selected="false">1 Month</button>
+      </div>
+
+      <div id="threeMonthView">
+        <div class="mini-months" id="miniMonths" aria-hidden="true"></div>
+      </div>
+
+      <div id="oneMonthView" style="display:none;" aria-hidden="true"></div>
+
+      <div class="events" id="eventsList" role="list">
+        <p class="muted" id="eventsStatus">Loading events…</p>
+      </div>
+    </section>
+
+    <section class="card" aria-label="Submit an event">
+      <h2>Submit an Event</h2>
+      <form>
+        <div>
+          <label for="eventName">Event Name</label>
+          <input id="eventName" name="eventName" type="text" autocomplete="off" />
+        </div>
+
+        <div>
+          <label for="eventDate">Date</label>
+          <input id="eventDate" name="eventDate" type="date" />
+        </div>
+
+        <div>
+          <label for="eventTime">Time</label>
+          <input id="eventTime" name="eventTime" type="time" />
+        </div>
+
+        <div class="full">
+          <label for="eventOrg">Organization</label>
+          <input id="eventOrg" name="eventOrg" type="text" autocomplete="organization" />
+        </div>
+
+        <div class="full">
+          <label for="eventDesc">Description</label>
+          <textarea id="eventDesc" name="eventDesc"></textarea>
+        </div>
+
+        <div class="full actions">
+          <button type="button" id="btnEventSubmit">Submit</button>
+        </div>
+      </form>
+    </section>
+
+    <footer>Events will be reviewed before being published</footer>
+  </div>
+
+  <script>
+    (function () {
+      var submitBtn = document.getElementById("btnEventSubmit");
+      var nameEl = document.getElementById("eventName");
+      var dateEl = document.getElementById("eventDate");
+      var timeEl = document.getElementById("eventTime");
+      var orgEl = document.getElementById("eventOrg");
+      var descEl = document.getElementById("eventDesc");
+
+      submitBtn.addEventListener("click", async function () {
+        var name = nameEl.value.trim();
+        var date = dateEl.value.trim();
+        var time = timeEl.value.trim();
+        var org = orgEl.value.trim();
+        var desc = descEl.value.trim();
+
+        if (!name || !date || !time) {
+          alert("Please fill in event name, date, and time before submitting.");
+          return;
+        }
+
+        submitBtn.disabled = true;
+        try {
+          var res = await fetch("/api/calendar-submit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: name,
+              date: date,
+              time: time,
+              organization: org,
+              description: desc
+            })
+          });
+          if (!res.ok) throw new Error("submit " + res.status);
+          alert("Event submitted for approval");
+          nameEl.value = "";
+          dateEl.value = "";
+          timeEl.value = "";
+          orgEl.value = "";
+          descEl.value = "";
+        } catch (err) {
+          alert("Could not submit event. Please try again later.");
+        } finally {
+          submitBtn.disabled = false;
+        }
+      });
+    })();
+
+    (function () {
+      var DOWS = ["S", "M", "T", "W", "T", "F", "S"];
+      var EVENT_DATES = [];
+
+      function esc(s) {
+        return String(s == null ? "" : s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function parseDateParts(iso) {
+        if (!iso) return null;
+        var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso));
+        if (!m) return null;
+        return { y: +m[1], m: +m[2], d: +m[3] };
+      }
+
+      function formatPretty(iso) {
+        var p = parseDateParts(iso);
+        if (!p) return iso || "";
+        var dt = new Date(p.y, p.m - 1, p.d);
+        return dt.toLocaleDateString(undefined, {
+          year: "numeric",
+          month: "long",
+          day: "numeric"
+        });
+      }
+
+      function formatTime(t) {
+        if (!t) return "";
+        var m = /^(\d{1,2}):(\d{2})/.exec(String(t));
+        if (!m) return String(t);
+        var h = parseInt(m[1], 10);
+        var min = m[2];
+        if (isNaN(h)) return String(t);
+        var suffix = h >= 12 ? "PM" : "AM";
+        var h12 = h % 12;
+        if (h12 === 0) h12 = 12;
+        return h12 + ":" + min + " " + suffix;
+      }
+
+      function isEventDay(year, m0, d) {
+        for (var i = 0; i < EVENT_DATES.length; i++) {
+          var ev = EVENT_DATES[i];
+          if (ev.y === year && ev.m === (m0 + 1) && ev.d === d) return true;
+        }
+        return false;
+      }
+
+      function renderMonth(year, m0, size) {
+        var prefix = size === "lg" ? "one" : "mini";
+        var wrapClass = size === "lg" ? "one-month" : "mini-month";
+        var first = new Date(year, m0, 1);
+        var daysInMonth = new Date(year, m0 + 1, 0).getDate();
+        var startDow = first.getDay();
+        var monthName = first.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+
+        var html = '<div class="' + wrapClass + '">';
+        html += '<div class="' + prefix + '-month-title">' + monthName + '</div>';
+        html += '<div class="' + prefix + '-dow">';
+        for (var k = 0; k < 7; k++) {
+          html += '<div class="' + prefix + '-dow-cell">' + DOWS[k] + '</div>';
+        }
+        html += '</div>';
+
+        html += '<div class="' + prefix + '-days">';
+        for (var b = 0; b < startDow; b++) {
+          html += '<div class="' + prefix + '-day empty"></div>';
+        }
+        for (var d = 1; d <= daysInMonth; d++) {
+          var cls = prefix + '-day' + (isEventDay(year, m0, d) ? ' has-event' : '');
+          html += '<div class="' + cls + '">' + d + '</div>';
+        }
+        html += '</div></div>';
+        return html;
+      }
+
+      function renderCalendars() {
+        var now = new Date();
+        var baseYear = now.getFullYear();
+        var baseMonth = now.getMonth();
+
+        var miniEl = document.getElementById("miniMonths");
+        if (miniEl) {
+          var threeHtml = "";
+          for (var i = 0; i < 3; i++) {
+            var offset = baseMonth + i;
+            var yr = baseYear + Math.floor(offset / 12);
+            var m0 = ((offset % 12) + 12) % 12;
+            threeHtml += renderMonth(yr, m0, "sm");
+          }
+          miniEl.innerHTML = threeHtml;
+        }
+
+        var oneEl = document.getElementById("oneMonthView");
+        if (oneEl) {
+          oneEl.innerHTML = renderMonth(baseYear, baseMonth, "lg");
+        }
+      }
+
+      function renderEventList(events) {
+        var listEl = document.getElementById("eventsList");
+        if (!listEl) return;
+        if (!events || events.length === 0) {
+          listEl.innerHTML = '<p class="muted">No approved events yet.</p>';
+          return;
+        }
+        var html = "";
+        for (var i = 0; i < events.length; i++) {
+          var ev = events[i];
+          var pretty = formatPretty(ev.date);
+          var timePretty = formatTime(ev.time);
+          var when = timePretty ? (pretty + " · " + timePretty) : pretty;
+          var meta = ev.organization ? (when + " · " + esc(ev.organization)) : when;
+          html += '<div class="event-item" role="listitem">';
+          html += '<h3 class="event-title">' + esc(ev.name) + '</h3>';
+          html += '<p class="event-meta">' + meta + '</p>';
+          if (ev.description) {
+            html += '<p class="event-desc">' + esc(ev.description) + '</p>';
+          }
+          html += '</div>';
+        }
+        listEl.innerHTML = html;
+      }
+
+      async function loadEvents() {
+        try {
+          var res = await fetch("/api/calendar-events", {
+            headers: { "Accept": "application/json" }
+          });
+          if (!res.ok) throw new Error("events " + res.status);
+          var data = await res.json();
+          var events = Array.isArray(data) ? data : [];
+          events.sort(function (a, b) {
+            return String(a.date || "").localeCompare(String(b.date || ""));
+          });
+
+          EVENT_DATES = events
+            .map(function (e) { return parseDateParts(e.date); })
+            .filter(function (p) { return !!p; });
+
+          renderCalendars();
+          renderEventList(events);
+        } catch (err) {
+          renderCalendars();
+          var listEl = document.getElementById("eventsList");
+          if (listEl) listEl.innerHTML = '<p class="muted">Could not load events.</p>';
+        }
+      }
+
+      var threeView = document.getElementById("threeMonthView");
+      var oneView = document.getElementById("oneMonthView");
+      var btn3 = document.getElementById("btnView3");
+      var btn1 = document.getElementById("btnView1");
+
+      function setView(mode) {
+        var isOne = mode === "one";
+        threeView.style.display = isOne ? "none" : "";
+        oneView.style.display = isOne ? "" : "none";
+        threeView.setAttribute("aria-hidden", isOne ? "true" : "false");
+        oneView.setAttribute("aria-hidden", isOne ? "false" : "true");
+        btn3.classList.toggle("active", !isOne);
+        btn1.classList.toggle("active", isOne);
+        btn3.setAttribute("aria-selected", !isOne);
+        btn1.setAttribute("aria-selected", isOne);
+      }
+
+      if (btn3) btn3.addEventListener("click", function () { setView("three"); });
+      if (btn1) btn1.addEventListener("click", function () { setView("one"); });
+
+      renderCalendars();
+      loadEvents();
+    })();
+  </script>
+</body>
+</html>

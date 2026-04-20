@@ -130,16 +130,17 @@
 
     .card h3{
       margin:0;
-      font-size: 16px;
+      font-size: 18px;
+      font-weight: 650;
       letter-spacing: .2px;
     }
 
     .card p{
       margin:0;
       color: var(--muted2);
-      font-size: 13px;
-      line-height: 1.45;
-      min-height: 38px;
+      font-size: 14.5px;
+      line-height: 1.55;
+      min-height: 44px;
     }
 
     .cta{
@@ -147,8 +148,9 @@
       display:flex;
       align-items:center;
       gap: 8px;
-      font-size: 13px;
-      color: rgba(233,238,247,.9);
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(233,238,247,.92);
     }
 
     .arrow{
@@ -247,6 +249,24 @@
       transition:all .15s ease;
     }
     .support-btn:hover{
+      background:rgba(255,255,255,.1);
+      border-color:rgba(255,255,255,.18);
+      color:#fff;
+    }
+
+    /* ── Calendar button (top-left, matches Support style) ── */
+    .calendar-btn{
+      position:fixed; top:18px; left:18px; z-index:900;
+      padding:8px 16px; font-size:13px; font-weight:600;
+      color:rgba(200,210,230,.8); letter-spacing:.2px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:10px; cursor:pointer;
+      text-decoration:none;
+      backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+      transition:all .15s ease;
+    }
+    .calendar-btn:hover{
       background:rgba(255,255,255,.1);
       border-color:rgba(255,255,255,.18);
       color:#fff;
@@ -384,6 +404,7 @@
 </head>
 
 <body>
+  <a class="calendar-btn" href="/calendar.html" aria-label="Open Calendar">Calendar</a>
   <button class="support-btn" id="btnSupport">Support</button>
 
   <main class="wrap">
