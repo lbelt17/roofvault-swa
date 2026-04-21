@@ -29,6 +29,35 @@
 
     * { box-sizing: border-box; }
 
+    /* Unified top-left Home control (shared across module pages) */
+    .rv-home {
+      position: fixed;
+      top: 18px;
+      left: 18px;
+      z-index: 1000;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px 9px 11px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      color: rgba(220, 225, 240, 0.88);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      text-decoration: none;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+    .rv-home:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.18);
+      color: #fff;
+    }
+    .rv-home svg { opacity: 0.9; }
+
     body {
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       color: var(--text);
@@ -39,7 +68,7 @@
         radial-gradient(1200px 800px at 25% 0%, rgba(33,179,255,0.14), transparent 60%),
         radial-gradient(900px 700px at 70% 10%, rgba(104,64,255,0.12), transparent 62%),
         radial-gradient(circle at top, #1c2333 0, #05060a 55%, #020308 100%);
-      padding: 18px 16px 28px;
+      padding: 70px 16px 28px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -77,9 +106,9 @@
       box-shadow: 0 8px 18px rgba(0, 0, 0, 0.55);
     }
 
-    .brand-text { line-height: 1.2; }
-    .brand-title { font-size: 13px; font-weight: 650; letter-spacing: 0.2px; }
-    .brand-subtitle { font-size: 11px; color: var(--muted); }
+    .brand-text { line-height: 1.25; }
+    .brand-title { font-size: 14px; font-weight: 650; letter-spacing: 0.2px; }
+    .brand-subtitle { font-size: 12px; color: var(--muted); }
 
     .nav-right {
       display: flex;
@@ -424,6 +453,13 @@
 </head>
 
 <body>
+  <a class="rv-home" href="/" aria-label="Home">
+    <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
+      <path d="M10 2.8 2.6 9.2c-.3.3-.1.8.3.8H4v6.4c0 .3.3.6.6.6H8v-4.4c0-.4.3-.7.7-.7h2.6c.4 0 .7.3.7.7V17h3.4c.3 0 .6-.3.6-.6V10h1.1c.4 0 .6-.5.3-.8L10 2.8z" fill="currentColor"/>
+    </svg>
+    <span>Home</span>
+  </a>
+
   <header>
     <div class="nav">
       <div class="nav-left">
@@ -432,10 +468,6 @@
           <div class="brand-title">RoofVault Practice Exams</div>
           <div class="brand-subtitle">Generate a book-specific practice exam.</div>
         </div>
-      </div>
-
-      <div class="nav-right">
-        <button id="btnBackHome" class="btn btn-text">⬅ Back to Library</button>
       </div>
     </div>
   </header>
@@ -510,13 +542,6 @@
   <!-- ✅ NEW: wire Spotlight search to the hidden dropdown populated by books.js -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
-      const btnBackHome = document.getElementById('btnBackHome');
-      if (btnBackHome) {
-        btnBackHome.addEventListener('click', function () {
-          window.location.href = 'library.html';
-        });
-      }
-
       // Keep generate button enabled at start (existing behavior)
       const genBtn = document.getElementById('btnGenExam25ByBook');
       if (genBtn) {
