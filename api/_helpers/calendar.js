@@ -73,6 +73,42 @@ async function getApprovedEvents() {
   return out;
 }
 
+async function getPendingEvents() {
+  const client = getClient();
+  await ensureTable(client);
+  const iter = client.listEntities({
+    queryOptions: {
+      filter: `PartitionKey eq '${PARTITION_KEY}' and status eq 'pending'`,
+    },
+  });
+  const out = [];
+  for await (const e of iter) out.push(entityToEvent(e));
+  return out;
+}
+
+async function getEventsByStatus(status) {
+  const s = String(status || "").trim().toLowerCase();
+  if (!s) return getAllEvents();
+  const client = getClient();
+  await ensureTable(client);
+  const iter = client.listEntities({
+    queryOptions: {
+      filter: `PartitionKey eq '${PARTITION_KEY}' and status eq '${s.replace(/'/g, "''")}'`,
+    },
+  });
+  const out = [];
+  for await (const e of iter) out.push(entityToEvent(e));
+  return out;
+}
+
+function sortByDateAsc(events) {
+  return (events || []).slice().sort(function (a, b) {
+    var ak = String(a.date || "") + " " + String(a.time || "");
+    var bk = String(b.date || "") + " " + String(b.time || "");
+    return ak.localeCompare(bk);
+  });
+}
+
 async function createEvent(event) {
   const client = getClient();
   await ensureTable(client);
@@ -107,6 +143,10 @@ async function updateEventStatus(partitionKey, rowKey, status) {
 module.exports = {
   getAllEvents,
   getApprovedEvents,
+  getPendingEvents,
+  getEventsByStatus,
   createEvent,
   updateEventStatus,
+  sortByDateAsc,
+  PARTITION_KEY,
 };

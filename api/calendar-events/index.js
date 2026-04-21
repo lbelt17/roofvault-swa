@@ -1,17 +1,15 @@
-// GET /api/calendar-events — returns approved calendar events only
+// GET /api/calendar-events — returns approved calendar events only, sorted ascending by date
 
-const { getApprovedEvents } = require("../_helpers/calendar");
+const { getApprovedEvents, sortByDateAsc } = require("../_helpers/calendar");
 
 module.exports = async function (context, req) {
   try {
     const events = await getApprovedEvents();
-    events.sort(function (a, b) {
-      return String(a.date || "").localeCompare(String(b.date || ""));
-    });
+    const sorted = sortByDateAsc(events);
     context.res = {
       status: 200,
       headers: { "Cache-Control": "no-store" },
-      body: events,
+      body: sorted,
     };
   } catch (err) {
     try { context.log.error("calendar-events error:", err); } catch {}
