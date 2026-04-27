@@ -65,16 +65,16 @@ document.addEventListener("DOMContentLoaded", () => {
     memEl = document.createElement("span");
     memEl.textContent = "Session memory: ON";
     memEl.style.fontSize = "12px";
-    memEl.style.color = "#6b7280";
+    memEl.style.color = "rgba(200, 212, 232, 0.72)";
     memEl.style.marginLeft = "10px";
 
     clearBtn = document.createElement("button");
     clearBtn.type = "button";
     clearBtn.textContent = "Clear chat";
     clearBtn.style.marginLeft = "auto";
-    clearBtn.style.border = "1px solid #e5e7eb";
-    clearBtn.style.background = "#ffffff";
-    clearBtn.style.color = "#111827";
+    clearBtn.style.border = "1px solid rgba(120, 140, 180, 0.28)";
+    clearBtn.style.background = "rgba(255, 255, 255, 0.06)";
+    clearBtn.style.color = "rgba(232, 237, 246, 0.94)";
     clearBtn.style.boxShadow = "none";
     clearBtn.style.fontWeight = "600";
 
@@ -168,23 +168,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const html = `
       <div id="${turnId}" style="
-        border: 1px solid #e5e7eb;
-        background: #ffffff;
+        border: 1px solid rgba(120, 140, 180, 0.22);
+        background: rgba(14, 20, 34, 0.78);
         border-radius: 14px;
         padding: 12px;
-        box-shadow: 0 8px 18px rgba(15,23,42,0.05);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
         margin: 10px 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
       ">
         <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
           <div style="
             max-width: 90%;
-            background: #2563eb;
-            color: white;
+            background: linear-gradient(135deg, #2cc3ff, #1679ff);
+            color: #ffffff;
             padding: 10px 12px;
             border-radius: 14px;
             line-height: 1.5;
             font-size: 14px;
-            box-shadow: 0 6px 14px rgba(37,99,235,0.16);
+            box-shadow: 0 8px 18px rgba(22, 121, 255, 0.32);
             white-space: pre-wrap;
           ">${escapeHtml(questionText)}</div>
         </div>
@@ -192,15 +193,16 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="rv-assistant-slot" style="display:flex;justify-content:flex-start;">
           <div style="
             max-width: 90%;
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
+            background: rgba(11, 18, 32, 0.78);
+            border: 1px solid rgba(120, 140, 180, 0.22);
+            color: #e9eef7;
             padding: 12px;
             border-radius: 14px;
             line-height: 1.6;
             font-size: 14px;
             width: 100%;
           ">
-            <div style="color:#6b7280;font-size:12px;">Thinking…</div>
+            <div style="color: rgba(200, 212, 232, 0.72); font-size:12px;">Thinking…</div>
           </div>
         </div>
       </div>
@@ -225,13 +227,13 @@ document.addEventListener("DOMContentLoaded", () => {
     return `
       <div style="
         margin-top:10px;
-        border-top:1px solid #e5e7eb;
+        border-top:1px solid rgba(120, 140, 180, 0.22);
         padding-top:8px;
-        color:#6b7280;
+        color: rgba(200, 212, 232, 0.78);
         font-size:12px;
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
       ">
-        <div style="font-weight:600;margin-bottom:4px;color:#374151;">Sources</div>
+        <div style="font-weight:600;margin-bottom:4px;color: rgba(232, 237, 246, 0.94);">Sources</div>
         <ul style="margin:4px 0 0 18px;padding:0;">${items}</ul>
       </div>
     `;
@@ -250,12 +252,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!url) return "";
 
         const label = title && title.trim() ? title.trim() : url;
-        const pub = publisher && publisher.trim() ? ` <span style="color:#9ca3af;">(${escapeHtml(publisher.trim())})</span>` : "";
+        const pub = publisher && publisher.trim() ? ` <span style="color: rgba(180, 195, 220, 0.6);">(${escapeHtml(publisher.trim())})</span>` : "";
 
         return `
           <li style="margin: 4px 0;">
             <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer"
-               style="color:#2563eb;text-decoration:underline;word-break:break-word;">
+               style="color:#7dd3fc;text-decoration:underline;word-break:break-word;">
               ${escapeHtml(label)}
             </a>${pub}
           </li>
@@ -269,12 +271,12 @@ document.addEventListener("DOMContentLoaded", () => {
     return `
       <div style="
         margin-top:10px;
-        border-top:1px solid #e5e7eb;
+        border-top:1px solid rgba(120, 140, 180, 0.22);
         padding-top:8px;
-        color:#6b7280;
+        color: rgba(200, 212, 232, 0.78);
         font-size:12px;
       ">
-        <div style="font-weight:700;margin-bottom:6px;color:#374151;">Web sources</div>
+        <div style="font-weight:700;margin-bottom:6px;color: rgba(232, 237, 246, 0.94);">Web sources</div>
         <ul style="margin:4px 0 0 18px;padding:0;">${items}</ul>
       </div>
     `;
@@ -306,8 +308,9 @@ document.addEventListener("DOMContentLoaded", () => {
       <div style="display:flex;justify-content:flex-start;">
         <div style="
           max-width: 90%;
-          background: #f9fafb;
-          border: 1px solid #e5e7eb;
+          background: rgba(11, 18, 32, 0.78);
+          border: 1px solid rgba(120, 140, 180, 0.22);
+          color: #e9eef7;
           padding: 12px;
           border-radius: 14px;
           line-height: 1.6;
@@ -334,15 +337,16 @@ document.addEventListener("DOMContentLoaded", () => {
       <div style="display:flex;justify-content:flex-start;">
         <div style="
           max-width: 90%;
-          background: #f9fafb;
-          border: 1px solid #e5e7eb;
+          background: rgba(11, 18, 32, 0.78);
+          border: 1px solid rgba(120, 140, 180, 0.22);
+          color: #e9eef7;
           padding: 12px;
           border-radius: 14px;
           line-height: 1.6;
           font-size: 14px;
           width: 100%;
         ">
-          <div style="color:#6b7280;font-size:12px;">${escapeHtml(label || "Thinking…")}</div>
+          <div style="color: rgba(200, 212, 232, 0.72); font-size:12px;">${escapeHtml(label || "Thinking…")}</div>
         </div>
       </div>
     `;
