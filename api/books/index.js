@@ -9,6 +9,7 @@
 
 const https = require("https");
 const { URL } = require("url");
+const { isBlobLocked } = require("../_helpers/locked-library-blobs");
 
 function safeDecodeURIComponent(s) {
   try {
@@ -325,6 +326,13 @@ module.exports = async function (context, req) {
       }
     }
 
+    // 🔒 Locked-book safety gate: drop any HIGH-risk blobs from the listing
+    // BEFORE grouping so users never see them in the Library dropdown. The
+    // /api/book SAS endpoint enforces the same gate independently.
+    const valuesBeforeLock = values.length;
+    values = values.filter((v) => !isBlobLocked(v));
+    const lockedFromIndex = valuesBeforeLock - values.length;
+
     // ✅ Group into unified books
     const groups = new Map();
 
@@ -365,7 +373,7 @@ module.exports = async function (context, req) {
     }
 
     // Library-only books (shown in Library, NOT in Exam dropdown)
-    const libraryOnlyBooks = [
+    const libraryOnlyBooksRaw = [
       {
         bookGroupId: "frsa-full-manual",
         displayTitle: "FRSA \u2013 Introduction to Roofing Technology (Full Manual)",
@@ -389,6 +397,23 @@ module.exports = async function (context, req) {
       },
     ];
 
+    // 🔒 Apply the same lock filter to the hardcoded library-only list so
+    // hardcoded entries cannot bypass the safety gate. An entry is dropped if
+    // its fileName OR any of its part filenames matches a locked pattern.
+    const libraryOnlyBooks = libraryOnlyBooksRaw.filter((b) => {
+      const names = [b.fileName, ...((b && b.parts) || [])].filter(Boolean);
+      return !names.some((n) => isBlobLocked(n));
+    });
+    const lockedFromHardcoded = libraryOnlyBooksRaw.length - libraryOnlyBooks.length;
+
+    // Debug-safe counts only — no filenames, no user-controlled content.
+    try {
+      context.log(
+        `books: locked filter removed ${lockedFromIndex} indexed value(s) and ` +
+        `${lockedFromHardcoded} hardcoded library-only book(s)`
+      );
+    } catch (_) { /* logging is best-effort */ }
+
     context.res = {
       headers: {
         "Content-Type": "application/json",
@@ -398,9 +423,9 @@ module.exports = async function (context, req) {
         _ver: "books-v2",
         indexUsed: index,
         field: picked || "metadata_storage_name",
-        values, // keep old output so frontend doesn't break
-        books,  // new grouped output (clean dropdown)
-        libraryOnlyBooks,
+        values, // keep old output so frontend doesn't break (locked items removed)
+        books,  // new grouped output (clean dropdown, locked items removed)
+        libraryOnlyBooks, // hardcoded list, locked items removed
       },
     };
   } catch (e) {

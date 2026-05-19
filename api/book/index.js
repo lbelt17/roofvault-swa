@@ -6,6 +6,7 @@ const {
   StorageSharedKeyCredential,
 } = require("@azure/storage-blob");
 const { logUsage } = require("../_helpers/usage");
+const { isBlobLocked, lockReason } = require("../_helpers/locked-library-blobs");
 
 module.exports = async function (context, req) {
   try {
@@ -15,6 +16,30 @@ module.exports = async function (context, req) {
         status: 400,
         headers: { "Content-Type": "application/json" },
         body: { ok: false, error: "Missing ?name=" },
+      };
+      return;
+    }
+
+    // Safety gate: refuse to mint a SAS for any locked blob BEFORE we touch
+    // storage. We test both the raw name and the ".pdf" variant so callers
+    // cannot bypass the lock by sending the title without an extension.
+    const lockCandidates = [name];
+    if (!name.toLowerCase().endsWith(".pdf")) {
+      lockCandidates.push(`${name}.pdf`);
+    }
+    const lockedHit = lockCandidates.find((c) => isBlobLocked(c));
+    if (lockedHit) {
+      try {
+        // Safe debug-only log: pattern id, no user-controlled content echoed.
+        context.log("book: locked request blocked", { pattern: lockReason(lockedHit) });
+      } catch (_) { /* logging is best-effort */ }
+      context.res = {
+        status: 403,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: { error: "This document is currently locked pending permissions review." },
       };
       return;
     }
