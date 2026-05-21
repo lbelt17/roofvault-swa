@@ -64,6 +64,21 @@
       bookGroupId: "astm-d4263",
       displayTitle: "ASTM D4263 (Bank)",
       parts: []
+    },
+    {
+      bookGroupId: "field-wisdom-joe-feb-2026",
+      displayTitle: "CCS Influencer Joe Sorrentino - February 2026",
+      parts: []
+    },
+    {
+      bookGroupId: "field-wisdom-cost-effectiveness-coatings-vs-single-ply",
+      displayTitle: "Joe Sorrentino on Cost Effectiveness Coatings vs Single-Ply",
+      parts: []
+    },
+    {
+      bookGroupId: "field-wisdom-joe-april-2026",
+      displayTitle: "CCS Influencer Joe Sorrentino - April 2026",
+      parts: []
     }
   ];
 

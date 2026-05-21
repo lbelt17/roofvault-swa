@@ -1,0 +1,261 @@
+{
+  "_doc": "Provenance manifest for the RoofVault Field Wisdom exam banks. Maps each question id (e.g. 'FWFEB-001') to its source transcript, timestamp, and a short quote for traceability. Authored manually as questions are created. This file is content/QA-only: it is NOT loaded by /api/exam and must NOT be required from runtime code. Move/rename only with care - the bank files and any QA tooling reference these transcript file names exactly.",
+  "version": 2,
+  "banks": {
+    "field_wisdom_joe_feb_2026": {
+      "bankFile": "api/exam/field_wisdom_joe_feb_2026-question-bank-2026.js",
+      "displayTitle": "CCS Influencer Joe Sorrentino - February 2026",
+      "transcript": "2026-02-ccs-influencer-joe-sorrentino.txt",
+      "idPrefix": "FWFEB"
+    },
+    "field_wisdom_cost_effectiveness_coatings_vs_single_ply": {
+      "bankFile": "api/exam/field_wisdom_cost_effectiveness_coatings_vs_single_ply-question-bank-2026.js",
+      "displayTitle": "Joe Sorrentino on Cost Effectiveness Coatings vs Single-Ply",
+      "transcript": "2026-03-cost-effectiveness-coatings-vs-single-ply.txt",
+      "idPrefix": "FWMAR"
+    },
+    "field_wisdom_joe_april_2026": {
+      "bankFile": "api/exam/field_wisdom_joe_april_2026-question-bank-2026.js",
+      "displayTitle": "CCS Influencer Joe Sorrentino - April 2026",
+      "transcript": "2026-04-ccs-influencer-joe-sorrentino.txt",
+      "idPrefix": "FWAPR"
+    }
+  },
+  "speaker": {
+    "name": "Joe Sorrentino",
+    "role": "Roofing professional, 20+ years experience",
+    "consentNote": "Transcripts authorized for proprietary RoofVault exam-content derivation."
+  },
+  "transcripts": {
+    "2026-02-ccs-influencer-joe-sorrentino.txt": {
+      "host": "Dani Sheehan",
+      "show": "Coatings Coffee Shop Influencer Response",
+      "episodeMonth": "2026-02",
+      "originalFileName": "CCS Influencer Joe Sorrentino - February 2026.txt",
+      "topic": "Shift to coatings membrane systems",
+      "themes": [
+        "industry evolution since the late 1970s",
+        "single-ply vs coatings",
+        "owner decision-making",
+        "sustainability",
+        "reinforcement defines membrane-grade",
+        "Florida material-exposure regulatory constraint",
+        "chemistry families and hybrid stacks"
+      ]
+    },
+    "2026-03-cost-effectiveness-coatings-vs-single-ply.txt": {
+      "host": "Dani Sheehan",
+      "show": "Coatings Coffee Shop Influencer Response",
+      "episodeMonth": "2026-03",
+      "originalFileName": "Joe Sorrentino on Cost Effectiveness Coatings vs Single-Ply.txt",
+      "topic": "Cost effectiveness - coatings vs single-ply",
+      "themes": [
+        "personality of the roof",
+        "insulation differential",
+        "energy code requirements",
+        "theoretical vs practical R-value (HVAC-gated)",
+        "weather/location feasibility",
+        "number of roofs in place",
+        "twilight strategy (single-ply to fluid-applied recoat)",
+        "renewable sustainable warranty transferability",
+        "ask more questions"
+      ]
+    },
+    "2026-04-ccs-influencer-joe-sorrentino.txt": {
+      "host": "Lauren White",
+      "show": "Coatings Coffee Shop Influencer Response",
+      "episodeMonth": "2026-04",
+      "originalFileName": "CCS Influencer Joe Sorrentino - April 2026.txt",
+      "topic": "Strategies for selling fluid-applied systems to skeptics",
+      "themes": [
+        "four root causes of premature failure",
+        "horror-stories objection reframing",
+        "power of no",
+        "too-good-to-be-true cost objection",
+        "decision hierarchy (location/timing/service before chemistry)",
+        "living document / evidence of performance",
+        "solutions vs products framing",
+        "condition-matched references"
+      ]
+    }
+  },
+  "_entryShape": {
+    "questionId": {
+      "bank": "<one of the banks.* keys>",
+      "source": "<one of the transcripts.* keys>",
+      "timestamp": "<original transcript timestamp range, e.g. '4:19 - 5:31'>",
+      "quote": "<optional short verbatim excerpt for traceability; keep brief>",
+      "tags": ["<topical tags such as 'coatings', 'owner-communication', 'warranty'>"]
+    }
+  },
+  "questions": {
+    "FWFEB-001": {
+      "bank": "field_wisdom_joe_feb_2026",
+      "source": "2026-02-ccs-influencer-joe-sorrentino.txt",
+      "timestamp": "4:19 - 5:31",
+      "quote": "Adding reinforcements to liquid materials puts it in that category of a roofing membrane.",
+      "tags": ["fluid-applied", "maintenance-coating", "reinforcement", "system-classification"]
+    },
+    "FWFEB-002": {
+      "bank": "field_wisdom_joe_feb_2026",
+      "source": "2026-02-ccs-influencer-joe-sorrentino.txt",
+      "timestamp": "4:19 - 5:31",
+      "quote": "We look for hail impact. We look for tensile strength. We look for elongation properties.",
+      "tags": ["membrane-grade-testing", "hail-impact", "tensile", "elongation", "performance"]
+    },
+    "FWFEB-003": {
+      "bank": "field_wisdom_joe_feb_2026",
+      "source": "2026-02-ccs-influencer-joe-sorrentino.txt",
+      "timestamp": "2:25 - 4:19",
+      "quote": "There are disadvantages in going over a moisture-latent system, which concrete is, with liquid-applied materials. So it gets back to preparation, patience, and the understanding from the contractor base.",
+      "tags": ["concrete-deck", "moisture-latent", "substrate-preparation", "fluid-applied"]
+    },
+    "FWFEB-004": {
+      "bank": "field_wisdom_joe_feb_2026",
+      "source": "2026-02-ccs-influencer-joe-sorrentino.txt",
+      "timestamp": "2:25 - 4:19",
+      "quote": "The state of Florida is very stringent on the term that you can have material down. It makes it a challenge for owners who embrace sustainability.",
+      "tags": ["regulatory", "florida", "material-exposure", "sustainability"]
+    },
+    "FWFEB-005": {
+      "bank": "field_wisdom_joe_feb_2026",
+      "source": "2026-02-ccs-influencer-joe-sorrentino.txt",
+      "timestamp": "5:31 - 7:08",
+      "quote": "Water-based acrylic reinforced systems being installed, and then a liquid-applied silicone over the top to deal with any issues as it relates to water.",
+      "tags": ["chemistry", "acrylic", "silicone", "hybrid-stack", "ponding-water"]
+    },
+    "FWFEB-006": {
+      "bank": "field_wisdom_joe_feb_2026",
+      "source": "2026-02-ccs-influencer-joe-sorrentino.txt",
+      "timestamp": "4:19 - 5:31",
+      "quote": "Most single-ply and modified bitumen systems that have endured hail impact have worked with the same materials that liquid-applied systems utilize, which is a polyester membrane or reinforcement.",
+      "tags": ["polyester-reinforcement", "hail-impact", "cross-system", "membrane"]
+    },
+    "FWMAR-001": {
+      "bank": "field_wisdom_cost_effectiveness_coatings_vs_single_ply",
+      "source": "2026-03-cost-effectiveness-coatings-vs-single-ply.txt",
+      "timestamp": "0:39 - 2:56",
+      "quote": "I call it the personality of the roof. If we have a large open area, the benefits of large sheets ... start to take away some of the advantages ... within coating systems.",
+      "tags": ["cost-effectiveness", "single-ply", "coatings", "system-selection", "insulation"]
+    },
+    "FWMAR-002": {
+      "bank": "field_wisdom_cost_effectiveness_coatings_vs_single_ply",
+      "source": "2026-03-cost-effectiveness-coatings-vs-single-ply.txt",
+      "timestamp": "4:38 - 5:14",
+      "quote": "When you think you've asked enough questions, what should be the next thing that you do? Ask some more questions.",
+      "tags": ["owner-communication", "discovery", "asset-management", "sustainability"]
+    },
+    "FWMAR-003": {
+      "bank": "field_wisdom_cost_effectiveness_coatings_vs_single_ply",
+      "source": "2026-03-cost-effectiveness-coatings-vs-single-ply.txt",
+      "timestamp": "5:55 - 6:36",
+      "quote": "Taking care of your roof and more importantly, having a proactive look at life cycle costs will allow you to look at performances of 20 to 30 to 40 years.",
+      "tags": ["preventive-maintenance", "life-cycle", "renewable-warranty", "service-life"]
+    },
+    "FWMAR-004": {
+      "bank": "field_wisdom_cost_effectiveness_coatings_vs_single_ply",
+      "source": "2026-03-cost-effectiveness-coatings-vs-single-ply.txt",
+      "timestamp": "0:39 - 1:08",
+      "quote": "Single ply assemblies, which typically will have some type of an insulation system included in it, whereas codings will not. The cost savings will definitely override all of the material costs.",
+      "tags": ["insulation", "scope-difference", "cost-comparison", "owner-conversation"]
+    },
+    "FWMAR-005": {
+      "bank": "field_wisdom_cost_effectiveness_coatings_vs_single_ply",
+      "source": "2026-03-cost-effectiveness-coatings-vs-single-ply.txt",
+      "timestamp": "1:31 - 2:00",
+      "quote": "The regulations and the national energy code requirements that at times require a tremendous amount of insulation, which then change everything as far as the formula goes.",
+      "tags": ["energy-code", "regulation", "insulation", "system-selection"]
+    },
+    "FWMAR-006": {
+      "bank": "field_wisdom_cost_effectiveness_coatings_vs_single_ply",
+      "source": "2026-03-cost-effectiveness-coatings-vs-single-ply.txt",
+      "timestamp": "2:57 - 3:43",
+      "quote": "If it's running at 40% capacity, it doesn't matter how well your insulation values are. You're not getting full capacity out of your actual HVAC system.",
+      "tags": ["r-value", "theoretical-vs-practical", "hvac", "insulation"]
+    },
+    "FWMAR-007": {
+      "bank": "field_wisdom_cost_effectiveness_coatings_vs_single_ply",
+      "source": "2026-03-cost-effectiveness-coatings-vs-single-ply.txt",
+      "timestamp": "3:20 - 4:06",
+      "quote": "You have an owner that has a specific location, they have a specific need and a specific production schedule for the roofing crew, which then means you're dealing with certain weather conditions that once again can prohibit some of the fluid applied assemblies to be installed.",
+      "tags": ["weather", "location", "feasibility", "install-conditions"]
+    },
+    "FWMAR-008": {
+      "bank": "field_wisdom_cost_effectiveness_coatings_vs_single_ply",
+      "source": "2026-03-cost-effectiveness-coatings-vs-single-ply.txt",
+      "timestamp": "2:25 - 2:56",
+      "quote": "Depending on the number of roofs, like one roof in place versus two roofs in place, a single ply system can have its advantages.",
+      "tags": ["number-of-roofs", "tear-off", "single-ply", "system-selection"]
+    },
+    "FWMAR-009": {
+      "bank": "field_wisdom_cost_effectiveness_coatings_vs_single_ply",
+      "source": "2026-03-cost-effectiveness-coatings-vs-single-ply.txt",
+      "timestamp": "5:14 - 6:36",
+      "quote": "When you look at long-term performance in single ply roofing systems, be it KEE, be it PVC, be it TPO, be it EPDM, my point is they all tend to then move towards a fluid applied solution as it gets to the twilight of that membrane being able to have a useful service life.",
+      "tags": ["twilight-strategy", "single-ply", "fluid-applied-recoat", "end-of-life"]
+    },
+    "FWMAR-010": {
+      "bank": "field_wisdom_cost_effectiveness_coatings_vs_single_ply",
+      "source": "2026-03-cost-effectiveness-coatings-vs-single-ply.txt",
+      "timestamp": "6:38 - 8:33",
+      "quote": "When you can look at someone negotiating on a 22-story building the price of a new roof and say, we don't need one because we're offering you a warranty in place that's sustainable, it's very valuable.",
+      "tags": ["renewable-warranty", "transferability", "building-sale", "asset-value"]
+    },
+    "FWAPR-001": {
+      "bank": "field_wisdom_joe_april_2026",
+      "source": "2026-04-ccs-influencer-joe-sorrentino.txt",
+      "timestamp": "5:35 - 8:07",
+      "quote": "The biggest issues that we have in non-believers is not bringing to them specifically the issues they have on their roof and showing conditions that have been successfully done.",
+      "tags": ["selling-fluid-applied", "objection-handling", "references", "consultant-skepticism"]
+    },
+    "FWAPR-002": {
+      "bank": "field_wisdom_joe_april_2026",
+      "source": "2026-04-ccs-influencer-joe-sorrentino.txt",
+      "timestamp": "2:09 - 5:35",
+      "quote": "Improper design, poor selection of system, poor time of installer, lack of understanding by the installer, improper maintenance program. They all tend to kind of get hidden into, wow, I've heard the horror stories.",
+      "tags": ["four-root-causes", "premature-failure", "diagnosis", "design", "installer", "maintenance"]
+    },
+    "FWAPR-003": {
+      "bank": "field_wisdom_joe_april_2026",
+      "source": "2026-04-ccs-influencer-joe-sorrentino.txt",
+      "timestamp": "2:22 - 5:35",
+      "quote": "They really have to take on the power of no. You have to do the right selection and make sure that before you make that footprint of a liquid applied system... you have to be very mindful of that initial approach.",
+      "tags": ["power-of-no", "discipline", "system-selection", "contractor-judgment"]
+    },
+    "FWAPR-004": {
+      "bank": "field_wisdom_joe_april_2026",
+      "source": "2026-04-ccs-influencer-joe-sorrentino.txt",
+      "timestamp": "2:22 - 5:35",
+      "quote": "When you do the right evaluation and you make sure it's a yes, some of the savings to the owner on the front end and then on the long term are just at times too good to be true until they experience it.",
+      "tags": ["cost-objection", "too-good-to-be-true", "minimize-budget-maximize-cost", "owner-communication"]
+    },
+    "FWAPR-005": {
+      "bank": "field_wisdom_joe_april_2026",
+      "source": "2026-04-ccs-influencer-joe-sorrentino.txt",
+      "timestamp": "5:35 - 8:07",
+      "quote": "In a 90 slide presentation, I would have three slides on actually the technology of the coating systems... the location and the timing of the facility and the service of that facility's roof should dictate the type of technology for the coating.",
+      "tags": ["decision-hierarchy", "location", "timing", "service", "chemistry-selection"]
+    },
+    "FWAPR-006": {
+      "bank": "field_wisdom_joe_april_2026",
+      "source": "2026-04-ccs-influencer-joe-sorrentino.txt",
+      "timestamp": "5:35 - 8:07",
+      "quote": "You actually have a living document that serves the service life for that facility within a sustainable renewable warranty program.",
+      "tags": ["living-document", "evidence-of-performance", "renewable-recoat", "asset-value"]
+    },
+    "FWAPR-007": {
+      "bank": "field_wisdom_joe_april_2026",
+      "source": "2026-04-ccs-influencer-joe-sorrentino.txt",
+      "timestamp": "0:02 - 2:09",
+      "quote": "We're not really selling with any roofing systems. We're really creating solutions, right? That's the intent, to build a watertight system for a building owner through design.",
+      "tags": ["solutions-vs-products", "owner-communication", "presentation", "framing"]
+    },
+    "FWAPR-008": {
+      "bank": "field_wisdom_joe_april_2026",
+      "source": "2026-04-ccs-influencer-joe-sorrentino.txt",
+      "timestamp": "2:09 - 5:35",
+      "quote": "Improper design, poor selection of system, poor time of installer, lack of understanding by the installer, improper maintenance program. They all tend to kind of get hidden into, wow, I've heard the horror stories.",
+      "tags": ["horror-stories", "diagnostic-reframe", "root-causes", "objection-handling"]
+    }
+  }
+}

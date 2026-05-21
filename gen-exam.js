@@ -418,6 +418,21 @@
     return group === "astm-d4263";
   }
 
+  function isFieldWisdomJoeFeb2026(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "field-wisdom-joe-feb-2026";
+  }
+
+  function isFieldWisdomCostEffectivenessCoatingsVsSinglePly(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "field-wisdom-cost-effectiveness-coatings-vs-single-ply";
+  }
+
+  function isFieldWisdomJoeApril2026(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "field-wisdom-joe-april-2026";
+  }
+
   function bankKeyForSelection(selection) {
     if (isRwcStudyGuide(selection)) return "rwc";
     if (isRrcStudyGuide(selection)) return "rrc";
@@ -429,6 +444,9 @@
     if (isFrsaMaintenance15(selection)) return "frsa_maint15";
     if (isAstmD5898(selection)) return "astm_d5898";
     if (isAstmD4263(selection)) return "astm_d4263";
+    if (isFieldWisdomJoeFeb2026(selection)) return "field_wisdom_joe_feb_2026";
+    if (isFieldWisdomCostEffectivenessCoatingsVsSinglePly(selection)) return "field_wisdom_cost_effectiveness_coatings_vs_single_ply";
+    if (isFieldWisdomJoeApril2026(selection)) return "field_wisdom_joe_april_2026";
     return "";
   }
 
