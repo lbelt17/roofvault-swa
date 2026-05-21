@@ -418,6 +418,11 @@
     return group === "astm-d4263";
   }
 
+  function isFieldWisdom(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "field-wisdom";
+  }
+
   function bankKeyForSelection(selection) {
     if (isRwcStudyGuide(selection)) return "rwc";
     if (isRrcStudyGuide(selection)) return "rrc";
@@ -429,6 +434,7 @@
     if (isFrsaMaintenance15(selection)) return "frsa_maint15";
     if (isAstmD5898(selection)) return "astm_d5898";
     if (isAstmD4263(selection)) return "astm_d4263";
+    if (isFieldWisdom(selection)) return "field_wisdom";
     return "";
   }
 

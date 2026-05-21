@@ -656,6 +656,64 @@ if (bank === "frsa_g13" || bank === "frsa_ss48" || bank === "frsa_ls911" || bank
   }
 }
 
+if (bank === "field_wisdom") {
+  const bankSource = "field_wisdom-question-bank-2026.js";
+  try {
+    const bankObj = require("./field_wisdom-question-bank-2026.js");
+    const questionsAll = Array.isArray(bankObj?.questions) ? bankObj.questions : [];
+
+    const take = Math.min(Math.max(count, 1), questionsAll.length);
+    const shuffled = questionsAll.slice();
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    const selected = shuffled.slice(0, take);
+
+    const items = selected.map((q, idx) => {
+      const answerLetter = String(q.answer || "").toUpperCase().trim();
+      const ci = answerLetter.charCodeAt(0) - 65;
+      const correctIndexes = (Number.isFinite(ci) && ci >= 0 && ci < (Array.isArray(q.options) ? q.options.length : 0))
+        ? [ci]
+        : [];
+
+      return {
+        id: String(q.id || idx + 1),
+        type: q.type || "mcq",
+        question: q.question || "",
+        options: Array.isArray(q.options) ? q.options : [],
+        answer: answerLetter,
+        multi: !!q.multi,
+        correctIndexes,
+        expectedSelections: q.expectedSelections || 1,
+        cite: q.cite || bankObj?.book || "Field Wisdom Bank",
+        explanation: q.explanation || "",
+        exhibitImage: q.exhibitImage || "",
+        imageRef: q.imageRef || q.exhibitImage || "",
+      };
+    });
+
+    jsonRes(context, 200, {
+      ok: true,
+      deployTag: DEPLOY_TAG,
+      method: "GET",
+      bank: "field_wisdom",
+      count: items.length,
+      items,
+    });
+    context.res.headers["x-roofvault-bank-source"] = bankSource;
+    context.res.headers["x-roofvault-bank-name"] = "field_wisdom";
+    return;
+  } catch (e) {
+    return jsonRes(context, 500, {
+      ok: false,
+      deployTag: DEPLOY_TAG,
+      error: "Failed to load Field Wisdom bank",
+      message: e?.message || String(e),
+    });
+  }
+}
+
       // Default GET (health)
       return jsonRes(context, 200, {
         ok: true,
@@ -663,7 +721,7 @@ if (bank === "frsa_g13" || bank === "frsa_ss48" || bank === "frsa_ls911" || bank
         method: "GET",
         hint: 'POST { "parts":["<part1>","<part2>"], "count":25 }',
         note:
-          "Exam endpoint is multi-part grounded; sources are not returned. Bank mode: GET /api/exam?bank=rwc|rrc|frsa|frsa_g13|frsa_ss48|frsa_ls911|frsa_mod1113|frsa_rr14|frsa_maint15|astm_d5898|astm_d4263&count=25",
+          "Exam endpoint is multi-part grounded; sources are not returned. Bank mode: GET /api/exam?bank=rwc|rrc|frsa|frsa_g13|frsa_ss48|frsa_ls911|frsa_mod1113|frsa_rr14|frsa_maint15|astm_d5898|astm_d4263|field_wisdom&count=25",
       });
     }
 

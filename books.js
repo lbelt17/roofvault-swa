@@ -64,6 +64,11 @@
       bookGroupId: "astm-d4263",
       displayTitle: "ASTM D4263 (Bank)",
       parts: []
+    },
+    {
+      bookGroupId: "field-wisdom",
+      displayTitle: "Field Wisdom \u2014 Joe Sorrentino (Bank)",
+      parts: []
     }
   ];
 
