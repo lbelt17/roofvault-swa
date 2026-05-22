@@ -79,6 +79,21 @@
       bookGroupId: "field-wisdom-joe-april-2026",
       displayTitle: "CCS Influencer Joe Sorrentino - April 2026",
       parts: []
+    },
+    {
+      bookGroupId: "carlisle-sure-seal-epdm-kleen",
+      displayTitle: "Carlisle Sure-Seal EPDM Kleen Non-Reinforced (Bank)",
+      parts: []
+    },
+    {
+      bookGroupId: "carlisle-sure-tough-epdm-reinforced",
+      displayTitle: "Carlisle Sure-Tough EPDM Reinforced (Bank)",
+      parts: []
+    },
+    {
+      bookGroupId: "carlisle-sure-weld-tpo-reinforced",
+      displayTitle: "Carlisle Sure-Weld TPO Reinforced (Bank)",
+      parts: []
     }
   ];
 

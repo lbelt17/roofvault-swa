@@ -433,6 +433,21 @@
     return group === "field-wisdom-joe-april-2026";
   }
 
+  function isCarlisleSureSealEpdmKleen(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "carlisle-sure-seal-epdm-kleen";
+  }
+
+  function isCarlisleSureToughEpdmReinforced(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "carlisle-sure-tough-epdm-reinforced";
+  }
+
+  function isCarlisleSureWeldTpoReinforced(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "carlisle-sure-weld-tpo-reinforced";
+  }
+
   function bankKeyForSelection(selection) {
     if (isRwcStudyGuide(selection)) return "rwc";
     if (isRrcStudyGuide(selection)) return "rrc";
@@ -447,6 +462,9 @@
     if (isFieldWisdomJoeFeb2026(selection)) return "field_wisdom_joe_feb_2026";
     if (isFieldWisdomCostEffectivenessCoatingsVsSinglePly(selection)) return "field_wisdom_cost_effectiveness_coatings_vs_single_ply";
     if (isFieldWisdomJoeApril2026(selection)) return "field_wisdom_joe_april_2026";
+    if (isCarlisleSureSealEpdmKleen(selection)) return "carlisle_sure_seal_epdm_kleen";
+    if (isCarlisleSureToughEpdmReinforced(selection)) return "carlisle_sure_tough_epdm_reinforced";
+    if (isCarlisleSureWeldTpoReinforced(selection)) return "carlisle_sure_weld_tpo_reinforced";
     return "";
   }
 
