@@ -1,0 +1,376 @@
+{
+  "_doc": "Provenance manifest for Carlisle Product Data Sheet (PDS) derived exam content. This file is NOT loaded by /api/exam at runtime. It exists for traceability, QA review, and future-author guidance.",
+  "_internalSecurityNote": "INTERNAL ONLY. The Carlisle PDF files referenced by this manifest live under sources/manufacturers/carlisle/pds/ and MUST NEVER be exposed publicly via /api/book, /api/books, the Library page, or any other RoofVault endpoint. They are manufacturer-published collateral © Carlisle and are used here solely as source material to derive original RoofVault exam questions. The locked-library helper at api/_helpers/locked-library-blobs.js already contains a 'MfgCarlisle' pattern that would 403 any blob whose name matches /\\bcarlisle\\b.*\\b(?:manual|guide|specification|spec)\\b/ at the /api/book endpoint, and these PDFs are stored only in sources/ (not in the Azure blob container backing /api/book or /api/books), giving defense-in-depth. Do not upload these PDFs to Azure storage. Do not link to them from the frontend. Do not import them from any runtime module under /api or the root frontend bundle.",
+  "version": 1,
+  "createdAt": "2026-05-22",
+  "vendor": {
+    "name": "Carlisle SynTec Systems",
+    "parent": "Carlisle Companies Incorporated",
+    "contact": "800-479-6832 | P.O. Box 7000 | Carlisle, PA 17013 | www.carlislesyntec.com",
+    "role": "manufacturer"
+  },
+  "copyrightNotice": "Carlisle Product Data Sheets are © Carlisle. Used internally for RoofVault exam-content derivation. Questions and explanations authored from this material must paraphrase technical content; do not copy marketing prose. Standard test references (ASTM, UL, FM, NSF, CRRC, LEED, Title 24) and numeric specifications cited from these PDS documents are factual data of the kind specifiers routinely cite in their own work.",
+  "useRestrictions": [
+    "Do NOT serve the PDF files through /api/book, /api/books, or any public route.",
+    "Do NOT upload the PDF files to the Azure blob container that backs /api/book or /api/books.",
+    "Do NOT copy verbatim marketing prose (headers, taglines, brand-promise paragraphs) into question text or explanations.",
+    "Do NOT include trademark symbols (TM, R) in question text; trademarks are acknowledged here in the trademarks array instead.",
+    "Long verbatim excerpts (more than a short phrase) belong only in this manifest's optional 'quote' field for internal QA review, never in question text or explanations.",
+    "Use 'cite' on each generated question in the form: Carlisle <short product> PDS - p. <page>, <section heading>."
+  ],
+  "trademarks": [
+    "Carlisle",
+    "Sure-Seal",
+    "Sure-Tough",
+    "Sure-Weld",
+    "Sure-Weld Extra",
+    "OctaGuard XT",
+    "APEEL",
+    "Factory-Applied Tape",
+    "SecurTAPE"
+  ],
+  "_sourceEntryShape": {
+    "sourceKey": "stable short id used by question entries to reference a source PDF",
+    "normalizedFileName": "kebab-case filename as stored in this repo under pds/",
+    "originalFileName": "the filename as it arrived on Desktop, preserved here for traceability",
+    "relativePath": "repo-relative path to the PDF (sources/manufacturers/carlisle/pds/...)",
+    "footerDate": "YYYY-MM-DD parsed from the PDS footer revision date",
+    "copyrightYear": "year shown in the PDS footer",
+    "reprintCode": "Carlisle reprint/SKU code from the PDS footer (e.g. 605436 / EPDM-1117)",
+    "productShortName": "human display string for the 'cite' field on questions",
+    "productFullName": "the product name as it appears in the PDS heading",
+    "membraneFamily": "EPDM | TPO | other",
+    "reinforcement": "non-reinforced | polyester-reinforced",
+    "thicknessesMil": "list of available membrane thicknesses",
+    "intendedBankKey": "the planned /api/exam bank key that will be authored from this source (no bank file exists yet)",
+    "fileSizeBytes": "byte size of the PDF as stored",
+    "sha256": "SHA-256 hex of the PDF as stored",
+    "sectionHeadings": "list of section headings present in the PDS, used as the 'section' anchor in question citations",
+    "notes": "free-form notes about the source"
+  },
+  "sources": {
+    "sure-seal-epdm-kleen-non-reinforced": {
+      "sourceKey": "sure-seal-epdm-kleen-non-reinforced",
+      "normalizedFileName": "2024-12-sure-seal-epdm-kleen-non-reinforced-pds.pdf",
+      "originalFileName": "Sure-Seal EPDM Kleen Non-Reinforced Membranes Product Data Sheet.pdf",
+      "relativePath": "sources/manufacturers/carlisle/pds/2024-12-sure-seal-epdm-kleen-non-reinforced-pds.pdf",
+      "footerDate": "2024-12-05",
+      "copyrightYear": "2024",
+      "reprintCode": "605436 / EPDM-1117",
+      "productShortName": "Sure-Seal EPDM Kleen",
+      "productFullName": "Sure-Seal EPDM Kleen Non-Reinforced Membranes",
+      "membraneFamily": "EPDM",
+      "reinforcement": "non-reinforced",
+      "thicknessesMil": [45, 60, 90],
+      "intendedBankKey": "carlisle_sure_seal_epdm_kleen",
+      "fileSizeBytes": 538695,
+      "sha256": "09a8ca9034063331d1b34e34e624b344ebe980014f07ca509b61c72ee30a8f0e",
+      "sectionHeadings": [
+        "Overview",
+        "Features and Benefits",
+        "Carlisle's Factory-Applied Tape Seam Technology",
+        "30-Year Warranty",
+        "Installation",
+        "Precautions",
+        "LEED Information",
+        "Typical Properties and Characteristics"
+      ],
+      "notes": "Type I non-reinforced EPDM per ASTM D4637. 90-mil supports 30-year warranty assemblies. Primary install design referenced: Design A (Fully Adhered). Hand-applied alternative seam: SecurTAPE."
+    },
+    "sure-tough-epdm-reinforced": {
+      "sourceKey": "sure-tough-epdm-reinforced",
+      "normalizedFileName": "2025-07-sure-tough-epdm-reinforced-pds.pdf",
+      "originalFileName": "Sure - Tough EPDM Reinforced Membranes.pdf",
+      "relativePath": "sources/manufacturers/carlisle/pds/2025-07-sure-tough-epdm-reinforced-pds.pdf",
+      "footerDate": "2025-07-24",
+      "copyrightYear": "2025",
+      "reprintCode": "605437 / EPDM-1118",
+      "productShortName": "Sure-Tough EPDM Reinforced",
+      "productFullName": "Sure-Tough EPDM Reinforced Membranes",
+      "membraneFamily": "EPDM",
+      "reinforcement": "polyester-reinforced",
+      "thicknessesMil": [45, 60, 75],
+      "intendedBankKey": "carlisle_sure_tough_epdm_reinforced",
+      "fileSizeBytes": 605854,
+      "sha256": "ae05acef711dbe448a7c025b131963894a6bca66ef0535ba5dbb9421fb2339dc",
+      "sectionHeadings": [
+        "Overview",
+        "Features and Benefits",
+        "Sustainable Attributes",
+        "Carlisle's Factory-Applied Tape Seam Technology",
+        "Installation",
+        "Precautions",
+        "LEED Information",
+        "Typical Properties and Characteristics"
+      ],
+      "notes": "Type II reinforced EPDM per ASTM D4637. Internal polyester scrim. Supports Design MFS (Mechanically Fastened), Design MR (Metal Retrofit), and Design A (Fully Adhered). 60 percent greater puncture resistance vs non-reinforced (ASTM D5635 / Federal Method 2031). Desktop original filename had stray spaces around the hyphen."
+    },
+    "sure-weld-tpo-reinforced": {
+      "sourceKey": "sure-weld-tpo-reinforced",
+      "normalizedFileName": "2026-01-sure-weld-tpo-reinforced-pds.pdf",
+      "originalFileName": "TPO-2012 Sure-Weld TPO Reinforced Membrane PDS_01-28-26.pdf",
+      "relativePath": "sources/manufacturers/carlisle/pds/2026-01-sure-weld-tpo-reinforced-pds.pdf",
+      "footerDate": "2026-01-28",
+      "copyrightYear": "2026",
+      "reprintCode": "600515 / TPO-2012",
+      "productShortName": "Sure-Weld TPO Reinforced",
+      "productFullName": "Sure-Weld TPO Reinforced Membrane",
+      "membraneFamily": "TPO",
+      "reinforcement": "polyester-reinforced",
+      "thicknessesMil": [45, 60, 80],
+      "intendedBankKey": "carlisle_sure_weld_tpo_reinforced",
+      "fileSizeBytes": 837312,
+      "sha256": "d2ccdc12404801a41fcc35d30c7d188b82c67f57a5b1cd4ea62f4014ccfd36cc",
+      "sectionHeadings": [
+        "Overview",
+        "Features and Benefits",
+        "Sustainable Attributes",
+        "Wider is Better (16-Foot TPO Benefits)",
+        "Installation",
+        "Heat Aging",
+        "Q-Trac Testing",
+        "Environmental Cycling",
+        "Extreme Testing for Severe Climates (ASTM D6878)",
+        "Precautions",
+        "APEEL Protective Film",
+        "Typical Properties and Characteristics",
+        "Green Building Information",
+        "Radiative Properties for Cool Roof Rating Council (CRRC) and LEED",
+        "Radiative Properties (Initial) for Special Colors"
+      ],
+      "notes": "Heat-weldable TPO with OctaGuard XT weathering package. Supports Fully Adhered, Mechanically Fastened, and Induction-Welded designs. Sure-Weld Extra is the 80-mil variant. APEEL Protective Film is an optional factory-applied film with specific handling rules. Maximum sustained membrane temperature 160 F. Some PDF tools report 0 pages (PDF 1.7 with non-standard page table) but content is fully extractable; downstream tooling should rely on the section headings list above rather than page indices alone."
+    }
+  },
+  "_bankEntryShape": {
+    "bankKey": "the /api/exam bank key (snake_case)",
+    "bankFile": "repo-relative path to the question-bank module",
+    "displayTitle": "the dropdown label exactly as it will appear",
+    "idPrefix": "stable per-bank ID prefix used on every question in that bank",
+    "source": "sourceKey of the PDS this bank is derived from",
+    "targetQuestionCount": "honest premium count agreed with product owner; no filler beyond this",
+    "status": "planned | scaffold | live"
+  },
+  "banks": {
+    "carlisle_sure_seal_epdm_kleen": {
+      "bankKey": "carlisle_sure_seal_epdm_kleen",
+      "bankFile": "api/exam/carlisle_sure_seal_epdm_kleen-question-bank-2026.js",
+      "displayTitle": "Carlisle Sure-Seal EPDM Kleen Non-Reinforced (Bank)",
+      "idPrefix": "CARSS",
+      "source": "sure-seal-epdm-kleen-non-reinforced",
+      "targetQuestionCount": 6,
+      "status": "wired"
+    },
+    "carlisle_sure_tough_epdm_reinforced": {
+      "bankKey": "carlisle_sure_tough_epdm_reinforced",
+      "bankFile": "api/exam/carlisle_sure_tough_epdm_reinforced-question-bank-2026.js",
+      "displayTitle": "Carlisle Sure-Tough EPDM Reinforced (Bank)",
+      "idPrefix": "CARST",
+      "source": "sure-tough-epdm-reinforced",
+      "targetQuestionCount": 7,
+      "status": "wired"
+    },
+    "carlisle_sure_weld_tpo_reinforced": {
+      "bankKey": "carlisle_sure_weld_tpo_reinforced",
+      "bankFile": "api/exam/carlisle_sure_weld_tpo_reinforced-question-bank-2026.js",
+      "displayTitle": "Carlisle Sure-Weld TPO Reinforced (Bank)",
+      "idPrefix": "CARSW",
+      "source": "sure-weld-tpo-reinforced",
+      "targetQuestionCount": 10,
+      "status": "wired"
+    }
+  },
+  "_questionEntryShape": {
+    "bank": "bankKey the question belongs to",
+    "source": "sourceKey of the originating PDS",
+    "page": "page number in the PDS where the claim appears",
+    "section": "section heading in the PDS where the claim appears",
+    "quote": "OPTIONAL short verbatim excerpt for internal QA only; never copied into question text",
+    "tags": "list of free-form topic tags (e.g. cold-weather-splice, scrim-reinforcement, heat-welding)"
+  },
+  "questions": {
+    "CARSS-001": {
+      "bank": "carlisle_sure_seal_epdm_kleen",
+      "source": "sure-seal-epdm-kleen-non-reinforced",
+      "page": 2,
+      "section": "Installation (Design A) / ASTM D4637 Type I",
+      "quote": "Sure-Seal Kleen 45-mil, 60-mil, and 90-mil membranes are utilized primarily in Design A (Fully Adhered roofing systems). Sure-Seal Kleen Non-Reinforced EPDM Membrane meets or exceeds the minimum requirements set forth by ASTM D4637 for Type I non-reinforced EPDM single-ply roofing membranes.",
+      "tags": ["non-reinforced-use-case", "design-a", "astm-d4637-type-i", "system-selection", "mechanically-fastened-mismatch"]
+    },
+    "CARSS-002": {
+      "bank": "carlisle_sure_seal_epdm_kleen",
+      "source": "sure-seal-epdm-kleen-non-reinforced",
+      "page": 2,
+      "section": "Installation (Splicing below 40\u00b0F)",
+      "quote": "Follow these steps for splicing in temperatures below 40 F (5 C): 1. Heat the primed area of the bottom membrane with a hot-air gun as the top sheet with Factory-Applied Tape is applied and pressed into place. 2. Prior to rolling the splice area with a 2-inch-wide steel hand roller, apply heat to the top side of the membrane with a hot-air gun. The heated surface should be hot to the touch. Be careful not to burn or blister the membrane.",
+      "tags": ["cold-weather-splice", "factory-applied-tape", "hot-air-gun", "steel-hand-roller", "install-judgment"]
+    },
+    "CARSS-003": {
+      "bank": "carlisle_sure_seal_epdm_kleen",
+      "source": "sure-seal-epdm-kleen-non-reinforced",
+      "page": 2,
+      "section": "Precautions",
+      "quote": "Membranes with Factory-Applied Tape should not be exposed to prolonged jobsite storage temperatures in excess of 90 F (32 C), otherwise the shelf life of the tape may be affected. When membranes with Factory-Applied Tape are used in warm, sunny weather, shade the tape end of the rolls until ready to use. Factory-Applied Tape has a shelf life of one year.",
+      "tags": ["jobsite-storage", "90F-temperature-limit", "tape-shelf-life", "fat-precaution", "warm-weather-handling"]
+    },
+    "CARSS-004": {
+      "bank": "carlisle_sure_seal_epdm_kleen",
+      "source": "sure-seal-epdm-kleen-non-reinforced",
+      "page": 1,
+      "section": "30-Year Warranty",
+      "quote": "Carlisle's 30-year Sure-Seal EPDM roof system features a thicker, more durable membrane complemented by enhanced details and accessories. Carlisle's 90-mil EPDM is used for 30-year warranty installations to provide long-term value and performance. In addition to 30 years of guaranteed protection, this system is available with warranties to cover hail, accidental punctures, and wind speeds up to 120 mph.",
+      "tags": ["90-mil-thickness", "30-year-warranty", "warranty-platform", "add-on-warranties", "system-selection"]
+    },
+    "CARSS-005": {
+      "bank": "carlisle_sure_seal_epdm_kleen",
+      "source": "sure-seal-epdm-kleen-non-reinforced",
+      "page": 1,
+      "section": "Features and Benefits (UL 2218 Class 4)",
+      "quote": "Numerous studies and real-world experience confirm that Sure-Seal EPDM's 465% elongation and weathering resistance result in superior hail damage resistance (UL 2218 Class 4 rating). Elongation, Ultimate, min, %: 300 spec / 465 typical (ASTM D412).",
+      "tags": ["ul-2218-class-4", "hail-resistance", "elongation", "astm-d412", "material-behavior", "weathering"]
+    },
+    "CARSS-006": {
+      "bank": "carlisle_sure_seal_epdm_kleen",
+      "source": "sure-seal-epdm-kleen-non-reinforced",
+      "page": 2,
+      "section": "Installation (Design A)",
+      "quote": "Design A (Fully Adhered Roofing System): insulation is mechanically fastened or adhered to the roof deck. The substrate and membrane are coated with the appropriate Carlisle bonding adhesive. The membrane is then rolled into place and broomed down.",
+      "tags": ["design-a", "fully-adhered", "brooming", "bonding-adhesive", "install-judgment"]
+    },
+    "CARST-001": {
+      "bank": "carlisle_sure_tough_epdm_reinforced",
+      "source": "sure-tough-epdm-reinforced",
+      "page": 1,
+      "section": "Features and Benefits",
+      "quote": "60% greater resistance to punctures (as measured by ASTM D5635 and Federal Method 2031) compared to non-reinforced membranes. Internally reinforced sheets provide excellent resistance to punctures, tears, and scuffs that can be caused by maintenance traffic, backed by the industry's longest puncture warranty.",
+      "tags": ["reinforced-vs-non-reinforced", "puncture-resistance", "astm-d5635", "federal-method-2031", "puncture-warranty", "system-selection"]
+    },
+    "CARST-002": {
+      "bank": "carlisle_sure_tough_epdm_reinforced",
+      "source": "sure-tough-epdm-reinforced",
+      "page": 2,
+      "section": "Installation (MFS/MR sheet flutter note)",
+      "quote": "Design MFS (Mechanically Fastened) and Design MR (Metal Retrofit): insulation is mechanically fastened to the roof deck and membrane is secured with seam fastening plates or bars and fasteners. ... Sheet flutter/noise may occur on mechanically fastened systems.",
+      "tags": ["mechanically-fastened", "sheet-flutter", "noise", "occupant-impact", "design-mfs", "design-mr", "install-judgment"]
+    },
+    "CARST-003": {
+      "bank": "carlisle_sure_tough_epdm_reinforced",
+      "source": "sure-tough-epdm-reinforced",
+      "page": 2,
+      "section": "Typical Properties and Characteristics (Thickness Over Scrim)",
+      "quote": "Thickness Over Scrim, min, in. (mm) - .045 / .060 Annex 0.015 (0.381) / 0.016 typical / 0.020 typical. .075 typical 0.032 (0.81).",
+      "tags": ["thickness-over-scrim", "tos", "scrim-protection", "service-life", "75-mil-thickness", "non-linear-jump"]
+    },
+    "CARST-004": {
+      "bank": "carlisle_sure_tough_epdm_reinforced",
+      "source": "sure-tough-epdm-reinforced",
+      "page": 2,
+      "section": "Typical Properties (ASTM D4637 Type II)",
+      "quote": "Sure-Tough reinforced EPDM membrane meets or exceeds the minimum requirements set forth by ASTM D4637 for Type II reinforced EPDM single-ply roofing membranes.",
+      "tags": ["astm-d4637-type-ii", "reinforced-classification", "spec-writing", "vs-type-i"]
+    },
+    "CARST-005": {
+      "bank": "carlisle_sure_tough_epdm_reinforced",
+      "source": "sure-tough-epdm-reinforced",
+      "page": 2,
+      "section": "Typical Properties (Breaking Strength, ASTM D751)",
+      "quote": "Breaking Strength, min, lbf (N) - ASTM D751, Grab Method, .045/.060: 90 (400) min / 210 (930) typical.",
+      "tags": ["breaking-strength", "astm-d751-grab", "vs-tensile-d412", "test-method-rationale", "composite-failure-mode"]
+    },
+    "CARST-006": {
+      "bank": "carlisle_sure_tough_epdm_reinforced",
+      "source": "sure-tough-epdm-reinforced",
+      "page": 1,
+      "section": "Overview (5-ft and 6.5-ft perimeter sheets)",
+      "quote": "Carlisle offers 5' (1.5 m) and 6.5' (1.98 m) wide sheets, ideal for use as perimeter sheets and to achieve certain uplift ratings, in 45- and 60-mil thicknesses.",
+      "tags": ["perimeter-sheets", "5-ft-width", "6-5-ft-width", "wind-uplift", "fastener-density", "mechanically-fastened"]
+    },
+    "CARST-007": {
+      "bank": "carlisle_sure_tough_epdm_reinforced",
+      "source": "sure-tough-epdm-reinforced",
+      "page": 1,
+      "section": "Overview (UL Class A up to 3-inch slope)",
+      "quote": "Sure-Tough membranes are formulated with fire retardants to inhibit the spread of flame and meet or exceed UL Class A requirements for slopes up to 3 inches per foot (76.2 mm), depending on the assembly.",
+      "tags": ["ul-class-a", "fire-rating", "slope-limit", "3-inch-per-foot", "assembly-dependent"]
+    },
+    "CARSW-001": {
+      "bank": "carlisle_sure_weld_tpo_reinforced",
+      "source": "sure-weld-tpo-reinforced",
+      "page": 1,
+      "section": "Installation (three attachment designs)",
+      "quote": "Fully-Adhered - membrane is adhered to a suitable substrate utilizing an appropriate bonding adhesive. Mechanically Fastened - membrane is attached to the roof deck over a suitable substrate utilizing plates and fasteners which are overlapped with membrane. Induction-Welded - membrane is attached over a suitable substrate via an induction welding tool being placed over the membrane where a fastened TPO induction welding plate is located to weld the two components together.",
+      "tags": ["fully-adhered", "mechanically-fastened", "induction-welded", "attachment-design-selection", "membrane-puncture"]
+    },
+    "CARSW-002": {
+      "bank": "carlisle_sure_weld_tpo_reinforced",
+      "source": "sure-weld-tpo-reinforced",
+      "page": 2,
+      "section": "Precautions (APEEL razor prohibition)",
+      "quote": "Do not use razor blades or other sharp tools to cut the APEEL Protective Film while it is still adhered to the TPO membrane as damage to the underlying membrane may occur. Pull the protective film away from the membrane prior to cutting. A static electric charge may develop when removing APEEL Protective Film from the surface of the membrane sheet. To avoid the possibility of ignition, lids must be closed on any flammable products and a fire extinguisher should be readily available.",
+      "tags": ["apeel-protective-film", "razor-prohibition", "static-electricity", "fire-extinguisher", "install-judgment"]
+    },
+    "CARSW-003": {
+      "bank": "carlisle_sure_weld_tpo_reinforced",
+      "source": "sure-weld-tpo-reinforced",
+      "page": 2,
+      "section": "APEEL Protective Film (90-day window)",
+      "quote": "In areas that do not require heat-welding, the APEEL Protective Film can be left in place for up to 90 days without degrading due to its excellent heat- and UV-resistance.",
+      "tags": ["apeel-protective-film", "90-day-limit", "uv-resistance", "heat-resistance", "trade-sequencing"]
+    },
+    "CARSW-004": {
+      "bank": "carlisle_sure_weld_tpo_reinforced",
+      "source": "sure-weld-tpo-reinforced",
+      "page": 2,
+      "section": "Wider is Better (16-Foot TPO Benefits)",
+      "quote": "Up to 60% fewer seams vs. 10-foot TPO. Fewer rolls to load and stage. Fewer rolls to position, kick-out, and align. Fewer seams to weld, probe, and inspect, saving considerable time during installation. Fewer T-joint patches to install on each roof. Less waste and trash from packaging.",
+      "tags": ["16-ft-wide-sheets", "labor-savings", "seam-reduction", "t-joint-patches", "large-roof-bidding"]
+    },
+    "CARSW-005": {
+      "bank": "carlisle_sure_weld_tpo_reinforced",
+      "source": "sure-weld-tpo-reinforced",
+      "page": 1,
+      "section": "Features and Benefits (HS formula)",
+      "quote": "Sure-Weld High Slope (HS) membrane is formulated with additional flame retardant for higher-slope fire code approvals. HS formula opens assemblies for slopes greater than 1/2 inch over combustible and non-combustible deck types where standard TPO is restricted.",
+      "tags": ["high-slope-hs-formula", "combustible-deck", "non-combustible-deck", "fire-code-approvals", "slope-restriction"]
+    },
+    "CARSW-006": {
+      "bank": "carlisle_sure_weld_tpo_reinforced",
+      "source": "sure-weld-tpo-reinforced",
+      "page": 2,
+      "section": "Precautions (max sustained 160F)",
+      "quote": "Maximum sustained temperature not to exceed 160 F (71 C) for TPO membrane.",
+      "tags": ["max-sustained-temperature", "160F-limit", "skylight-reflective-heat", "detail-design", "service-life"]
+    },
+    "CARSW-007": {
+      "bank": "carlisle_sure_weld_tpo_reinforced",
+      "source": "sure-weld-tpo-reinforced",
+      "page": 1,
+      "section": "Heat Aging (oxidation doubles per 18F)",
+      "quote": "Heat Aging accelerates the oxidation rate that roughly doubles for each 18 F (10 C) increase in roof membrane temperature. Oxidation (reaction with oxygen) is one of the primary chemical degradation mechanisms of roofing materials.",
+      "tags": ["heat-aging", "oxidation-rate", "18F-rule", "service-life-math", "climate-driven-degradation"]
+    },
+    "CARSW-008": {
+      "bank": "carlisle_sure_weld_tpo_reinforced",
+      "source": "sure-weld-tpo-reinforced",
+      "page": 2,
+      "section": "Supplemental Approvals (ASTM D5635-04)",
+      "quote": "Sure-Weld TPO was tested for dynamic puncture resistance per ASTM D5635-04 using the most recently modified impact head. 45-mil (1.14 mm) was watertight after an impact energy of 12.5 J (9.2 ft-lbf) and 60-mil (1.52 mm) was watertight after 22.5 J (16.6 ft-lbf). 80-mil (2.03 mm) Extra was watertight after an impact energy of 30.0 J (22.1 ft-lbf).",
+      "tags": ["dynamic-puncture", "astm-d5635-04", "thickness-selection", "pv-array", "maintenance-traffic"]
+    },
+    "CARSW-009": {
+      "bank": "carlisle_sure_weld_tpo_reinforced",
+      "source": "sure-weld-tpo-reinforced",
+      "page": 2,
+      "section": "Precautions (Weathered Membrane Cleaner)",
+      "quote": "Membrane that has been exposed to the weather must be prepared with Weathered Membrane Cleaner prior to hot-air welding.",
+      "tags": ["weathered-membrane-cleaner", "weld-prep", "field-storage", "surface-contamination", "hot-air-welding"]
+    },
+    "CARSW-010": {
+      "bank": "carlisle_sure_weld_tpo_reinforced",
+      "source": "sure-weld-tpo-reinforced",
+      "page": 2,
+      "section": "Precautions (color fading) + Sustainable Attributes (Title 24, NSF P151)",
+      "quote": "Color membranes will 'fade' over time mainly due to the ultraviolet portion of sunlight. Since most roof surfaces are exposed to variable sunlight, some areas will be more susceptible to color changes caused by UV fading. Warranties for color membranes do not cover fading of colors. California Title 24 compliant (White and Tan only). NSF P151 certification for rainwater catchment (White only, produced in Tooele, UT and Carlisle, PA).",
+      "tags": ["color-fade-warranty-exclusion", "california-title-24", "nsf-p151", "white-only", "tan-only", "patina-green", "owner-disclosure"]
+    }
+  }
+}
