@@ -448,6 +448,16 @@
     return group === "carlisle-sure-weld-tpo-reinforced";
   }
 
+  function isCarlisleSureWeldTpoFieldInstall(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "carlisle-sure-weld-tpo-field-install";
+  }
+
+  function isCarlisleSureFlexPvcFieldInstall(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "carlisle-sure-flex-pvc-field-install";
+  }
+
   function bankKeyForSelection(selection) {
     if (isRwcStudyGuide(selection)) return "rwc";
     if (isRrcStudyGuide(selection)) return "rrc";
@@ -465,6 +475,8 @@
     if (isCarlisleSureSealEpdmKleen(selection)) return "carlisle_sure_seal_epdm_kleen";
     if (isCarlisleSureToughEpdmReinforced(selection)) return "carlisle_sure_tough_epdm_reinforced";
     if (isCarlisleSureWeldTpoReinforced(selection)) return "carlisle_sure_weld_tpo_reinforced";
+    if (isCarlisleSureWeldTpoFieldInstall(selection)) return "carlisle_sure_weld_tpo_field_install";
+    if (isCarlisleSureFlexPvcFieldInstall(selection)) return "carlisle_sure_flex_pvc_field_install";
     return "";
   }
 
