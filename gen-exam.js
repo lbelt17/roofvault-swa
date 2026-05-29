@@ -458,6 +458,16 @@
     return group === "carlisle-sure-flex-pvc-field-install";
   }
 
+  function isNrcaRoofCoatingApplicatorFundamentals(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "nrca-roof-coating-applicator-fundamentals";
+  }
+
+  function isNrcaRoofingEquipmentCostFundamentals(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "nrca-roofing-equipment-cost-fundamentals";
+  }
+
   function bankKeyForSelection(selection) {
     if (isRwcStudyGuide(selection)) return "rwc";
     if (isRrcStudyGuide(selection)) return "rrc";
@@ -477,6 +487,8 @@
     if (isCarlisleSureWeldTpoReinforced(selection)) return "carlisle_sure_weld_tpo_reinforced";
     if (isCarlisleSureWeldTpoFieldInstall(selection)) return "carlisle_sure_weld_tpo_field_install";
     if (isCarlisleSureFlexPvcFieldInstall(selection)) return "carlisle_sure_flex_pvc_field_install";
+    if (isNrcaRoofCoatingApplicatorFundamentals(selection)) return "nrca_roof_coating_applicator_fundamentals";
+    if (isNrcaRoofingEquipmentCostFundamentals(selection)) return "nrca_roofing_equipment_cost_fundamentals";
     return "";
   }
 

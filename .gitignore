@@ -9,3 +9,6 @@ api_min.zip
 
 # Local Azure Functions settings (never commit)
 api/local.settings.json
+
+# NRCA exam source PDFs - copyrighted, exam-only provenance, never commit or expose publicly
+sources/nrca/pdfs/

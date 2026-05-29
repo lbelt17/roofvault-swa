@@ -1,0 +1,284 @@
+{
+  "_doc": "Provenance manifest for NRCA source-document derived exam content. This file is NOT loaded by /api/exam at runtime. It exists for traceability, QA review, and future-author guidance. The two banks derived from these sources are EXAM-ONLY: they appear only in the Exam module dropdown (books.js EXAM_ONLY_BOOKS, read solely by exams.html) and are served only through /api/exam bank branches. They are never added to the Library (/api/books) or to Chat (/api/rvchat).",
+  "_internalSecurityNote": "INTERNAL ONLY. The NRCA PDF files referenced by this manifest live under sources/nrca/pdfs/ and MUST NEVER be exposed publicly via /api/book, /api/books, the Library page, Chat, or any other RoofVault endpoint. They are NRCA-published copyrighted collateral and are used here solely as source material to derive original RoofVault exam questions. These PDFs are stored only in sources/ (NOT in the Azure blob container that backs /api/book, /api/books, or the Chat search index azureblob-index-content-chunked), which keeps them out of Library and Chat by construction. As defense-in-depth, the locked-library helper at api/_helpers/locked-library-blobs.js contains an 'NRCA' pattern that would 403 any blob whose name matches /\\bnrca\\b/ at the /api/book endpoint; both normalized filenames below carry an 'nrca-' token so that backstop applies to both. Do not upload these PDFs to Azure storage. Do not link to them from the frontend. Do not import them from any runtime module under /api or the root frontend bundle. Do not add them as searchable source documents outside the Exam module.",
+  "version": 1,
+  "createdAt": "2026-05-29",
+  "vendor": {
+    "name": "National Roofing Contractors Association (NRCA)",
+    "role": "trade-association / standards-and-guidance publisher",
+    "contact": "https://www.nrca.net"
+  },
+  "copyrightNotice": "NRCA Guidelines, manuals, and cost-data publications are copyright (c) NRCA. Used internally for RoofVault exam-content derivation only. Questions and explanations authored from this material must paraphrase technical content; do not copy marketing prose or reproduce tables, figures, or substantial verbatim text. Factual references (ASTM/UL/ANSI standard numbers, numeric specifications, and the kind of cost/spec data that practitioners routinely cite in their own work) may be cited as facts. The source PDFs themselves are reproduced here only as internal source material and must not be redistributed or publicly served.",
+  "useRestrictions": [
+    "Do NOT serve the PDF files through /api/book, /api/books, Chat, or any public route.",
+    "Do NOT upload the PDF files to the Azure blob container that backs /api/book, /api/books, or the Chat content index.",
+    "Do NOT add these PDFs as searchable source documents outside the Exam module.",
+    "Do NOT copy verbatim marketing prose, full tables, or figures into question text or explanations.",
+    "Long verbatim excerpts (more than a short phrase) belong only in this manifest's optional 'quote' field for internal QA review, never in question text or explanations.",
+    "Use 'cite' on each generated question in the form: NRCA <short doc title> - p. <page>, <section heading>."
+  ],
+  "trademarks": [
+    "NRCA"
+  ],
+  "_sourceEntryShape": {
+    "sourceKey": "stable short id used by question entries to reference a source PDF",
+    "normalizedFileName": "kebab-case filename as stored in this repo under pdfs/",
+    "originalFileName": "the filename as it arrived on Desktop, preserved here for traceability",
+    "relativePath": "repo-relative path to the PDF (sources/nrca/pdfs/...)",
+    "documentType": "guideline | cost-data | manual",
+    "publicationDate": "YYYY-MM (best-effort from PDF metadata / cover)",
+    "pageCount": "number of pages in the PDF",
+    "intendedBankKey": "the planned /api/exam bank key that will be authored from this source (no bank file exists yet)",
+    "fileSizeBytes": "byte size of the PDF as stored",
+    "sha256": "SHA-256 hex of the PDF as stored",
+    "notes": "free-form notes about the source"
+  },
+  "sources": {
+    "nrca-roof-coating-applicator-guidelines": {
+      "sourceKey": "nrca-roof-coating-applicator-guidelines",
+      "normalizedFileName": "2026-03-nrca-guidelines-for-roof-coating-applicators.pdf",
+      "originalFileName": "NRCA Guidelines for Roof Coating Applicators (Digital).pdf",
+      "relativePath": "sources/nrca/pdfs/2026-03-nrca-guidelines-for-roof-coating-applicators.pdf",
+      "documentType": "guideline",
+      "publicationDate": "2026-03",
+      "pageCount": 84,
+      "intendedBankKey": "nrca_roof_coating_applicator_fundamentals",
+      "fileSizeBytes": 4383819,
+      "sha256": "1d38d34d36396c0eb79f679e7846e9720be373fc09ffa41e0f40eabac5a89717",
+      "notes": "NRCA guidance for roof coating applicators. 84-page digital edition. Source for the planned exam-only bank 'Roof Coating Applicator Fundamentals'. PDF metadata CreationDate 2026-03-04 (Aspose digital render); cover/footer copyright governs."
+    },
+    "nrca-roofing-contractors-equipment-cost-schedule": {
+      "sourceKey": "nrca-roofing-contractors-equipment-cost-schedule",
+      "normalizedFileName": "2026-04-nrca-roofing-contractors-equipment-cost-schedule.pdf",
+      "originalFileName": "Roofing Contractors Equipment Cost Schedule (Digital).pdf",
+      "relativePath": "sources/nrca/pdfs/2026-04-nrca-roofing-contractors-equipment-cost-schedule.pdf",
+      "documentType": "cost-data",
+      "publicationDate": "2026-04",
+      "pageCount": 42,
+      "intendedBankKey": "nrca_roofing_equipment_cost_fundamentals",
+      "fileSizeBytes": 8066860,
+      "sha256": "200f3d5e2af0884ee14da36288578edd85316513bb2c9fd3af007f98e05601cd",
+      "notes": "NRCA Roofing Contractors Equipment Cost Schedule. 42-page digital edition. Source for the planned exam-only bank 'Roofing Equipment Cost Fundamentals'. PDF metadata CreationDate 2026-04-28 (Aspose digital render); cover/footer copyright governs. Original title does not contain the token 'NRCA'; normalized filename carries an 'nrca-' token so the locked-library backstop also applies."
+    }
+  },
+  "_bankEntryShape": {
+    "bankKey": "the /api/exam bank key (snake_case)",
+    "bankFile": "repo-relative path to the question-bank module (does not exist yet at status=planned)",
+    "displayTitle": "the Exam-dropdown label exactly as it will appear (no '(Bank)' suffix per product owner)",
+    "idPrefix": "stable per-bank ID prefix used on every question in that bank",
+    "source": "sourceKey of the document this bank is derived from",
+    "sourceType": "exam-only (never added to Library or Chat)",
+    "targetQuestionCount": "honest premium count to be set after content-capacity audit; no filler",
+    "status": "planned | scaffold | wired"
+  },
+  "banks": {
+    "nrca_roof_coating_applicator_fundamentals": {
+      "bankKey": "nrca_roof_coating_applicator_fundamentals",
+      "bankFile": "api/exam/nrca_roof_coating_applicator_fundamentals-question-bank-2026.js",
+      "displayTitle": "Roof Coating Applicator Fundamentals",
+      "idPrefix": "RCAF",
+      "source": "nrca-roof-coating-applicator-guidelines",
+      "sourceType": "exam-only",
+      "targetQuestionCount": 12,
+      "status": "scaffold",
+      "notes": "Scaffold authored Step 3 (12 questions RCAF-001..012, drawn from Chapters 1-4: coating types, properties/cure mechanisms, substrate evaluation, adhesion). Exam-only: will be added to books.js EXAM_ONLY_BOOKS and an /api/exam branch only; never to /api/books (Library) or /api/rvchat (Chat). Display title used verbatim with NO '(Bank)' suffix per product owner. Not yet wired into /api/exam, books.js, or gen-exam.js."
+    },
+    "nrca_roofing_equipment_cost_fundamentals": {
+      "bankKey": "nrca_roofing_equipment_cost_fundamentals",
+      "bankFile": "api/exam/nrca_roofing_equipment_cost_fundamentals-question-bank-2026.js",
+      "displayTitle": "Roofing Equipment Cost Fundamentals",
+      "idPrefix": "RECF",
+      "source": "nrca-roofing-contractors-equipment-cost-schedule",
+      "sourceType": "exam-only",
+      "targetQuestionCount": 10,
+      "status": "scaffold",
+      "notes": "Scaffold authored Step 4 (10 questions RECF-001..010). Teaches METHODOLOGY only (cost basis/f.o.b.+10% freight, excluded operating costs, monthly->weekly/daily/hourly multipliers, straight-line depreciation, Column 6 = Column 4 / Column 5, useful-life vs depreciation %, the 12.5% interest/taxes/storage/insurance breakdown, 8-month average use, antitrust/usage disclaimer). Deliberately avoids copying dollar pricing per the schedule foreword's antitrust note. Exam-only: will be added to books.js EXAM_ONLY_BOOKS and an /api/exam branch only; never to /api/books (Library) or /api/rvchat (Chat). Display title used verbatim with NO '(Bank)' suffix. Not yet wired into /api/exam, books.js, or gen-exam.js."
+    }
+  },
+  "_questionEntryShape": {
+    "bank": "bankKey the question belongs to",
+    "source": "sourceKey of the originating document",
+    "page": "page number in the source where the claim appears",
+    "section": "section heading in the source where the claim appears",
+    "quote": "OPTIONAL short verbatim excerpt for internal QA only; never copied into question text",
+    "tags": "list of free-form topic tags"
+  },
+  "questions": {
+    "RCAF-001": {
+      "bank": "nrca_roof_coating_applicator_fundamentals",
+      "source": "nrca-roof-coating-applicator-guidelines",
+      "page": 12,
+      "section": "Chapter 1 - Roof Coating Types (Aluminum roof coatings)",
+      "quote": "If applied at temperatures below 40-45 F, depending on product, leafing of the aluminum flake to the surface of the coating can be impeded, leaving a bronze finish instead of a bright silver finish on the coating's surface. In addition, early exposure of the coating to moisture (rain, dew, frost) can have comparable negative effects, sometimes resulting in a blotchy appearance.",
+      "tags": ["aluminum-coating", "leafing", "bronze-vs-silver", "cold-application", "moisture-sensitivity", "40-45F"]
+    },
+    "RCAF-002": {
+      "bank": "nrca_roof_coating_applicator_fundamentals",
+      "source": "nrca-roof-coating-applicator-guidelines",
+      "page": 12,
+      "section": "Chapter 1 - Roof Coating Types (Acrylic coatings)",
+      "quote": "Products need to be kept at temperatures above 38 F during storage. Application of acrylic coatings should take place at temperatures above 38 F, and the wet film also must be kept above this temperature during the initial cure period. ... most acrylic coatings absorb sufficient water to create blistering and adhesion issues if water stands on the cured film for extended periods of time. Most acrylic roof coatings are considered breathable and exhibit a typical perm rating of 5.0 to 10.0.",
+      "tags": ["acrylic-coating", "water-based", "38F-minimum", "moisture-cure-sensitivity", "ponding-blistering", "perm-5-to-10", "breathable"]
+    },
+    "RCAF-003": {
+      "bank": "nrca_roof_coating_applicator_fundamentals",
+      "source": "nrca-roof-coating-applicator-guidelines",
+      "page": 15,
+      "section": "Chapter 1 - Roof Coating Types (Silicone coatings)",
+      "quote": "It should be noted only silicone coatings and sealants successfully bond to existing silicone-coated surfaces.",
+      "tags": ["silicone-coating", "recoat-compatibility", "only-silicone-bonds-to-silicone", "restoration-trap", "low-surface-energy"]
+    },
+    "RCAF-004": {
+      "bank": "nrca_roof_coating_applicator_fundamentals",
+      "source": "nrca-roof-coating-applicator-guidelines",
+      "page": 15,
+      "section": "Chapter 1 - Roof Coating Types (Butyl coatings)",
+      "quote": "These coatings cure by solvent evaporation, leaving a butyl rubber film that has a perm rating of 0.001 or lower. Butyl coatings typically are used to stop vapor drive in cold storage or high-humidity applications. The coatings typically are ultraviolet sensitive and either top-coated with another coating or covered in some way to minimize exposure to sunlight.",
+      "tags": ["butyl-coating", "perm-0.001", "vapor-drive", "cold-storage", "uv-sensitive", "must-topcoat"]
+    },
+    "RCAF-005": {
+      "bank": "nrca_roof_coating_applicator_fundamentals",
+      "source": "nrca-roof-coating-applicator-guidelines",
+      "page": 21,
+      "section": "Chapter 2 - Roof Coating Properties and Comparisons (Coating solids by volume)",
+      "quote": "One gallon of a coating material that has 100% solid content by volume will cover a 1,604-square-foot area at 1 dry mil thickness. ... Although solids by weight and solids by volume sound similar, they can vary significantly between coatings.",
+      "tags": ["solids-by-volume", "solids-by-weight", "theoretical-coverage", "1604-sq-ft-per-gallon", "1-dry-mil", "astm-d2697", "coverage-comparison"]
+    },
+    "RCAF-006": {
+      "bank": "nrca_roof_coating_applicator_fundamentals",
+      "source": "nrca-roof-coating-applicator-guidelines",
+      "page": 19,
+      "section": "Chapter 2 - Roof Coating Properties and Comparisons (Drying and Curing Mechanisms)",
+      "quote": "Tack free: Dust will not stick to the coating. Dry to touch: Touching with a finger, using the weight of the hand only, will not leave a fingerprint. Dry to recoat: The base coat can be walked on and the top coat can be applied without volatiles being trapped between the coats. ... Some coatings can take up to 30 days or longer to fully cure.",
+      "tags": ["dry-vs-cured", "tack-free", "dry-to-touch", "dry-to-recoat", "trapped-volatiles", "30-day-cure", "recoat-window"]
+    },
+    "RCAF-007": {
+      "bank": "nrca_roof_coating_applicator_fundamentals",
+      "source": "nrca-roof-coating-applicator-guidelines",
+      "page": 20,
+      "section": "Chapter 2 - Roof Coating Properties and Comparisons (Curing by oxidation or reaction with moisture)",
+      "quote": "The binders react with oxygen or moisture from the air to form more complex molecules. ... Moisture-curing products highly depend on ambient moisture and temperature levels. Curing in dry climates may require a specific catalyst or may not be recommended. Examples of this curing mechanism are single-component urethane and silicone roof coatings.",
+      "tags": ["moisture-cure", "single-component-urethane", "single-component-silicone", "dry-climate-catalyst", "ambient-humidity-dependence", "cure-mechanism"]
+    },
+    "RCAF-008": {
+      "bank": "nrca_roof_coating_applicator_fundamentals",
+      "source": "nrca-roof-coating-applicator-guidelines",
+      "page": 26,
+      "section": "Chapter 3 - Substrate and Surface Evaluation (surfaces generally not adequate substrates)",
+      "quote": "Recently installed thermoplastic single-ply roof systems. Thermoplastic roof membranes less than three to five years old - depending on environment - typically need more weathering time to present a substrate that will allow coatings to adhere. Exposure to ultraviolet light plays a critical part in weathering of thermoplastic roof membrane surfaces. A field dirt pickup test such as the masking tape test described later in this chapter may be used to determine whether a membrane has weathered sufficiently to accept a coating.",
+      "tags": ["thermoplastic-membrane", "tpo", "recently-installed", "3-to-5-year-weathering", "uv-weathering", "masking-tape-test", "substrate-suitability"]
+    },
+    "RCAF-009": {
+      "bank": "nrca_roof_coating_applicator_fundamentals",
+      "source": "nrca-roof-coating-applicator-guidelines",
+      "page": 27,
+      "section": "Chapter 3 - Substrate and Surface Evaluation (criteria to rule out a roof; Repairs Required Before Coating)",
+      "quote": "NRCA criterion for positive drainage is that there be no standing water on a roof 48 hours after a rain event during conditions conducive to drying. ... As a rule of thumb, a roof system is not a candidate for coating if more than 25% of the roof area is moisture-laden.",
+      "tags": ["positive-drainage", "48-hour-rule", "ponding", "25-percent-moisture-laden", "infrared-survey", "coating-candidacy", "pre-coating-repairs"]
+    },
+    "RCAF-010": {
+      "bank": "nrca_roof_coating_applicator_fundamentals",
+      "source": "nrca-roof-coating-applicator-guidelines",
+      "page": 31,
+      "section": "Chapter 3 - Substrate and Surface Evaluation (Field dirt pickup tests - masking tape test)",
+      "quote": "Slowly peeling the tape off. If the tape comes off easily and the adhesive side is covered with dirt, soap film or degraded roofing material, the roof surface is not suitable for coating and should be cleaned again. If the tape adheres well, offers some resistance when peeled off and the adhesive side is generally dirt-free, the roof surface is suitable for coating.",
+      "tags": ["masking-tape-test", "field-dirt-pickup", "surface-cleanliness", "soap-film", "pass-fail-interpretation", "re-clean"]
+    },
+    "RCAF-011": {
+      "bank": "nrca_roof_coating_applicator_fundamentals",
+      "source": "nrca-roof-coating-applicator-guidelines",
+      "page": 30,
+      "section": "Chapter 3 - Substrate and Surface Evaluation (Cleaning roof substrates)",
+      "quote": "Power washing should be performed no more than 24 to 36 hours before coating application to minimize the time window when inadvertent contamination can occur before coating application. ... Hydrocarbon solvents should not be used on roof system surfaces except when recommended by the roof system manufacturer. ... On through-fastened metal roof systems, otherwise functional fastener seals may become dislodged and nonfunctional as a result of high-pressure spray.",
+      "tags": ["power-washing", "24-to-36-hours", "hydrocarbon-solvent-prohibition", "water-soluble-cleaners", "metal-fastener-seals", "high-pressure-damage", "cleaning-timing"]
+    },
+    "RCAF-012": {
+      "bank": "nrca_roof_coating_applicator_fundamentals",
+      "source": "nrca-roof-coating-applicator-guidelines",
+      "page": 36,
+      "section": "Chapter 4 - Adhesion (Peel Tests)",
+      "quote": "For most coatings under ordinary curing conditions, a minimum of three to seven days of cure time should be allowed. To test adhesion strength, the fabric tail is pulled backward in a smooth, peeling motion 180 degrees parallel to the substrate surface with consistent force; 3 to 5 pounds of force per inch width of test specimen indicates sufficient adhesion strength to provide for excellent performance in most coating applications. A fish scale may be used to obtain an accurate measurement of adhesion if desired.",
+      "tags": ["peel-test", "field-adhesion", "3-to-7-day-cure", "3-to-5-lbf-per-inch", "180-degree-peel", "fish-scale", "representative-area", "same-prep-method"]
+    },
+    "RECF-001": {
+      "bank": "nrca_roofing_equipment_cost_fundamentals",
+      "source": "nrca-roofing-contractors-equipment-cost-schedule",
+      "page": 1,
+      "section": "Explanation of Equipment Cost Tables",
+      "quote": "The equipment costs are based on the average list prices of known suppliers, f.o.b. their points of manufacture plus 10% for freight.",
+      "tags": ["cost-basis", "fob-point-of-manufacture", "list-price-average", "10-percent-freight", "not-delivered-price", "new-equipment-cost"]
+    },
+    "RECF-002": {
+      "bank": "nrca_roofing_equipment_cost_fundamentals",
+      "source": "nrca-roofing-contractors-equipment-cost-schedule",
+      "page": 1,
+      "section": "Explanation of Equipment Cost Tables",
+      "quote": "The costs do not take into account loading, erecting, operating or dismantling; fuel; lubricants; expendable items; wages or transportation of operating crews; or any of a contractor's general business expenses. Sales and use taxes also are not included. All these items should be taken into account when calculating actual costs.",
+      "tags": ["excluded-costs", "ownership-vs-operating", "fuel", "crew-wages", "mobilization", "sales-use-taxes", "actual-cost-buildup"]
+    },
+    "RECF-003": {
+      "bank": "nrca_roofing_equipment_cost_fundamentals",
+      "source": "nrca-roofing-contractors-equipment-cost-schedule",
+      "page": 1,
+      "section": "The Schedule to Arrive at Expense per Month",
+      "quote": "All other rates - hourly, daily and weekly - are derived from the monthly rate using percentages based on industry averages as follows: Weekly rate: monthly rate x 0.35; Daily rate: monthly rate x 0.13; Hourly rate: monthly rate x 0.016. ... Numbers are rounded to the nearest dollar.",
+      "tags": ["rate-derivation", "weekly-0.35", "daily-0.13", "hourly-0.016", "monthly-base-rate", "short-term-premium", "rounded-to-dollar"]
+    },
+    "RECF-004": {
+      "bank": "nrca_roofing_equipment_cost_fundamentals",
+      "source": "nrca-roofing-contractors-equipment-cost-schedule",
+      "page": 1,
+      "section": "The Schedule to Arrive at Expense per Month (trucks example)",
+      "quote": "The total percentage of depreciation; maintenance and repairs; and interest, taxes and storage (Column 4) is 57.5. When divided by the estimated average use in months per year (eight), the total expense percentage is 7.2 (Column 6).",
+      "tags": ["column-6", "column-4-total", "column-5-months-use", "57.5-over-8-equals-7.2", "monthly-percentage", "trucks-example", "rate-math"]
+    },
+    "RECF-005": {
+      "bank": "nrca_roofing_equipment_cost_fundamentals",
+      "source": "nrca-roofing-contractors-equipment-cost-schedule",
+      "page": 2,
+      "section": "Depreciation",
+      "quote": "The rate is calculated by the straight-line method of depreciation by which a uniform amount is charged for each year of useful life. Salvage or scrap value is not taken into account. The depreciation rates selected for equipment are based on one-shift-per-day operations.",
+      "tags": ["straight-line-depreciation", "salvage-not-counted", "useful-life", "one-shift-per-day", "wear-and-tear", "uniform-annual-charge"]
+    },
+    "RECF-006": {
+      "bank": "nrca_roofing_equipment_cost_fundamentals",
+      "source": "nrca-roofing-contractors-equipment-cost-schedule",
+      "page": 1,
+      "section": "The Schedule to Arrive at Expense per Month (trucks example) + Schedule chart Column 1 (Depreciation) pp. 3-4",
+      "quote": "Using trucks as an example, the useful life is estimated to be three years (therefore, 33% annual depreciation is listed in Column 1). [Chart: HAND TOOLS, MOPPING CARTS, SINGLE-PLY TOOLS, VACUUMS = 100% depreciation; FRONT-END LOADERS, CRANES, HEAVY SHEET-METAL = 20%.]",
+      "tags": ["useful-life-vs-depreciation", "100-percent-equals-1-year", "33-percent-equals-3-year", "20-percent-equals-5-year", "consumable-tools", "inverse-relationship", "straight-line"]
+    },
+    "RECF-007": {
+      "bank": "nrca_roofing_equipment_cost_fundamentals",
+      "source": "nrca-roofing-contractors-equipment-cost-schedule",
+      "page": 2,
+      "section": "Interest, Taxes, Storage and Insurance + Schedule chart Column 3 (pp. 2-3)",
+      "quote": "The amount used for interest is 5.5%. ... The amount used for taxes is 1.5%. ... Storage costs are estimated at 3.5 percent. ... Insurance costs are estimated at 2%. [Chart Column 3 = 12.5% across categories.]",
+      "tags": ["column-3", "interest-5.5", "taxes-1.5", "storage-3.5", "insurance-2.0", "sums-to-12.5", "constant-across-categories", "ownership-cost-components"]
+    },
+    "RECF-008": {
+      "bank": "nrca_roofing_equipment_cost_fundamentals",
+      "source": "nrca-roofing-contractors-equipment-cost-schedule",
+      "page": 2,
+      "section": "Interest, Taxes, Storage and Insurance (Storage)",
+      "quote": "Storage costs are incurred when equipment is not used between jobs. They are composed of rental costs and maintenance of warehouse and yards, wages and the direct costs associated with storage facilities and equipment handling. Storage costs are estimated at 3.5 percent.",
+      "tags": ["storage-cost", "idle-between-jobs", "warehouse-yard-rental", "3.5-percent", "ownership-cost-during-idle", "handling-costs"]
+    },
+    "RECF-009": {
+      "bank": "nrca_roofing_equipment_cost_fundamentals",
+      "source": "nrca-roofing-contractors-equipment-cost-schedule",
+      "page": 1,
+      "section": "The Schedule to Arrive at Expense per Month (Column 5, Average Use)",
+      "quote": "The average use in months per year (Column 5) is estimated from industry averages (eight months). ... When divided by the estimated average use in months per year (eight), the total expense percentage is 7.2 (Column 6).",
+      "tags": ["column-5", "8-months-average-use", "seasonality", "idle-time", "divide-by-8-not-12", "higher-monthly-rate", "cost-recovery"]
+    },
+    "RECF-010": {
+      "bank": "nrca_roofing_equipment_cost_fundamentals",
+      "source": "nrca-roofing-contractors-equipment-cost-schedule",
+      "page": null,
+      "section": "Foreword",
+      "quote": "This publication is not intended to establish, recommend, influence or serve as a benchmark for any contractor's pricing, bids, rental rates, markups or other competitive business decisions. NRCA does not collect, publish or endorse specific pricing and each contractor, lessor, lessee and other market participant must independently determine their own prices, rates, terms and conditions. ... This document is best used in conjunction with your company's current estimating system and pricing models and best business judgement for determining direct cost rates.",
+      "tags": ["antitrust", "not-a-pricing-benchmark", "no-bid-benchmark", "independent-pricing", "competition-law", "direct-cost-reference", "use-with-own-estimating-system"]
+    }
+  }
+}
