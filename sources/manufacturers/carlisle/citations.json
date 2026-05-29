@@ -1,6 +1,6 @@
 {
-  "_doc": "Provenance manifest for Carlisle Product Data Sheet (PDS) derived exam content. This file is NOT loaded by /api/exam at runtime. It exists for traceability, QA review, and future-author guidance.",
-  "_internalSecurityNote": "INTERNAL ONLY. The Carlisle PDF files referenced by this manifest live under sources/manufacturers/carlisle/pds/ and MUST NEVER be exposed publicly via /api/book, /api/books, the Library page, or any other RoofVault endpoint. They are manufacturer-published collateral © Carlisle and are used here solely as source material to derive original RoofVault exam questions. The locked-library helper at api/_helpers/locked-library-blobs.js already contains a 'MfgCarlisle' pattern that would 403 any blob whose name matches /\\bcarlisle\\b.*\\b(?:manual|guide|specification|spec)\\b/ at the /api/book endpoint, and these PDFs are stored only in sources/ (not in the Azure blob container backing /api/book or /api/books), giving defense-in-depth. Do not upload these PDFs to Azure storage. Do not link to them from the frontend. Do not import them from any runtime module under /api or the root frontend bundle.",
+  "_doc": "Provenance manifest for Carlisle source-document derived exam content (PDS and install/field guides). This file is NOT loaded by /api/exam at runtime. It exists for traceability, QA review, and future-author guidance.",
+  "_internalSecurityNote": "INTERNAL ONLY. The Carlisle PDF files referenced by this manifest live under sources/manufacturers/carlisle/ (in pds/ and install-guides/) and MUST NEVER be exposed publicly via /api/book, /api/books, the Library page, or any other RoofVault endpoint. They are manufacturer-published collateral © Carlisle and are used here solely as source material to derive original RoofVault exam questions. The locked-library helper at api/_helpers/locked-library-blobs.js already contains a 'MfgCarlisle' pattern that would 403 any blob whose name matches /\\bcarlisle\\b.*\\b(?:manual|guide|specification|spec)\\b/ at the /api/book endpoint, and these PDFs are stored only in sources/ (not in the Azure blob container backing /api/book or /api/books), giving defense-in-depth. Do not upload these PDFs to Azure storage. Do not link to them from the frontend. Do not import them from any runtime module under /api or the root frontend bundle.",
   "version": 1,
   "createdAt": "2026-05-22",
   "vendor": {
@@ -9,14 +9,14 @@
     "contact": "800-479-6832 | P.O. Box 7000 | Carlisle, PA 17013 | www.carlislesyntec.com",
     "role": "manufacturer"
   },
-  "copyrightNotice": "Carlisle Product Data Sheets are © Carlisle. Used internally for RoofVault exam-content derivation. Questions and explanations authored from this material must paraphrase technical content; do not copy marketing prose. Standard test references (ASTM, UL, FM, NSF, CRRC, LEED, Title 24) and numeric specifications cited from these PDS documents are factual data of the kind specifiers routinely cite in their own work.",
+  "copyrightNotice": "Carlisle Product Data Sheets and field/install guides are © Carlisle. Used internally for RoofVault exam-content derivation. Questions and explanations authored from this material must paraphrase technical content; do not copy marketing prose. Standard test references (ASTM, UL, FM, NSF, CRRC, LEED, Title 24) and numeric specifications cited from these documents are factual data of the kind specifiers routinely cite in their own work.",
   "useRestrictions": [
     "Do NOT serve the PDF files through /api/book, /api/books, or any public route.",
     "Do NOT upload the PDF files to the Azure blob container that backs /api/book or /api/books.",
     "Do NOT copy verbatim marketing prose (headers, taglines, brand-promise paragraphs) into question text or explanations.",
     "Do NOT include trademark symbols (TM, R) in question text; trademarks are acknowledged here in the trademarks array instead.",
     "Long verbatim excerpts (more than a short phrase) belong only in this manifest's optional 'quote' field for internal QA review, never in question text or explanations.",
-    "Use 'cite' on each generated question in the form: Carlisle <short product> PDS - p. <page>, <section heading>."
+    "Use 'cite' on each generated question in the form: Carlisle <short product> <doc-type> - p. <page>, <section heading>. Examples: 'Carlisle Sure-Weld TPO PDS - p. 2, Precautions'; 'Carlisle Thermoplastics Field Guide - p. 36, Section 4 - Common Installation Issues'."
   ],
   "trademarks": [
     "Carlisle",
@@ -24,28 +24,42 @@
     "Sure-Tough",
     "Sure-Weld",
     "Sure-Weld Extra",
+    "Sure-Flex",
+    "KEE HP",
+    "Spectro-Weld",
     "OctaGuard XT",
     "APEEL",
     "Factory-Applied Tape",
-    "SecurTAPE"
+    "SecurTAPE",
+    "SecurEdge",
+    "SecurShield",
+    "FleeceBACK",
+    "LIQUISEAL",
+    "CAV-GRIP III",
+    "RUSS",
+    "InsulBase",
+    "StormBase",
+    "R-Tech"
   ],
   "_sourceEntryShape": {
     "sourceKey": "stable short id used by question entries to reference a source PDF",
-    "normalizedFileName": "kebab-case filename as stored in this repo under pds/",
+    "normalizedFileName": "kebab-case filename as stored in this repo under pds/ or install-guides/",
     "originalFileName": "the filename as it arrived on Desktop, preserved here for traceability",
-    "relativePath": "repo-relative path to the PDF (sources/manufacturers/carlisle/pds/...)",
-    "footerDate": "YYYY-MM-DD parsed from the PDS footer revision date",
-    "copyrightYear": "year shown in the PDS footer",
-    "reprintCode": "Carlisle reprint/SKU code from the PDS footer (e.g. 605436 / EPDM-1117)",
+    "relativePath": "repo-relative path to the PDF (sources/manufacturers/carlisle/<subfolder>/...)",
+    "documentType": "PDS | install-guide | manual (optional; document classification)",
+    "footerDate": "YYYY-MM-DD parsed from the document footer revision date",
+    "copyrightYear": "year shown in the document footer",
+    "reprintCode": "Carlisle reprint/SKU code from the document footer (e.g. 605436 / EPDM-1117)",
     "productShortName": "human display string for the 'cite' field on questions",
-    "productFullName": "the product name as it appears in the PDS heading",
-    "membraneFamily": "EPDM | TPO | other",
-    "reinforcement": "non-reinforced | polyester-reinforced",
-    "thicknessesMil": "list of available membrane thicknesses",
-    "intendedBankKey": "the planned /api/exam bank key that will be authored from this source (no bank file exists yet)",
+    "productFullName": "the product or document name as it appears in the source heading",
+    "membraneFamily": "EPDM | TPO | PVC | thermoplastic-mixed | other",
+    "reinforcement": "non-reinforced | polyester-reinforced | varies-by-system",
+    "thicknessesMil": "list of available membrane thicknesses (or union across systems for multi-product sources)",
+    "intendedBankKey": "the planned /api/exam bank key that will be authored from this source (singular form; use when a source feeds exactly one bank)",
+    "intendedBankKeys": "list of planned /api/exam bank keys (plural form; use when a single source feeds multiple banks)",
     "fileSizeBytes": "byte size of the PDF as stored",
     "sha256": "SHA-256 hex of the PDF as stored",
-    "sectionHeadings": "list of section headings present in the PDS, used as the 'section' anchor in question citations",
+    "sectionHeadings": "list of section headings present in the source, used as the 'section' anchor in question citations",
     "notes": "free-form notes about the source"
   },
   "sources": {
@@ -139,6 +153,56 @@
         "Radiative Properties (Initial) for Special Colors"
       ],
       "notes": "Heat-weldable TPO with OctaGuard XT weathering package. Supports Fully Adhered, Mechanically Fastened, and Induction-Welded designs. Sure-Weld Extra is the 80-mil variant. APEEL Protective Film is an optional factory-applied film with specific handling rules. Maximum sustained membrane temperature 160 F. Some PDF tools report 0 pages (PDF 1.7 with non-standard page table) but content is fully extractable; downstream tooling should rely on the section headings list above rather than page indices alone."
+    },
+    "carlisle-thermoplastics-field-guide": {
+      "sourceKey": "carlisle-thermoplastics-field-guide",
+      "normalizedFileName": "2023-09-carlisle-thermoplastics-field-guide.pdf",
+      "originalFileName": "Thermoplastics TPO-PVC Field Guide.pdf",
+      "relativePath": "sources/manufacturers/carlisle/install-guides/2023-09-carlisle-thermoplastics-field-guide.pdf",
+      "documentType": "install-guide",
+      "footerDate": "2023-09-06",
+      "copyrightYear": "2023",
+      "reprintCode": "611463 / CST-9994",
+      "productShortName": "Carlisle Thermoplastics Field Guide",
+      "productFullName": "Carlisle Thermoplastics Field Guide (Sure-Weld TPO and Sure-Flex PVC install reference)",
+      "membraneFamily": "thermoplastic-mixed",
+      "reinforcement": "varies-by-system",
+      "thicknessesMil": [45, 50, 60, 75, 80],
+      "intendedBankKeys": [
+        "carlisle_sure_weld_tpo_field_install",
+        "carlisle_sure_flex_pvc_field_install"
+      ],
+      "fileSizeBytes": 20486912,
+      "sha256": "200fd9ab83bf301df364186ead66d2794e05a22e3bf74facfdecb026738b4ee8",
+      "sectionHeadings": [
+        "Field Guide Purpose / Disclaimer",
+        "Description of Systems",
+        "Products & Accessories - Insulation",
+        "Products & Accessories - Fasteners & Plates",
+        "Products & Accessories - Adhesives, Primers & Sealants",
+        "Products & Accessories - Thermoplastic Accessories",
+        "Tools & Equipment",
+        "Common Installation Issues",
+        "Staging & Storage Best Practices",
+        "Execution / Installation Procedures - Sure-Weld TPO General",
+        "Execution / Installation Procedures - Sure-Weld TPO Execution",
+        "Execution / Installation Procedures - Sure-Flex PVC General",
+        "Execution / Installation Procedures - Sure-Flex PVC Execution",
+        "Daily Procedures",
+        "Insulation Details (A-27, MF-27 families)",
+        "Mechanically Fastened Details",
+        "Metal Edges and Gravel Stops",
+        "Membrane Splices",
+        "Expansion Joints",
+        "Curb Flashing",
+        "Drains",
+        "Pipe Flashing",
+        "Terminations",
+        "Parapet Flashing",
+        "Vapor / Air Barrier Details (V-8 and V-12 families)",
+        "Contact Information"
+      ],
+      "notes": "246-page Carlisle install/QA reference covering Sure-Weld TPO and Sure-Flex PVC (plus Spectro-Weld, KEE HP, Induction-Welded Grid, Metal Retrofit, SAT, Adhered, and FleeceBACK variants). This single source feeds two planned banks: carlisle_sure_weld_tpo_field_install (TPO install judgment) and carlisle_sure_flex_pvc_field_install (PVC install judgment). When authoring questions, do NOT repeat concepts already covered by the carlisle_sure_weld_tpo_reinforced PDS bank (notably CARSW-002/003 APEEL razor + 90-day window, CARSW-006 max sustained 160 F, CARSW-007 oxidation per 18 F). The Field Guide's install procedures, daily seam-probing, common installation issues, staging/storage, and PVC-specific welding parameters are net-new content. Reprint code 611463 / CST-9994. Footer marker: 'Thermoplastics Field Guide - 09.06.23'. Section anchors marked 'JULY 2023' on internal section headers."
     }
   },
   "_bankEntryShape": {
@@ -177,6 +241,26 @@
       "source": "sure-weld-tpo-reinforced",
       "targetQuestionCount": 10,
       "status": "wired"
+    },
+    "carlisle_sure_weld_tpo_field_install": {
+      "bankKey": "carlisle_sure_weld_tpo_field_install",
+      "bankFile": "api/exam/carlisle_sure_weld_tpo_field_install-question-bank-2026.js",
+      "displayTitle": "Carlisle Sure-Weld TPO Field Install (Bank)",
+      "idPrefix": "CARTW",
+      "source": "carlisle-thermoplastics-field-guide",
+      "targetQuestionCount": 12,
+      "status": "wired",
+      "notes": "Wired Step 5. Install-judgment angle complementary to carlisle_sure_weld_tpo_reinforced (PDS bank). Does NOT repeat APEEL razor/90-day, 160 F sustained-temp, or oxidation-per-18 F concepts already in the PDS bank."
+    },
+    "carlisle_sure_flex_pvc_field_install": {
+      "bankKey": "carlisle_sure_flex_pvc_field_install",
+      "bankFile": "api/exam/carlisle_sure_flex_pvc_field_install-question-bank-2026.js",
+      "displayTitle": "Carlisle Sure-Flex PVC Field Install (Bank)",
+      "idPrefix": "CARPV",
+      "source": "carlisle-thermoplastics-field-guide",
+      "targetQuestionCount": 10,
+      "status": "wired",
+      "notes": "Wired Step 5. Covers Sure-Flex PVC and Sure-Flex KEE HP install judgment (PVC Membrane Cleaner 15-min flash-off, 1,094 F auto-welder starting parameters, PVC bleed-out interpretation flip vs TPO, aged-membrane bottom-side weld fallback, PVC-specific probe-tip geometry, Section 7 test-weld delamination indicator, scorched-membrane diagnostic, PVC Metal Retrofit Half Sheets/Linear Induction Welded options)."
     }
   },
   "_questionEntryShape": {
@@ -371,6 +455,182 @@
       "section": "Precautions (color fading) + Sustainable Attributes (Title 24, NSF P151)",
       "quote": "Color membranes will 'fade' over time mainly due to the ultraviolet portion of sunlight. Since most roof surfaces are exposed to variable sunlight, some areas will be more susceptible to color changes caused by UV fading. Warranties for color membranes do not cover fading of colors. California Title 24 compliant (White and Tan only). NSF P151 certification for rainwater catchment (White only, produced in Tooele, UT and Carlisle, PA).",
       "tags": ["color-fade-warranty-exclusion", "california-title-24", "nsf-p151", "white-only", "tan-only", "patina-green", "owner-disclosure"]
+    },
+    "CARTW-001": {
+      "bank": "carlisle_sure_weld_tpo_field_install",
+      "source": "carlisle-thermoplastics-field-guide",
+      "page": 36,
+      "section": "Section 4 - Common Installation Issues (Reduce the chance for cold welds on TPO membranes)",
+      "quote": "A good starting point for welding all types and thickness of Sure-Weld TPO on auto-welders is 1,000 F at 12'/minute with airflow at 100%. ... A proper hot air welded seam has no voids or wrinkles and must be at least 1.5 inches wide.",
+      "tags": ["auto-welder-starting-parameters", "1000F", "12-ft-per-minute", "100-percent-airflow", "seam-quality", "1.5-inch-min-seam-width", "tpo-vs-pvc-welding"]
+    },
+    "CARTW-002": {
+      "bank": "carlisle_sure_weld_tpo_field_install",
+      "source": "carlisle-thermoplastics-field-guide",
+      "page": 36,
+      "section": "Section 4 - Common Installation Issues (hand-welder settings)",
+      "quote": "Hand welding flashing the welder should be set at #7 and for membrane set at #8. A proper hot air welded seam has no voids or wrinkles and must be at least 1.5 inches wide.",
+      "tags": ["hand-welder-settings", "flashing-7", "membrane-8", "1.5-inch-seam", "no-voids-no-wrinkles", "cold-weld-prevention"]
+    },
+    "CARTW-003": {
+      "bank": "carlisle_sure_weld_tpo_field_install",
+      "source": "carlisle-thermoplastics-field-guide",
+      "page": 36,
+      "section": "Section 4 - Common Installation Issues (test welds)",
+      "quote": "Perform a test weld at the start of each morning and afternoon on a piece of like membrane over the same substrate.",
+      "tags": ["test-weld-discipline", "twice-daily", "like-membrane", "same-substrate", "welder-drift", "qc-procedure"]
+    },
+    "CARTW-004": {
+      "bank": "carlisle_sure_weld_tpo_field_install",
+      "source": "carlisle-thermoplastics-field-guide",
+      "page": 36,
+      "section": "Section 4 - Common Installation Issues (24-hour seam-cleaning rule)",
+      "quote": "Seams that are not welded within 24 hours should be cleaned with a Splice Wipe soaked with Weathered Membrane Cleaner regardless of conditions. Allow the cleaned area to vent for at least 10 minutes prior to welding again.",
+      "tags": ["24-hour-rule", "splice-wipe", "weathered-membrane-cleaner", "10-minute-vent", "seam-prep", "regardless-of-conditions"]
+    },
+    "CARTW-005": {
+      "bank": "carlisle_sure_weld_tpo_field_install",
+      "source": "carlisle-thermoplastics-field-guide",
+      "page": 36,
+      "section": "Section 4 - Common Installation Issues (aged membrane welding)",
+      "quote": "Welding aged membrane (over 1-year and longer) may require the use of a Primer Pad and Weathered Membrane Cleaner. Work up a slurry using the Primer Pad and Weather[ed] Membrane Cleaner. Using a Splice Wipe remove the residue from the cleaned area. Wipe the membrane again using a clean Splice Wipe and Weathered Membrane Cleaner. Allow the cleaned area to vent for at least 10 minutes prior to welding.",
+      "tags": ["aged-membrane", "1-year-plus", "primer-pad", "slurry", "splice-wipe", "10-minute-vent", "re-roof-tie-in", "oxidation-layer-removal"]
+    },
+    "CARTW-006": {
+      "bank": "carlisle_sure_weld_tpo_field_install",
+      "source": "carlisle-thermoplastics-field-guide",
+      "page": 36,
+      "section": "Section 4 - Common Installation Issues (Seam Probing)",
+      "quote": "Probing seams must be done once hot air welds have thoroughly cooled (min. 20 minutes). Hot air weld seams must be probed throughout the day to check seam quality and to make proper adjustments to hot air welding equipment. The repair of deficiencies must be done routinely throughout the day but no later than the end of each workday.",
+      "tags": ["seam-probing", "20-minute-cooldown", "probe-throughout-day", "welder-adjustment", "daily-repair", "qc-discipline"]
+    },
+    "CARTW-007": {
+      "bank": "carlisle_sure_weld_tpo_field_install",
+      "source": "carlisle-thermoplastics-field-guide",
+      "page": 36,
+      "section": "Section 4 - Common Installation Issues (Membrane Securement)",
+      "quote": "Membrane securement must be installed at perimeters of each roof level, curbs, skylights, expansion joints and all inside deck angle changes greater than 2 inches in 12.",
+      "tags": ["membrane-securement", "perimeter", "curbs", "skylights", "expansion-joints", "2-in-12-threshold", "deck-angle-change", "uplift"]
+    },
+    "CARTW-008": {
+      "bank": "carlisle_sure_weld_tpo_field_install",
+      "source": "carlisle-thermoplastics-field-guide",
+      "page": 36,
+      "section": "Section 4 - Common Installation Issues (Membrane Securement - penetrations)",
+      "quote": "Membrane securement is also required around all pipe penetrations and sealant pockets regardless of size on mechanically fastened systems. On adhered systems only when the pipe diameter exceeds 18 inches in size or the sealant pocket exceeds 12 inches in size is membrane securement required.",
+      "tags": ["penetration-securement", "mfs-vs-adhered", "pipe-greater-than-18", "sealant-pocket-greater-than-12", "system-dependent-threshold", "uplift-stress-riser"]
+    },
+    "CARTW-009": {
+      "bank": "carlisle_sure_weld_tpo_field_install",
+      "source": "carlisle-thermoplastics-field-guide",
+      "page": 36,
+      "section": "Section 4 - Common Installation Issues (Overheated Welds)",
+      "quote": "Overheating of welds is evident when bleed-out occurs. Bleed-out is the dark underside of the membrane that begins to melt and flow. Bleed-out will not occur with Sure-Weld TPO membrane if properly welded. If overheating is evident, a piece of non-reinforced flashing may be used for a repair. The non-reinforced flashing should overlay the deficiency 2 inches in all directions and be welded 100%.",
+      "tags": ["bleed-out", "overheated-weld", "non-reinforced-flashing-repair", "2-inch-overlay", "100-percent-weld", "tpo-vs-pvc-bleedout-interpretation"]
+    },
+    "CARTW-010": {
+      "bank": "carlisle_sure_weld_tpo_field_install",
+      "source": "carlisle-thermoplastics-field-guide",
+      "page": 38,
+      "section": "Section 5 - Staging and Storage Best Practices (Pressure-Sensitive Products)",
+      "quote": "TPO pressure sensitive products to include TPO P.S. Coverstrip, Warning Strip and RUSS must not be prolonged to jobsite storage temperatures more than 90 F may affect product shelf life. ... Storage and use of TPO PS Coverstrip at temperatures below 40 F will result in a loss of adhesive tack, and in extreme cases will result in an inadequate bond to the substrate. Overnight storage must be available to keep the temperature of the TPO PS Coverstrip at a minimum of 40 F. Hot boxes for jobsite storage must be provided to maintain a minimum product temperature of 40 F. TPO PS Coverstrip must be stored in a dry area.",
+      "tags": ["ps-coverstrip", "40F-minimum", "90F-maximum", "hot-box", "overnight-storage", "adhesive-tack-loss", "warning-strip", "russ", "pressure-sensitive"]
+    },
+    "CARTW-011": {
+      "bank": "carlisle_sure_weld_tpo_field_install",
+      "source": "carlisle-thermoplastics-field-guide",
+      "page": 38,
+      "section": "Section 5 - Staging and Storage Best Practices (Membrane and Flashing - SAT TPO)",
+      "quote": "SAT TPO membrane must be installed at ambient temperatures above 50 F (10 C).",
+      "tags": ["sat-tpo", "self-adhering-technology", "50F-ambient-threshold", "install-temperature-limit", "pressure-sensitive-adhesive", "cold-weather-restriction"]
+    },
+    "CARTW-012": {
+      "bank": "carlisle_sure_weld_tpo_field_install",
+      "source": "carlisle-thermoplastics-field-guide",
+      "page": 2,
+      "section": "Section 1 - Description of Systems (Sure-Weld TPO Metal Retrofit Mechanically Fastened)",
+      "quote": "The Sure-Weld TPO Metal Retrofit Mechanically Fastened Roofing System: White, Gray and Tan Membrane Colors Available; 4', 6', 8', 10', and 12' Widths Available; 60-mil and 80-mil Thicknesses Available; Option 1 - PS RUSS Strip; Option 2 - Linear Induction Welded.",
+      "tags": ["system-design-breadth", "metal-retrofit", "mfs", "spectro-weld", "induction-welded-grid", "adhered", "sat", "ps-russ-strip-option-1", "linear-induction-welded-option-2", "section-1"]
+    },
+    "CARPV-001": {
+      "bank": "carlisle_sure_flex_pvc_field_install",
+      "source": "carlisle-thermoplastics-field-guide",
+      "page": 36,
+      "section": "Section 4 - Common Installation Issues (Reduce the chance for cold welds on PVC membranes)",
+      "quote": "When cleaning PVC it is important to allow the solvents from the PVC Membrane Cleaner to thoroughly flash-off prior to welding. This will take up to 15 minutes to occur. If this procedure is rushed the PVC membrane may exhibit cold welding. Cold welding is defined as a weld that is not properly fused together, allowing the weld area to separate after natural expansion and contraction occurs in the roofing system.",
+      "tags": ["pvc-membrane-cleaner", "15-minute-flash-off", "cold-welding", "thermal-cycling-failure", "post-install-separation", "pvc-specific-rule"]
+    },
+    "CARPV-002": {
+      "bank": "carlisle_sure_flex_pvc_field_install",
+      "source": "carlisle-thermoplastics-field-guide",
+      "page": 36,
+      "section": "Section 4 - Common Installation Issues (PVC auto-welder starting parameters)",
+      "quote": "A good starting point for welding all types and thickness of Sure-Flex PVC on auto-welders is 1,094 F at 8.9'/minute. Using the Leister V-2 welder the speed can be utilized up to 10.2'/minute.",
+      "tags": ["pvc-auto-welder", "1094F", "8.9-ft-per-minute", "leister-v2", "10.2-ft-per-minute", "tpo-vs-pvc-settings", "crew-cross-training-risk"]
+    },
+    "CARPV-003": {
+      "bank": "carlisle_sure_flex_pvc_field_install",
+      "source": "carlisle-thermoplastics-field-guide",
+      "page": 36,
+      "section": "Section 4 - Common Installation Issues (PVC bleed-out interpretation)",
+      "quote": "A proper weld for PVC will exhibit a little bit of bleed-out at the overlap step-off. Bleed-out is when the darker bottom ply actually starts to flow from the heat melting the sheet.",
+      "tags": ["bleed-out-pvc", "proper-weld-indicator", "tpo-vs-pvc-bleedout-inverted", "diagnostic-flip", "cross-trained-foreman-trap", "qc-visual-inspection"]
+    },
+    "CARPV-004": {
+      "bank": "carlisle_sure_flex_pvc_field_install",
+      "source": "carlisle-thermoplastics-field-guide",
+      "page": 36,
+      "section": "Section 4 - Common Installation Issues (aged PVC welding)",
+      "quote": "Welding PVC membranes that are 5-7 years or older category may be difficult to achieve proper fusion. You may have to utilize the bottom side of the older sheet that has not seen weathering and is generally more stable for welding.",
+      "tags": ["aged-pvc", "5-7-year-threshold", "bottom-side-weld", "re-roof-tie-in", "uv-weathering", "plasticizer-migration", "field-workaround"]
+    },
+    "CARPV-005": {
+      "bank": "carlisle_sure_flex_pvc_field_install",
+      "source": "carlisle-thermoplastics-field-guide",
+      "page": 36,
+      "section": "Section 4 - Common Installation Issues (PVC seam probing)",
+      "quote": "When probing PVC make sure the membrane is thoroughly cooled. Proceed with probing making sure the probe point is duller and has a flatter point compared to TPO probing.",
+      "tags": ["pvc-seam-probing", "duller-flatter-tip", "tpo-vs-pvc-probe-tool", "cooled-membrane", "tool-selection", "surface-scoring-risk"]
+    },
+    "CARPV-006": {
+      "bank": "carlisle_sure_flex_pvc_field_install",
+      "source": "carlisle-thermoplastics-field-guide",
+      "page": 2,
+      "section": "Section 1 - Description of Systems (Sure-Flex PVC and Sure-Flex KEE HP product families)",
+      "quote": "The Sure-Flex PVC Mechanically Fastened Roofing System: White, Gray, Tan, Light Gray, and Slate Gray Colors Available; 40.5\\\", 5', 81\\\", and 10' Widths Available; 50-mil, 60-mil, and 80-mil Thicknesses Available. The Sure-Flex KEE HP Mechanically Fastened Roofing System: White, Gray, Tan, and Light Gray Colors Available; 5' and 10' Widths Available; 50-mil, 60-mil, and 80-mil Thicknesses Available.",
+      "tags": ["sure-flex-pvc", "sure-flex-kee-hp", "product-family-comparison", "slate-gray-pvc-only", "width-availability", "seam-layout-planning", "owner-color-selection"]
+    },
+    "CARPV-007": {
+      "bank": "carlisle_sure_flex_pvc_field_install",
+      "source": "carlisle-thermoplastics-field-guide",
+      "page": 93,
+      "section": "Section 7 - Daily Procedures (Clean Up)",
+      "quote": "For Sure-Weld membrane, Weathered Membrane Cleaner can be used to clean the surface of the membrane. For Sure-Flex Membrane, PVC Membrane Cleaner can be used to clean the surface of the membrane.",
+      "tags": ["cleaner-selection", "pvc-membrane-cleaner", "weathered-membrane-cleaner", "chemistry-pairing", "clean-up", "post-install-maintenance", "section-7"]
+    },
+    "CARPV-008": {
+      "bank": "carlisle_sure_flex_pvc_field_install",
+      "source": "carlisle-thermoplastics-field-guide",
+      "page": 93,
+      "section": "Section 7 - Daily Procedures (Test Welds)",
+      "quote": "Peel the test sample apart after it has thoroughly cooled (approximately 10 minutes) and examine for a consistent 1.5 inch wide minimum weld. Delamination of the membrane from the scrim-reinforcement is an indication of a properly welded seam.",
+      "tags": ["test-weld-peel", "delamination-from-scrim", "proper-weld-indicator", "counter-intuitive", "10-minute-cool", "1.5-inch-minimum-width", "qa-inspection"]
+    },
+    "CARPV-009": {
+      "bank": "carlisle_sure_flex_pvc_field_install",
+      "source": "carlisle-thermoplastics-field-guide",
+      "page": 94,
+      "section": "Section 7 - Daily Procedures (Test Welds, seam-quality troubleshooting)",
+      "quote": "Discolored or scorched membrane - Increase speed or decrease temperature setting if membrane discolors.",
+      "tags": ["scorched-membrane", "discoloration-diagnostic", "increase-speed", "decrease-temperature", "over-heating-correction", "auto-welder-tuning"]
+    },
+    "CARPV-010": {
+      "bank": "carlisle_sure_flex_pvc_field_install",
+      "source": "carlisle-thermoplastics-field-guide",
+      "page": 2,
+      "section": "Section 1 - Description of Systems (Sure-Flex PVC and KEE HP Metal Retrofit Mechanically Fastened)",
+      "quote": "The Sure-Flex PVC and KEE HP Metal Retrofit Mechanically Fastened Roofing System: ... Option 1 - Half Sheets; Option 2 - Linear Induction Welded.",
+      "tags": ["pvc-metal-retrofit", "half-sheets-option-1", "linear-induction-welded-option-2", "tpo-vs-pvc-metal-retrofit", "ps-russ-vs-half-sheets", "bid-spec-decision", "section-1"]
     }
   }
 }

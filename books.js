@@ -94,6 +94,16 @@
       bookGroupId: "carlisle-sure-weld-tpo-reinforced",
       displayTitle: "Carlisle Sure-Weld TPO Reinforced (Bank)",
       parts: []
+    },
+    {
+      bookGroupId: "carlisle-sure-weld-tpo-field-install",
+      displayTitle: "Carlisle Sure-Weld TPO Field Install (Bank)",
+      parts: []
+    },
+    {
+      bookGroupId: "carlisle-sure-flex-pvc-field-install",
+      displayTitle: "Carlisle Sure-Flex PVC Field Install (Bank)",
+      parts: []
     }
   ];
 
