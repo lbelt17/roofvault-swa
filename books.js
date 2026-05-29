@@ -104,6 +104,16 @@
       bookGroupId: "carlisle-sure-flex-pvc-field-install",
       displayTitle: "Carlisle Sure-Flex PVC Field Install (Bank)",
       parts: []
+    },
+    {
+      bookGroupId: "nrca-roof-coating-applicator-fundamentals",
+      displayTitle: "Roof Coating Applicator Fundamentals",
+      parts: []
+    },
+    {
+      bookGroupId: "nrca-roofing-equipment-cost-fundamentals",
+      displayTitle: "Roofing Equipment Cost Fundamentals",
+      parts: []
     }
   ];
 
