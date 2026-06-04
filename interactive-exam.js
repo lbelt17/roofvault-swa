@@ -23,7 +23,7 @@
         border: 1px solid rgba(15, 23, 42, 0.12);
         background: #ffffff;
         color: #0b0d12;
-        font-size: 15px;
+        font-size: 18px;
         line-height: 1.45;
         border-radius: 10px;
         cursor: pointer;
@@ -62,7 +62,7 @@
         padding: 9px 14px;
         border: 1px solid rgba(255, 255, 255, 0.14);
         border-radius: 999px;
-        font-size: 15px;
+        font-size: 18px;
         font-weight: 650;
         cursor: pointer;
         color: rgba(255, 255, 255, 0.96);
@@ -75,7 +75,7 @@
       }
       .rv-nav:hover { filter: brightness(1.03); box-shadow: 0 10px 24px rgba(22, 121, 255, 0.30); }
       .rv-nav:active { filter: brightness(0.98); }
-      .rv-tag { font-size: 13px; color: #5b6b82; margin-top: 6px; line-height: 1.4; }
+      .rv-tag { font-size: 16px; color: #5b6b82; margin-top: 6px; line-height: 1.4; }
       .rv-why {
         background: transparent;
         border: none;
@@ -88,7 +88,7 @@
         font-weight: 600;
       }
       .rv-hint { font-size: 14px; color: #b45309; margin-top: 8px; line-height: 1.45; }
-      .rv-progress { font-size: 14px; color: #5b6b82; margin-top: 8px; line-height: 1.45; }
+      .rv-progress { font-size: 17px; color: #5b6b82; margin-top: 8px; line-height: 1.45; }
       .rv-progress strong { color: #0b0d12; font-weight: 650; }
       .rv-summary {
         border: 1px solid rgba(15, 23, 42, 0.10);
@@ -100,7 +100,7 @@
         text-align: center;
         box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
       }
-      .rv-grade-big { font-size: 34px; font-weight: 800; margin-bottom: 8px; color: #0b0d12; letter-spacing: -0.02em; }
+      .rv-grade-big { font-size: 38px; font-weight: 800; margin-bottom: 8px; color: #0b0d12; letter-spacing: -0.02em; }
       .rv-summary-text { font-size: 15px; color: #5b6b82; margin: 6px 0; line-height: 1.5; }
       .rv-summary-actions { margin-top: 16px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
     `;
