@@ -114,6 +114,26 @@
       bookGroupId: "nrca-roofing-equipment-cost-fundamentals",
       displayTitle: "Roofing Equipment Cost Fundamentals",
       parts: []
+    },
+    {
+      bookGroupId: "jm-app-roofing-systems",
+      displayTitle: "JM APP Roofing Systems",
+      parts: []
+    },
+    {
+      bookGroupId: "polyglass-technical-guide",
+      displayTitle: "Polyglass Technical Guide",
+      parts: []
+    },
+    {
+      bookGroupId: "elevate-ultraply-tpo",
+      displayTitle: "Elevate UltraPly TPO Roofing Systems",
+      parts: []
+    },
+    {
+      bookGroupId: "duro-last-maintenance",
+      displayTitle: "Duro-Last Care & Maintenance Guide",
+      parts: []
     }
   ];
 
