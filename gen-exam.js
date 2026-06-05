@@ -468,6 +468,26 @@
     return group === "nrca-roofing-equipment-cost-fundamentals";
   }
 
+  function isJmAppRoofingSystems(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "jm-app-roofing-systems";
+  }
+
+  function isPolyglassTechnicalGuide(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "polyglass-technical-guide";
+  }
+
+  function isElevateUltraplyTpo(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "elevate-ultraply-tpo";
+  }
+
+  function isDuroLastMaintenance(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "duro-last-maintenance";
+  }
+
   function bankKeyForSelection(selection) {
     if (isRwcStudyGuide(selection)) return "rwc";
     if (isRrcStudyGuide(selection)) return "rrc";
@@ -489,6 +509,10 @@
     if (isCarlisleSureFlexPvcFieldInstall(selection)) return "carlisle_sure_flex_pvc_field_install";
     if (isNrcaRoofCoatingApplicatorFundamentals(selection)) return "nrca_roof_coating_applicator_fundamentals";
     if (isNrcaRoofingEquipmentCostFundamentals(selection)) return "nrca_roofing_equipment_cost_fundamentals";
+    if (isJmAppRoofingSystems(selection)) return "jm_app_roofing_systems";
+    if (isPolyglassTechnicalGuide(selection)) return "polyglass_technical_guide";
+    if (isElevateUltraplyTpo(selection)) return "elevate_ultraply_tpo";
+    if (isDuroLastMaintenance(selection)) return "duro_last_maintenance";
     return "";
   }
 
