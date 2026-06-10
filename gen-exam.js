@@ -493,6 +493,16 @@
     return group === "ultra-thane-230-hfo-roofing";
   }
 
+  function isUltraGuard5700Hs(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "ultra-guard-5700-hs";
+  }
+
+  function isUltraGuard5700Mastic(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "ultra-guard-5700-mastic";
+  }
+
   function bankKeyForSelection(selection) {
     if (isRwcStudyGuide(selection)) return "rwc";
     if (isRrcStudyGuide(selection)) return "rrc";
@@ -519,6 +529,8 @@
     if (isElevateUltraplyTpo(selection)) return "elevate_ultraply_tpo";
     if (isDuroLastMaintenance(selection)) return "duro_last_maintenance";
     if (isUltraThane230HfoRoofing(selection)) return "ultra_thane_230_hfo_roofing";
+    if (isUltraGuard5700Hs(selection)) return "ultra_guard_5700_hs";
+    if (isUltraGuard5700Mastic(selection)) return "ultra_guard_5700_mastic";
     return "";
   }
 
