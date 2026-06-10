@@ -1,0 +1,6942 @@
+SOURCE: 2023-Technical-Guide_web.pdf
+TOTAL_PAGES: 74
+
+
+===== PAGE 1 =====
+TECHNICAL guide
+for Commercial and Residential Roofing Systems
+
+
+===== PAGE 2 =====
+
+
+
+===== PAGE 3 =====
+Table of Contents
+Policy Statement..................................................................................................................................2
+Online Specification Generators. ...............................................................................................3
+Company Overview & Locations	����������������������������������������������������������������������������������������������4
+Technologies & Innovations. .........................................................................................................6
+Low-Slope Roofing
+Product Range
+Self-Adhered membranes with ADESO® Technology	������������������������������������������������������������������������������������16
+APP (Plastomeric) Modified Bitumen Membranes	����������������������������������������������������������������������������������������18
+SBS (Elastomeric) Modified Bitumen Membranes	����������������������������������������������������������������������������������������20
+Quick ASTM Product Reference.................................................................................................................22
+Color Selection Chart for Low-Slope Modified Bitumen Cap Sheets	���������������������������������������������������������������23
+
+General Requirements & Design Criteria
+Low-Slope General Requirements...............................................................................................................25
+Requirements for Low-Slope Roof Decks......................................................................................................28
+Requirements for Thermal Insulation on Low-Slope Roofing	���������������������������������������������������������������������������30
+Low-Slope Membrane Installation. .............................................................................................................30
+Slope and Fastening Requirements. ...........................................................................................................33
+Re-Cover or Re-Roofing. ...........................................................................................................................34
+Test Approvals and Classifications.............................................................................................................35
+Polyglass Tiered Contractor Program. ........................................................................................................35
+Polyglass Warranty Program.....................................................................................................................35
+
+Guide Specifications
+2-Ply Roof Systems...................................................................................................................................36
+3-Ply Roof Systems...................................................................................................................................40
+
+Roofing Details.........................................................................................................................................44
+
+Steep-Slope Roofing
+Product Range
+Polystick® Roof Underlayments. .................................................................................................................60
+
+General Requirements & Design Criteria
+Low-Slope General Requirements...............................................................................................................63
+Steep-Slope Roofing Materials. .................................................................................................................63
+Steep-Slope Membrane Installation............................................................................................................64
+
+Guide Specifications
+1-Ply Roof Systems...................................................................................................................................66
+2-Ply Roof Systems...................................................................................................................................69
+
+Roofing Details.........................................................................................................................................71
+*While all information printed in this guide is accurate at time of publication, such information may change at any time
+with or without notice. For the most up to date information and data, please visit our website at polyglass.us.
+
+1
+
+
+===== PAGE 4 =====
+Policy Statement
+Polyglass products are intended for use in low-slope and steepslope roofing applications, below-grade waterproofing and lining
+systems and liquid applied solutions. The general requirements
+and guide specifications in this manual are intended to assist
+architects, engineers, specifiers, owners and contractors in the
+design and construction process. This information should be used
+in conjunction with the recommendations provided by such bodies
+as the National Roofing Contractors Association (NRCA) in their
+most current Roofing & Waterproofing Manual, the Asphalt Roofing
+Manufacturers Association (ARMA), the International Building Code
+(IBC) and any other appropriate national or local codes (or code
+enforcement agencies), as well as pertinent recommendations of any
+other applicable third-party, Industry associations or manufacturers.
+Polyglass offers this information as a guide for the
+satisfactory application of Polyglass products, and accepts no
+responsibility or liability for the design and construction of the
+building, roof deck, roof loads, wind designs or uses of the
+products in applications not contained within the published
+literature and specifications. Polyglass will not be responsible
+for the performance of its products when they are altered
+or damaged in anyway as a result of design, construction
+procedures, inclusions or omissions, and/or acts of God.
+
+Applicability
+Though Polyglass Modified Bitumen Roofing Systems are
+applicable for many residential, commercial and industrial
+roofing applications they may not be appropriate for uses
+other than those contained herein. For any application or
+use not covered here please contact the Polyglass Technical
+Services Department. Exceptions to these criteria shall have no
+validity unless provided in writing by an authorized, technically
+qualified Polyglass Technical Services representative.
+Polyglass materials are not to be applied, without
+special consideration and written approval (as
+described above) by our Technical Services Department,
+where any of the following conditions exist:
+• Roofs subject to chemical or by-product discharge.
+• Buildings with large openings in a wall (greater than 10%
+of the wall surface) which could be left open in a storm.
+• Roofs subject to regular traffic.
+• Roofs subject to positive pressure situations such as:
+pressurized buildings, air-infiltrating decks, canopies,
+overhangs, airplane hangars, distribution centers, etc.
+• Cold storage or freezer buildings or buildings
+with abnormally high interior temperatures.
+• Swimming pools or other high humidity interior’s (laundries, etc.)
+Determination of satisfactory structural conditions for
+supporting the load of the completed roof installation as well
+as any other anticipated loads are the owner’s, owner ‘s
+engineer and/or architect ‘s responsibility, not Polyglass’.
+For roofs subject to code requirements or special job conditions,
+contact Polyglass Technical Services Department, a design
+professional and the local code official, prior to bidding.
+
+2
+
+Polyglass Guide Specifications are provided for the purpose
+of meeting the minimum requirements necessary to issue a
+Polyglass Warranty. Polyglass recommends that a design
+professional be consulted to assure proper design, installation,
+conformance to building codes, applicable wind designs, etc.
+
+Safety
+Refer to the General requirements of this manual, sections of
+important considerations from the NRCA “HARK” Manual
+regarding safety requirements/recommendations, as well as
+any other industry available documents which may address
+topics of concern with respect to safety, prior to the application
+of any roofing system. This manual is offered in good faith to
+support the professionally trained roofing contractor and others
+in the building/construction process, in making decisions with
+regard to use of, but not limited to, Polyglass products. Please
+note, although highly suggested herein for guidance, it is not
+an all-encompassing safety manual or training manual.
+
+Phased Construction
+Phased construction is a practice which is not recommended by
+NRCA (National Roofing Contractors Association). However,
+it is acknowledged that certain scheduling restrictions in new
+construction may require flexibility in construction. This may be in
+order to temporarily waterproof buildings and to avoid damage to,
+or impairment of, the completed roof membrane. For these situations
+Polyglass recommends the installation of a temporary roof as
+described in the NRCA “HARK”. Polyglass membranes shall not be
+left “open” with regards to phased or over-night tie-ins, to ensure no
+water intrudes into a Polyglass system during any type of phasing.
+
+Modifications
+Any changes in, or variance, of the roofing system as
+published or manufactured by Polyglass, must be approved in
+writing by Polyglass, prior to the application of the Polyglass
+products. Polyglass at its discretion deserves the right to
+change or modify any of the information, recommendations,
+or specifications in its publication, without prior notice.
+
+Warranty
+For statements relating to the warranties please refer to the
+specific warranty (type). On non-warranted roofs, Polyglass
+acts only as the seller of materials, and has no control over the
+conditions under which the products are applied, whether by a
+Polyglass minimal tiered level Registered Contractor (or greater)
+or by another Contractor. Under these conditions, Polyglass
+assumes no responsibility for the performance of the roof beyond
+the obligation to manufacture and ship quality products that
+comply with published and ISO Certified Polyglass standards.
+Further, Polyglass assumes no responsibility for any damage
+resulting from use of the products in any improper manner.
+
+
+===== PAGE 5 =====
+Online Specifications Generators
+Polyglass is listed! Find us on these Spec Generators online.
+
+bsdspeclink.com
+
+arcat.com
+
+avitru.com/specifications/
+masterspec/
+
+For questions contact Polyglass Technical services Design Specialist at
+technical@polyglass.com
+For full specifications on systems listed here, visit polyglass.us
+
+Certifications
+Polyglass SBS & APP membranes meet or exceed industry code approvals:
+•
+•
+•
+•
+
+UL Classified
+FM Approved
+ICC-ES
+Miami-Dade County Approved
+
+• Florida Building Code
+• Texas Department of Insurance
+• CGSB
+
+• Canadian Standards Association
+• RCABC RoofStar
+• CRRC
+
+TM
+
+Full System Warranties available when installed by a Polyglass Preferred
+and Quantum Contractor. For more information contact info@polyglass.com.
+
+3
+
+
+===== PAGE 6 =====
+About Polyglass
+Polyglass is an ISO 9001:2015 Certified, leading manufacturer of modified bitumen roofing and waterproofing
+membranes and roof coatings for low- and steep-slope applications with over 30 years of experience in North America.
+Committed to adding value through innovation, Polyglass utilizes the most technologically advanced manufacturing
+process in the industry with six state-of-the-art manufacturing facilities- five in North America and one in Italy which
+services all of Europe.
+Since 2008, Polyglass has been a part of the Mapei® Group, a multi-billion dollar manufacturer in the building industry
+with over 31 research centers and more than 83 production facilities in 36 countries.
+Polyglass prides itself in innovative and quality roofing products which exceed the needs and expectations of its
+customers all around the world. This commitment is demonstrated daily by the people that work for Polyglass where
+the customers’ needs always come first.
+
+Research & Development
+As a leading company in the modified bitumen membrane waterproofing and roofing products category, Polyglass has
+consistently innovated throughout its history. Our patent portfolio includes but not limited to: “ADESO®” - a groundbreaking
+self-adhered, dual-compound membrane, “SEALLap® ULTRA” - an enhanced bonding method for self-adhered membranes,
+and “Polyfresko®” an unsurpassed energy savings membrane that delivers exceptional solar reflectance.
+Our multidisciplinary Research & Development team is comprised of Ph.Ds., chemists, material scientists and chemical,
+civil and mechanical engineers that interact with other departments to play a critical role in the development of new
+products, processes, innovations and ideas. R&D contributes to achieving our company’s goals through the optimization
+of the manufacturing process, by implementing cost effective and improved installation techniques and by controlling
+the selection and approval of raw materials ensuring our customers receive quality products at an exceptional value that
+meet and exceed environmental, health and safety regulations.
+The Research & Development department embraces and understands the many difficulties of meeting the demands of the
+building and waterproofing industries and is well equipped to meet these future challenges. Our research laboratories
+are equipped with cutting edge analytical and physical testing equipment to push the boundaries in the development of
+novel and innovative products and technologies that better serve our customer’s needs and expectations.
+4
+
+
+===== PAGE 7 =====
+7
+3
+
+2
+6
+
+4
+
+5
+
+1
+
+Our Locations
+1.
+
+Deerfield Beach, FL
+Polyglass USA, Inc.
+North American Headquarters
+
+2.
+
+Fernley, NV
+Manufacturing Facility
+
+3.
+
+Hazleton, PA
+Manufacturing Facility
+
+6.
+
+Phoenix, AZ
+Manufacturing Facility
+
+4.
+
+Winter Haven, FL
+Manufacturing Facility
+
+7.
+
+5.
+
+Waco, TX
+Manufacturing Facility
+
+Ponte di Piave, Italy
+Polyglass SpA European
+Headquarters
+
+5
+
+
+===== PAGE 8 =====
+What is ADESO® Technology?
+ADESO Technology revolutionized the modified bitumen industry by manufacturing dual-compound self-adhered (SA)
+membranes using a true APP or SBS formulation on the top weathering side and an aggressive self-adhered formulation on
+the bottom side of the reinforcement. ADESO Technology integrates patented features that enhance lap sealing and allows
+product design with a variety of customized surfaces.
+
+Feature & Benefits
+• Labor savings with fast and clean installation
+• Safe, no open flame application
+• Superior watertight sealing
+• Versatile roof systems for commercial and residential projects
+• Long-term warranty protection
+• Adheres to a variety of substrates
+
+INNOVATIONS
+
+• Polyester or fiberglass reinforced
+• Polar products available for cold weather application (25oF – 60oF)
+
+Dual Compound
+
+SEALLap® ULTRA
+
+Combines a true APP or SBS compound
+
+Instant side lap bond, tested stronger than
+
+top weathering surface with an aggressive self-
+
+all other application methods. This SA to SA
+
+adhesive compound on the bottom surface.
+
+bond provides a completely monolithic seal.
+
+Multiple Surface Solutions
+
+FASTLap®
+
+Provides solution for any roofing system
+
+Save time and labor with granule free
+
+need, allows a wide variety of surfacing
+
+end laps.
+
+options
+
+Competitor Granulated Cap Sheet
+
+Polyglass FASTLap Granule Free End Laps
+
+Product List
+Polyflex® SA P
+
+Elastobase® SA
+
+Elastoflex SA V Flashing Strips
+
+Polystick® XFR
+
+Polyflex SA P FR
+
+Elastoflex SA Base
+
+Elastoflex SA V Polar Base
+
+Polystick® MTS Plus
+
+Polyfresko® G SA
+
+Elastoflex SA V
+
+Elastoflex SA P
+
+Polystick® TU PLUS
+
+Polyfresko G SA FR
+
+Elastoflex SA V FR
+
+Elastoflex SA P FR
+
+Polystick® TU MAX
+
+Elastoflex SA V Plus
+
+Elastoflex SA P Polar Cap®
+
+Polystick® TU P
+
+Elastoflex SA V Plus FR
+
+Polyfresko G SBS SA
+
+Polystick® IR-Xe
+
+®
+
+®
+
+®
+
+®
+
+Polyfresko® G SBS SA FR
+
+6
+
+
+===== PAGE 9 =====
+7
+
+3
+1
+
+4
+5
+
+2
+
+6
+
+1. SEALLap® ULTRA
+2. FASTLap®
+3. Multiple Surface Solutions
+4. True APP or SBS
+5. Reinforcement
+6. Self-Adhered compound
+7. Release Film
+7
+
+
+===== PAGE 10 =====
+What is CURE Technology®?
+CURE Technology is a patented thin film technology, resulting in a modified bitumen membrane with greatly enhanced
+performance benefits without compromising the ease of installation and overall value expected from Polyglass products.
+
+Features & Benefits
+
+• Minimal scorching with torch application
+
+• Featured on all Polyfresko® cap sheets
+
+• Impact, scuff and stain resistant
+
+• Vastly improved surface reflectivity and
+
+• Mold and fungus resistant
+
+membrane emissivity
+
+• Solvent-free and environmentally friendly
+
+• Exceptional granule adhesion
+• Ultraviolet stabilizers resulting in greater
+
+INNOVATIONS
+
+durability and longevity
+
+Stain-Free
+
+Granule Adhesion
+
+Minimal staining on the surface of the cap
+
+Superior granule adhesion, minimal loss of
+
+sheet; significantly resists discoloration.
+
+granules when exposed to foot traffic and
+
+Maintains its color integrity over time.
+
+other elements.
+
+Reflectivity
+
+Thin Film Technology
+
+Initial reflectivity ratings above industry
+
+Minimal surface finishing while
+
+standards, maintains reflectivity
+
+maintaining granule appearance,
+
+performance over time.
+
+increased durability and improved
+reflectivity.
+
+Product List
+Polyfresko® G
+
+Polyfresko® G SBS
+
+Polyfresko® G SA
+
+Polyfresko G FR
+
+Polyfresko G SBS FR
+
+Polyfresko® G SA FR
+
+Polyfresko® G HP FR (Type II)
+
+Polyfresko® G SBS HP FR (Type II)
+
+Polyfresko® G SBS SA
+
+®
+
+®
+
+Polyfresko® G SBS SA FR
+
+8
+
+
+===== PAGE 11 =====
+®
+
+Why
+
+?
+
+with
+Highly Reflective, Energy Efficient
+Initial reflectivity above industry standards, eligible for LEED®
+points as part of qualified cool roof system
+
+Durability
+Premium membrane construction for superior durability
+
+Protection
+As part of a Polyglass multi-ply system, Class A Fire Rating
+with extended warranties available
+
+Safe and secure
+Enhanced performance benefits without compromising the
+ease of installation
+
+Stain-free
+Polyfresko will not discolor over time, resistant to surface
+blemishes and dirt pickup
+
+Approved Substrates
+• Various base membranes • DensDeck®
+• Concrete
+• SECUROCK
+• Refer to Polyglass published documentation for complete list
+of approved substrates.
+
+Code Approvals*
+• ASTM
+• UL Classified
+• FM Approved
+• ICC-ES
+• Florida Building Code
+• Miami-Dade County Approved
+• Texas Department of Insurance
+• CRRC Listed
+• Can be used to comply with 2016 Title 24 Part 6
+Cool Roof Requirements
+*See Product Data Sheet for product specific approvals.
+
+Rated Product ID #: 0616-0011a
+Solar Reflectance
+Thermal Emittance
+
+Initial
+0.77
+0.90
+
+Aged
+0.68
+0.88
+
+The ratings above are subject to CRRC rating program conditions,
+requirements, and limitations. Visit coolroofs.org for important
+information and disclaimers about CRRC rating conditions,
+requirements, and limitations.
+
+Solar Reflectance Index (SRI) Initial: 96 Weathered: 83
+
+9
+
+
+===== PAGE 12 =====
+HIGH WIND RESISTANT ROOF ASSEMBLY
+Polyglass’ Velociflex is a redundant, multi-ply roofing system offering multiple installation and assembly options. The base
+sheet is “loose-laid” and mechanically attached in the side laps, which allows for fast, efficient installation. Velociflex systems
+were independently tested providing for high speed wind protection up to 270 psf (pounds per square foot).
+
+INNOVATIONS
+
+The Velociflex Advantage
+Meets ‘Wind Load’ Performance
+Multiple base sheet and attachment pattern options, can exceed specification requirements
+
+Highly Reflective ‘Kool Roof’ Options
+When installed with a Polyfresko® G cap sheet, the system can be used to comply with 2016 Title 24 Part 6
+Cool Roof Requirements and achieves Solar Reflective Index: 96
+
+Long-Term Performance
+Redundant, multi-ply, modified bitumen roof system reinforced with high strength polyester; great for new roofing,
+re-roofing and recover systems.
+
+Tested & Certified
+UL Classified for use in Class A roofs, as listed in the latest UL “Roofing Materials and Systems Director,"
+and Florida Building Code approved
+
+Watertight System
+Acts as a temporary roof once base sheet seams are heat welded
+
+Self Venting System
+“Loose-laid” base sheet reduces chances of blistering from substrate to membrane
+
+Economical
+Base sheet is fastened in the seam only, reducing material and labor costs
+
+10
+
+
+===== PAGE 13 =====
+Velociflex System Wind Ratings
+Mechanically Fastened Base Sheets with
+Heat Welded Cap Sheets
+Polyglass
+Base Sheet
+
+Attachment
+Pattern*
+
+Wind Uplift
+Resistance (psf)
+
+Elastoflex S6
+
+12" o.c.
+
+90
+
+Elastoflex S6
+
+6" o.c.
+
+120
+
+Elastoflex S6 HP
+
+18" o.c.
+
+120
+
+Elastoflex S6 HP
+
+12" o.c.
+
+165
+
+Elastoflex S6 HP
+
+6" o.c.
+
+270
+
+Polyflex
+
+12" o.c.
+
+165
+
+*Attached within the 5" wide side lap (torch-sealed or heat-welded).
+Contact Polyglass Technical Support for approved fasteners and plates
+for desired wind uplift.
+
+Mechanically Fastened Base Sheets with
+Cold Applied Cap Sheets**
+Polyglass
+Base Sheet
+
+Attachment
+Pattern*
+
+Wind Uplift
+Resistance (psf)
+
+Elastoflex S6 HP
+
+18" o.c.
+
+120
+
+Elastoflex S6 HP
+
+12" o.c.
+
+165
+
+**Cold Applied Cap Sheets adhered with
+Polyglass PG 350 adhesive or PolyPlus® 35.
+
+Polyglass Base Sheet
+(mechanically attached in-the-seam)
+
+Polyglass Cap Sheet
+Heat welded or cold applied
+
+Heat-Welded Side Laps
+Approved Fasteners and Plates
+
+Roof Deck
+Heavy Duty Steel
+or Concrete
+
+Insulation
+POLYTHERM® Polyisocyanurate
+(attachment same as base sheet)
+11
+
+
+===== PAGE 14 =====
+POLYFLASH®
+
+1C
+
+One Part
+Flashing
+Compound
+
+What is PolyFlash® 1C?
+PolyFlash 1C is a one-component, moisture-cure, silane
+
+INNOVATIONS
+
+modified polyurethane, white flashing compound designed
+for sealing and waterproofing roofing details, flashings,
+and penetrations on a wide variety of roofing systems.
+When combined with PolyBrite® reinforcing polyester fabric
+this product can permanently solve typical and challenging
+flashing needs. Compatible for use over asphaltic
+membranes, polymer modified membranes (APP, SBS),
+conventional BUR, most Polyglass roofing membranes.
+
+Features & Benefits
+• Unique ability to be applied as an immediate,
+but temporary emergency leak repair over wet
+or damp surfaces
+• High tensile strength
+• Crack bridging capabilities
+• Excellent early rain resistance
+• Excellent waterproofing: <1.0 US perms
+• UV resistant
+• Minimal odor
+• Durable
+• Extensive application ambient temperature range
+(40°F to 122°F)
+• User-friendly application
+• Seals masonry, wood, curbs or vents, specialty
+gypsum sheathing products, roof drains, pitch pans,
+unusually shaped penetrations
+
+12
+
+
+===== PAGE 15 =====
+What is Burn-Shield Technology®?
+Polyglass’ patent pending Burn-Shield Technology® offers fire resistance
+capable of achieving the highest level of fire ratings.
+
+Featured on Polyglass' Polystick XFR
+Polyglass Polystick XFR is a dual-purpose fire resistant and self-adhered
+waterproofing underlayment, combining two patented technologies to
+achieve the highest levels of performance.
+• Robust 80 mils (2 mm) of waterproofing rubberized asphalt
+• Utilizes ADESO® Dual-Compound Self-Adhered Technology
+• Approved for applications up to 265°F
+
+“Fire has met its match!”
+
+13
+
+
+===== PAGE 16 =====
+LOW-SLOPE
+
+14
+
+
+===== PAGE 17 =====
+15
+
+
+===== PAGE 18 =====
+DETAILS
+
+SPECIFICATIONS
+
+GENERAL
+REQUIREMENTS
+
+PRODUCT
+RANGE
+
+LOW-SLOPE
+
+Product Range
+
+16
+
+Self-Adhered membranes with ADESO® Technology
+Modifier
+
+Mat
+
+ASTM
+
+Basic Use
+
+Top
+Surface
+
+Bottom
+Surface
+
+Polyflex® SA P
+
+APP
+
+Polyester
+
+D6222
+
+Cap
+
+Granules
+
+Release Film
+
+Polyflex® SA P FR
+
+APP
+
+Polyester
+
+D6222
+
+Cap
+
+Granules
+
+Release Film
+
+Polyfresko® G SA
+
+APP
+
+Polyester
+
+D6222
+
+Cap
+
+Granules
+
+Release Film
+
+Polyfresko® G SA FR
+
+APP
+
+Polyester
+
+D6222
+
+Cap
+
+Granules
+
+Release Film
+
+Elastobase® SA
+
+SBS
+
+Fiberglass
+
+D1970; D4601
+
+Base
+
+Film
+
+Release Film
+
+Elastoflex SA Base
+
+SBS
+
+Polyester
+
+D6164
+
+Base
+
+Film
+
+Release Film
+
+Elastoflex SA V
+
+SBS
+
+Fiberglass
+
+D1970; D6163
+
+Base/Interply
+
+Film
+
+Release Film
+
+Elastoflex SA V FR
+
+SBS
+
+Fiberglass
+
+D1970; D6163
+
+Base/Interply
+
+Film
+
+Release Film
+
+Elastoflex SA V Plus
+
+SBS
+
+Fiberglass
+
+D6163
+
+Base/Interply
+
+Film
+
+Release Film
+
+Elastoflex SA V Plus FR
+
+SBS
+
+Fiberglass
+
+D6163
+
+Base/Interply
+
+Film
+
+Release Film
+
+Elastoflex SA V Polar Base®
+
+SBS
+
+Fiberglass
+
+D1970; D6163
+
+Base/Interply
+
+Film
+
+Release Film
+
+Elastoflex SA P
+
+SBS
+
+Polyester
+
+D6164
+
+Cap
+
+Granules
+
+Release Film
+
+Elastoflex SA P FR
+
+SBS
+
+Polyester
+
+D6164
+
+Cap
+
+Granules
+
+Release Film
+
+Elastoflex SA P Polar Cap®
+
+SBS
+
+Polyester
+
+D6164
+
+Cap
+
+Granules
+
+Release Film
+
+Polyfresko® G SBS SA
+
+SBS
+
+Polyester
+
+D6164
+
+Cap
+
+Granules
+
+Release Film
+
+Polyfresko® G SBS SA FR
+
+SBS
+
+Polyester
+
+D6164
+
+Cap
+
+Granules
+
+Release Film
+
+Product Name
+
+
+===== PAGE 19 =====
+Product Range
+
+Length
+
+Width
+
+Rolls/
+Pallet
+
+Self-Adhered
+
+100 ft2 (9.3 m2)
+
+89 lbs (40 kg)
+
+142 mils (3.6 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Self-Adhered
+
+100 ft2 (9.3 m2)
+
+89 lbs (40 kg)
+
+142 mils (3.6 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Self-Adhered
+
+100 ft2 (9.3 m2)
+
+90 lbs (41 kg)
+
+160 mils (4.0 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Self-Adhered
+
+100 ft2 (9.3 m2)
+
+90 lbs (41 kg)
+
+160 mils (4.0 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Self-Adhered
+
+200 ft2 (18.5 m2)
+
+86 lbs (39 kg)
+
+65 mils (1.65 mm)
+
+65'8" (20 m)
+
+39 3/8" (1 m)
+
+25
+
+Self-Adhered
+
+150 ft2 (13.9 m2)
+
+94 lbs (43 kg)
+
+100 mils (2.5 mm)
+
+49' 3" (15 m)
+
+39 3/8" (1 m)
+
+20
+
+Self-Adhered
+
+200 ft2 (18.5 m2)
+
+94 lbs (43 kg)
+
+80 mils (2.0 mm)
+
+65'8" (20 m)
+
+39 3/8" (1 m)
+
+25
+
+Self-Adhered
+
+200 ft2 (18.5 m2)
+
+94 lbs (43 kg)
+
+80 mils (2.0 mm)
+
+65'8" (20 m)
+
+39 3/8" (1 m)
+
+25
+
+Self-Adhered
+
+150 ft2 (13.9 m2)
+
+92 lbs (42 kg)
+
+100 mils (2.5 mm)
+
+49'3" (15 m)
+
+39 3/8" (1 m)
+
+20
+
+Self-Adhered
+
+150 ft2 (13.9 m2)
+
+92 lbs (42 kg)
+
+100 mils (2.5 mm)
+
+49'3" (15 m)
+
+39 3/8" (1 m)
+
+20
+
+Self-Adhered
+
+200 ft2 (18.5 m2)
+
+95 lbs (43 kg)
+
+80 mils (2.0 mm)
+
+65'8" (20 m)
+
+39 3/8" (1 m)
+
+20
+
+Self-Adhered
+
+100 ft2 (9.3 m2)
+
+84 lbs (38 kg)
+
+140 mils (3.5 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Self-Adhered
+
+100 ft2 (9.3 m2)
+
+84 lbs (38 kg)
+
+140 mils (3.5 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Self-Adhered
+
+100 ft2 (9.3 m2)
+
+90 lbs (41 kg)
+
+140 mils (3.5 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Self-Adhered
+
+100 ft2 (9.3 m2)
+
+88 lbs (40 kg)
+
+142 mils (3.6 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Self-Adhered
+
+100 ft2 (9.3 m2)
+
+88 lbs (40 kg)
+
+142 mils (3.6 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+UL
+
+SPECIFICATIONS
+
+Nominal Thickness
+
+GENERAL
+REQUIREMENTS
+
+Weight
+
+PRODUCT
+RANGE
+
+Net Coverage
+(Approx)
+
+LOW-SLOPE
+
+Application
+Method
+
+DETAILS
+17
+
+
+===== PAGE 20 =====
+LOW-SLOPE
+
+Product Range
+
+APP (Plastomeric) Modified Bitumen Membranes
+APP modified asphalt roofing membranes, reinforced with polyester and/or fiberglass mat offer excellent tensile strength and
+dimensional stability. Polyglass APP membranes can be heat-welded and are designed to be applied directly over approved
+substrate or as part of a multi-ply system.
+
+Modifier
+
+Mat
+
+ASTM
+
+Basic Use
+
+Top
+Surface
+
+Bottom
+Surface
+
+Polybase V
+
+APP
+
+Fiberglass
+
+D6509
+
+Base
+
+Film
+
+Film
+
+Polybond®
+
+APP
+
+Polyester
+
+D6222
+
+Base/Interply/Cap
+
+Sand
+
+Film
+
+Polybond® G
+
+APP
+
+Polyester
+
+D6222
+
+Cap
+
+Granules
+
+Film
+
+Polyflex®
+
+APP
+
+Polyester
+
+D6222
+
+Base/Interply/Cap
+
+Sand
+
+Film
+
+Polyflex® (Talc Smooth)
+
+APP
+
+Polyester
+
+D6222
+
+Base/Interply/Cap
+
+Talc
+
+Film
+
+Polyflex® 5.0
+
+APP
+
+Polyester
+
+D6222
+
+Base/Interply/Cap
+
+Sand
+
+Film
+
+Polyflex® G
+
+APP
+
+Polyester
+
+D6222
+
+Cap
+
+Granules
+
+Film
+
+Polyflex® G FR
+
+APP
+
+Polyester
+
+D6222
+
+Cap
+
+Granules
+
+Film
+
+Polyflex® G HP
+
+APP
+
+Polyester
+
+D6222, Type II
+
+Cap
+
+Granules
+
+Film
+
+Polyflex® G HP FR
+
+APP
+
+Polyester
+
+D6222, Type II
+
+Cap
+
+Granules
+
+Film
+
+Modibond® G FR
+
+APP
+
+Polyester
+
+D6222
+
+Cap
+
+Granules
+
+Film
+
+Polyfresko® G
+
+APP
+
+Polyester
+
+D6222
+
+Cap
+
+Granules
+
+Film
+
+Polyfresko® G FR
+
+APP
+
+Polyester
+
+D6222
+
+Cap
+
+Granules
+
+Film
+
+Polyfresko® G HP FR
+
+APP
+
+Polyester
+
+D6222, Type II
+
+Cap
+
+Granules
+
+Film
+
+DETAILS
+
+SPECIFICATIONS
+
+GENERAL
+REQUIREMENTS
+
+PRODUCT
+RANGE
+
+Product Name
+
+18
+
+
+===== PAGE 21 =====
+Product Range
+
+LOW-SLOPE
+
+Nominal Thickness
+
+Length
+
+Width
+
+Rolls/
+UL
+Pallet
+
+Heat Weld/
+Mechanically Attached
+
+200 ft2 (18.5 m2)
+
+111 lbs (51 kg)
+
+80 mils (2.0 mm)
+
+65'8" (20 m)
+
+39 3/8" (1 m)
+
+20
+
+Heat Weld
+
+100 ft2 (9.3 m2)
+
+90 lbs (41 kg)
+
+145 mils (3.7 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+23
+
+Heat Weld
+
+100 ft2 (9.3 m2)
+
+100 lbs (45 kg)
+
+160 mils (4.0 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Heat Weld/
+Mechanically Attached
+
+100 ft2 (9.3 m2)
+
+102 lbs (46 kg)
+
+160 mils (4.0 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+23
+
+Heat Weld
+
+100 ft2 (9.3 m2)
+
+88 lbs (40 kg)
+
+155 mils (3.9 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+23
+
+Heat Weld
+
+100 ft2 (9.3 m2)
+
+123 lbs (56 kg)
+
+200 mils (5.0 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Heat Weld
+
+100 ft2 (9.3 m2)
+
+115 lbs (52 kg)
+
+180 mils (4.5 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Heat Weld
+
+100 ft2 (9.3 m2)
+
+117 lbs (53 kg)
+
+180 mils (4.5 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Heat Weld
+
+100 ft2 (9.3 m2)
+
+110 lbs (50 kg)
+
+180 mils (4.5 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Heat Weld
+
+100 ft2 (9.3 m2)
+
+110 lbs (50 kg)
+
+180 mils (4.5 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Heat Weld
+
+100 ft2 (9.3 m2)
+
+106 lbs (48 kg)
+
+160 mils (4.0 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Heat Weld
+
+100 ft2 (9.3 m2)
+
+110 lbs (50 kg)
+
+165 mils (4.2 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Heat Weld
+
+100 ft2 (9.3 m2)
+
+117 lbs (53 kg)
+
+165 mils (4.2 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Heat Weld
+
+100 ft2 (9.3 m2)
+
+116 lbs (53 kg)
+
+173 mils (4.4 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+SPECIFICATIONS
+
+Weight
+
+GENERAL
+REQUIREMENTS
+
+Net Coverage
+(Approx)
+
+PRODUCT
+RANGE
+
+Application
+Method
+
+DETAILS
+19
+
+
+===== PAGE 22 =====
+Product Range
+
+DETAILS
+
+SPECIFICATIONS
+
+GENERAL
+REQUIREMENTS
+
+PRODUCT
+RANGE
+
+LOW-SLOPE
+
+SBS (Elastomeric) Modified Bitumen Membranes
+
+20
+
+SBS modified asphalt roofing membranes, reinforced with polyester and/or fiberglass mat, offer superior flexibility, excellent tensile
+strength and dimensional stability. Polyglass’ SBS modified bitumen membranes are designed to be part of a multi-ply roof system.
+
+Modifier
+
+Mat
+
+ASTM
+
+Basic Use
+
+Top
+Surface
+
+Bottom
+Surface
+
+Modibase®
+
+SBS
+
+Fiberglass
+
+D4601
+
+Base/Interply
+
+Sand
+
+Sand
+
+Elastovent®
+
+SBS
+
+Fiberglass
+
+D4897
+
+Base (Venting)
+
+Sand
+
+Granules
+
+Elastobase® V
+
+SBS
+
+Fiberglass
+
+D6163
+
+Base
+
+Film/Sand
+
+Film/Sand
+
+Elastobase® P
+
+SBS
+
+Polyester
+
+D6164
+
+Base
+
+Film/Sand
+
+Film/Sand
+
+Elastoflex S6
+
+SBS
+
+Polyester
+
+D6164
+
+Base/Interply
+
+Film/Sand
+
+Film/Sand
+
+Elastoflex S6 HP
+
+SBS
+
+Polyester
+
+D6164, Type II
+
+Base/Interply
+
+Film/Sand
+
+Film/Sand
+
+Elastoflex S6 G
+
+SBS
+
+Polyester
+
+D6164
+
+Cap
+
+Granules
+
+Film/Sand
+
+Elastoflex S6 G FR
+
+SBS
+
+Polyester
+
+D6164
+
+Cap
+
+Granules
+
+Film/Sand
+
+Elastoflex S6 G HP
+
+SBS
+
+Polyester
+
+D6164, Type II
+
+Cap
+
+Granules
+
+Film/Sand
+
+Elastoflex S6 G HP FR
+
+SBS
+
+Polyester
+
+D6164, Type II
+
+Cap
+
+Granules
+
+Film/Sand
+
+Elastoflex V
+
+SBS
+
+Fiberglass
+
+D6163
+
+Base/Interply
+
+Film/Sand
+
+Film/Sand
+
+Elastoflex V HP
+
+SBS
+
+Fiberglass
+
+D6163, Type II
+
+Base/Interply
+
+Film
+
+Film
+
+Elastoflex V 22
+
+SBS
+
+Fiberglass
+
+D6163
+
+Base/Interply
+
+Film/Sand
+
+Film/Sand
+
+Elastoflex V G
+
+SBS
+
+Fiberglass
+
+D6163
+
+Cap
+
+Granules
+
+Sand
+
+Elastoflex V G FR
+
+SBS
+
+Fiberglass
+
+D6163
+
+Cap
+
+Granules
+
+Film/Sand
+
+Elastoflex V G HP FR
+
+SBS
+
+Fiberglass
+
+D6163, Type II
+
+Cap
+
+Granules
+
+Film
+
+Elastoshield® TS
+
+SBS
+
+Polyester
+
+D6164
+
+Base/Interply
+
+Sand
+
+Film
+
+Elastoshield® TS G
+
+SBS
+
+Polyester
+
+D6164
+
+Cap
+
+Granules
+
+Film/Sand
+
+Elastoshield® TS G FR
+
+SBS
+
+Polyester
+
+D6164
+
+Cap
+
+Granules
+
+Film/Sand
+
+Polyfresko® G SBS
+
+SBS
+
+Polyester
+
+D6164
+
+Cap
+
+Granules
+
+Film
+
+Polyfresko® G SBS FR
+
+SBS
+
+Polyester
+
+D6164
+
+Cap
+
+Granules
+
+Film
+
+Polyfresko® G SBS HP FR
+
+SBS
+
+Polyester
+
+D6164, Type II
+
+Cap
+
+Granules
+
+Film
+
+Product Name
+
+
+===== PAGE 23 =====
+Product Range
+
+Width
+
+Rolls/
+UL
+Pallet
+
+Hot Mop, Cold Process,
+Mechanically Attached
+
+300 ft2 (28 m2)
+
+78 lbs (35 kg)
+
+50 mils (1.3 mm)
+
+108' (33 m)
+
+36" (0.914 m)
+
+20
+
+Hot Mop, Mechanically Attached
+
+100 ft2 (9.3 m2)
+
+79 lbs (36 kg)
+
+130 mils (3.3 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+30
+
+Heat Weld, Hot Mop, Cold Process,
+Mechanically Attached
+
+200 ft2 (18.5 m2)
+
+106 lbs (48 kg)
+
+80 mils (2.0 mm)
+
+65'8" (20 m)
+
+39 3/8" (1 m)
+
+20
+
+Heat Weld, Hot Mop, Cold Process,
+Mechanically Attached
+
+200 ft2 (18.5 m2)
+
+100 lbs (45 kg)
+
+87 mils (2.2 mm)
+
+65'8" (20 m)
+
+39 3/8" (1 m)
+
+20
+
+Heat Weld, Hot Mop, Cold Process,
+Mechanically Attached
+
+100 ft2 (9.3 m2)
+
+80 lbs (36 kg)
+
+118 mils (3.0 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+25
+
+Heat Weld, Hot Mop, Cold Process,
+Mechanically Attached
+
+100 ft2 (9.3 m2)
+
+80 lbs (36 kg)
+
+118 mils (3.0 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+25
+
+Heat Weld, Hot Mop,
+Cold Process
+
+100 ft2 (9.3 m2)
+
+102 lbs (46 kg)
+
+160 mils (4.0 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Heat Weld, Hot Mop,
+Cold Process
+
+100 ft2 (9.3 m2)
+
+102 lbs (46 kg)
+
+160 mils (4.0 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Heat Weld, Hot Mop,
+Cold Process
+
+100 ft2 (9.3 m2)
+
+106 lbs (48 kg)
+
+160 mils (4.0 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Heat Weld, Hot Mop,
+Cold Process
+
+100 ft2 (9.3 m2)
+
+106 lbs (48 kg)
+
+160 mils (4.0 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Heat Weld, Hot Mop, Cold Process,
+Mechanically Attached
+
+100 ft2 (9.3 m2)
+
+84 lbs (38 kg)
+
+120 mils (3.0 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+25
+
+Heat Weld, Mechanically Attached
+
+150 ft2 (13.9 m2)
+
+85 lbs (39 kg)
+
+90 mils (2.2 mm)
+
+49'3" (15 m)
+
+39 3/8" (1 m)
+
+25
+
+Heat Weld, Hot Mop, Cold Process,
+Mechanically Attached
+
+150 ft2 (13.9 m2)
+
+85 lbs (39 kg)
+
+90 mils (2.2 mm)
+
+49'3" (15 m)
+
+39 3/8" (1 m)
+
+25
+
+Hot Mop, Cold Process
+
+100 ft2 (9.3 m2)
+
+90 lbs (41 kg)
+
+140 mils (3.5 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Heat Weld , Hot Mop,
+Cold Process
+
+100 ft2 (9.3 m2)
+
+90 lbs (41 kg)
+
+140 mils (3.5 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Heat Weld
+
+100 ft2 (9.3 m2)
+
+84 lbs (38 kg)
+
+140 mils (3.5 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Heat Weld, Mechanically Attached
+
+100 ft2 (9.3 m2)
+
+99 lbs (45 kg)
+
+160 mils (4.0 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+23
+
+Heat Weld, Hot Mop,
+Cold Process
+
+100 ft2 (9.3 m2)
+
+108 lbs (49 kg)
+
+180 mils (4.5 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Heat Weld, Hot Mop,
+Cold Process
+
+100 ft2 (9.3 m2)
+
+108 lbs (49 kg)
+
+180 mils (4.5 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Heat Weld
+
+100 ft2 (9.3 m2)
+
+97 lbs (43 kg)
+
+160 mils (4.0 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Heat Weld
+
+100 ft2 (9.3 m2)
+
+97 lbs (43 kg)
+
+160 mils (4.0 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+Heat Weld
+
+100 ft2 (9.3 m2)
+
+110 lbs (50 kg)
+
+165 mils (4.2 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+DETAILS
+
+Length
+
+SPECIFICATIONS
+
+Nominal
+Thickness
+
+GENERAL
+REQUIREMENTS
+
+Weight
+
+PRODUCT
+RANGE
+
+Net Coverage
+(Approx)
+
+LOW-SLOPE
+
+Application
+Method
+
+21
+
+
+===== PAGE 24 =====
+Quick ASTM Product Reference
+
+LOW-SLOPE
+
+ASTM
+D226
+
+D1970
+
+Type I
+PolyAnchor
+
+®
+
+D2178
+
+Elastobase® SA
+
+Type IV
+
+Elastoflex SA V Flashing Strips
+
+Polyglass Ply IV
+
+D4601
+
+D6162
+Type III
+
+Modibase®
+
+Elastoflex VP HT
+
+®
+
+Type II
+Type VI
+
+Elastobase® SA
+
+Polyglass® Ply VI
+
+Polyglass® G2 Base
+
+PRODUCT
+RANGE
+
+PolyAnchor® UDL 40
+
+ASTM
+D6163
+Type I
+Elastobase V
+
+GENERAL
+REQUIREMENTS
+SPECIFICATIONS
+DETAILS
+
+D6164
+Type I
+
+Type II
+
+D6222
+Type I
+
+Elastobase P
+
+Polybond
+
+Elastoflex S6
+
+Polybond® G
+
+Elastoflex V 22
+
+Elastoshield TS
+
+Polybond® G FR
+
+Elastoflex V G
+
+Elastoflex S6 G
+
+Polyflex®
+
+Elastoflex V G FR
+
+Elastoflex S6 G FR
+
+Polyflex® (Talc-Smooth)
+
+Elastoflex SA V
+
+Elastoshield TS G
+
+Polyflex® 5.0
+
+Elastoflex SA V FR
+
+Elastoshield TS G FR
+
+Polyflex® G
+
+Elastoflex SA V Plus
+
+Polyfresko G SBS
+
+Polyflex® G FR
+
+Elastoflex SA V Plus FR
+
+Polyfresko G SBS FR
+
+Modibond® G FR
+
+Elastoflex SA V Flashing Strips
+
+Elastoflex SA Base
+
+Polyfresko® G
+
+Elastoflex SA V Polar Base®
+
+Elastoflex SA P
+
+Polyfresko® G FR
+
+Elastoflex SA P FR
+
+Polyflex® SA P
+
+Type II
+
+Elastoflex SA P Polar Cap®
+
+Polyflex® SA P FR
+
+Elastoflex V HP
+
+Polyfresko G SBS SA
+
+Polyfresko® G SA
+
+Elastoflex V G HP FR
+
+Polyfresko® G SBS SA FR
+
+Polyfresko® G SA FR
+
+Type II
+
+Type II
+
+Elastoflex S6 HP
+
+Polyflex® G HP
+
+Elastoflex S6 G HP
+
+Polyflex® G HP FR
+
+Elastoflex S6 G HP FR
+
+Polyfresko® G HP FR
+
+Elastovent
+
+®
+
+®
+
+®
+
+Polyfresko G SBS HP FR
+
+D6509
+Polybase V
+
+Elastoflex V
+
+®
+
+22
+
+D4897
+
+®
+
+
+===== PAGE 25 =====
+Color Selection Chart for Low-Slope
+Modified Bitumen Cap Sheets
+CHESTNUT
+
+GREY SLATE
+
+HEATHER BLEND
+
+OAK
+
+PINE GREEN
+
+RED BLEND
+
+WEATHERWOOD
+
+PRODUCT
+RANGE
+
+BUFF
+
+LOW-SLOPE
+
+BLACK
+
+GENERAL
+REQUIREMENTS
+
+POLYFRESKO ®
+HIGHLY REFLECTIVE WHITE
+
+SPECIFICATIONS
+
+WHITE
+
+DETAILS
+23
+
+
+===== PAGE 26 =====
+General Requirements and Design Criteria
+
+LOW-SLOPE
+
+Part 1: Low-Slope General Requirements. .......................................................................... 25
+1.0
+
+General........................................................................................................................................ 25
+
+1.1
+
+Quality Assurance. ........................................................................................................................ 25
+
+1.2
+
+Material Handling and Storage....................................................................................................... 25
+
+1.3
+
+Cold Weather Installation................................................................................................................ 25
+
+1.4
+
+Substrate and Preparation – New and Re-Roof Applications................................................................ 26
+
+1.5
+
+Vapor Retarders............................................................................................................................. 27
+
+1.6
+
+Special Applications. ..................................................................................................................... 27
+
+1.7
+
+Drainage...................................................................................................................................... 27
+
+1.8
+
+Cants........................................................................................................................................... 27
+
+1.9
+
+Wood Nailers. .............................................................................................................................. 27
+
+1.10 Expansion Joints/Area Dividers. ...................................................................................................... 28
+1.11 Membrane Flashings...................................................................................................................... 28
+1.12 Walkways and Protected Membranes............................................................................................... 28
+1.13 Safety and Health.......................................................................................................................... 28
+
+PRODUCT
+RANGE
+
+Part 2: Requirements for Low-Slope Roof Decks. ............................................................ 28
+2.0
+
+General Roof Deck (Substrate) Information......................................................................................... 28
+
+2.1
+
+Individual Deck Requirements.......................................................................................................... 29
+
+Part 3: Requirements for Thermal Insulation on Low-Slope Roofing	�������������������� 30
+3.0
+
+General Thermal Insulation Information............................................................................................. 30
+
+3.1
+
+Insulation Installation and Attachment............................................................................................... 30
+
+GENERAL
+REQUIREMENTS
+
+Part 4: Low-Slope Membrane Installation........................................................................... 30
+4.1
+
+Polyglass Self-Adhered (SA) Membranes with ADESO® Technology. ..................................................... 30
+
+4.2
+
+Polyglass APP & SBS Heat-Welded Membranes. ................................................................................ 31
+
+4.3
+
+Polyglass SBS Hot Mop Membranes................................................................................................. 32
+
+4.4
+
+Polyglass SBS Cold-Applied Membranes........................................................................................... 33
+
+Part 5: Slope and Fastening Requirements......................................................................... 33
+
+DETAILS
+
+SPECIFICATIONS
+
+Part 6: Re-Cover or Re-Roofing. ............................................................................................... 34
+
+24
+
+Part 7: Test Approvals and Classifications.......................................................................... 35
+Part 8: Polyglass Tiered Contractor Program.................................................................... 35
+Part 9: Polyglass Warranty Program..................................................................................... 35
+
+
+===== PAGE 27 =====
+General Requirements and Design Criteria
+Part 1: Low-Slope General
+
+1.0 General
+
+A. Ensure all materials are stored in a manner which
+prevents them being exposed to moisture.
+B. Materials should be examined when received. Damaged
+or unlabeled materials should not be used.
+
+DETAILS
+
+1.2 Material Handling and Storage
+
+Polyglass advises against installing modified bitumen membranes
+at temperatures lower than 40°F–45°F (4°C–7°C) (wherever
+practicable). Where work is unavoidable at such temperatures,
+we recommend the following precautions be taken:
+A. Take extra care during cold weather installation (Below
+ambient temperatures of 40°F–45°F (4°C–7°C), whereas
+ambient temperatures are affected by wind, humidity,
+etc.), to ensure adequate bonding is achieved between
+the surfaces to be joined. This applies to both material
+seam welds and adhesion of the applied product to
+the appropriately prepared substrate (substrate can be
+affected by such temperature constraints as well).
+B. In addition, unrolling of cold materials, under very low
+ambient conditions must be avoided to prevent the likelihood
+of unnecessary stress cracking. The rolls must be at least
+40°F (4°C) at the time of application. Should the membrane
+roll become stiff or difficult to install, it should be replaced
+with a new roll from the storage area. When unrolling in
+cold weather conditions (< 40°F (4°C)) the center of the
+roll (closer to the core) will be colder and retain that colder
+temperature longer, making it more likely to stress crack.
+C. To prevent the aforementioned situations and to ease
+the progress of installation under unfavorable conditions
+we recommend the following procedures:
+1. The general recommendations of the National
+Roofing Contractors Association (NRCA) and Asphalt
+Roofing Manufacturers Association (ARMA) should
+be taken into account and will be helpful.
+
+SPECIFICATIONS
+
+A. As an ISO 9001:2015 Certified Company, Polyglass provides
+quality products worldwide.
+B. Dependent upon the type of warranty requested or specified,
+roof observations may be required. Polyglass reserves the right
+to conduct roof observations to ensure quality of installation.
+C. Polyglass provides installers assistance with a qualified team
+of technical field representatives. Please contact Technical
+Services or your local sales representative for information
+regarding the Technical Representative assigned to your region.
+D. See PART 9: Polyglass Warranty Program for information
+regarding individual warranties offered.
+
+1.3 Cold Weather Installation
+
+GENERAL
+REQUIREMENTS
+
+1.1 Quality Assurance
+
+PRODUCT
+RANGE
+
+A. Polyglass® U.S.A., Inc. specializes in Modified Bitumen
+roofing assemblies and offers a variety of products which
+utilize various application methods. Product labels should
+always be checked to ensure proper application.
+B. Selection of assemblies is dependent upon a variety
+of factors which include (but not limited to) roof
+deck type, building type, use of the building and its
+occupancy, applicable code requirements as well as
+the environment of the location of the building.
+C. Polyglass does not perform design, engineering or
+architecture and is not responsible for system performance
+issues resulting from faulty building construction or improper
+design. Selection of products, assemblies, and individual
+tested systems via accredited testing organizations
+such as Factory Mutual (FM), Underwriter Laboratories
+(UL) etc. shall remain the responsibility of others.
+D. Polyglass offers the information found in this manual
+as a variety of recommendations for individual roof
+constructions to assist the design professional. It is the
+responsibility of both the design professional and/or
+material applicator to ensure compliance with all applicable
+codes and standards required for each project.
+E. Polyglass materials must be protected from any damaging
+or aggressive discharges such as petroleum products,
+greases, any oils or animal fats. Where discharges in the
+roof vicinity are unavoidable, a suitable and permanently
+maintained separation or diverting mechanism should be
+used. Contact Polyglass Technical Services with questions.
+F. Follow manufacturer’s directions for protection of any materials
+used in the roofing operation prior to and during installation.
+Do not use materials which have been damaged.
+
+LOW-SLOPE
+
+Requirements
+
+C. Materials must be stored in a dry area with adequate
+ventilation. Care should be taken to only remove stored
+materials that can be installed in a reasonable amount
+of time. All excess materials must be kept in storage.
+D. Rolls shall be stored in an upright position with selvage edge up
+on pallets.
+E. Prior to beginning installation, remove all roll wrapping tape
+by cutting carefully and not ripping/damaging the material.
+F. Polyglass does allow double stacking of pallets of
+membranes with the use of slip boards. Please see
+the Technical Bulletin online at www.polyglass.us
+for Rotation and Storage of Roll Products.
+G. Polyglass self-adhered membranes to be stored at room
+temperature whenever possible and in an upright position
+on a flat surface. Avoid storing out of packaging for
+prolonged periods, especially above 88°F (31°C), in direct
+sunlight. Do not take the roll out of the packaging until it is
+ready for application. Refer to technical bulletins found at
+www.polyglass.us for more instruction on storage and handling.
+H. Polyglass ADESO® membranes shall remain stored
+in boxes or wraps until time of application.
+I. Polyglass Cold Applied Cements, Adhesives and Mastics
+shelf life is typically 18 months, if stored in original
+unopened containers – between 40°F–100°F (4°C–38°C).
+All containers should be sealed when not in use.
+
+25
+
+
+===== PAGE 28 =====
+DETAILS
+
+SPECIFICATIONS
+
+GENERAL
+REQUIREMENTS
+
+PRODUCT
+RANGE
+
+LOW-SLOPE
+
+General Requirements and Design Criteria
+2. Remember that wind chill will have an effect
+on the application temperature.
+3. Ensure that membrane is only installed to properly
+dry, clean and primed (where necessary)
+surfaces as required by the specifications.
+4. Store membrane, until immediately prior to installing
+the roll. Minimum ambient temperature of the storage
+area should be 55°F–60°F (13°C–15°C).
+5. Once rolls of material are taken from the temperature
+controlled storage area, install before the temperature
+of the material drops below 40°F–45°F (4°C–7°C).
+The following application specific recommendations should
+be followed:
+Self-Adhered Application
+For temperatures between 25°F–60°F (-4°C–16°C), use Polyglass’
+Elastoflex SA V Polar Base and Elastoflex SA P Polar Cap;
+ADESO® Self-Adhered membranes for cold weather application.
+Heat-Welded Application
+The use of shielded “dragon-wagons”, or moveable,
+flame-resistant wind shields can also be of great help
+in the effort to keep all surfaces and materials at a
+suitably warm temperature during heat-welding.
+Hot Mop Application
+Asphalt cools and thickens more quickly once removed from the heat
+source (tanker or kettle) and will not flow well, or give a uniform
+application rate. The following special precautions should be taken:
+A. All asphalt handling equipment should be insulated in
+order to minimize the drop-in asphalt temperature.
+B. For mop applied membranes, asphalt must be at least
+400°F (204°C) (with a target temperature of 425°F
+(218°C)) or 20°F above the EVT (Equiviscous Temperature),
+whichever is higher, at the point of application.
+C. If minimum asphalt temperature of 400°F
+(204°C) cannot be maintained at the point of
+application, work should be discontinued.
+D. Never overheat asphalt to compensate
+for cold weather conditions.
+E. Mopping should not progress more than 5'–7'
+(1.5 m – 2.1 m) in front of the roll at any time.
+Cold Process Application
+Cold process adhesives may become increasingly viscous and
+difficult to apply below 50°F (10°C). In such cases, extra care
+should be taken to ensure that the adhesives are applied at
+the proper rate and that humidity conditions are not conducive
+to condensation at the adhesive-membrane interface. Refer
+to Polyglass Product Sheets at www.polyglass.us for product
+specific cold weather application details. Do not proceed with
+application if inclement weather threatens. When temperatures
+are cold, store product in a heated area overnight.
+
+1.4 Substrate and Preparation – New
+and Re-Roof Applications
+Substrate and Preparation
+A. All surfaces to receive roofing must be properly
+clean and primed when necessary.
+
+26
+
+B. It should be noted that proper preparation of the substrate
+relies on the installing contractor and/or building owner.
+C. When possible, construction of other trades prior to a
+finished roof application should be avoided. Protection of the
+finished roof is required when traffic from others is expected.
+Plywood, tarps, insulation, or other forms of protective
+sheathing should be applied prior to construction work.
+D. Substrates and decking must be evaluated to identify
+below deck conduit, fixtures, equipment, etc. that
+affect the installation of the roofing assembly.
+E. All rooftop units, supports, and penetrations that are to be
+removed should be removed prior to roof construction.
+F. Attention to termination heights, penetration heights, as well
+as membrane flashing heights should be given prior to roof
+construction to ensure proper clearance to receive new roofing.
+New and Re-Roof Applications
+A. All surfacing or overburden materials, membranes, insulations,
+fasteners, membrane flashings, sheet metal flashings, and
+penetration flashings are to be completely removed.
+B. Existing roof decks may be contaminated with asphalt,
+adhesives, etc. from the prior roof system. Care should be taken
+when adhering rigid insulation boards and/or cover boards to
+the contaminated surface. Adhesion testing must be conducted
+to ensure a proper and efficient bond of the new materials.
+C. Irregular, or non-monolithic wall surfaces may
+need to be addressed to ensure a proper vertical
+surface to receive new membrane flashings.
+D. During the construction of the roofing assembly, temporary
+water cut-offs and tie-ins at the conclusion of each work
+day must be provided. The temporary materials must
+be removed and properly prepared at the beginning
+of roof construction the following workday.
+Re-cover Applications
+Re-cover applications include the application of a new roof
+directly over an existing roofing assembly. Many considerations
+should be given to the suitability of this application as not every
+existing roof system is a candidate for re-cover. It should be noted
+that it is the responsibility of the architect, engineer, contractor,
+or building owner to determine the suitability of a re-cover.
+A. A complete review and assessment of both the existing
+roof system as well as the support system should be
+conducted. A design professional or licensed engineer is
+highly recommended to evaluate the impact of the added
+weight of the new roof in addition to the existing system. As
+stated above, Polyglass does not practice engineering.
+B. The existing roof must be in sound condition
+and free of excessive defects.
+C. The substrate (existing system) must be free of excessive moisture.
+D. Existing roofing systems which contain 20%–25%
+moisture content are not a suitable candidate
+for re-cover and should be torn off.
+E. Moisture surveys are highly recommended to identify
+specific roof locations where moisture exists. Polyglass may
+require moisture scan on longer term warranted projects.
+
+
+===== PAGE 29 =====
+General Requirements and Design Criteria
+F.
+
+1.5 Vapor Retarders
+
+1.7 Drainage
+A. Adequate drainage is required for a wellfunctioning low-slope roof system. The minimum
+recommended slope is 1⁄4" (6 mm) per foot.
+B. Absence of proper drainage often results in “Ponding”. It is
+defined by the National Roofing Contractors Association (NRCA)
+as water that has not dissipated from the roof within 48 hours.
+C. Ponding water negatively affects the membrane
+and can result in premature deterioration, and
+is not covered by Polyglass warranties.
+D. The ideal structural roof deck is designed to provide
+adequate slope and drainage. When the roof deck
+has not be constructed to provide proper slope and
+drainage, the use of tapered insulation is required.
+E. Primary and secondary drains shall be of sufficient
+number and diameter and located so as to provide
+adequate drainage of the entire roof surface.
+F. The adequacy of drainage provisions, placement, sizing and/
+or number of drains required is the responsibility of the design
+professional. Drainage conditions should meet the requirements
+of codes as well as standard industry recommendations.
+
+1.8 Cants
+
+A. It should be noted that both wood nailers and blocking
+materials are deemed as a component of the structure
+– not the roofing assembly. However, wood nailers are
+critical to the success of a well-performing roof.
+B. Care for selection of proper lumber used for nailers
+is important to ensure the selection of the appropriate
+type and level of corrosion resistance for fasteners.
+C. All nailers should be installed as per Factory
+Mutual (FM) LPDS 1-49 “Perimeter Flashing”.
+D. ANSI/SPRI ES-1 should also be referenced for edge metal and
+parapet wall top conditions to ensure the installation of the
+nailer materials/attachment to resist calculated wind loads.
+
+DETAILS
+
+A. Polyglass roofing assemblies are sometimes selected
+for installation over buildings that include unique
+environments and are deemed special purpose. These
+would include cold storage facilities, pools, as well as
+partially enclosed and open buildings such as hangars.
+B. These should be carefully reviews as they pose
+design and building conditions such as elevated
+moisture or humidity, unusually elevated or lowered
+temperatures, and elevated pressure conditions.
+C. Special applications also include overburden or plaza deck
+assemblies. These typically include the addition of additional
+materials for protection of the newly installed roof.
+
+SPECIFICATIONS
+
+1.9 Wood Nailers
+1.6 Special Applications
+
+GENERAL
+REQUIREMENTS
+
+A. Cant Strips are required at all horizontal/vertical
+intersections. They may be mechanically fastened or
+adhered to the substrate depending upon the deck type.
+B. Material type of Cant strip is dependent upon the application
+method of the roofing assembly. Hot asphalt applied systems
+may utilize Perlite (conforming to ASTM C728) or wood fiber
+(conforming to ASTM C208). Heat welded flashing assemblies
+require the use of Perlite only. Self-Adhered flashing applications
+are recommended to include wood Cant strip (primed).
+C. Roofing assemblies that do not include a Cant must
+incorporate the use of PolyFlash® 1C One Part Flashing
+Compound with reinforcement at the horizontal and
+vertical transition. Please contact Polyglass Technical
+Services for details on this application.
+
+PRODUCT
+RANGE
+
+A. Adequate moisture vapor control is recommended
+(when appropriate) as a lack thereof may result in the
+accumulation of moisture in the roofing assembly.
+B. An analysis of dew point and vapor flow should
+be assessed during an initial project design for
+the building as well as for re-roofing and re-cover
+applications as they can alter existing vapor flow.
+C. In general, vapor retarders may be required when
+high interior relative humidity is present. The condition
+is typically seen with food processing facilities,
+swimming pools, paper mills, laundry facilities, etc.
+D. Vapor retarders are sometimes referred to
+as temporary or secondary roofs.
+E. The necessity for use of a vapor retarder is the responsibility of
+the design professional and should be reviewed and approved
+by the building owner. The type, location and method of
+application is also to be determined by the design professional.
+F. The National Roofing Contractors Association (NRCA) as
+well as the American Society of Heating, Refrigerating and
+Air Conditioning Engineers (ASHRAE) may be referenced
+for recommendations on the necessity of a vapor retarder.
+
+D. Technical Services should be contacted
+prior to these installations.
+
+LOW-SLOPE
+
+Test cuts may be used to evaluate the current
+condition of an existing roof on small projects.
+G. Any wet and/or deteriorated materials must be removed and
+replaced with like materials prior to installation of the new roof.
+H. All membrane flashings of the existing system
+must be removed and replaced.
+I. If existing membranes require ventilation, existing system/
+membrane must be cut in 10' × 10' (3 m × 3 m) areas.
+J. Systems requiring the use of one-way moisture
+relief vents, must have vents installed at one (1)
+per 1,000 ft2 or 10 squares (93 m2).
+K. Temporary water cut-offs and tie-ins at the conclusion
+of each workday must be provided. The temporary
+materials must be removed and properly prepared at the
+beginning of roof construction the following workday.
+L. Coal Tar Pitch roof systems are typically an extensive re-cover
+and require particular attention. Please contact Polyglass
+Technical Services when considering a re-cover application.
+
+27
+
+
+===== PAGE 30 =====
+General Requirements and Design Criteria
+
+DETAILS
+
+SPECIFICATIONS
+
+GENERAL
+REQUIREMENTS
+
+PRODUCT
+RANGE
+
+LOW-SLOPE
+
+1.10 Expansion Joints/Area Dividers
+
+28
+
+Expansion joints are part of the building, considerations such
+as design and location must be taken at the time of original
+building design by design professionals and reviewed by
+the building owner. The purpose of the expansion joint is
+to minimize stress on the building from movement.
+A. Per typical flashing details, expansion joints must be
+extended a minimum of 8" (20 cm) above the roof surface
+on curbs. Sheet metal caps or flexible expansion joint
+covers are used at the top surface of the expansion joint.
+B. Expansion joints must be located so as the
+typical drainage flow is not blocked.
+C. Expansion joints are continuous along the break in the structure.
+They shall not be terminated short of the end of the roof deck.
+Area Dividers
+A. Area dividers can be similar to but are
+not considered expansion joints.
+B. Typical uses for dividers are to section off roof sections which
+were not included in original building design/construction.
+They can relieve stresses in an existing roofing system, and can
+serve as a separator between two dissimilar roofing materials.
+C. Area dividers are typically capped with a
+coping cap style sheet metal detail.
+
+1.11 Membrane Flashings
+A. Membrane flashings and their locations are particularly
+volatile and are most susceptible to moisture
+penetration. Proper installation at these locations is
+critical to the integrity of the roofing assembly.
+B. Flashings, or, “Base Flashing”, are locations on the roof
+whereby the field of the roof (horizontal surface) intersects
+with a wall, curb, penetrations (vertical surfaces), etc.
+C. Membrane flashings entail the installation of two
+(2) plies of membrane at flashing locations. The
+products associated with the flashings may utilize
+same plies used for the overall roofing assembly.
+D. Flashing locations that include irregularly shaped penetrations,
+low flashing clearance heights, or items too close to be
+properly flashed with membrane may be treated with
+PolyFlash 1C and PolyBrite Polyester Fabric in three-course
+fashion. Contact Technical Services for more information.
+E. Minimum flashing height is 8" (20 cm) above the deck and the
+maximum flashing height is 24" (61 cm). Membrane flashing
+can be taller than 24", only when terminated at every 24".
+F. Base flashings shall me mechanically fastened
+at the top edge and terminated with a proper
+termination bar and counterflashing.
+
+1.12 Walkways and Protected Membranes
+Walkways help protect the membrane from damage due to
+routine rooftop service traffic. Walkways may consist of an
+additional layer of similar Polyglass membrane of a contrasting
+color granulated surface, or another approved walkway system.
+The following are typical roof locations that utilize walkways:
+A. All roof access points (ladders, hatches, doorways, etc.).
+
+B. Areas subjected to traffic in excess of one monthly visit.
+C. Areas with high pedestrian traffic or subject
+to frequent maintenance operations.
+In addition to typical locations requiring walkways, the walkway
+material may also be applied beneath rooftop equipment such
+as blocking to support gas/plumbing lines, and small non curb
+mounted HVAC (or other) equipment placed on wood sleepers.
+
+1.13 Safety and Health
+Strict Safety and Health precautions are necessary at all
+times. PLEASE READ, UNDERSTAND AND FOLLOW ALL
+INSTRUCTIONS ON LABELS AND PACKAGING AS
+WELL AS ANY APPLICABLE INDUSTRY STANDARDS AND
+REGULATIONS. See also all relevant sections above.
+All volatile, or potentially volatile, materials such as primers,
+gas, cleaners, etc., shall be kept away from all ignition sources
+(e.g. flames, torches, fire, sparks, etc.). Consult product container
+labels and Safety Data Sheets for specific safety instructions.
+The application of those products installed with hot asphalt
+or torch may result in burns and other physical injury. Surfaces
+which contact the melted bitumen or torch may ignite. The installer
+should take utmost care when using hot materials such as asphalt
+or when heat-welding any product. This is especially important
+when there may be a danger of contact with materials which
+may smolder, such as cellulose and wood materials, wood fiber,
+etc. or flammable or highly flammable solvents or chemicals.
+Polyglass membranes may present a slip and fall hazard. This risk
+is increased when wet or icy conditions exist. Adequate precautions
+should be taken when working. Manufacturer recommends the
+use of OSHA approved fall protection for project conditions.
+Cold Applied:
+A. DO NOT HEAT WITH AN OPEN FLAME.
+B. Clean equipment and over-spray with water.
+C. Clean hands with waterless hand cleaner.
+D. Application tools and equipment can be cleaned with
+odorless mineral spirits solvent. Recirculate through lines and
+spray equipment guns until residual coating is removed.
+E. DO NOT USE WATER OR RECLAIMED SOLVENTS.
+
+1.14 Limitations
+A. Polyglass membranes should never be applied directly
+to TPO, EPDM, PVC, or other single ply membranes.
+B. Polyglass Cold Applied membranes are not to
+be used with organic saturated felts.
+C. Not to be installed over or under polystyrene insulation.
+
+Part 2: Requirements for
+Low-Slope Roof Decks
+2.0 General Roof Deck (Substrate) Information
+A. Polyglass is not responsible for design, selection, or
+performance of the deck. Roof decks are to be designed and
+
+
+===== PAGE 31 =====
+General Requirements and Design Criteria
+
+2.1 Individual Deck Requirements
+
+PRODUCT
+RANGE
+GENERAL
+REQUIREMENTS
+SPECIFICATIONS
+DETAILS
+
+A. Steel Decks:
+1. Minimum 22 gauge cold-formed steel decking with
+G-90 galvanized or minimum finish coat of primer
+paint on both sides. Galvanized steel decking where
+appropriate to project design criteria is recommended.
+2. Deck panels are to be anchored to the supporting
+members by welding or mechanically fastening.
+Requirements as established by Factory Mutual for
+gauge and span should be in compliance with
+Factory Mutual (FM) LPDS 1-28 and 1-29.
+3. Decks shall be clean and free of moisture
+and debris as well as free of corrosion.
+4. Damaged or deflected panels as well as deteriorated
+portions must be removed and replaced.
+B. Structural Concrete:
+1. Decks shall me a minimum compressive strength of
+2,500 psi with a minimum thickness of 4" (10 cm).
+2. The surface is to be smooth, and free of ridges,
+sharp edges, and irregular surfaces.
+3. The underside of the concrete deck must remain unobstructed
+to allow for the escape of moisture. This would include the
+applications of items such as paint, spray fireproofing etc.
+4. Concrete decks typically require a minimum of 28 days cure
+time. Evaluation of determination of moisture content should
+be in accordance to ASTM D4263 (Plastic Sheet Method).
+5. Field uplift resistance for adhesive applications
+is recommended as per ANSI/SPRI 1A-1.
+6. Primers applied to the deck, when applied, must
+be dry prior to application of adhesives.
+7. Cracks greater than 1⁄8" (3 mm) shall be filled or treated
+as per the direction of the deck manufacturer.
+C. Cellular Lightweight Insulating Concrete:
+1. Must have a minimum 200 psi compressive strength
+as well provide a minimum withdrawal resistance
+of 40 lbs (18 kg) as an average pull value.
+2. Deck installation shall comply with the deck manufacturer.
+3. Installation shall not proceed during inclement weather
+including both precipitation as well as freezing
+
+temperatures. Any and all frozen deck sections
+shall be completely removed and replaced.
+4. All measures should be taken to ensure that
+there is no entrapment of moisture within the
+deck prior to roofing applications.
+D. Wood Plank:
+1. Thickness to be a nominal 1" (2.5 cm) and
+width of 4"–6" (10 cm–15 cm).
+2. Wood plank boards shall have a bearing on rafters
+at each end and must be securely fastened.
+3. Boards shall be kiln-dried and preferably a tongue-andgroove style to eliminate the shrinkage or warping of planks.
+4. Knotholes/cracks exceeding 1⁄4" (6 mm) must
+be covered with secured sheet metal.
+E. Plywood:
+1. Thickness to be a minimum of 15⁄32" (12 mm) with a
+minimum 4-ply conforming with C-D Exposure 1 grade.
+2. The maximum joist spacing shall be 24"
+(61 cm) O.C. or less using minimum 1⁄8"–1⁄4"
+(3 mm–6 mm) spacing between panels.
+F. Oriented Strand Board (OSB):
+1. OSB shall be PS 2-10, Exposure 1, Structural
+1 not less than 7⁄16" (11 mm) in thickness.
+2. The sheathing is installed with all sides bearing on and
+secured to joists and cross blocking in accordance
+with the APA (Engineered Wood Association).
+G. Cementitious Wood Fiber:
+1. The application of cementitious wood fiber decking shall
+be in accordance to the individual deck manufacturer.
+2. Panels shall be a minimum of 2" (5 cm) in thickness.
+3. Panels must be protected from inclement weather when
+stored as well as during the application of the panels.
+4. Joints between panels in excess of 1⁄4" (6 mm) as well as
+offsets in adjacent panels exceeding 1⁄8" (3 mm) must be
+grouted as per the panel manufacturer’s instruction.
+H. Gypsum:
+1. Gypsum decks must have a minimum
+deck thickness of 2" (5 cm).
+2. Panels shall be a minimum of 2" (5 cm) in thickness.
+3. Panels must be protected from inclement weather when
+stored as well as during the application of the panels.
+4. Joints between panels in excess of 1⁄4" (6 mm) as well as
+offsets in adjacent panels exceeding 1⁄8" (3 mm) must be
+grouted as per the panel manufacturer’s instruction.
+I. Poured reinforced concrete:
+1. Shall be smooth, dry, clean and free of ice/
+frost, projections and depressions.
+2. The concrete shall be fully cured and the surface
+shall be broom cleaned and free of release/
+curing agents prior to commencement of work.
+3. The prepared concrete surfaces shall be primed with
+Polyglass PG 100 Fast-Drying Asphalt Primer ASTM Type
+D-41 at a rate of approximately 1 gallon/100 ft2 (9.2 m2)
+4. Polyglass requires no less than 30 days
+cure time for new concrete pours.
+
+LOW-SLOPE
+
+constructed as per the deck manufacturers specifications and
+shall be suitable to receive a Polyglass roofing assembly.
+B. Prior to roof construction, the acceptance of the suitability
+of the substrate shall remain the responsibility of the
+applicator and/or the Authority Having Jurisdiction.
+C. Field verification of the suitability of the substrate shall
+include fastener withdrawal resistance, moisture content,
+as well as the overall condition of the substrate. Testing
+standards such as ANSI/SPRI FX-1 (withdrawal resistance),
+ANSI/SPRI 1A-1 (adhesion testing), as well as ASTM
+D4263 (surface moisture testing over concrete) shall be
+applied when assessing the condition of the substrate.
+D. Re-cover application may require the use of moisture scans to
+verify the moisture content of the assembly that currently in place.
+
+29
+
+
+===== PAGE 32 =====
+LOW-SLOPE
+
+General Requirements and Design Criteria
+5. All primed areas shall be fully dried before proceeding
+with the application of the roof system.
+J. Other deck types:
+Contact Polyglass for recommendations in any situation which
+involves other deck types, new or unusual deck construction.
+
+Part 3: Requirements for Thermal
+Insulation on Low-Slope Roofing
+
+DETAILS
+
+SPECIFICATIONS
+
+GENERAL
+REQUIREMENTS
+
+PRODUCT
+RANGE
+
+3.0 General Thermal Insulation Information
+
+30
+
+The selection of insulation type and thickness is the responsibility
+of the architect, designer or building owner. Insulation must
+provide continuous support for all layers of the roofing system.
+A. Polyglass modified bitumen products may be installed directly
+over Polyglass Polytherm® or other approved polyisocyanurate
+insulation boards and certain other insulation materials. Most
+insulation manufacturers, however, require that a base sheet or
+Coverboard be mechanically attached to the deck or adhered
+to the insulation, when direct bonding isn’t acceptable.
+B. Specific types and minimum thicknesses of Polytherm Insulation
+are available for use as a substrate for Polyglass membranes.
+C. Polytherm Insulation, or other suitable polyisocyanurate
+insulation boards, shall be provided with a suitable
+overlay board prior to mopping and with a suitable
+base sheet prior to heat welding of membrane.
+D. If Polyglass Polytherm Insulation is not used, consult Polyglass
+Technical Services for current information regarding the
+acceptability of other insulation types or manufacturers.
+E. Acceptable insulations: perlite, polyisocyanurate (ISO),
+ISO/perlite composite, expanded polystyrene (EPS)/
+perlite composite, phenolic, wood fiber, wood Fiber/
+ISO composite, glass fiber and cellular glass (“Foam
+glass”). Contact Polyglass for insulations not listed here.
+F. In general, all Polytherm Insulation must be installed in
+accordance with Polyglass requirements for installation.
+In the case of third-party manufacturers, the insulation
+manufacturer’s instructions shall be strictly adhered to.
+
+3.1 Insulation Installation and Attachment
+A. Incorrectly installed insulation can lead to roof system
+loss (blow-offs) and is the responsibility of the insulation
+installer, not the roof membrane manufacturer.
+B. Polyglass does not warrant against improperly attached
+insulation or insulation failure caused by incorrect application.
+C. All joints between layers should be staggered when
+multiple layers of insulation are installed.
+D. Insulation shall be kept dry at all times. Install only as
+much insulation as can be covered with completed
+roofing membrane before the end of the day’s
+work (or prior to onset of inclement weather).
+E. Edges shall butt tightly, and all cuts shall fit neatly against
+adjoining surfaces to provide a smooth overall surface. Gaps
+of greater than 1⁄4" (6 mm) width shall be filled with insulation.
+
+F.
+
+Install tapered insulation around roof drains and penetrations
+to provide adequate slope for proper drainage.
+G. Mechanically attached insulation shall be fastened
+in accordance with Factory Mutual (FM) Approvals
+requirements for the applicable geographic Zone with
+the required number (and type) of fasteners and plates.
+Exception: where Polyglass requirements are more
+stringent than Factory Mutual (FM) Approvals or third-party
+manufacturers, Polyglass requirements shall be followed.
+H. When asphalt or foam adhesive attachment is selected
+by the project designer, the proposed insulation shall
+be compatible with the roof substrate, the proposed
+bitumen and the requirements of the specific Polyglass
+membrane. NOTE: Expanded polystyrene (EPS) materials
+shall not be installed with hot bitumen products.
+• Maximum 4' × 4' (1.2 m × 1.2 m) insulation
+boards can be attached with hot asphalt.
+• Asphalt for insulation attachment shall meet ASTM
+D312 Type III or IV criteria, as dictated by the
+roof slope or other design conditions.
+
+Part 4: Low-Slope
+Membrane Installation
+Commence installation of the roofing system at the lowest point
+of the roof (or roof area), working up the slope toward the
+highest point. Lap sheets shingle fashion so as to constantly
+shed water. For further information contact Polyglass Technical
+Services. Follow the recommendations for the specific type
+of material and layer as outlined below, or as specified.
+Type II standards, are acceptable for Polyglass roofing
+systems and should be appropriately installed in a manner
+approved for the specific product, e.g. fully adhered as selfadhered or with asphalt/or cold adhesive, heat-welded or
+mechanically attached (per industry standard fastening pattern),
+as applicable, and in accordance with specifications.
+
+4.1 Polyglass Self-Adhered (SA) Membranes
+with ADESO® Technology
+Polyglass self-adhered membranes are designed to provide a
+cleaner application, improve application speed and remove
+the need for torches, hot asphalt or bonding adhesives on
+the job site. Especially for job sites with limited access for
+special installation equipment or where using a propane
+torch or hot asphalt is undesirable or prohibited.
+Surface Preparation
+Polyglass self-adhered membranes may be applied directly to
+approved substrates such as; approved roof insulation, Polyglass
+film-surfaced base sheets and certain roof deck types. Do not apply
+directly to shingles, shakes, steep-sloped residential roof coverings or
+existing mineral surfaced roof membrane systems. Refer to Polyglass
+published Technical Bulletins regarding approved substrates.
+
+
+===== PAGE 33 =====
+General Requirements and Design Criteria
+Seaming Intersection Treatment – Field, Sequence (T-Joints)
+
+2
+
+1
+
+45º Cut
+
+2
+Sheet 2
+
+45º Cut
+
+1
+
+LOW-SLOPE
+
+Sheet 1
+
+4.2 Polyglass APP & SBS Heat-Welded Membranes
+
+SPECIFICATIONS
+DETAILS
+
+Application of Heat-Welded Base/Interply Sheets
+Polyglass APP or SBS heat-welded base or interply sheet membranes
+are intended to be used as a base or interply sheet in new
+or re-roof applications. Polyglass APP or SBS base or interply
+sheets may be applied directly to non-combustible substrates and
+require the installation of a compatible granulated cap sheet
+or approved roof coating to complete the roofing system.
+A. Apply over clean, dry, dust and debris-free substrates. Prime
+concrete decks and required substrates prior to application with
+PG 100 Fast-Drying Asphalt Primer and allow to dry. Consult
+Polyglass Technical Services if alternate primer is allowed.
+B. When re-roofing, remove all prior roofing materials
+down to a clean debris-free substrate and properly
+close-off all abandoned roof penetrations.
+C. Concrete or steel decks shall be designed
+with proper expansion devices.
+D. Wood decks shall have all joints blocked
+and properly supported.
+E. Ensure the fire rating of the assembly
+over any combustible substrate.
+
+GENERAL
+REQUIREMENTS
+
+Details, T-Joints and flashing may be installed with a hot air
+welder or with PG 500 Roof Cement or PolyPlus 50 Premium
+Modified Wet/Dry Cement. Refer to manufacturer’s published
+details for proper design and installation of detail work.
+For detailed drawings and recommended installation
+procedures of typical roof segments, such as drip edge and T-joint
+conditions, please refer to our website at, www.polyglass.us.
+A. Sheet 1 is applied to substrate.
+B. Cut off the top and bottom corners of the
+membrane at 45° angles (Sheet 1).
+C. Sheet 2 is aligned and applied to substrate,
+over lapping sheet 1 by a minimum of 5".
+D. Cut off the top corner of the membrane
+at a 45° angle (Sheet 2).
+E. Sheet 3 is applied to substrate.
+F. Heat weld or apply PolyPlus® 50 Premium Modified Wet/
+Dry Cement at the intersection of all 3 sheets, the “T-Joint”.
+G. Top sheet is carefully rolled at joint.
+
+PRODUCT
+RANGE
+
+A. Apply only in dry weather and when air and surface
+temperatures are 40°F (5°C) and rising. For temperatures
+between 25°F–60°F (-4°C–16°C), use Polyglass Elastoflex
+SA V Polar Base® and Elastoflex SA P Polar Cap® ADESO
+Self-Adhered membranes for cold weather application.
+Roofing installation shall not be conducted when any form
+of water, such as rain, dew, ice, frost, snow are present.
+B. All roof deck or substrate areas shall have positive drainage,
+be properly supported, structurally sound to support the live
+and dead load requirements of the roofing system, and
+sufficiently rigid to support construction traffic. A minimum slope
+requirement of 1∕4" (6 mm) per foot of rise is recommended.
+C. Apply over clean, dry, dust and debris-free substrates. When
+fully bonding, prime concrete decks and required substrates,
+prior to application with PG 100 Fast-Drying Asphalt Primer,
+WB-3000 Fast-Drying Water Based Primer or PolyBrite 745
+Water Based Primer/Adhesive or applicable ASTM D-41
+asphalt primer. Any primed substrate should be fully dry prior
+to installation. Refer to manufacturer’s recommendations.
+D. All substrates shall be designed with proper expansion devices.
+E. Wood decks shall have all joints cross blocked and/or properly
+supported.
+F. Installation of membrane should not adversely
+affect the ventilation of existing construction.
+Application of Self-Adhered Cap Sheet
+A. Start at the low point of the roof.
+B. Unroll the material and allow to relax prior to application.
+C. Align and position membrane into place, following
+the line of the lowest edge of the roof.
+D. Fold the aligned membrane in half
+exposing the split release film.
+E. Peel release film at a 45° angle in a constant motion, ensuring
+to keep weight on the outer edges as you progress.
+F. Position successive rolls using the 5" (13 cm) FASTLap at the
+endlap and 3" (7.5 cm) SEALLap ULTRA granule free side lap.
+G. Press the membrane into place with firm, even pressure
+to ensure a watertight seal. Edges or laps to be firmly
+rolled by hand roller to ensure full adhesion.
+H. After installation of the entire roof surface, roll with a
+75 lbs (34 kg) weighted split-face roller. Take care
+on sloped roofs by securing the roller and applicator
+with the appropriate safety equipment.
+I. Applications equal to or greater than 1.5" (4 cm) slope
+per foot of rise, to be back-nailed at the seams with 11
+gauge ring shank simplex-type nails at 8" (20 cm) O.C.
+
+31
+
+
+===== PAGE 34 =====
+General Requirements and Design Criteria
+
+DETAILS
+
+SPECIFICATIONS
+
+GENERAL
+REQUIREMENTS
+
+PRODUCT
+RANGE
+
+LOW-SLOPE
+
+F.
+
+32
+
+Ensure the installation of the membrane does not
+prevent the ventilation of existing construction.
+G. Do not apply over shingles or any granulated surface.
+H. While installing Polyglass APP or SBS heat-welded base or
+interply sheet membranes:
+1. Start at the low point of the roof.
+2. Unroll the material and allow to relax.
+3. Install with traditional heat-welding roofing
+techniques ensuring proper heating of the roofing
+material as not to expose the reinforcement.
+4. Do not heat the substrate. Do not overheat to
+expose or compromise the reinforcement.
+5. Position successive rolls providing a minimum 6" (15 cm)
+end lap and 3" (7.5 cm) side lap. Asphalt bleed out
+shall be 1⁄4"– 3⁄8" (6 mm–10 mm) on all seams.
+6. It is recommended that laps shall be rolled with a 6"
+(15 cm) wide roller immediately after heat welding.
+I. Details and flashing may be installed using Polyglass APP or
+SBS heat-welded base or interply sheet membranes with heatwelding techniques. Do not use cold adhesives or hot asphalt.
+Check project details for proper installation requirements.
+Application of Heat-Welded Cap Sheet
+Polyglass APP or SBS heat-welded cap sheet membranes are
+intended to be used as the primary weathering surface in new and
+re-roof applications. Polyglass APP or SBS heat-welded cap sheet
+membranes are to be applied as the uppermost layer of a multi-ply
+roof system over a compatible Polyglass base and/or interply
+sheet. Polyglass APP or SBS heat-welded cap sheet membranes
+may be applied directly to certain noncombustible substrates.
+A. Apply over clean, dry, dust and debris-free substrates. Prime
+concrete decks and required substrates prior to application with
+PG 100 Fast-Drying Asphalt Primer and allow to dry. Consult
+Polyglass Technical Services if alternate primer is allowed.
+B. When re-roofing, remove all prior roofing materials
+down to a clean, dust free substrate. Remove unused
+or abandoned through-roof penetrations.
+C. All substrates shall be designed with proper expansion devices.
+D. Wood decks shall have all joints cross
+blocked and/or properly supported.
+E. Installation of the membrane should not adversely
+affect the ventilation of existing construction.
+F. Do not apply directly to existing shingles or
+other unacceptable roof coverings.
+G. While installing Polyglass APP or SBS
+heat-welded cap sheet membranes:
+1. Start at the lowest point of the roof.
+2. Unroll the material and allow it to relax as
+membrane is positioned prior to installation.
+3. Install with traditional heat-welding roofing techniques
+ensuring proper heating of the roofing material.
+4. Do not overheat to expose or compromise the reinforcement.
+5. Position successive rolls using the 5" (13 cm) FASTLap at the
+end of the rolls, where applicable (only premium Polyglass
+membranes have FASTLap), or 6" on granulated endlaps.
+
+6. Bleed out of asphalt when heat welding the
+seam should be 1⁄8" –1⁄4" (3 mm–6 mm) (typical all
+seams). Warm/pliable bleed out may be covered
+by lose granules for enhanced aesthetics.
+7. Laps may be lightly rolled with a 4"–6"
+(10 cm–15 cm) wide roller to ensure lap is fused.
+H. Details and flashings may be installed using heat-welding
+techniques. Do not adhere using cold adhesives or
+hot asphalt. Refer to manufacturer’s published details
+for proper design and installation of detail work.
+
+4.3 Polyglass SBS Hot Mop Membranes
+Application of Hot Mop Base and Cap Sheets
+A. The first roll of Polyglass SBS Base or Cap sheet shall
+be set and unrolled completely. It shall then be rerolled and installed to the initial alignment set.
+B. Following rolls shall be unrolled approximately
+6' (2 m) (or half roll length if desired) to align
+sheets to the lap lines (or selvage edges).
+C. The sheets shall then be set in a solid mopping
+of approved asphalt (see below) depending
+upon variables such as slope and substrate using
+approximately 25 lbs (11 kg) per 100 ft2 (9.2 m2).
+D. Where asphalt is required by specification, Polyglass
+recommends the use of ASTM D312 Type III or Type IV
+Asphalt commensurate with roof slope, installed as follows.
+1. Asphalt should be applied at the proper EVT (Equiviscous
+Temperature), as recommended by the asphalt supplier/
+manufacturer, and the NRCA manual (Technical Bulletin
+#2). Polyglass cannot be held responsible for any
+damages which may occur should the applicator or
+specifier, require a method of hot mopping other than
+those recommended by Polyglass. Furthermore, since the
+decision is something the applicator must determine based
+upon ambient and job-site conditions it is the applicator’s
+sole responsibility and Polyglass will not be responsible
+for any deviations from recommended procedures.
+2. Mopping temperature should be maintained
+at a minimum 400°F (204°C) (with a target of
+425°F (218°C)) at the point of application.
+3. If minimum asphalt temperature of 400°F
+(204°C) cannot be maintained at the point of
+application, work should be discontinued.
+4. Asphalt shall be applied at the recommended minimum
+rate (25 lbs (11 kg) per ply, per square) in an even,
+uniform method without interruptions or voids.
+5. Mopping should not progress more than 5'–7'
+(1.5 m–2 m) in front of the roll at any time.
+6. During cold temperature application, insulated
+equipment is recommended for maintaining minimum
+acceptable temperatures. Asphalt shall be applied no
+more than 4' (1.2 m) ahead of the membrane roll.
+7. Brooming of felts is recommended to ensure
+100% bonding in the asphalt.
+
+
+===== PAGE 35 =====
+General Requirements and Design Criteria
+
+4.4 Polyglass SBS Cold Applied Membranes
+
+Part 5: Slope and
+Fastening Requirements
+
+GENERAL
+REQUIREMENTS
+
+A. Polyglass recommends positive slope to drain criteria
+(see also drainage section), that the recommendations
+of the NRCA and ARMA be followed and that roofs be
+provided with a minimum slope of 1⁄4":12. All ponding
+water shall dissipate after a period of 48 hours.
+B. Follow the requirements of the insulation manufacturer for
+fastening or attachment of the insulation system. Roof Insulation
+Boards shall be attached with an Factory Mutual (FM) Approved
+fastening pattern or attachment methods for the wind loads
+expected. The fastening may vary from manufacturer to
+manufacturer. Consult the latest Factory Mutual (FM) Approval
+Guide or contact Polyglass Technical Services for assistance.
+C. For typical fastening requirements for Base Sheets,
+consult the latest Factory Mutual (FM) Approval Guide or
+contact Polyglass Technical Services for assistance.
+D. Membrane Back-Nailing Requirements are provided in Table 1.
+E. On non-nailable decks, nailers (adequately secured to the
+deck) may be required at specific spacing to allow for
+back nailing of membranes. In such cases the membrane
+is to be fastened into the nailers with suitable fasteners.
+
+PRODUCT
+RANGE
+SPECIFICATIONS
+DETAILS
+
+Application of Cold Applied Base and Cap Sheets
+Install base and interply sheet in a full coating of approved cold
+adhesive in accordance with Polyglass PolyPlus® 35 Premium
+Modified Bitumen Adhesive or PG 350 Modified Bitumen
+Adhesive application instructions of acceptable adhesive
+manufacturer’s recommendations and installation instructions.
+Surface Preparation:
+A. Surfaces to receive coating must be clean, dry and free
+from any foreign matter such as dirt, oils, grease or other
+debris that could inhibit the adhesion capabilities of
+the newly installed products. Priming is recommended
+when adhering to questionable conditions.
+B. On existing roofs, inspect roof substrate condition.
+Blisters, buckles, and raised edges should be cut
+out and repaired for a smooth surface.
+C. Check all flashings, edges, drains, valleys
+and vents and repair as needed.
+D. Do not use on wet or damp surfaces, directly over wood or
+on surfaces previously covered with coal tar-based products.
+Application:
+A. Stir well prior to application.
+B. Application Rate: Approximately 1.5–2 gallons
+(5.7 L–7.6 L) per square when applied to smooth
+to semi-smooth surfaces. Coverage rate may vary
+depending on ambient temperature, surface porosity, as
+well as applicator and/or application technique.
+C. PolyPlus® 35 may be applied by high pressure spray,
+notched squeegee, or brush application methods.
+D. After Adhesive Application: Apply membrane within 15 minutes
+of adhesive application. Unroll modified and base sheet rolls
+and allow them to relax prior to installation. Make sure that
+membrane is lying flat and making full contact with the adhesive.
+Roll all side and end laps making sure a sufficient amount of
+adhesive is applied so that a bead is visible at all lap edges.
+E. Two Layer Application: Install SBS base membrane in
+adhesive - wait three to seven hours to allow adhesive
+to set before installing the SBS cap membrane.
+F. Slope Application: The adhesive may be used on
+various slopes up to 1.5" (4 cm) per foot. Slopes less
+than or equal to 1.5" (4 cm) per foot may require backnailing. Please call Polyglass Technical Services should
+you have any questions on slope application.
+
+G. Apply only when ambient temperatures are 35°F
+(1.5°C) and rising. Cold weather will cause
+product to stiffen, making application difficult.
+H. Do not apply if inclement weather is expected within 24 hours.
+I. Do not heat outside of container or attempt to thin
+this product. Not recommended for application
+on substrates that exceed 140°F (60°C).
+J. Close air intakes on roof until solvents dissipate. Solvent vapor
+can penetrate porous substrates. Make sure there is proper
+outside ventilation for the underside of this type of roof deck.
+
+LOW-SLOPE
+
+8. Never overheat asphalt to compensate
+for cold weather conditions.
+9. Areas of asphalt “bleed-out” at seam edges and
+details (such as curb or flashing corners, etc.) of
+granular membrane should be treated by sprinkling
+additional loose granules (available from Polyglass)
+into the fresh, hot asphalt. Areas missed may require
+patching with a new piece of membrane.
+10. For a short time after installation, foot traffic on the
+sheets should be kept to a minimum in order to
+avoid unnecessary damage to the membrane.
+
+33
+
+
+===== PAGE 36 =====
+General Requirements and Design Criteria
+
+LOW-SLOPE
+
+TABLE 1
+Back Nailing Requirements for Sloped Roofs
+⁄4" – 1⁄2"
+
+> 1⁄2" – 11⁄2"
+(see Footnote 1)
+
+11⁄2" – 3"
+(see Footnote 1)
+
+> 3" – 6"
+(see Footnote 1)
+
+NO BACK NAILING
+REQUIRED
+
+WOOD NAILER
+INSTALLED AT RIDGE,
+EVE AND 32' CENTERS
+
+WOOD NAILER
+INSTALLED AT RIDGE,
+EVE AND 16' CENTERS
+
+WOOD NAILER
+INSTALLED AT RIDGE,
+EVE AND 12' CENTERS
+
+⁄4" – 3"
+
+> 3" – 6"
+(see Footnote 1)
+
+> 6" (see Footnote 1)
+
+NO BACK NAILING
+REQUIRED
+
+WOOD NAILER
+INSTALLED AT RIDGE,
+EVE AND 16' CENTERS
+
+WOOD NAILER INSTALLED AT RIDGE,
+EVE AND 16' CENTERS
+
+1
+
+SBS MEMBRANES
+SELF-ADHERED MEMBRANES
+POLYSTICK UNDERLAYMENTS
+
+APP MEMBRANES
+ALL SMOOTH AND GRANULATED,
+POLYESTER OR POLYESTER/GLASS
+COMBINED PRODUCTS
+1
+
+1
+
+NOTE: For SBS, Self-Adhered and Polystick® membranes on slopes > 6", contact Polyglass Technical Services Department.
+
+Nailers matching the height of the insulation are to be installed at the ridge, eve and:
+(1) at 32', 16', 12' or 10' centers, parallel (strap) to the slope, as delineated above. Modified sheets are cut to 10', 12' or 16' lengths and back nailed at the end lap into the nailers
+using Polyglass approved Fasteners and Plates at a spacing of 4" on center staggered (max).
+*Applicable APP membranes heat-welded directly over mechanically attached base sheet, or other acceptable substrate. Where APP membranes are applied over mopped or cold
+applied base sheets SBS requirements apply.
+
+DETAILS
+
+SPECIFICATIONS
+
+GENERAL
+REQUIREMENTS
+
+PRODUCT
+RANGE
+
+Part 6: Re-Cover or Re-Roofing
+
+34
+
+Polyglass products are suitable for many re-cover roofing
+applications. While it is necessary to completely remove any
+areas of decking, roof covering and insulation that are badly
+deteriorated and/or moisture laden, some existing roofs may be
+suitable for re-covering without complete removal, provided they
+are adequately prepared. All re-roofing projects must be considered
+unique and each should be assessed on an individual basis. Some
+general procedures are recommended in considering any project.
+NOTE: Analysis of the existing conditions (such as drainage,
+existing moisture, deck & structural integrity, etc.) is the
+responsibility of the building owner or the design professional.
+The determination of need for a vapor retarder is the sole
+decision of a design professional i.e. Registered Professional
+Engineer or Architect, or Registered Roof Consultant.
+Polyglass recommends that a professional moisture survey
+and analysis be carried out to determine the existing moisture
+content of the roof, just prior to commencing the re-roof or
+re-cover work. To qualify for certain system guarantees,
+which may be obtainable through Polyglass Registered
+Contractors, the need for an infrared (IR) scan, or other suitable
+survey may be mandatory for obtaining a guarantee.
+NOTE: Where the existing roofing system (all existing
+waterproofing and insulation materials, including any vapor
+retarders) is to be removed down to the deck, AND where
+it is determined (by the owner, design professional, architect
+or engineer) that the existing deck is suitable for applying a
+new roofing system, the requirements for new roofing may be
+applicable. Where existing roofing materials are to be left in
+place, the following requirements are to be adhered to.
+The following recommendations provide some guidelines
+for assessment of the existing roof system to determine
+the appropriate Polyglass re-cover/re-roof system:
+
+A. Evaluate existing roof conditions including interior and
+exterior surveys. Locate points of interior leakage,
+condition of underside of deck, and areas where
+moisture may be present in the system/insulation.
+B. The adequacy needs for a vapor retarder
+(see section on Vapor Retarders) should be
+established, by a party other than Polyglass.
+C. Establish whether the deck is structurally sound and able
+to accept the imposed weight of a new system.
+D. Determine whether the method of existing
+roof attachment is adequate.
+E. Ensure adequate provision made for clearance (height)
+of new or existing curbs, counter flashing, walls, etc.
+F. Determine whether the roof system drains properly and what
+measures are necessary prior to the re-cover/re-roof operation.
+Existing deck deflection or ponding water may require
+upgrading of the drainage provisions, including possible
+addition of new drains, increased bar joist support, etc.
+G. Ensure that there is no more than one existing roof covering.
+Once the applicability and practicality of a re-cover/
+re-roof has been determined, by the building owner or his
+design professional, and when all preliminary evaluations
+and necessary adjustments, or allowances, have been
+made the following preparations must be carried out.
+Preparation
+The ultimate performance of any re-cover project is the direct result
+of adequate preparation of the existing roof assembly. The following
+are the minimum recommendations for a successful re-cover:
+A. Power broom and vacuum all surfaces
+to remove loose aggregate.
+B. All wet or deteriorated areas of membrane, insulation
+or decking, components, blisters, splits, and surface
+irregularities shall be removed and patched to
+create a stable, smooth and even surface.
+
+
+===== PAGE 37 =====
+General Requirements and Design Criteria
+
+Part 7: Test Approvals
+and Classifications
+
+Part 9: Polyglass Warranty Program
+
+GENERAL
+REQUIREMENTS
+
+Polyglass offers no-cost Limited Material and Labor and
+Material Warranties. These Warranties protect the owner
+from leaks as a result of defective material. The length of
+these Warranties can vary from 10 to 30 years, depending
+on the specific system and materials installed.
+For a fee, Polyglass offers NDL (No Dollar Limit) Full System
+Warranties. These warranties protect the owner from leaks caused
+by defective material and workmanship (provided the system
+has been correctly installed by a Polyglass Preferred or Quantum
+Applicator. Full Systems warranties provide protection to the owner
+by covering all Polyglass products in the assembly, not just the
+roofing membrane. Full Systems warranties provide the owner with
+extensive protection. The systems are limited to materials supplied
+by Polyglass, and certain requirements, formalities of application
+and acceptance are required, PRIOR to the installation work.
+For specific Warranty Fees and Systems, contact
+your Polyglass Sales Representative.
+Polyglass Reserves the right not to issue the requested
+Warranty if the proper Guidelines of Registration have not
+been followed, or if the system does not meet the minimum
+requirements required for the desired Warranty.
+
+PRODUCT
+RANGE
+
+Polyglass has an ongoing Code Approvals and Product Compliance
+Testing program. Polyglass products are widely tested and
+approved in accordance with the requirements of ASTM and a
+variety of international approval bodies and testing laboratories
+in accordance with many internationally recognized standards.
+For specific details please contact Polyglass or consult the latest
+published listings of the various code/approval bodies.
+Testing is carried out by:
+• Underwriter’s Laboratories, LLC (UL)
+• Factory Mutual Approvals (FM)
+• Miami-Dade County Building Code Compliance (NOA)
+• Florida Building Code (FBC)
+• International Code Council (ICC)
+• Texas Department of Insurance (TDI)
+• Cool Roof Ratings Council (CRRC)
+• Canadian Standards Association (CSA)
+• Canadian General Standards Board (CGSB)
+
+Polyglass Roofing Applicators are not agents or representatives
+of Polyglass They are, however, independent applicators who
+have expressed an interest in Polyglass and have met the
+qualifications required by Polyglass. For specific applicators
+in your area, or to receive information on becoming a
+Polyglass Applicator, please contact a Polyglass Sales
+Representative or visit our website www.polyglass.us.
+
+LOW-SLOPE
+
+C. Remove existing roof flashings from curbs and
+parapet walls down to roof surface.
+D. Remove existing flashings at roof drains and roof penetrations.
+E. Install new wood nailers as necessary to accommodate
+insulation/recovery board or new nailing patterns.
+F. When mechanically attached, the fastening pattern
+for the insulation/recovery board shall be as
+recommended by the specific product manufacturer.
+G. Re-roofing over coal tar pitch generally requires a mechanically
+attached recovery board or insulation and a base sheet
+prior to the application of a Polyglass roofing system.
+
+Part 8: Polyglass Tiered
+
+DETAILS
+
+Polyglass maintains a roster of Roofing Contractors (Registered,
+Preferred and Quantum) who install and repair Polyglass roofing
+systems. Polyglass Roofing Contractors are those contractors
+who are eligible for Limited Material, Labor and Material, and
+Fully System Warranties, provided the installation complies
+with current Polyglass Details and Guide Specifications.
+The Polyglass contractor program is a three-tiered program
+that rewards contractors for quality Polyglass roof system
+installations. Designed to recognize the contractor for their
+commitment to excellence, each tier provides unique benefits.
+The three tiers are:
+• Registered Contractor
+• Preferred Contractor
+• Quantum Contractor
+
+SPECIFICATIONS
+
+Contractor Program
+
+35
+
+
+===== PAGE 38 =====
+Guide Specifications
+
+LOW-SLOPE
+
+2-Ply Systems
+
+1
+
+2
+3
+
+GENERAL
+REQUIREMENTS
+
+PRODUCT
+RANGE
+
+2-Ply Self-Adhered
+1. Cap Sheet: Polyflex® SA P, Elastoflex SA P or Polyfresko® G SA
+2. Base Sheet: Elastoflex SA V or SA V PLUS
+3. Roof Deck: Plywood
+
+1
+
+2
+
+DETAILS
+
+SPECIFICATIONS
+
+3
+
+36
+
+4
+
+2-Ply Self-Adhered
+1. Cap Sheet: Polyflex® SA P, Elastoflex SA P or Polyfresko® G SA
+2. Base Sheet: Elastoflex SA V or SA V PLUS
+3. Insulation: Polyglass Polytherm® ISO
+4. Roof Deck: Heavy Gauge Steel, Structural Concrete or Plywood
+
+
+===== PAGE 39 =====
+Guide Specifications
+2-Ply Systems
+
+2
+3
+4
+
+LOW-SLOPE
+
+1
+
+2-Ply Stick 1-Torch 1
+1. Cap Sheet: Polyflex® G, Elastoflex S6 G or Polyfresko® G
+2. Base Sheet: Elastoflex SA V or SA V PLUS or Elastobase® SA
+3. Insulation: Polyglass Polytherm® ISO
+4. Roof Deck: Heavy Gauge Steel or Structural Concrete
+
+PRODUCT
+RANGE
+GENERAL
+REQUIREMENTS
+
+1
+
+2
+
+3
+5
+
+DETAILS
+
+2-Ply Heat Welded APP
+1. Cap Sheet: Polyflex® G or Polyfresko® G
+2. Base Sheet: Polyglass Base or Polyflex®
+3. Coverboard: (by others)
+4. Insulation: Polyglass Polytherm® ISO
+5. Roof Deck: Heavy Gauge Steel or Structural Concrete
+
+SPECIFICATIONS
+
+4
+
+37
+
+
+===== PAGE 40 =====
+Guide Specifications
+
+LOW-SLOPE
+
+2-Ply Systems
+
+1
+
+2
+
+3
+
+4
+5
+
+GENERAL
+REQUIREMENTS
+
+PRODUCT
+RANGE
+
+2-Ply Heat Welded SBS
+1. Cap Sheet: Elastoflex S6 G, Elastoshield® TS G or Polyfresko® G SBS
+2. Base Sheet: Elastoflex S6 or Elastoshield® TS
+3. Coverboard: (by others)
+4. Insulation: Polyglass Polytherm® ISO
+5. Roof Deck: Heavy Gauge Steel or Structural Concrete
+
+1
+
+2
+3
+
+DETAILS
+
+SPECIFICATIONS
+
+4
+
+38
+
+2-Ply Lightweight Heat Welded
+1. Cap Sheet: Polyflex® G, Elastoflex S6 G or Polyfresko® G
+2. Interply Sheet: Polyflex® or Elastoflex S6
+3. Base Sheet: Elastobase® or Elastovent® (mechanically attached)
+4. Roof Deck: Lightweight Insulation Concrete (LWIC of approved type)
+
+
+===== PAGE 41 =====
+Guide Specifications
+2-Ply Systems
+
+LOW-SLOPE
+
+1
+
+2
+3
+4
+
+2-Ply Hot Mop
+1. Cap Sheet: Elastoflex S6 G, Elastoflex S6 G HP or Elastoshield® TS G
+2. Base Sheet: Elastobase® or Elastoflex V or Elastoshield® TS
+3. Insulation: Polyglass Polytherm® ISO (optional)
+4. Roof Deck: Structural Concrete
+
+PRODUCT
+RANGE
+
+1
+
+2
+3
+
+4
+
+DETAILS
+
+Note: Wind Uplift ratings determined by fastener pattern. Contact Polyglass Technical Support for full specifications.
+**Velociflex Systems may also incorporate cold applied bonding for cap sheet membranes.
+
+SPECIFICATIONS
+
+2-Ply Velociflex System
+1. Cap Sheet – Heat Welded**: Polyfresko® G/G SBS, Elastoflex S6 G/S6 G HP, Elastoshield TS G, or
+Polyflex® G/G HP
+2. Base Sheet – Mechanically Fastened (seam is heat fused): Elastoflex S6, Elastoflex S6 HP** or Polyflex®
+3. Insulation: Polyglass Polytherm® ISO
+4. Roof Deck: Heavy Gauge Steel or Structural Concrete
+
+GENERAL
+REQUIREMENTS
+
+HIGH WIND RESISTANT ROOF ASSEMBLY
+
+39
+
+
+===== PAGE 42 =====
+Guide Specifications
+
+LOW-SLOPE
+
+3-Ply Systems
+
+1
+
+2
+
+3
+
+4
+
+GENERAL
+REQUIREMENTS
+
+PRODUCT
+RANGE
+
+3-Ply Self-Adhered
+1. Cap Sheet: Polyflex® SA P, Elastoflex SA P or Polyfresko® G SA
+2. Interply Sheet: Elastoflex SA V or SA V PLUS
+3. Base Sheet: Elastoflex SA V or SA V PLUS
+4. Roof Deck: Plywood
+
+1
+
+DETAILS
+
+SPECIFICATIONS
+
+2
+
+40
+
+3
+
+4
+5
+
+3-Ply Self-Adhered
+1. Cap Sheet: Polyflex® SA P, Elastoflex SA P or Polyfresko® G SA
+2. Interply Sheet: Elastoflex SA V or SA V PLUS
+3. Base Sheet: Elastoflex SA V or SA V PLUS
+4. Insulation: Polyglass Polytherm® ISO
+5. Roof Deck: Heavy Gauge Steel, Structural Concrete or Plywood
+
+
+===== PAGE 43 =====
+Guide Specifications
+3-Ply Systems
+
+LOW-SLOPE
+
+1
+
+2
+
+3
+
+4
+5
+
+3-Ply Stick 2-Torch 1 System
+1. Cap Sheet: Polyflex® G, Elastoflex S6 G or Polyfresko® G
+2. Interply Sheet: Elastoflex SA V or SA V PLUS or Polyflex®
+3. Base Sheet: Elastoflex SA V or SA V PLUS
+4. Insulation: Polyglass Polytherm® ISO
+5. Roof Deck: Heavy Gauge Steel or Structural Concrete
+
+PRODUCT
+RANGE
+GENERAL
+REQUIREMENTS
+
+1
+
+2
+
+3
+
+4
+
+6
+
+DETAILS
+
+3-Ply Heat Welded APP
+1. Cap Sheet: Polyflex® G or Polyfresko® G
+2. Interply Sheet: Polyglass Base or Polyflex®
+3. Base Sheet: Polyglass Base or Polyflex®
+4. Coverboard: (by others)
+5. Insulation: Polyglass Polytherm® ISO
+6. Roof Deck: Heavy Gauge Steel or Structural Concrete
+
+SPECIFICATIONS
+
+5
+
+41
+
+
+===== PAGE 44 =====
+Guide Specifications
+
+LOW-SLOPE
+
+3-Ply Systems
+1
+
+2
+
+3
+
+4
+
+5
+
+GENERAL
+REQUIREMENTS
+
+PRODUCT
+RANGE
+
+6
+
+3-Ply Heat Welded SBS
+1. Cap Sheet: Elastoflex S6 G or Elastoshield® TS G
+2. Interply Sheet: Elastoflex S6 or Elastoshield® TS
+3. Base Sheet: Elastoflex S6 or Elastoshield® TS
+4. Coverboard: (by others)
+5. Insulation: Polyglass Polytherm® ISO
+6. Roof Deck: Heavy Gauge Steel or Structural Concrete
+
+1
+
+2
+
+3
+
+4
+
+DETAILS
+
+SPECIFICATIONS
+
+5
+
+42
+
+3-Ply Lightweight Heat Welded
+1. Cap Sheet: Polyflex® G, Elastoflex S6 G or Polyfresko® G
+2. Interply Sheet: Polyflex® or Elastoflex S6
+3. Base Sheet: Polyflex® or Elastoflex S6
+4. Base Sheet: Elastobase® or Elastovent™ (mechanically attached)
+5. Roof Deck: Lightweight Insulation Concrete (LWIC of approved type)
+
+
+===== PAGE 45 =====
+Guide Specifications
+3-Ply Systems
+
+2
+
+3
+4
+5
+
+LOW-SLOPE
+
+1
+
+3-Ply Hot Mop
+1. Cap Sheet: Elastoflex S6 G, Elastoflex S6 G HP or Elastoshield® TS G
+2. Interply Sheet: Elastobase® or Elastoflex V or Elastoshield® TS
+3. Base Sheet: Elastobase® or Elastoflex V or Elastoshield® TS
+4. Insulation: Polyglass Polytherm® ISO (optional)
+5. Roof Deck: Structural Concrete
+
+PRODUCT
+RANGE
+GENERAL
+REQUIREMENTS
+SPECIFICATIONS
+DETAILS
+
+Scan to view Specifications online
+
+43
+
+
+===== PAGE 46 =====
+Roofing Details
+LIQUID-APPLIED DRAIN DETAIL (Typical) – PG-LF-DRN-01
+
+LOW-SLOPE
+
+STRAINER BASKET
+
+APPROVED POLYGLASS
+LIQUID FLASHING
+
+12" MINIMUM (NTS)
+
+EXISTING ROOF
+SYSTEM
+
+EXISTING ROOF
+CONSTRUCTION
+
+DRAIN
+
+PRODUCT
+RANGE
+
+GENERAL NOTATIONS:
+• Wood blocking may be slotted for venting of wet-fill
+decks or other applicable constructions.
+• Wood blocking may be required at drain, depending on
+insulation thickness and type (not shown for clarity).
+• Cleaning and Preparation - Clean and prepare the surface by brooming
+mild detergent & water rinse or as required to remove any conditions that
+could adversely affect the adhesion of primers and liquid materials.
+
+• Surfaces to receive Polyglass Liquid Flashing System may
+need to be primed, depending on the surface.
+• Polyglass Liquid Flashing System consists one of the following; PolyFlash
+1C Base Coat, embed Polybrite Fabric, covered with PolyFlash 1C Surface
+Coat or Polyglass PMMA Flashing Base Coat, embed Polyglass PMMA
+Polyester, covered with Polyglass PMMA Flashing Surface Coat.
+• Illustration and notations intended for generalized application only.
+Please refer to Product Data Sheets for additional information.
+
+GENERAL
+REQUIREMENTS
+
+POLYFLASH 1C PIPE PENETRATION DETAIL (Typical) – PG-LF-PEN-01
+
+VENT PIPE
+
+APPROVED POLYGLASS
+LIQUID FLASHING
+
+SPECIFICATIONS
+
+EXISTING
+ROOF
+SYSTEM
+
+APPROVED POLYGLASS
+LIQUID FLASHING
+
+EXISTING ROOF
+CONSTRUCTION
+
+DETAILS
+
+GENERAL NOTATIONS:
+
+44
+
+• Wood blocking may be slotted for venting of wet-fill
+decks or other applicable constructions.
+• Wood blocking may be required at drain, depending on
+insulation thickness and type (not shown for clarity).
+• Cleaning and Preparation - Clean and prepare the surface by brooming
+mild detergent & water rinse or as required to remove any conditions that
+could adversely affect the adhesion of primers and liquid materials.
+
+• Surfaces to receive Polyglass Liquid Flashing System may
+need to be primed, depending on the surface.
+• Polyglass Liquid Flashing System consists of PolyFlash 1C Base Coat, embed
+Polybrite Reinforcing Polyester, covered with PolyFlash 1C Top Coat.
+• Illustration and notations intended for generalized application only.
+Please refer to Product Data Sheets for additional information.
+
+
+===== PAGE 47 =====
+Roofing Details
+POLYFLASH 1C FABRICATED CURB FLASHING DETAIL (Typical) – PG-LF-PEN-02
+
+ANGLED SEALANT FILL
+TYPICAL AT ALL
+TRANSITION POINTS
+APPROVED POLYGLASS LIQUID
+FLASHING. MIN. 3" ON VERTICAL
+AND 3" ON THE DECK.
+
+LOW-SLOPE
+
+FABRICATED CURB
+
+EXISTING ROOF
+SYSTEM
+
+BLOCKING AS APPLICABLE
+
+EXISTING ROOF
+CONSTRUCTION
+
+GENERAL NOTATIONS:
+• Polyglass Liquid Flashing System consists of PolyFlash 1C Base Coat, embed
+Polybrite Reinforcing Polyester, covered with PolyFlash 1C Top Coat.
+• Illustration and notations intended for generalized application only.
+Please refer to Product Data Sheets for additional information.
+
+PRODUCT
+RANGE
+
+• Wood blocking may be slotted for venting of wet-fill
+decks or other applicable constructions.
+• Cleaning and Preparation - Clean and prepare the surface by brooming
+mild detergent & water rinse or as required to remove any conditions that
+could adversely affect the adhesion of primers and liquid materials.
+• Surfaces to receive Polyglass Liquid Flashing System may
+need to be primed, depending on the surface.
+
+POLYFLASH 1C TO PASS THE
+EDGE OF THE REINFORCEMENT
+BY NO MORE THAN 1/4"
+ANGLED SEALANT FILL
+TYPICAL AT ALL
+TRANSITION POINTS
+EMBED POLYBRITE
+REINFORCING
+POLYESTER
+EXISTING ROOF
+POLYFLASH 1C
+SYSTEM
+BASE COAT
+
+1/4"
+3"
+MAXIMUM (NTS)
+MINIMUM (NTS)
+
+SPECIFICATIONS
+
+3"
+MINIMUM (NTS)
+
+POLYFLASH 1C TOP COAT
+
+GENERAL
+REQUIREMENTS
+
+1/4"
+MAXIMUM (NTS)
+
+POLYFLASH 1C FLASHING DETAIL (Typical) – PG-LF-VERT-01
+
+GENERAL NOTATIONS:
+• Cleaning and Preparation - Clean and prepare the surface by brooming
+mild detergent & water rinse or as required to remove any conditions that
+could adversely affect the adhesion of primers and liquid materials.
+• Surfaces to receive Polyglass Liquid Flashing System may
+need to be primed, depending on the surface.
+• Illustration and notations intended for generalized application only.
+Please refer to Product Data Sheets for additional information.
+
+DETAILS
+
+• Metal Edge Flashing, Wood Blockings and Attachments
+shall comply with ANSI/SPRI ES-1.
+• Wood blocking may be slotted for venting of wet-fill
+decks or other applicable constructions.
+• Detail only applicable when installing a membrane field wrap
+application, otherwise use approved metal flashings.
+
+45
+
+
+===== PAGE 48 =====
+Roofing Details
+
+LOW-SLOPE
+
+CURB DETAIL (Typical) – PG-LS-CURB-01
+APPROPRIATE
+FASTENER
+METAL COUNTER FLASHING
+AS APPLICABLE
+METAL FLASHING
+BASE PLY FLASHING
+APPROVED CANT
+CAP FLASHING
+CAP MEMBRANE
+BASE / INTERPLY
+MEMBRANE
+ROOF DECK
+
+BLOCKING AS APPLICABLE
+
+APPROVED SUBSTRATE
+
+PRODUCT
+RANGE
+
+GENERAL NOTATIONS:
+• Metal Edge Flashing, Wood Blockings and Attachments
+shall comply with ANSI/SPRI ES-1.
+• Refer to SMACNA recommendations and details regarding metal thickness and
+cleat requirements. Continuous cleats are recommended at all edges and coping
+flashings, cleats to be at least one gauge heavier than the edge/coping metal.
+• Wood blocking may be slotted for venting of wet-fill
+decks or other applicable constructions.
+• For heat fused membrane applications, set metal
+flashing onto heated softened membrane.
+
+• Extension of field base/plies 1" min above top of
+cant, required (not shown for clarity).
+• Membrane end laps to be a minimum 6" and fully
+adhered at all membrane to membrane seams.
+• Membrane laps at flanged metal to be 3" minimum
+and fully bonded to primed metal surface.
+• Use only when roof deck is support by the wall.
+
+EQUIPMENT CURB DETAIL (Typical) – PG-LS-CURB-02
+GENERAL
+REQUIREMENTS
+
+NEOPRENE PAD
+METAL FLASHING
+APPROPRIATE
+FASTENER
+METAL COUNTER FLASHING
+AS APPLICABLE
+APPROVED CANT
+BASE MEMBRANE FLASHING
+CAP FLASHING
+
+SPECIFICATIONS
+
+CAP MEMBRANE
+BASE / INTERPLY
+MEMBRANE
+
+BLOCKING AS APPLICABLE
+
+APPROVED SUBSTRATE
+
+ROOF DECK
+
+DETAILS
+
+GENERAL NOTATIONS:
+
+46
+
+• Metal Edge Flashing, Wood Blockings and Attachments
+shall comply with ANSI/SPRI ES-1.
+• Refer to SMACNA recommendations and details regarding metal thickness and
+cleat requirements. Continuous cleats are recommended at all edges and coping
+flashings, cleats to be at least one gauge heavier than the edge/coping metal.
+• Wood blocking may be slotted for venting of wet-fill
+decks or other applicable constructions.
+• For heat fused membrane applications, set metal
+flashing onto heated softened membrane.
+
+• Extension of field base/plies 1" min above top of
+cant, required (not shown for clarity).
+• Membrane end laps to be a minimum 6" and fully
+adhered at all membrane to membrane seams.
+• Membrane laps at flanged metal to be 3" minimum
+and fully bonded to primed metal surface.
+• Use only when roof deck is support by the wall.
+
+
+===== PAGE 49 =====
+Roofing Details
+ROOF DRAIN DETAIL (Typical) – PG-LS-DRN-01
+
+BASE / INTERPLY
+MEMBRANE
+
+DRAIN
+
+LOW-SLOPE
+
+STRAINER BASKET
+
+LEAD / COPPER FLASHING
+SET IN A BED OF APPROVED
+MASTIC
+CAP MEMBRANE
+STRIPPING PLY
+
+APPROVED SUBSTRATE
+
+ROOF DECK
+
+GENERAL NOTATIONS:
+
+PRODUCT
+RANGE
+
+• Wood blocking may be slotted for venting of wet-fill decks or other applicable constructions.
+• Wood blocking may be required at drain, depending on insulation thickness and type (not shown for clarity).
+• For heat fused membrane applications, set metal flashing onto heated softened membrane.
+• Membrane end laps to be a minimum 6" and fully adhered at all membrane to membrane seams.
+• Drain Installation and re-equipment by others.
+
+EDGE METAL DETAIL (Typical) – PG-LS-EDGE-01
+STRIPPING PLY
+
+CAP MEMBRANE
+BASE / INTERPLY
+MEMBRANE
+
+EDGE METAL
+
+GENERAL
+REQUIREMENTS
+
+APPROPRIATE
+FASTENERS
+
+CLEAT
+
+EXTERIOR
+CLADDING
+AS APPLICABLE
+
+ROOF DECK
+BLOCKING AS APPLICABLE
+
+SPECIFICATIONS
+
+APPROVED SUBSTRATE
+
+GENERAL NOTATIONS:
+• Membrane end laps to be a minimum 6" and fully
+adhered at all membrane to membrane seams.
+• Membrane laps at flanged metal to be 3" minimum
+and fully bonded to primed metal surface.
+• Use only when roof deck is support by the wall.
+• For Self-Adhered Membranes, in areas prone to freezing
+conditions, membrane shall be heat welded or sealed with
+an approved sealant at 90° bend of edge metal.
+
+DETAILS
+
+• Metal Edge Flashing, Wood Blockings and Attachments
+shall comply with ANSI/SPRI ES-1.
+• Refer to SMACNA recommendations and details regarding metal thickness and
+cleat requirements. Continuous cleats are recommended at all edges and coping
+flashings, cleats to be at least one gauge heavier than the edge/coping metal.
+• Wood blocking may be slotted for venting of wet-fill
+decks or other applicable constructions.
+• For heat fused membrane applications, set metal
+flashing onto heated softened membrane.
+
+47
+
+
+===== PAGE 50 =====
+Roofing Details
+
+LOW-SLOPE
+
+RAISED EDGE METAL DETAIL (Typical) – PG-LS-EDGE-02
+CAP MEMBRANE
+
+APPROPRIATE
+FASTENERS
+
+BASE / INTERPLY
+MEMBRANE
+
+APPROPRIATE
+FASTENERS
+EDGE METAL
+
+CLEAT
+APPROVED SUBSTRATE
+
+EXTERIOR
+CLADDING
+AS APPLICABLE
+
+ROOF DECK
+BLOCKING AS APPLICABLE
+
+PRODUCT
+RANGE
+
+GENERAL NOTATIONS:
+• Metal Edge Flashing, Wood Blockings and Attachments
+shall comply with ANSI/SPRI ES-1.
+• Refer to SMACNA recommendations and details regarding metal thickness and
+cleat requirements. Continuous cleats are recommended at all edges and coping
+flashings, cleats to be at least one gauge heavier than the edge/coping metal.
+• Wood blocking may be slotted for venting of wet-fill
+decks or other applicable constructions.
+
+• For heat fused membrane applications, set metal
+flashing onto heated softened membrane.
+• Membrane end laps to be a minimum 6" and fully
+adhered at all membrane to membrane seams.
+• Membrane laps at flanged metal to be 3" minimum
+and fully bonded to primed metal surface.
+• Use only when roof deck is support by the wall.
+
+GENERAL
+REQUIREMENTS
+
+EXPANSION JOINT WITH PRE-MANUFACTURED COVER DETAIL (Typical) – PG-LS-EXP-01
+EXPANSION JOINT
+AS APPLICABLE
+APPROPRIATE
+FASTENER
+METAL FLASHING
+APPROVED CANT
+BASE PLY FLASHING
+CAP FLASHING
+
+SPECIFICATIONS
+
+CAP MEMBRANE
+BASE / INTERPLY
+MEMBRANE
+ROOF DECK
+
+BLOCKING AS APPLICABLE
+
+APPROVED SUBSTRATE
+
+DETAILS
+
+GENERAL NOTATIONS:
+
+48
+
+• Metal Edge Flashing, Wood Blockings and Attachments
+shall comply with ANSI/SPRI ES-1.
+• Refer to SMACNA recommendations and details regarding metal thickness and
+cleat requirements. Continuous cleats are recommended at all edges and coping
+flashings, cleats to be at least one gauge heavier than the edge/coping metal.
+• Wood blocking may be slotted for venting of wet-fill
+decks or other applicable constructions.
+• For heat fused membrane applications, set metal
+flashing onto heated softened membrane.
+
+• Extension of field base/plies 1" min above top of
+cant, required (not shown for clarity).
+• Membrane end laps to be a minimum 6" and fully
+adhered at all membrane to membrane seams.
+• Membrane laps at flanged metal to be 3" minimum
+and fully bonded to primed metal surface.
+• Use only when roof deck is support by the wall.
+
+
+===== PAGE 51 =====
+Roofing Details
+VENT PIPE FLASHING WITH MEMBRANE SLEEVE DETAIL (Typical) – PG-LS-PEN-01
+
+SS DRAW BAND
+
+CAP FLASHING MEMBRANE
+APPROVED SEALANT
+
+VENT PIPE
+
+LOW-SLOPE
+
+APPROVED SEALANT
+
+CAP MEMBRANE
+BASE / INTERPLY
+MEMBRANE
+
+BLOCKING AS APPLICABLE
+
+ROOF DECK
+
+APPROVED SUBSTRATE
+
+GENERAL NOTATIONS:
+
+PRODUCT
+RANGE
+
+• Wood blocking may be slotted for venting of wet-fill decks or other applicable constructions.
+• For heat fused membrane applications, set metal flashing onto heated softened membrane.
+• Membrane end laps to be a minimum 6" and fully adhered at all membrane to membrane seams.
+• Membrane laps at flanged metal to be 3" minimum and fully bonded to primed metal surface.
+
+VENT PIPE FLASHING WITH LEAD SLEEVE DETAIL (Typical) – PG-LS-PEN-02
+GENERAL
+REQUIREMENTS
+
+LEAD / COPPER
+FLASHING
+VENT PIPE
+
+STRIPPING PLY
+CAP MEMBRANE
+BASE / INTERPLY
+MEMBRANE
+ROOF DECK
+
+SPECIFICATIONS
+
+APPROVED
+SEALANT
+
+APPROVED SUBSTRATE
+BLOCKING AS APPLICABLE
+
+GENERAL NOTATIONS:
+
+DETAILS
+
+• Wood blocking may be slotted for venting of wet-fill decks or other applicable constructions.
+• For heat fused membrane applications, set metal flashing onto heated softened membrane.
+• Membrane end laps to be a minimum 6" and fully adhered at all membrane to membrane seams.
+• Membrane laps at flanged metal to be 3" minimum and fully bonded to primed metal surface.
+
+49
+
+
+===== PAGE 52 =====
+Roofing Details
+VENT PIPE WITH PENETRATION POCKET DETAIL (Typical) – PG-LS-PEN-03
+
+LOW-SLOPE
+
+VENT PIPE
+
+APPROVED SEALANT
+SS DRAW BAND
+SHEET METAL RAIN
+HOOD OVERLAPPING
+PENETRATION POCKET
+SHEET METAL PITCH PAN,
+SOLDERED/WELDED
+WEATHER TIGHT
+SEE NOTE #5
+APPROVED SEALANT
+CAP MEMBRANE
+STRIPPING PLY
+BASE / INTERPLY
+MEMBRANE
+APPROVED SUBSTRATE
+
+BLOCKING AS APPLICABLE
+
+ROOF DECK
+
+PRODUCT
+RANGE
+
+GENERAL NOTATIONS:
+• Wood blocking may be slotted for venting of wet-fill decks or other applicable constructions.
+• For heat fused membrane applications, set metal flashing onto heated softened membrane.
+• Membrane end laps to be a minimum 6" and fully adhered at all membrane to membrane seams.
+• Membrane laps at flanged metal to be 3" minimum and fully bonded to primed metal surface.
+• Pitch pans filled with approved pourable sealer.
+
+GENERAL
+REQUIREMENTS
+
+THROUGH WALL SCUPPER DETAIL (Typical) – PG-LS-SCUP-01
+APPROVED MEMBRANE
+APPROPRIATE
+FASTENER
+APPROVED CANT BEYOND
+APPROPRIATE
+FASTENER
+STRIPPING PLY
+
+APPROVED
+SEALANT
+
+SPECIFICATIONS
+
+METAL SCUPPER
+
+CAP MEMBRANE
+
+APPROVED
+SEALANT
+
+BASE / INTERPLY
+MEMBRANE
+
+ROOF DECK
+APPROVED SUBSTRATE
+BLOCKING AS APPLICABLE
+
+DETAILS
+
+GENERAL NOTATIONS:
+
+50
+
+• Metal Edge Flashing, Wood Blockings and Attachments
+shall comply with ANSI/SPRI ES-1.
+• Refer to SMACNA recommendations and details regarding metal thickness and
+cleat requirements. Continuous cleats are recommended at all edges and coping
+flashings, cleats to be at least one gauge heavier than the edge/coping metal.
+• Wood blocking may be slotted for venting of wet-fill
+decks or other applicable constructions.
+• For heat fused membrane applications, set metal
+flashing onto heated softened membrane.
+
+• Extension of field base/plies 1" min above top of
+cant, required (not shown for clarity).
+• Membrane end laps to be a minimum 6" and fully
+adhered at all membrane to membrane seams.
+• Membrane laps at flanged metal to be 3" minimum
+and fully bonded to primed metal surface.
+• Use only when roof deck is support by the wall.
+
+
+===== PAGE 53 =====
+Roofing Details
+WALL TO ROOF FLASHING FOR NON-WALL SUPPORTED DECK (Typical) – PG-LS-WALL-01
+
+APPROPRIATE
+FASTENER
+
+METAL FLASHING
+CAP MEMBRANE
+
+APPROPRIATE
+FASTENER
+METAL FLASHING
+FLEXIBLE LINER W/
+COMPRESSIBLE INSULATION
+BASE PLY FLASHING
+APPROVED CANT
+
+LOW-SLOPE
+
+EXTERIOR CLADDING
+
+CAP FLASHING
+CAP MEMBRANE
+BASE / INTERPLY
+MEMBRANE
+
+ROOF DECK
+
+BLOCKING
+AS APPLICABLE
+
+APPROVED SUBSTRATE
+
+GENERAL NOTATIONS:
+• Extension of field base/plies 1" min above top of
+cant, required (not shown for clarity).
+• Membrane end laps to be a minimum 6" and fully
+adhered at all membrane to membrane seams.
+• Membrane laps at flanged metal to be 3" minimum
+and fully bonded to primed metal surface.
+• Use only when roof deck is support by the wall.
+
+PRODUCT
+RANGE
+
+• Metal Edge Flashing, Wood Blockings and Attachments
+shall comply with ANSI/SPRI ES-1.
+• Refer to SMACNA recommendations and details regarding metal thickness and
+cleat requirements. Continuous cleats are recommended at all edges and coping
+flashings, cleats to be at least one gauge heavier than the edge/coping metal.
+• Wood blocking may be slotted for venting of wet-fill
+decks or other applicable constructions.
+• For heat fused membrane applications, set metal
+flashing onto heated softened membrane.
+
+WALL TO ROOF FLASHING WITH METAL COPING (Typical) – PG-LS-WALL-02
+CLEAT & APPROPRIATE FASTENERS
+
+CONTINUOUS SHEET
+MEMBRANE LINER
+CLEAT & APPROPRIATE
+FASTENERS
+APPROVED CANT
+BASE MEMBRANE FLASHING
+
+GENERAL
+REQUIREMENTS
+
+SHEET METAL PARAPET CAP
+BY OTHERS
+
+CAP FLASHING
+CAP MEMBRANE
+
+ROOF DECK
+APPROVED SUBSTRATE
+BLOCKING AS APPLICABLE
+
+SPECIFICATIONS
+
+BASE / INTERPLY
+MEMBRANE
+
+GENERAL NOTATIONS:
+• Extension of field base/plies 1" min above top of
+cant, required (not shown for clarity).
+• Membrane end laps to be a minimum 6" and fully
+adhered at all membrane to membrane seams.
+• Membrane laps at flanged metal to be 3" minimum
+and fully bonded to primed metal surface.
+• Use only when roof deck is support by the wall.
+
+DETAILS
+
+• Metal Edge Flashing, Wood Blockings and Attachments
+shall comply with ANSI/SPRI ES-1.
+• Refer to SMACNA recommendations and details regarding metal thickness and
+cleat requirements. Continuous cleats are recommended at all edges and coping
+flashings, cleats to be at least one gauge heavier than the edge/coping metal.
+• Wood blocking may be slotted for venting of wet-fill
+decks or other applicable constructions.
+• For heat fused membrane applications, set metal
+flashing onto heated softened membrane.
+
+51
+
+
+===== PAGE 54 =====
+Roofing Details
+OUTSIDE CORNER FLASHING DETAIL (Typical) – PG-LS-WALL-03
+
+LOW-SLOPE
+
+APPROVED
+SUBSTRATE
+APPROVED
+ADHESIVE/PRIMER
+
+BASE
+FLASHING
+MEMBRANE
+
+APPROVED
+CANT
+
+BASE /
+INTERPLY
+MEMBRANE
+
+BASE
+FLASHING
+MEMBRANE
+
+BASE /
+INTERPLY
+MEMBRANE
+
+STEP 1
+
+STEP 2
+CAP
+FLASHING
+MEMBRANE
+
+CAP
+MEMBRANE
+
+BASE /
+INTERPLY
+MEMBRANE
+
+BASE /
+INTERPLY
+MEMBRANE
+
+STEP 4
+
+PRODUCT
+RANGE
+
+STEP 3
+
+CAP
+FLASHING
+MEMBRANE
+
+DETAILS
+
+SPECIFICATIONS
+
+GENERAL
+REQUIREMENTS
+
+STEP 5
+
+52
+
+GENERAL NOTATIONS:
+• For heat fused membrane applications, set metal flashing onto heated softened membrane.
+• Extension of field base/plies1" min above top of cant, required(not shown for clarity).
+• Membrane end laps to be a minimum 6" and fully adhered at all membrane to membrane seams.
+• Membrane laps at flanged metal to be 3" minimum and fully bonded to primed metal surface.
+
+CAP
+FLASHING
+MEMBRANE
+BASE /
+INTERPLY
+MEMBRANE
+ADDITIONAL
+REINFORCEMENT
+REQUIRED
+AT TOP AND
+BOTTOM OF
+CANT
+
+
+===== PAGE 55 =====
+Roofing Details
+INSIDE CORNER FLASHING DETAIL (Typical) – PG-LS-WALL-04
+CAP
+FLASHING
+MEMBRANE
+
+APPROVED
+CANT
+
+CAP
+MEMBRANE
+
+LOW-SLOPE
+
+APPROVED
+SUBSTRATE
+APPROVED
+ADHESIVE/PRIMER
+
+STEP 2
+
+STEP 1
+CAP
+FLASHING
+MEMBRANE
+
+PRODUCT
+RANGE
+
+STEP 3
+
+ADDITIONAL
+REINFORCEMENT
+REQUIRED
+AT TOP AND
+BOTTOM OF
+CANT
+
+GENERAL NOTATIONS:
+
+GENERAL
+REQUIREMENTS
+
+• For heat fused membrane applications, set metal flashing onto heated softened membrane.
+• Extension of field base/plies 1" min above top of cant, required(not shown for clarity).
+• Membrane end laps to be a minimum 6" and fully adhered at all membrane to membrane seams.
+• Membrane laps at flanged metal to be 3" minimum and fully bonded to primed metal surface.
+
+SPECIFICATIONS
+DETAILS
+53
+
+
+===== PAGE 56 =====
+Roofing Details
+
+LOW-SLOPE
+
+Velociflex Mechanically Attached Base Ply Fastening Pattern 6" – PG-BASE-003
+
+ZONE 1
+
+ZONE 2
+
+SEALING STRIP
+
+SPACING
+
+PRODUCT
+RANGE
+
+STAGGERED
+
+SEALING STRIP
+
+ZONE 3
+SPACING
+
+GENERAL
+REQUIREMENTS
+
+STAGGERED
+
+Roll Width (Y) Lap Width (Z)
+39 in (1m)
+
+39 in (1m)
+
+DETAILS
+
+SPECIFICATIONS
+
+39 in (1m)
+
+54
+
+4 in
+
+5 in
+
+6 in
+
+Zone
+
+Pattern
+
+Row Spacing (X)
+
+1
+
+6
+
+35 in
+
+Fasteners Per Square
+69
+
+2
+
+6, 6
+
+17.5 in
+
+138
+
+3
+
+6, 6, 6
+
+11.67 in
+
+206
+
+1
+
+6
+
+34 in
+
+71
+
+2
+
+6, 6
+
+17 in
+
+142
+
+3
+
+6, 6, 6
+
+11.33 in
+
+212
+
+1
+
+6
+
+33 in
+
+73
+
+2
+
+6, 6
+
+16.5 in
+
+146
+
+3
+
+6, 6, 6
+
+11 in
+
+219
+
+
+===== PAGE 57 =====
+Roofing Details
+Velociflex Mechanically Attached Base Ply Fastening Pattern 12" – PG-BASE-003
+
+LOW-SLOPE
+
+ZONE 1
+
+ZONE 2
+
+SEALING STRIP
+
+NOMINAL 60% OF FIELD ROW
+SPACING
+
+STAGGERED
+
+SPACING
+
+PRODUCT
+RANGE
+
+SEALING STRIP
+
+ZONE 3
+
+STAGGERED
+
+39 in (1m)
+
+39 in (1m)
+
+4 in
+
+5 in
+
+Zone
+
+Pattern
+
+Row Spacing (X)
+
+Fasteners Per Square
+
+1
+
+12
+
+35 in
+
+35
+
+2
+
+12, 12
+
+17.5 in
+
+69
+
+3
+
+12, 12, 12
+
+11.67 in
+
+103
+
+1
+
+12
+
+34 in
+
+36
+
+2
+
+12, 12
+
+17 in
+
+71
+
+3
+
+12, 12, 12
+
+11.33 in
+
+106
+
+1
+39 in (1m)
+
+6 in
+
+12
+
+33 in
+
+2
+
+12, 12
+
+16.5 in
+
+73
+
+3
+
+12, 12, 12
+
+11 in
+
+110
+
+GENERAL
+REQUIREMENTS
+
+Roll Width (Y) Lap Width (Z)
+
+37
+
+SPECIFICATIONS
+DETAILS
+55
+
+
+===== PAGE 58 =====
+Roofing Details
+
+LOW-SLOPE
+
+Velociflex Mechanically Attached Base Ply Fastening Pattern 18" – PG-BASE-003
+
+ZONE 1
+
+ZONE 2
+
+SEALING STRIP
+
+SPACING
+
+PRODUCT
+RANGE
+
+STAGGERED
+
+SEALING STRIP
+
+ZONE 3
+SPACING
+
+GENERAL
+REQUIREMENTS
+
+STAGGERED
+
+Roll Width (Y) Lap Width (Z)
+39 in (1m)
+
+39 in (1m)
+
+DETAILS
+
+SPECIFICATIONS
+
+39 in (1m)
+
+56
+
+4 in
+
+5 in
+
+6 in
+
+Zone
+
+Pattern
+
+Row Spacing (X)
+
+Fasteners Per Square
+
+1
+
+18
+
+35 in
+
+23
+
+2
+
+18, 18
+
+17.5 in
+
+46
+
+3
+
+18, 18, 18
+
+11.67 in
+
+69
+
+1
+
+18
+
+34 in
+
+24
+
+2
+
+18, 18
+
+17 in
+
+48
+
+3
+
+18, 18, 18
+
+11.33 in
+
+71
+
+1
+
+18
+
+33 in
+
+25
+
+2
+
+18, 18
+
+16.5 in
+
+49
+
+3
+
+18, 18, 18
+
+11 in
+
+73
+
+
+===== PAGE 59 =====
+Notes
+
+LOW-SLOPE
+PRODUCT
+RANGE
+
+GENERAL
+REQUIREMENTS
+
+SPECIFICATIONS
+
+DETAILS
+
+57
+
+Scan to view Detail Drawings online
+
+
+===== PAGE 60 =====
+STEEP-SLOPE
+
+58
+
+
+===== PAGE 61 =====
+59
+
+
+===== PAGE 62 =====
+STEEP-SLOPE
+
+Product Range
+
+Polystick® Underlayments with ADESO® Technology
+Polystick roof underlayments feature our revolutionary ADESO Technology, a patented method of manufacturing dualcompound self-adhesive membranes featuring enhanced lap sealing, designed to provide unmatched waterproofing across
+a wide range of roofing applications. This unique formulation includes an aggressive self-adhering bottom layer coupled
+with one of several types of top surfaces, depending on the application and waterproofing needs. No other underlayment
+on the market is made with this unique formulation, and none can surpass its level of protection.
+
+Mat
+
+ASTM
+
+Basic Use
+
+Top
+Surface
+
+Bottom
+Surface
+
+Application
+
+Polystick® XFR
+
+Fiberglass
+
+D1970
+
+Underlayment
+
+Film
+
+Release Film
+
+Self-Adhered
+
+Polystick® MTS PLUS
+
+Fiberglass
+
+D1970
+
+Underlayment
+
+Film
+
+Release Film
+
+Self-Adhered
+
+Polystick® TU MAX
+
+N/A
+
+D1970
+
+Underlayment
+
+Polyester Fabric
+
+Release Film
+
+Self-Adhered
+
+Polystick® TU PLUS
+
+Fiberglass
+
+D1970
+
+Underlayment
+
+Polyester Fabric
+
+Release Film
+
+Self-Adhered
+
+Polystick® TU P
+
+Polyester
+
+D1970
+
+Underlayment
+
+Mineral
+
+Release Film
+
+Self-Adhered
+
+N/A
+
+D1970
+
+Underlayment
+
+Film
+
+Release Paper
+
+Self-Adhered
+
+Fiberglass
+
+D1970
+
+Underlayment
+
+Mineral/Sand
+
+Release Film
+
+Self-Adhered
+
+PRODUCT
+RANGE
+
+Product
+
+Polystick® P
+
+GENERAL
+REQUIREMENTS
+
+Polystick® IR-Xe
+
+DETAILS
+
+SPECIFICATIONS
+
+Non-Modified Base, Felt and Anchor Sheets
+
+60
+
+Mat
+
+ASTM
+
+Basic Use
+
+Top
+Surface
+
+Bottom Surface
+
+N/A
+
+D226, Type I
+
+Anchor Sheet
+
+Film
+
+Film
+
+Polyglass® G2 Base
+
+Fiberglass
+
+D4601
+
+Base/Interply
+
+Sand
+
+Sand
+
+Polyglass® Ply IV
+
+Fiberglass
+
+D2178
+
+Interply
+
+Sand
+
+Sand
+
+Polyglass® Ply VI
+
+Fiberglass
+
+D2178
+
+Interply
+
+Sand
+
+Sand
+
+Product
+PolyAnchor®
+
+
+===== PAGE 63 =====
+Product Range
+
+STEEP-SLOPE
+
+Gross Coverage
+(Actual)
+
+Weight
+
+Nominal
+Thickness
+
+Length
+
+Width
+
+Rolls/
+UL
+Pallet
+
+150 ft2 (13.9 m2)
+
+160 ft2 (15 m2)
+
+75 lbs (34 kg)
+
+80 mils (2.0 mm)
+
+49'3" (15 m)
+
+39 3/8" (1 m)
+
+20
+
+200 ft2 (18.5 m2)
+
+215 ft2 (20 m2)
+
+74 lbs (33.5 kg)
+
+60 mils (1.5 mm)
+
+65'8" (20 m)
+
+39 3/8" (1 m)
+
+30
+
+200 ft2 (18.5 m2)
+
+215 ft2 (20 m2)
+
+70 lbs (32 kg)
+
+60 mils (1.5 mm)
+
+65'8" (20 m)
+
+39 3/8" (1 m)
+
+25
+
+200 ft2 (18.5 m2)
+
+215 ft2 (20 m2)
+
+79 lbs (36 kg)
+
+80 mils (2.0 mm)
+
+65'8" (20 m)
+
+39 3/8" (1 m)
+
+25
+
+100 ft2 (9.3 m2)
+
+108 ft2 (10 m2)
+
+86 lbs (39 kg)
+
+130 mils (3.3 mm)
+
+32'10" (10 m)
+
+39 3/8" (1 m)
+
+20
+
+180 ft2 (16.7 m2)
+
+200 ft2 (18.5 m2)
+
+56 lbs (25 kg)
+
+42 mils (1.07 mm)
+
+65'11" (20.1 m)
+
+36 ¼" (0.92 m)
+
+20
+
+180 ft2 (16.7 m2)
+
+195 ft2 (18.2 m2)
+
+56 lbs (25 kg) mineral
+61 lbs (28 kg) sand
+
+60 mils (1.5 mm)
+
+65'4" (19.9 m)
+
+36" (0.914 m)
+
+30
+
+PRODUCT
+RANGE
+
+Net Coverage
+(Approx)
+
+GENERAL
+REQUIREMENTS
+
+Weight
+
+Length
+
+Width
+
+Rolls/
+Pallet
+
+Mechanically Attached
+
+1,000 ft2 (93 m2)
+
+34 lbs (15.4 kg)
+
+250' (76.2 m)
+
+48" (1.2 m)
+
+20
+
+Hot Mop/Mechanically Attached
+
+325 ft2 (30 m2)
+
+78 lbs (35.4 kg)
+
+108' (33 m)
+
+36" (0.914 m)
+
+20
+
+Hot Mop/Mechanically Attached
+
+540 ft2 (50.2 m2)
+
+40 lbs (18.1 kg)
+
+180' (55 m)
+
+36" (0.914 m)
+
+20
+
+Hot Mop/Mechanically Attached
+
+540 ft2 (50.2 m2)
+
+45 lbs (20.4 kg)
+
+180' (55 m)
+
+36" (0.914 m)
+
+20
+
+UL
+
+DETAILS
+
+Gross Coverage
+(Actual)
+
+SPECIFICATIONS
+
+Application
+
+61
+
+
+===== PAGE 64 =====
+General Requirements and Design Criteria
+
+STEEP-SLOPE
+
+Part 1: Low Slope General Requirements ��������������������������������������������������������������������������� 63
+1.0 General........................................................................................................................................... 63
+1.1 Quality Assurance............................................................................................................................. 63
+1.2 Material Handling and Storage........................................................................................................... 63
+1.3 Limitations........................................................................................................................................ 63
+
+Part 2: Steep-Slope Roofing Materials ��������������������������������������������������������������������������������� 63
+2.0 Anchor Sheet.................................................................................................................................... 63
+2.1 Polyglass Polystick Self-Adhered Roof Underlayments ���������������������������������������������������������������������������� 63
+2.2 Finishing Roof Cover (by Others)......................................................................................................... 63
+2.3 Asphalt Primers................................................................................................................................. 64
+2.4 Modified Asphalt Adhesives............................................................................................................... 64
+
+Part 3: Steep-Slope Membrane Installation ����������������������������������������������������������������������� 64
+3.0 Surface Preparation........................................................................................................................... 64
+3.1 Re-Roofing Applications...................................................................................................................... 64
+3.2 Application of Mechanically Attached Sheet (Non-Direct to Deck) ����������������������������������������������������������� 64
+
+DETAILS
+
+SPECIFICATIONS
+
+GENERAL
+REQUIREMENTS
+
+PRODUCT
+RANGE
+
+3.3 Application of Polystick Underlayment.................................................................................................. 64
+
+62
+
+
+===== PAGE 65 =====
+General Requirements and Design Criteria
+Part 1: Steep-Slope
+
+1.0 General
+Provide all labor, materials, equipment, supervision, and incidentals
+as needed to install a complete Polyglass® reinforced modified
+bituminous underlayment over a new or accepted prepared
+existing roof substrate. All details of installation shall conform to
+Polyglass Specifications, Details and General Recommendations.
+
+1.1 QUALITY ASSURANCE
+
+IMPORTANT NOTE: Use extreme care when
+using open flame torches or similar devices when
+used in areas of combustible materials.
+
+Part 2: Steep-Slope Roofing Materials
+2.0 Anchor Sheet
+Any mechanically attached base sheet or anchor sheet, as
+approved or deemed applicable per project requirements.
+
+2.1 Polyglass Polystick Self-Adhered Roof Underlayments
+
+1.2 Material Handling and Storage
+2.2 Finishing Roof Cover (by Others)
+
+SPECIFICATIONS
+
+A. Clay, ceramic, concrete, or other roofing tiles, manufactured by
+others, maybe set in foam adhesives, mortar, or mechanically
+attached. Battens are approved for use for Tile applications as
+well as Tile stacking/loading. NOTE: Polyglass does provide
+detailed instructions for Tile stacking. Tile stacking instruction
+can be found on packaging, within certain building code
+documentations (as applicable) and online at www.polyglass.us.
+B. Mechanically attached metal roofing systems, shingles, shakes
+and other approved/accepted finished roofing products.
+
+DETAILS
+
+A. All materials, except those that are shop fabricated
+shall be delivered to the job site with their original
+labels intact. Bulk materials shall be identified by
+the manufacturer as to specification issued.
+B. All materials shall be stored in accordance with the
+instructions of the manufacturer prior to their application or
+installation. No wet or damaged materials will be used
+in the application. Materials stored on the job site shall
+be a minimum 4" (10 cm) off the ground of the roof.
+C. Polyglass Polystick self-adhered underlayments are to be stored
+at room temperature whenever possible and in an upright
+position on a flat surface. Avoid storing out of packaging
+for prolonged periods, especially above 88°F (31°C),
+in direct sunlight. Do not take the Polystick underlayment
+roll out of the packaging until it is ready for application.
+Refer to technical bulletins found at www.polyglass.us
+for more instruction on storage and handling.
+D. Application of all roofing shall be accomplished in such a
+way that each area will be complete at the end of each day’s
+work. All roof edges and incomplete flashing shall be protected
+against water entry, particularly between work periods.
+E. When ambient temperature is below 40°F (5°C),
+care must be exercised in handling and storing
+
+GENERAL
+REQUIREMENTS
+
+Polyglass Polystick Self-Adhered roof underlayments are
+homogeneous rubberized asphalt membranes (fiberglass or
+polyester reinforced, or non-reinforced) designed for specific
+applications as a waterproofing underlayment. The bottom surface
+of the sheet has an adhesive compound with split release film for
+ease of application. Typically, Polystick underlayments are 200 ft2
+(18.5 m2) net coverage (approximate) or 215 ft2 (20 m2) gross
+coverage (actual) per roll and weigh approximately 75 lbs (34 kg).
+
+PRODUCT
+RANGE
+
+A. Products used in the work of this Section shall be
+manufactured by Polyglass or accepted for use in
+conjunction with the products manufactured by Polyglass.
+B. The Roofing Contractor shall be currently accepted
+by Polyglass as qualified to install the materials of
+this section to receive a Polyglass warranty.
+C. Do not apply roofing during inclement weather. Do not apply
+roofing membrane to damp frozen, dirty or dusty surfaces.
+D. Installation of any Polyglass Polystick® Self-Adhered
+Underlayment system shall be at the lowest point of the
+roof (or roof area), working up the slope toward the
+highest point. Lap sheets shingle fashion to constantly shed
+water. For further information contact Polyglass Technical
+Services. Follow the recommendations for the specific type
+of material and layer as outlined below, or as specified.
+NOTE: Some applications may require the acceptable
+application method of strapping the roof as constructed.
+
+1.3 Limitations
+
+STEEP-SLOPE
+
+General Requirements
+
+Polyglass products. Only products for immediate
+application shall be exposed to the elements.
+F. All masonry, concrete and sheet metal surfaces incorporated
+into the roof system shall be primed with Polyglass PG-100
+asphalt primer meeting ASTM D-41 specification and allowed
+to dry prior to installing bituminous roofing materials.
+G. Wood curbs or nailers, where required, shall be pressure treated
+with accepted pressure treatment meeting AWAP Standard P-5.
+
+63
+
+
+===== PAGE 66 =====
+STEEP-SLOPE
+
+General Requirements and Design Criteria
+2.3 Asphalt Primers
+
+3.3 Application of Polystick Underlayment
+
+Polyglass PG 100 Fast Drying Asphalt Primer or any other
+ASTM D-41 asphaltic primer, PolyBrite® 745 Water-Based
+Primer/Adhesive or WB 3000 Water Based Primer; applied
+in strict conformance to manufacturers recommendations.
+
+Directly over the acceptable substrate/insulation/anchor sheet,
+install one ply of Polystick underlayment. Polystick underlayments
+shall be installed without wrinkles or fishmouths. Unless the substrate
+surface is flat, voids may occur which will be hard to seal and
+may not render a permanent, waterproof roof. It is the installer’s
+responsibility to ensure that substrate conditions permit a wrinkle
+and void-free installation. Any voids occurring may have to be
+sealed with a heat gun or an application of Polyglass PolyPlus® 50
+Premium Modified Wet/Dry Cement or PG 500 Modified Cement.
+Starting from the lowest point of the roof, cut and unroll the
+membrane to a suitable desired length (depending on conditions).
+A. Position the material in the desired location on the substrate,
+align the membrane at the lowest edge of the roof.
+B. Fold the material back onto itself (width wise) and remove the
+split back release paper from the exposed side, gradually push/
+roll the material into place (do not lift and drop the material into
+place, air pockets may occur that will be difficult to remove).
+C. Apply even pressure along the entire length of the
+membrane, from center to outer edges, to avoid air
+inclusions or wrinkles. Repeat for other side.
+D. Polystick underlayments require specific back nailing
+attachments. These attachments are dictated by the slope of the
+roof. Please follow the Polyglass published back nailing guides,
+as published in this manual or online at www.polyglass.us.
+E. Position successive rolls providing a minimum 6" (15 cm) end lap
+and 3" (7.5 cm) side lap. Position the next sheet by overlapping
+seams to lineup the overlap of the top sheet edge with the
+inside of the bottom sheet’s factory selvage edge. Repeat the
+above procedure for all subsequent sheets. At side overlaps,
+remove the protective seam tape (if applicable) and apply even
+pressure to seam area. Exception: Polystick® TU PLUS must line
+up with the guideline at the bottom of the nail area. Reference
+product specific applications listed on Product Data Sheets.
+F. After adhering the Polystick underlayment, uniform pressure
+must be applied to the entire surface. Roll area with a 35 lbs
+(16 kg) or 75 lbs (34 kg) weighted roller, or water-filled lawn
+roller. Brooming the surface of the Polystick membrane is also
+acceptable on steep pitched roof applications where safety
+is a concern. NOTE: Polyglass advises that proper safety
+precautions are taken during rolling on all sloped roofs.
+G. Polystick membranes shall be installed perpendicular to the slope
+of the roof, starting at the lowest point of application, wherever
+possible. Laps of sheets should be installed to shed water with
+the slope of the roof wherever practical. NOTE: Strapping of
+the Polystick underlayment is acceptable in certain applications.
+H. Additional applications of certain Polystick underlayments
+are applicable when applied directly to an installed
+layer of either Polystick® MTS Plus or Polystick® XFR.
+
+2.4 Modified Asphalt Adhesives
+Polyglass PolyPlus® 50 Premium Modified Wet/Dry
+Cement or PG 500 Modified Cement; applied in strict
+conformance to Polyglass installation instructions. Use is
+required for certain Polyglass Warranty programs.
+
+Part 3: Steep-Slope
+Membrane Installation
+
+PRODUCT
+RANGE
+
+3.0 Surface Preparation
+The roof surface, which is to receive the Polystick
+underlayment, shall be smooth, clean, free from loose
+gravel, dirt, and debris, dry and structurally sound.
+Application of Polyglass Polystick Self-Adhered Underlayment –
+Direct to Deck
+NOTE: Where required, prime in accordance with requirements and
+recommendations of the primer and priming materials manufacturer
+(if applicable). Typically, recover boards must be field primed.
+
+DETAILS
+
+SPECIFICATIONS
+
+GENERAL
+REQUIREMENTS
+
+3.1 Re-Roofing Applications
+
+64
+
+A. Remove existing metal edging down to the surface of
+the roof. Remove existing flashings at roof details and
+roof penetrations. Remove all wet or deteriorated roofing
+substrate materials or insulation and fill in any low spots
+that may occur as a result of any removal work, to create
+a smooth even surface for application of underlayments.
+B. Existing roof surfaces shall be primed as necessary with
+Polyglass PG 100 Fast Drying Asphalt Primer or any other ASTM
+D-41 asphaltic primer, PolyBrite 745 Water-Based Primer/
+Adhesive or WB 3000 Water Based Primer and allowed to dry
+prior to installing the Polystick membrane underlayment, applied
+in strict conformance to manufacturers recommendations.
+
+3.2 Application of Mechanically Attached
+Sheet (Non-Direct to Deck)
+A. Directly over the acceptable substrate/insulation install
+one ply of approved, nailable base sheet with minimum
+3" (7.5 cm) side laps and minimum 6" (15 cm) end laps.
+Seams and all laps shall be without wrinkles or fishmouths.
+B. The base sheet shall be mechanically fastened with
+approved fastening systems, appropriate for the
+specific deck type and thickness. Length to be as
+determined as per required penetration of deck.
+C. Where a vapor retarder, slip or base sheet is required by the
+specifier, follow the instructions regarding the particular materials
+specified and install in accordance with the recommendations
+of the manufacturer and the requirements of the architect.
+
+
+===== PAGE 67 =====
+General Requirements and Design Criteria
+I.
+
+STEEP-SLOPE
+
+J.
+
+At any intersection between different roof slopes, narrow
+valleys or gutters (less than 3' (0.9 m) wide) or similar details,
+require an initial ply of Polystick MTS Plus, Polystick XFR or
+Elastoflex SA V under the applicable Polystick underlayments,
+extending minimum 6" (15 cm) onto each surface. Polyglass
+recommends that all metal flashing components be contained
+and sealed between pieces of Polystick underlayment.
+When installing and applying finishing roof covering (metal,
+shingle, tile, etc.) by Others, review the Manufacturers
+Specifications and/or Local Building Codes.
+
+PRODUCT
+RANGE
+GENERAL
+REQUIREMENTS
+SPECIFICATIONS
+DETAILS
+65
+
+
+===== PAGE 68 =====
+Guide Specifications
+1-Ply Systems
+
+STEEP-SLOPE
+
+1
+3
+2
+
+4
+
+DETAILS
+
+SPECIFICATIONS
+
+GENERAL
+REQUIREMENTS
+
+PRODUCT
+RANGE
+
+1-Ply Polystick MTS PLUS
+1. Roof Covering: Metal Roofing (by others)
+2. Base Ply Underlayment: Polystick MTS PLUS
+3. Base Layer: 30 lb. Sheet (per code)
+4. Roof Deck: Approved/Accepted Substrate (prime when necessary)
+
+66
+
+1
+3
+2
+
+1-Ply Polystick XFR
+1. Roof Covering: Metal Roofing (by others)
+2. Base Ply Underlayment: Polystick XFR
+3. Base Layer: 30 lb. Sheet (per code)
+4. Roof Deck: Approved/Accepted Substrate (prime when necessary)
+
+4
+
+
+===== PAGE 69 =====
+Guide Specifications
+1-Ply Systems
+
+STEEP-SLOPE
+
+1
+
+4
+
+2
+3
+
+1-Ply Polystick P
+1. Roof Covering: Metal Roofing (by others)
+2. Base Ply Underlayment: Polystick P
+3. Base Layer: 30 lb. Sheet (per code)
+4. Roof Deck: Approved/Accepted Substrate (prime when necessary)
+
+PRODUCT
+RANGE
+
+1
+
+2
+
+SPECIFICATIONS
+
+1-Ply Polystick IR-Xe
+1. Roof Covering: Asphalt Shingles (by others)
+2. Base Ply Underlayment: Polystick IR-Xe (sand or mineral)
+3. Roof Deck: Approved/Accepted Substrate (prime when necessary)
+
+GENERAL
+REQUIREMENTS
+
+3
+
+DETAILS
+67
+
+
+===== PAGE 70 =====
+Guide Specifications
+
+STEEP-SLOPE
+
+1-Ply Systems
+
+3
+
+1
+
+2
+
+4
+
+DETAILS
+
+SPECIFICATIONS
+
+GENERAL
+REQUIREMENTS
+
+PRODUCT
+RANGE
+
+1-Ply Polystick TU MAX
+1. Roof Covering: Roofing Tiles (by others)
+2. Base Ply Underlayment: Polystick TU MAX
+3. Base Layer: 30 lb. Base (per code)
+4. Roof Deck: Approved/Accepted Substrate (prime when necessary)
+
+68
+
+3
+
+1
+
+2
+
+1-Ply Polystick TU PLUS
+1. Roof Covering: Roofing Tiles (by others)
+2. Base Ply Underlayment: Polystick TU PLUS
+3. Base Layer: 30 lb. Base (per code)
+4. Roof Deck: Approved/Accepted Substrate (prime when necessary)
+
+4
+
+
+===== PAGE 71 =====
+Guide Specifications
+2-Ply Systems
+
+1
+3
+4
+
+STEEP-SLOPE
+
+5
+
+2
+
+2-Ply Polystick TU PLUS/Polystick MTS PLUS
+1. Roof Covering: Roofing Tiles (by others)
+2. Top Ply Underlayment: Polystick TU PLUS or Polystick TU MAX
+3. Base Ply Underlayment: Polystick MTS PLUS
+4. Base Layer: 30 lb. Base (per code)
+5. Roof Deck: Approved/Accepted Substrate (prime when necessary)
+
+PRODUCT
+RANGE
+
+1
+2
+4
+
+GENERAL
+REQUIREMENTS
+
+5
+
+3
+
+SPECIFICATIONS
+DETAILS
+
+2-Ply Polystick MTS PLUS/Polystick MTS PLUS
+1. Roof Covering: Metal Roofing (by others)
+2. Top Ply Underlayment: Polystick MTS PLUS
+3. Base Ply Underlayment: Polystick MTS PLUS
+4. Base Layer: 30 lb. Base (per code)
+5. Roof Deck: Approved/Accepted Substrate (prime when necessary)
+
+69
+
+
+===== PAGE 72 =====
+Guide Specifications
+
+STEEP-SLOPE
+
+2-Ply Systems
+5
+
+1
+3
+2
+4
+
+DETAILS
+
+SPECIFICATIONS
+
+GENERAL
+REQUIREMENTS
+
+PRODUCT
+RANGE
+
+2-Ply Polystick XFR/Polystick XFR
+1. Roof Covering: Metal Roofing (by others)
+2. Top Ply Underlayment: Polystick XFR
+3. Base Ply Underlayment: Polystick XFR
+4. Base Layer: 30 lb. Base (per code)
+5. Roof Deck: Approved/Accepted Substrate (prime when necessary)
+
+70
+
+Scan to view
+Specifications online
+
+Scan to view
+Detail Drawings online
+
+
+===== PAGE 73 =====
+Roofing Details
+VALLEY FLASHING DETAIL (Typical) – PG-SS-VLY-01
+
+STEEP-SLOPE
+
+CAP MEMBRANE
+CAP MEMBRANE
+FLASHING
+BASE MEMBRANE
+FLASHING
+
+)
+12" (NTS
+M
+"
+S)
+U
+8
+1
+M
+I
+NT
+M(
+MIN
+U
+IM
+MIN
+
+APPROVED SUBSTRATE
+
+GENERAL NOTATIONS:
+
+PRODUCT
+RANGE
+
+• Metal Edge Flashing, Wood Blockings and Attachments shall comply with ANSI/SPRI ES-1.
+• Refer to SMACNA recommendations and details regarding metal thickness and cleat requirements. Continuous cleats are
+recommended at all edges and coping flashings, cleats to be at least one gauge heavier than the edge/coping metal.
+• Wood blocking may be slotted for venting of wet-fill decks or other applicable constructions.
+• For heat fused membrane applications, set metal flashing onto heated softened membrane.
+• Extension of field base/plies 1" min above top of cant, required (not shown for clarity).
+• Membrane end laps to be a minimum 6" and fully adhered at all membrane to membrane seams.
+• Membrane laps at flanged metal to be 3" minimum and fully bonded to primed metal surface.
+• Use only when roof deck is support by the wall.
+
+STEEP-SLOPE TO LOW-SLOPE TRANSITION DETAIL (Typical) – PG-SS-VLY-02
+GENERAL
+REQUIREMENTS
+
+STEEP ROOF COVERING
+
+6
+U "
+M
+(N
+TS
+
+)
+
+APPROVED FASTENER
+FASTEN THROUGH CAP
+MEMBRANE
+
+M
+
+M
+
+IN
+
+IM 12
+U "
+M
+(N
+
+TS
+
+)
+
+BASE / INTERPLY
+MEMBRANE
+
+SPECIFICATIONS
+
+IN
+
+IM
+
+CAP MEMBRANE
+
+APPROVED SUBSTRATE
+
+GENERAL NOTATIONS:
+
+DETAILS
+
+• Metal Edge Flashing, Wood Blockings and Attachments shall comply with ANSI/SPRI ES-1.
+• Refer to SMACNA recommendations and details regarding metal thickness and cleat requirements. Continuous cleats are
+recommended at all edges and coping flashings, cleats to be at least one gauge heavier than the edge/coping metal.
+• Wood blocking may be slotted for venting of wet-fill decks or other applicable constructions.
+• For heat fused membrane applications, set metal flashing onto heated softened membrane.
+• Extension of field base/plies 1" min above top of cant, required (not shown for clarity).
+• Membrane end laps to be a minimum 6" and fully adhered at all membrane to membrane seams.
+• Membrane laps at flanged metal to be 3" minimum and fully bonded to primed metal surface.
+• Use only when roof deck is support by the wall.
+
+71
+
+
+===== PAGE 74 =====
+POLYGLASS U.S.A., Inc.
+1111 West Newport Center Drive
+Deerfield Beach, FL 33442
+pgmarketing@polyglass.com
+Customer Service: (800) 222-9782
+Customer Success: (888) 975-1286
+
+© 2023 Polyglass U.S.A., Inc. All rights reserved.
+All information printed is accurate at the time of publication and may change at any time with or without notice.
+For the most up to date information and data, please visit our website at polyglass.us.
+
+2/2022 - 1,500 - APPLE
+
+polyglass.us

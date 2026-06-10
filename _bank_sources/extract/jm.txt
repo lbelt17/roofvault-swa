@@ -1,0 +1,4699 @@
+SOURCE: RS-7869-APP-Installaion-Application-Guide.pdf
+TOTAL_PAGES: 132
+
+
+===== PAGE 1 =====
+APP Roofing Systems
+Commercial Roofing Application Guide
+
+
+===== PAGE 2 =====
+
+
+
+===== PAGE 3 =====
+APP Commercial Roofing
+Application Guide
+
+Table of Contents
+Section One
+Roof Insulation Application Guide  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 1-1
+Roof Insulation Fastener Placement . .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 1-3
+Roof Insulation Attachment Patterns  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 1-10
+
+Section Two
+APP Heat-Welded Application Guide  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 2-1
+APP Modified Bitumen Cold-Applied Application Guide .  .  .  .  .  .  .  .  .  . 2-21
+
+Section Three
+Mechanically Fastened Base Sheet Fastening Patterns .  .  .  .  .  .  .  .  .  .  . 3-2
+
+Section Four
+JM APP Flashing Details Introduction .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 4-1
+Contents .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 4-6
+JM PermaFlash® Flashing System Application Guide  .  .  .  .  .  .  .  .  .  .  .  .  . 4-8
+JM PermaFlash® Flashing Details .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 4-12
+Heat-Weld Flashing Details  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 4-33
+Vapor Barriers .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  . 4-67
+
+Download a free QR Reader app on your smart
+phone. When you see a QR code, use your phone
+to scan the code. It will then redirect your phone to
+a specific video or detail. These codes will allow you
+to view step by step instructional videos and will
+allow you to zoom in on details for better readability.
+If you are viewing this booklet online you can click
+on these codes to direct you to the online videos
+and details as well.
+
+Disclaimer:
+The Roofing Systems Commercial Roofing Application Guide is intended as a guide only; actual
+conditions encountered during installation may vary from jobsite to jobsite. By providing this
+guidance, Johns Manville assumes no responsibility for quality of installation, field workmanship,
+building code compliance, or job safety. Johns Manville Safety Data Sheets (MSDS) are available
+with specific product safety information. For information on other Johns Manville thermal
+insulations and systems, call (800) 922-5922 or visit JM.com.
+
+
+===== PAGE 4 =====
+Roof Insulation Application
+
+Section One:
+Roof Insulation Application
+
+SECTION
+
+ONE
+
+1
+
+Roof Insulation
+Application Guide,
+and Fastening Patterns
+
+
+===== PAGE 5 =====
+Roof Insulation
+Application Guide
+
+It is important to know that all Johns Manville polyiso boards are printed with
+installation directions of “This side down”. This installation method is required
+for adhered systems and recommended when used under mechanically
+attached membranes. Foam insulation products are combustible and should be
+properly protected from exposure to fire during storage, transit, and application.
+
+Roof Insulation Application
+
+Insulation Installation Considerations
+
+Storage
+
+JM roof insulations (polyiso, Invinsa®, and FESCO®) are shipped with plastic
+shrouds that are intended to temporarily protect the insulation while in transit. There
+are two packaging methods (plastic wrap or plastic bag) that are used depending
+upon the product and the manufacturing facility. No matter how packaged, JM
+insulation should not be stored in or around standing water. Since all packaging is
+5-sided, the pallets should be elevated and stored on a finished surface rather than
+on dirt or grass. Exercise care during handling to prevent insulation damage; avoid
+pushing pallets off the truck, rolling pallets on the ground or roof, and removing the
+package support feet. No more insulation should be installed than can be completely covered with membrane on the same day.
+• Plastic Wrap Packaging is shipped to the job site with tarps. At the job site this
+packaging is adequate for outside
+storage without tarps provided the
+insulation arrives intact with the
+original undamaged weather-tight
+plastic wrap, for two weeks or less. For
+storage greater than two weeks, JM
+recommends slitting the plastic shrink
+wrap prior to covering the pallet with
+a breathable tarpaulin, to allow for
+venting. For storage greater than one month, insulation should be stored indoors
+in a dry, well-ventilated warehouse.
+• Plastic Bag Packaging is shipped to
+the job site without tarps as this
+packaging protects the insulation
+during shipment. For storage less than
+two weeks, the packaging is adequate
+for outside storage without tarps
+provided the insulation arrives intact
+with the original undamaged weathertight plastic bag. For storage greater
+than two weeks, JM recommends slitting the plastic shrink bag prior to covering
+the pallet with a breathable tarpaulin, to allow for venting. For storage greater
+than one month, insulation should be stored indoors in a dry, well-ventilated
+warehouse.
+
+Installation
+
+Insulation must be independently fastened to the roof deck in mechanically
+attached and adhered systems. Adhering certain insulations in hot asphalt or cold
+adhesives is sometimes acceptable for adhered systems (only for 4'x4' boards).
+For specific requirements, contact the JM Technical Services Group.
+Always cut insulation to fit closely around all roof penetrations. Around drains,
+and primary scuppers, taper insulation a minimum of 36''x 36'' (91.44 cm x 91.44
+cm) for proper drainage.
+Apply rigid insulation directly over fluted steel decks to provide smooth, continuous
+membrane support. Insulation should be installed with long edges parallel to the
+direction of the deck and supported by the deck flange. When butting insulation
+layers, do not allow the edge of either board to overlap an open flute. Cut the
+1-1
+
+SECTION
+
+ONE
+
+
+===== PAGE 6 =====
+Roof Insulation Application
+
+Roof Insulation
+Application Guide
+
+SECTION
+
+ONE
+
+insulation so the edge of the board is about at the center of, and supported by, the
+flange. Any gaps between insulation greater than 1/4'' should be filled.
+
+Double Insulation Layers.
+
+Installing roof insulation in multiple layers provides the designer with improved
+thermal performance. It also contributes to the overall performance of the roof
+system for the following reasons:
+• Recent studies indicate that as much as 8% of the thermal efficiency of the
+insulation can be lost through the insulation joints and exposed insulation
+fasteners of single layer installations. Insulation joints that are staggered in
+multiple layer installations block the flow of heat.
+• Multiple layer insulation installation reduces the stress accumulation of a
+thick, single insulation joint and distributes the stress more evenly over the
+multiple, thinner insulation joints.
+• The bottom side of the membrane is protected from physical damage from
+insulation plates and fasteners by the second layer of insulation if the top layer
+is adhered.
+• Roof decks may be stiffened.
+
+Asphalt Temperatures
+
+JM endorses the guidelines established by the NRCA and ARMA for heating
+asphalt for proper insulation applications. Asphalt should be applied at the
+Equiviscous Temperature (EVT), ± 25°F (±14°C).
+
+Cold Weather Application
+
+Hot asphalt chills rapidly at 40°F (4°C). To avoid problems associated with “cold”
+asphalt application, insulation may be applied with mechanical fasteners. Another
+method when using hot asphalt may be the “mop and flop” method. The “mop and
+flop” method entails mopping the back of the insulation so that the asphalt retains
+its adhesive qualities for a longer period. When adhering insulation, including hot
+asphalt, board size shall not exceed 4’ x 4’ (1.22 m x 1.22 m). Care should be taken
+in any application below 40°F (4°C).
+
+Mechanical Application to Steel Decks
+
+Mechanical attachment of insulation to steel decks is the only acceptable attachment method. For current information regarding Factory Mutual requirements over
+insulated steel decks, please check with a JM Technical Services Specialist, or the
+current FM ApprovalsSM RoofNav®.
+
+Adhesive Application
+
+JM insulations may be installed in Insulation Adhesives:
+• Two-Part Urethane Insulation Adhesive (2P-UIA) Bead Application Only
+• One-Step Foamable Adhesive
+• Roofing Systems Urethane Adhesive
+Board sizes shall not exceed 4’ x 4’ (1.22 m x 1.22 m). Refer to product data sheets
+for adhesive coverage rates.
+1-2
+
+
+===== PAGE 7 =====
+Roof Insulations
+Fastener Placement
+2’ x 4’ (.61 m x 1.22 m) Boards
+
+Roof Insulations Fastener Placement
+SECTION
+
+ONE
+
+1-3
+
+
+===== PAGE 8 =====
+Roof Insulations
+Fastener Placement
+
+Roof Insulations Fastener Placement
+
+4’ x 4’ (1.22 m x 1.22 m) Boards
+
+SECTION
+
+ONE
+
+1-4
+
+
+===== PAGE 9 =====
+Roof Insulations
+Fastener Placement
+4’ x 4’ (1.22 m x 1.22 m) Boards
+
+Roof Insulations Fastener Placement
+SECTION
+
+ONE
+
+1-5
+
+
+===== PAGE 10 =====
+Roof Insulations
+Fastener Placement
+
+Roof Insulations Fastener Placement
+
+4’ x 8’ (1.22 m x 2.44 m) Boards
+
+SECTION
+
+ONE
+
+1-6
+
+
+===== PAGE 11 =====
+Roof Insulations
+Fastener Placement
+4’ x 8’ (1.22 m x 2.44 m) Boards
+
+Roof Insulations Fastener Placement
+SECTION
+
+ONE
+
+1-7
+
+
+===== PAGE 12 =====
+Roof Insulations
+Fastener Placement
+
+Roof Insulations Fastener Placement
+
+4’ x 8’ (1.22 m x 2.44 m) Boards
+
+SECTION
+
+ONE
+
+1-8
+
+
+===== PAGE 13 =====
+Roof Insulations
+Fastener Placement
+4’ x 8’ (1.22 m x 2.44 m) Boards
+
+Roof Insulations Fastener Placement
+SECTION
+
+ONE
+
+1-9
+
+
+===== PAGE 14 =====
+Roof Insulations Fastener Placement
+
+Insulation Fastening Patterns for
+Adhered Membrane AD-8
+
+SECTION
+
+ONE
+
+1-10
+
+
+===== PAGE 15 =====
+Insulation Fastening Patterns for
+Adhered Membrane AD-16
+Roof Insulations Fastener Placement
+SECTION
+
+ONE
+
+1-11
+
+
+===== PAGE 16 =====
+Roof Insulations Fastener Placement
+
+Insulation Adhered Patterns for
+Adhered Membrane UA-12
+
+SECTION
+
+ONE
+
+1-12
+
+
+===== PAGE 17 =====
+Insulation Adhered Patterns for
+Adhered Membrane UA-12 INS
+Roof Insulations Fastener Placement
+SECTION
+
+ONE
+
+1-13
+
+
+===== PAGE 18 =====
+APP Heat-Welded
+Application Guide
+
+Section Two:
+APP Heat-Welded
+Application Guide
+
+SECTION
+
+TWO
+
+2A
+
+APP
+Heat-Welded
+Application Guide
+
+
+===== PAGE 19 =====
+Section Two:
+APP Heat-Welded
+Application Guide
+Section Two Contents
+1.0 General Information . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 2-1
+2.0 Membrane Substrate . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  2-2
+3.0 Roofing Over Non-nailable Decks . . . . . . . . . . . . . . . . . . . . . . . . . . .  2-2
+4.0 Roofing Over Nailable Decks  . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  2-2
+5.0 General Guidelines for Application of Materials . . . . . . . . . . . . .  2-2
+6.0 Roofing Felts . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  2-3
+7.0 Heat-Weld Application . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  2-3
+9.0	Steep Slope Requirements – Heat Welded Systems . . . . . . . . . .  2-4
+10.0 Phase Construction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  2-5
+11.0 Cold Weather Application  . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  2-5
+12.0 Temporary Roof Coverings . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 2-6
+
+APP Heat-Welded
+Application Guide
+
+8.0	Health and Safety . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  2-4
+
+13.0 Protected Roofing Membrane Assemblies (PRMA)  . . . . . . . . . .  2-7
+14.0	Safety Guidelines for Heat-welded Modified Bitumen  . . . . . . .  2-9
+SECTION
+
+TWO
+
+
+===== PAGE 20 =====
+APP Heat-Welded
+Application Guide
+
+1.0 General Information
+1.1 This section provides application information, and outlines specifications currently
+available from Johns Manville (JM) Roofing Systems, for APP (Atactic Polypropylene)
+modified bitumen roofing products. APP modified bitumen products may be installed by
+heat welding and select products in JM MBR Cold Application Adhesive.
+Note: For the most current information on general guidelines, please refer to the
+System Considerations tab under Systems Introduction & Selection on the JM Roofing
+Web site. For specifications, flashing details and general installation information
+please refer to the System Application tab.
+
+APP Heat-Welded
+Application Guide
+
+1.2 All general information contained in this section and the current Johns Manville
+Commercial/Industrial Roofing Systems Manual should be considered part of these
+specifications.
+
+SECTION
+
+TWO
+
+1.3 Specifications are available for systems installed over insulation, nailable, non-nailable
+and lightweight insulating fill substrates. JM offers systems that can be installed by heat
+welding or in JM MBR Cold Application Adhesive.
+1.4 For heat-weld application, all safety procedures must be reviewed prior to application.
+All contractors must understand, review and adhere to the information contained in
+the following sources:
+Johns Manville Safety Guidelines for Heat Weld Application
+ARMA Guide to Torch Safety
+ARMA Torch Safety Video
+1.5 JM does not recommend the use of traditional asphalt cut-back mastics under any
+APP modified bitumen product. The use of cutback mastics over the modified bitumen
+product (e.g., to strip in the edges of a base flashing) is acceptable. JM has developed
+two adhesives — MBR Cold Application Adhesive and MBR Utility Cement — that are
+compatible with all of the JM APP bitumen products. They should be used whenever a
+cold adhesive application is necessary or preferred.
+1.6 Each specification in this section is eligible to receive a JM Peak Advantage Guarantee.
+Refer to the information on guarantees in the current JM Commercial/Industrial Roofing
+Systems Manual, or contact a JM representative for additional information.
+1.6.1 This manual clearly differentiates between requirements and recommendations.
+This manual has been written to assist the specifier to develop a comprehensive bid
+package. The information is presented in an explanatory fashion rather than the
+authoritative, instructive manner commonly utilized in construction specifications.
+When experience, technical knowledge or established testing procedures support a
+policy or position, it is clearly identified,(i.e., “JM requires” or “is not acceptable”).
+When the use of a particular product or practice is desirable, the reference is stated as
+an opinion rather than an absolute fact (i.e., “JM recommends” or JM suggests”).
+It is mandatory that all requirements be complied with; however, it may not be necessary
+to follow all recommendations to qualify for a guarantee.
+1.7 Drainage of water off any roof membrane is necessary to prolong the service life of
+the system. JM, therefore, has the following policy:
+Drainage: Design and installation of the deck and/or substrate must result in the roof
+draining freely and to outlets numerous enough and so located as to remove water
+promptly and completely. Areas where water ponds for more than 48 hours are
+unacceptable and will not be eligible for a JM Peak Advantage Guarantee.
+1.8 Flashings: Refer to Section 4 of this book for Flashing Specifications and Details.
+
+2-1
+
+
+===== PAGE 21 =====
+APP Heat-Welded
+Application Guide
+
+2.0 Membrane Substrate
+2.1 The surface on which the APP modified bitumen roofing membrane is to be applied
+should be one of the following JM products: DuraBoard, JM APP Base Sheet, Ventsulation
+Felt, DuraFoam, PermaPly 28 or an approved structural substrate. GlasPly Premier and
+GlasPly IV may be used in selected specifications. (See “Roof Finder Index,” in Section
+3 of this book.) The surface must be clean, smooth, flat and dry.
+
+3.0 Roofing Over Non-Nailable Decks
+3.1 These specifications are for use over any type of structural deck which is not nailable,
+and which offers a suitable surface to receive the roof. Poured and precast concrete
+decks require priming with Asphalt Primer prior to the application of hot asphalt.
+
+3.3 These specifications are denoted by an “I” as the third character in the specification
+designation (e.g., 3CIN-W). See the “Roof Finder Index” in Section 3 of this book for further
+information.
+
+APP Heat-Welded
+Application Guide
+
+3.2 These specifications are also for use over JM roof insulations – DuraBoard, Fesco
+Board, Tapered Fesco Board, DuraFoam, Fesco Foam, Tapered Fesco Foam, ENRGY 3,
+Tapered ENRGY 3 and ½” (13 mm) Retro-Fit Board or other insulations that offer a suitable
+surface to receive the roof. For heat-weld application directly to the insulation, the top
+layer of insulation must be DuraBoard or DuraFoam.
+
+4.0 Roofing Over Nailable Decks
+4.1 These specifications are for use over any type of structural deck (without insulation)
+which can receive and adequately retain nails or other types of mechanical fasteners
+recommended by the deck manufacturer. Examples of such decks are wood and
+plywood. Certain specifications are eligible for use over lightweight insulating concrete
+decks or over fill made of lightweight insulating concrete. Consult the “Roof Decks”
+section of the current JM Commercial/Industrial Roofing Systems Manual, or contact a
+JM Technical Services Specialist for approval of the lightweight concrete to be used.
+4.2 Nailable specifications are denoted by an”N” or an “L” as the third character in the
+specification designation (e.g., 3CNN-W or 3PLN-W). See the “Roof Finder Index” in
+Section 3 of this book for more information.
+4.3 Over wood board decks, one ply of sheathing paper must be used under the base felt,
+next to the deck. Sheathing paper is not required on plywood decks.
+4.4 All of the specifications in this section require the use of a nailable base felt. Use
+nails or fasteners appropriate to the type of deck. See the “Roof Decks” section of the
+current JM Commercial/ Industrial Roofing Systems Manual.
+
+5.0 General Guidelines for Application of
+Materials
+5.1 The proper application of roofing materials is as important to the satisfactory performance of the roofing system as the materials themselves. JM strongly recommends
+the following guidelines for the application of APP modified bitumen roofing materials
+be followed. Always follow all recommended safety procedures when applying any
+heat-welded product.
+A.	Never use wet or damaged materials.
+B.	Never apply any roofing materials during rain or snow, or to wet surfaces. Moisture
+
+2-2
+
+SECTION
+
+TWO
+
+
+===== PAGE 22 =====
+APP Heat-Welded
+Application Guide
+
+APP Heat-Welded
+Application Guide
+
+SECTION
+
+TWO
+
+trapped within the roofing system may cause severe damage to the roofing membrane,
+insulation and deck.
+C.	Take special care when applying any APP modified bitumen in cold weather (below
+40°F [4°C]). All rolls must be stored on end in a heated trailer or building. Only rolls
+needed for immediate application should be exposed to ambient conditions.
+D. Never throw or drop rolls of APP in cold weather; sudden shocks can cause cracking
+of the APP coating asphalt.
+E. Do not double stack (with or without pallets) in cold weather.
+F. Remove all packaging from product and dispose of properly. Be sure to have the
+appropriate side of the product in position to be heat welded (polyolefin side down).
+G. APP modified bitumen sheets shall be rolled or scrolled into place as they are
+heat welded.
+H. Do not use traditional cut-back asphalt cements under APP modified bitumen products.
+The use of these mastics over the top of APP products is acceptable; however, the
+MBR cement products are preferred.
+I. Install the entire roofing system at one time. Phased construction may result in blisters
+due to entrapment of moisture, as well as poor adhesion due to dust or foreign
+materials that have collected on the exposed felts of an incomplete roofing system.
+J. All smooth APP-surfaced products must be coated with a JM-approved coating.
+Acceptable roof coatings for APP systems may be found in the built-up roofing
+Paragraph 6.9 of Section 3b.
+K.	Always comply with published safety procedures for all products being used. See
+the “Introduction” section of the current JM Commercial/Industrial Roofing Systems
+Manual, MSDS and container labels for health and safety recommendations.
+
+6.0 Roofing Felts
+6.1 JM manufactures different products for a variety of roofing needs: membranes,
+flashing, venting and vapor retarders.
+6.2 Roofing felts are furnished in rolls consisting typically of one square. Flashing
+materials are sold in square feet.
+
+7.0 Heat-Weld Application
+7.1 The surface over which the APP membrane is to be installed must be firm, dry, smooth,
+flat and free of debris and loose material. All surfaces must be designed and installed in
+accordance with manufacturer’s, industry and acceptable association standards.
+7.2 Drainage: Design and installation of the deck and/or the substrate must result in
+the roof draining freely and to outlets numerous enough and so located as to remove
+water promptly and completely. Areas where water ponds for more than 48 hours are
+unacceptable and will not be eligible for a JM Peak Advantage Guarantee.
+7.3 Roofing shall commence at the lowest point of the roof deck with laps installed so
+that water flows over and not against the lap. Align the roll in the course to be followed
+and unroll completely. Then reroll both ends to the middle of the roll (scrolling). Using
+the heat-welding apparatus, apply the heat to the surface of the coiled portion of the
+roll until the surface reaches the proper application temperature (approximately 330°F
+[166°C]). The flame should be moved from side to side and the membrane slowly unrolled while pressing the heated portion of the roll into the underlying surface.
+Apply the heat across the full width of the roll and along the 4" (102 mm) side lap area of
+the previously installed roll, making an “L” shape. As the surface of the roll is heated,
+it will develop a sheen. The generation of smoke is an indication that the material is
+being overheated. Repeat the operation with subsequent rolls, while maintaining a 4"
+
+2-3
+
+
+===== PAGE 23 =====
+APP Heat-Welded
+Application Guide
+
+(102 mm) side lap and a 6" (152 mm) end lap. On mineral-surfaced membranes, prior to
+seaming the 6" (152 mm) end lap, the granules must be embedded by heating the end lap
+area and then pressing the granules into the compound using a rounded-point trowel
+or an embedding tool. All laps should be rolled with a lap roller and a 1⁄8" (3 mm) to 3⁄8"
+(10 mm) bleed out of APP compound should extend beyond the lap. Check all laps for
+proper adhesion. Caution: Never adhere APP products with hot asphalt.
+
+8.0 Health and Safety
+
+9.0 Steep Slope Requirements – Heat
+Welded Systems
+
+APP Heat-Welded
+Application Guide
+
+8.1 J M develops and maintains Material Safety Data Sheets (MSDS) for all of its products.
+These MSDS contain health and safety information for development of appropriate product
+handling procedures to protect the users of our products. These sheets are available on
+the JM Web site (www.jm.com). They should be read and understood by all involved
+personnel prior to using and handling JM materials. In addition to the MSDS, JM products
+have health and safety precautions printed on the product label or packaging. The user is
+strongly urged to familiarize himself with this information prior to using the product, and
+observe certain precautions during use.
+
+9.1 Heat-welded APP roofing membranes can be applied on inclines up to 6" per ft
+(500 mm/m) when proper precautions are taken. On non-nailable decks, wood nailers
+must be used. Nailers act as insulation stops for the roof insulation and as a facility to
+back nail the membrane.
+On slopes up to 21⁄2" per ft (208 mm/m), the roofing sheets may be installed either
+perpendicular or parallel to the roof incline.
+9.2 Non-nailable Decks: On decks with a slope over 2½" per ft (208 mm/m), the roofing
+felts must be installed parallel to the incline and must be back nailed. Pressure-treated
+wood nailers shall be attached to the deck, run perpendicular to the incline, be capable
+of retaining the nails securing the roofing sheets, have the same thickness as the
+insulation and be at least 3½" (89 mm) wide. They should be securely attached to the
+deck with mechanical fasteners to resist a pullout force of 200 pounds (890 N). Wood
+nailers shall be provided at the ridge and at the following approximate intermediate
+points:
+Incline (Inches/Foot)
+
+Nailer Spacing (D) 1
+
+0”-2½” (0-208 mm/m)
+
+Not required
+
+2½”-6” (208-500 mm/m)
+
+32’ (9.8 m) (max.) face-to-face
+
+9.3 Nail the modified bitumen cap sheet at the end lap across the width of the sheet,
+with the first nail spaced ¾" (19 mm) from the leading edge of the sheet, and the remaining
+nails spaced approximately 8½" (216 mm) o.c. The nails shall be staggered across the
+width of the nailer to reduce the risk of the sheet tearing along the nail line. Nails must
+have an integral 1" (25 mm) (min.) diameter cap. Where capped nails are not used,
+fasteners must be driven through caps having a 1" (25 mm) (min.) diameter. All nails are
+to be covered by the lap of the next sheet.
+
+2-4
+
+SECTION
+
+TWO
+
+
+===== PAGE 24 =====
+APP Heat-Welded
+Application Guide
+
+APP Heat-Welded
+Application Guide
+
+6” End Lap
+
+9.4 Nailers must also be used around the roof perimeter, openings and penetrations, for
+nailing felts, gravel stops, roof fixtures and fascia systems.
+
+SECTION
+
+TWO
+
+Heat Weld
+APP Cap Sheet
+
+9.5 Nailable and Lightweight Concrete Decks: On decks with a slope over 21⁄2" per ft
+(208 mm/m), the roofing felts must be installed parallel to the incline. Nail the end laps of
+the modified bitumen cap sheet across the width of the sheet on 81⁄2" (216 mm) centers.
+All nails are to be covered by the lap of the next sheet.
+
+10.0 Phase Construction
+10.1 One of the greatest hazards of roof construction is the application of a roofing system
+in “phases,” where a partially completed roof system is left exposed to the weather
+overnight or longer. This can lead to entrapped moisture which can cause premature
+failure of the membrane.
+10.2 When the installation of the cap sheet is delayed for any reason, the following
+procedures should be followed:
+A. Prior to the application of the modified bitumen cap sheet, the surface of the membrane
+must be examined thoroughly for the presence of any moisture. If moisture is present,
+the application of the cap sheet is not to proceed until the moisture has been removed
+or evaporated and the surface is dry.
+B. The surface of the membrane must be properly cleaned and primed if contaminated
+by dirt, dust or debris. The primer must be completely dry prior to installation of the
+modified bitumen cap sheet.
+10.3 Under no circumstances shall the installation of the modified bitumen cap sheet be
+delayed more than 5 days after completion of the intermediate plies of the roofing system.
+10.4 Only multiple felt (two felts with modified cap sheet) should be considered for
+the delay in application of the modified bitumen cap sheet. Single ply felt or base felt
+systems must receive the modified bitumen cap sheet on the same day.
+
+11.0 Cold Weather Application
+11.1 APP modified bitumens require special application techniques when they are being installed in cold weather. The following precautions shall be taken when the ambient
+temperature drops below 50°F (10°C), and are mandatory below 40°F (4°C):
+
+2-5
+
+
+===== PAGE 25 =====
+APP Heat-Welded
+Application Guide
+
+12.0 Temporary Roof Coverings
+12.1 At times, an owner or general contractor may require the building to be closed at a
+time when the weather is not conducive to good roof construction, or the roof area may
+have to be used as a work platform during construction. Historically, this situation has
+led to phase construction, which has resulted in premature roof failure.
+12.2 When the complete roof cannot be installed in one operation, the following procedures
+are recommended:
+A. Nailable Decks:
+1. Apply one layer of an approved JM base felt, lapping the felt 2” (51 mm), and nailing
+9” (229 mm) o.c. along the lap and 12” (305 mm) o.c. through the center of the sheet.
+(Sheathing paper should first be installed on wood board decks.)
+2. Mop one ply of an approved JM ply felt in ASTM D 312, Type III asphalt and apply a
+glaze coat of 10 - 15 lb/100 ft2 (0.49 - 0.73 kg/m2) of Type III asphalt.
+3. An alternate would be to heat weld one layer of an APP modified bitumen cap sheet
+(smooth or mineral surfaced) over the base felt. No glaze coat of asphalt is applied.
+4. When the permanent roof is to be installed, inspect the roof and remove all damaged
+and blistered areas. Apply a layer of approved JM base felt nailed through the
+temporary roof and into the deck as the first layer of the roofing system. As an
+alternate, a layer of approved JM roof insulation may be mechanically fastened
+(with appropriate fasteners) through the temporary roof into the deck.
+5. Proceed with installing the appropriate permanent roof specification.
+B. Steel Decks:
+1. Apply a minimum layer of Fesco Board of adequate thickness to the steel deck
+using appropriate length UltraFast fasteners.
+2. Install a ply of a JM ply or base felt and an additional ply of fiber glass felt, both
+in hot steep asphalt.
+
+2-6
+
+APP Heat-Welded
+Application Guide
+
+A. Modified bitumen products shall be kept warm, or warmed prior to installation. Store
+these materials indoors or in heated storage units or warming boxes. If these facilities
+are not available, placing the materials in direct sunlight may help. Make certain that
+modified bitumen rolls are stored on end only; do not store rolls on their side.
+B. When the conditions are extreme (below 40°F [4°C]), the rolls must be heated or
+completely unwound and allowed to warm on the roof for 15 to 20 minutes. This shall
+be done with the darker side of the sheet up. The sheet may then be installed using
+conventional application techniques.
+C. When the ambient temperature is below 40°F (4°C), extra care must be used when
+handling and storing APP modified products. During cold weather, these modified
+bitumen products must be stored on end in a heated trailer or building, and only the
+rolls needed for immediate application should be outside. Materials must be kept dry.
+Never throw or drop rolls of modified bitumen products during cold weather. Sudden
+shocks can cause cracking of the asphalt. DO NOT DOUBLE STACK (with or without
+pallets). For heat-weld applied products, heat the substrate prior to rolling the molten
+modified bitumen into place. Special attention should be given to the lap area so proper
+adhesion can be obtained.
+D. The adhesive can be installed in temperatures between 40°F and 100°F (4°C and 38°C).
+However, when the temperature is below 50°F (10°C), the adhesive must be stored in
+a warm area (approximately 70°F [21°C]), for 24 hours before being used, to facilitate
+spreading. Note: Temperature affects the cure rate of the adhesive. Even in cooler
+weather, the product will develop bond strengths comparable to fully adhered single
+ply systems in a relatively short time. The membrane ultimately will develop adhesive
+bonds that exceed those of systems using asphalt as the adhesive.
+
+SECTION
+
+TWO
+
+
+===== PAGE 26 =====
+APP Heat-Welded
+Application Guide
+
+APP Heat-Welded
+Application Guide
+
+3. Finish with a 10 - 15 lb/100 ft2 (0.49 - 0.73 kg/m2) glaze coat of hot steep asphalt.
+4. When the permanent roof is to be applied, inspect the roof area. If the insulation
+has not been damaged and is dry, remove any blistered or damaged felt. Prime
+the temporary roof with Asphalt Primer at the rate of 1 gal/100 ft2 (0.4 l/m2) and
+then solid mop a layer of insulation board to the temporary roof with hot asphalt.
+Then apply the permanent roof system.
+5. If the membrane and/or roof insulation has been excessively damaged, remove
+all unusable material and replace.
+C. Non-nailable Decks, Other than Steel:
+1. Prepare the deck as would be done for a permanent roof.
+2. Solid mop two plies of approved JM ply felt in hot Type III asphalt.
+3. Finish with a 10 - 15 lb/100 ft2 (0.49 - 0.73 kg/m2) glaze coat of Type III asphalt.
+4. When the permanent roof is to be installed, inspect and repair all defects in the
+temporary roof. Clean the surface of the temporary roof and prime with Asphalt Primer
+if the surface is unusually worn. Proceed with the installation of the permanent roof.
+5. As an alternate to step 2, spot mop an approved JM base sheet using a mechanical
+spot mopping machine. Next, solid mop one ply of approved JM ply felt in hot Type III
+asphalt. When the permanent roof is to be installed, remove the entire temporary
+roof, prime the deck as required in the “Roof Decks” section of this manual, and
+proceed with the installation of the permanent roof.
+12.3 The decision as to whether or not a temporary roof is to be left in place is a judgment
+factor that must be made by the building owner or his representative. Although a JM
+representative may make suggestions in this area, JM will not be responsible for any
+problems that may develop with the roofing system due to the fact that the temporary
+roof is left in place.
+
+SECTION
+
+TWO
+
+13.0 Protected Roofing Membrane
+Assemblies (PRMA)
+13.1 General Information. All general information contained in this section and the
+current JM Commercial/Industrial Roofing Systems Manual shall be considered part of
+these specifications.
+JM APP modified bitumen specifications are eligible for use with protected roofing
+membrane assemblies. When these specifications are modified, the last digit of the
+specification designation should be changed to a “P” to denote “Protected” (e.g., 3CIP-W).
+Flashings: All flashings must conform to the requirements stated in this section and the
+current JM Commercial/Industrial Roofing Systems Manual. The flashing material must
+extend above the top of the extruded polystyrene insulation a minimum of 8” (203 mm).
+The standard flashing details for modified bitumen roofing can be found in Section 3.
+Drainage: Design and installation of the deck and/or roof substrate must result in the
+roof draining freely, to outlets numerous enough and so located as to remove water
+promptly and completely. Areas where water ponds for more than 48 hours are
+unacceptable, and will not be eligible for a JM Roofing System Guarantee.
+13.2 When designing a protected membrane roofing system, the designer must make
+sure that positive drainage exists on the roof. Even though some extruded polystyrene
+roof insulation products are designed with integral drainage channels, they will retard
+the flow of water due to the contact between the membrane and the insulation. JM
+recommends a minimum of ¼” per ft (20.8 mm/m) slope be obtained on the finished roof
+membrane. This will greatly reduce the amount of water that will be retained against
+the membrane after a rain.
+
+2-7
+
+
+===== PAGE 27 =====
+APP Heat-Welded
+Application Guide
+
+13.3 Ballast Requirements (for use with extruded polystyrene roof insulation):
+13.4 The ballast should be similar to ASTM D 448, Gradation #57. The following gradation
+is typical:
+Passing ½” (13 mm) .......................................................... 10-60%
+Passing ¾” (19 mm) ............................................................ 100%
+
+13.5 Ballast is applied at a rate of approximately 10 to 12 lb/ft2 (49 - 59 kg/m2) in the field
+of the roof over a layer of filter fabric. Twenty (20) lb/ft2 (97.6 kg/m2) of ballast is required
+over a 4’ (1.22 m) wide area at the roof perimeter and at all penetrations. The following
+fabrics have been found to be acceptable:
+A. Confil 689H – 3.0 oz./yd. (93.5 g/m) black polyester from International Paper Company.
+B. Rufon P3B – 3.0 oz./yd. (93.5 g/m) black polypropylene from Phillips Fiber Corporation.
+
+13.8 The use of pavers in high traffic areas, to and around equipment and other
+maintenance areas, is strongly recommended.
+13.9 It is the owner’s and/or specifier’s responsibility to determine if the building
+structure can support the required amount of ballast and still meet the code design
+requirements for anticipated dead and live loads (including snow, wind, etc.).
+13.10 Decks (PRMA)
+13.11 Precast slabs and prestressed “T” or “TT” decks require a minimum of one layer
+of approved JM roof insulation as a leveling course prior to the installation of the roof
+membrane.
+13.12 For lightweight insulating concrete, gypsum decks, etc., consult a JM Technical
+Services Specialist for specifications and guarantee information.
+13.13 For information on roof deck requirements not mentioned here, refer to the “Roof
+Decks” section of the current JM Commercial/ Industrial Roofing Systems Manual, or
+contact a JM Technical Services Specialist.
+13.14 Warning: Extruded polystyrene insulation is combustible and may constitute a
+fire hazard if improperly used or installed. It should be adequately protected. Use only
+as directed by the specific instructions for this product. This material should NEVER be
+exposed to an open flame or other source of ignition.
+13.15 All roof deck systems over which the protected system is installed should provide
+an adequate fire barrier for the extruded polystyrene insulation.
+13.16 For proper protection of plastic foam in storage, consult the National Fire Protection
+Association (NFPA) standards or the authority having jurisdiction.
+
+2-8
+
+APP Heat-Welded
+Application Guide
+
+13.6 JM makes no claims as to the quality of these products nor their performance when
+exposed on the roof. See the product warranty supplied by the fabric manufacturer.
+13.7 When pavers are used as ballast, the pavers must be placed on supports or
+pedestals. These supports or pedestals can either be commercially available products
+or 6” (152 mm) square pieces of JM DynaTred Plus (to give a minimum ½” [13 mm] air
+space). These supports should be located at the intersection of the corners of the paver
+blocks, such that where the four corners come together, all rest on the same 6” (152
+mm) square piece of DynaTred Plus or pedestal. The ½” (13 mm) air space between
+the pavers and the insulation will allow moisture vapor to vent to the atmosphere. If
+the moisture is not allowed to vent to the atmosphere, the top surface of the insulation
+will begin to absorb water and the thermal performance will be reduced. ROOF AREAS
+THAT HAVE PAVERS IN DIRECT CONTACT WITH THE INSULATION ARE EXCLUDED
+FROM COVERAGE UNDER A JM PEAK ADVANTAGE GUARANTEE, INCLUDING THE
+THERMAL OVERLAY PORTION OF THE GUARANTEE.
+
+SECTION
+
+TWO
+
+
+===== PAGE 28 =====
+APP Heat-Welded
+Application Guide
+
+13.17 Installing Ballasted PRMA Roof Insulation Over Modified Bitumen Roof Membranes
+13.18 The following are general recommendations for installing ballasted PRMA roof
+insulation over modified bitumen roof membranes.
+Materials per 100 ft2 (9.29 m2) of membrane area
+Insulation
+Fabric
+Ballast
+
+Extruded polystyrene roof insulation
+100 ft2 (9.29 m2) per layer
+12’ wide, 105 ft2 (3.66 m wide, 9.75 m2)
+10’ wide, 106 ft2 (3.05 m wide, 9.84 m2)
+8’ wide, 107 ft2 (2.44 m wide, 9.94 m2)
+¾” (19 mm) stone or crushed rock,
+1,000 - 1,200 lb/100 ft2 (48.8 - 58.6 kg/m2)*
+
+APP Heat-Welded
+Application Guide
+
+*Additional ballast is required at the perimeter and at penetrations.
+
+13.19 Insulation: Place extruded polystyrene roof insulation directly on the membrane
+with channel side down. The insulation boards should be tightly butted together. The
+maximum allowable gap between boards is 3⁄8” (10 mm). The boards shall be installed
+to within approximately 3⁄4” (19 mm) of all projections and cant strips.
+13.20 For multilayer installations, install subsequent layers, unattached over the first
+layer. Stagger all joints in relation to the underlying layer. The bottom layer in multi-layer
+applications must be at least 2” (51 mm) thick and as thick or thicker than the top layer.
+13.21 Fabric: Loose lay an approved fabric over the extruded polystyrene roof insulation,
+with all joints lapped a minimum of 12” (305 mm). There should not be any end laps
+within 6’ (1.83 m) of the perimeter. The fabric should extend 2” to 3” (51 - 76 mm) above
+the stone at the perimeter and at penetrations.
+
+SECTION
+
+TWO
+
+13.22 Wetting the fabric is helpful in holding it in place on the insulation until the ballast
+is installed.
+13.23 Ballast: Apply the correct size ballast at the rate of 1,000 - 1,200 lb/100 ft2 (10 - 12
+lb/ft2 [48.8 - 58.6 kg/m2]), over the fabric, as the fabric is being laid out in the field of the
+roof. For a width of 4’ (1.22 m) at the roof perimeter or penetrations, install ballast at a rate
+of 20 lb/ft2 (98 kg/m2) or pavers at a rate of 22 lb/lin ft (32.7 kg/lin m). If pavers are used,
+the fabric is not required. Pavers must be placed on pedestals. Pedestals can be either
+commercially available products or 6” (152 mm) square pieces of JM DynaTred Plus.
+13.24 Ballast should be washed 3⁄4” (19 mm) gravel or crushed stone, with fines
+(smaller than ½” [13 mm]) accounting for not less than 10% or more than 60%. This
+gradation is similar to ASTM D 448, Gradation #57.
+
+14.0 Safety Guidelines for Heat-welded
+Modified Bitumen
+14.1 Heat-welded modified bitumen products require special safety precautions prior
+to, during and after installation. When working with an open flame, contractors must
+use extra care and extreme caution to prevent accidents. Carelessness can lead to
+loss of life, injury and loss of property. The following safety recommendations should be
+followed:
+1. All contractors must be licensed and insured in the geographic area where they
+will conduct business. The work area must be properly prepared before the
+welding process begins and weather conditions must be favorable. Procedures and
+equipment must comply with all applicable code requirements including guidelines
+mandated by the Occupational Safety and Health Administration (OSHA).
+2. The roofing contractor must ensure that all mechanics or applicators involved with
+
+2-9
+
+
+===== PAGE 29 =====
+APP Heat-Welded
+Application Guide
+
+2-10
+
+APP Heat-Welded
+Application Guide
+
+the application of heat welded modified bitumens are properly trained not only in
+application and equipment handling, but also safety measures. The contractor should
+verify that all roofing applicators involved with open flame application maintain and
+carry a valid Certified Roofing Torch Applicator (CERTA) card as evidence of proper
+training. Further, the general contractor, jobsite superintendents and the building
+owner or its representative must also be knowledgeable and/or advised of the proper
+and necessary safety precautions applicable to heat welded roofing products.
+3. All mechanics or applicators must carry, review, understand and adhere to the
+safety information and guidelines contained in “Torch Applied/Do’s and Don’t’s”
+as published and supplied by the Asphalt Roofing Manufacturers Association
+(ARMA) which may be supplemented or amended, as well as the ARMA/NRCA
+“Guide to Torch Safety on Modified Bitumen” videotape. These are available from
+ARMA at: ARMA, 4041 Powder Mill Road, Ste. 404, Calverton, MD 20705-3016
+(Ph. 301-348-2002). Do not begin application procedures until you read and fully
+understand these safety procedures and installation practices.
+4. Written notice must be given to the local fire department where required and any
+required or necessary permits must be obtained. Even if not required, it is always
+recommended to give notice to the fire department, particularly when using LP gas.
+5. Supervisors must ensure that all roofing applicators wear adequate protective
+equipment, including nonsynthetic long-sleeved shirts, boots, long pants with no
+cuffs that extend over the top of the boot, heat-resistant gloves, safety glasses and
+a face shield during application.
+6. Never heat weld directly to, or near (e.g., the 35' [10.67 m] rule) combustible materials
+or surfaces. Extra care must be taken to identify all potentially combustible and
+flammable material and similar combustible and flammable aspects of a building’s
+use and design. Be aware of insulation type, parapet walls, curbs, cants, wood,
+edge strips, expansion joints, electrical wires and conduits, gas lines, chemicals,
+grease, oil, vapors, exhausts, spills or other materials that could ignite. Combustible
+materials present on a roof must be moved and materials that are not moveable
+must be protected from the heat-weld process and other fire hazards with fire
+blankets or shields. Be sure to identify similar materials on adjoining buildings
+and exercise proper precautions. A fiber glass base sheet should be installed
+to minimize the risk of fire. Always use combustion-resistant cant strips or other
+fire-resistant materials.
+7. 		 Never heat weld near or into vents, openings or cracks around edges, corners,
+voids or other penetrations in the building or near any rooftop equipment. Shut off
+fans and cover openings.
+8. 		 Never leave lighted torches unattended.
+9. 		 Use only equipment that is specifically designed for heat-welded roofing applications,
+and be sure the equipment is listed by a nationally recognized independent
+testing laboratory. The equipment must be operated in accordance with the
+manufacturer’s instructions and in accordance with all applicable codes and
+regulations. All mechanics must be properly trained and familiar with all safety
+precautions in the use and handling of tanks, regulators and LP gas. Be familiar
+with National Fire Protection Association (NFPA) 58 “Standard for the Storage and
+Handling of Liquefied Petroleum Gases” and appropriate publications of the
+National Propane Gas Association, (NPGA) 1600 Eisenhower Lane, Ste. 100, Lisle,
+IL 60532 (Ph. 630-515-0600), and the National Fire Protection Association, 11 Tracy
+Dr., Avon, MA 02322 (Ph. 800- 344-3555). Do not work in areas where LP gas can
+accumulate. Proper ventilation in accordance with OSHA and the National
+Institute for Occupational Safety and Health (NIOSH) is required. Ensure that all
+equipment is in good working condition and inspected daily.
+10. Maintain at least one fully charged 20 lb (9.1 kg) (min.) ABC-type dry chemical fire
+
+SECTION
+
+TWO
+
+
+===== PAGE 30 =====
+APP Heat-Welded
+Application Guide
+
+APP Heat-Welded
+Application Guide
+
+SECTION
+
+TWO
+
+extinguisher for each roofing mechanic on the project, and have more available
+near the application area (e.g. within 50' [15.24 m]) based on jobsite conditions.
+Roofing mechanics must have fire extinguisher use training at least annually per
+OSHA 29 CFR1910.157.
+11. Follow fire protection and prevention procedures mandated or recommended
+by OSHA and/or the National Roofing Contractors Association (NRCA) and ensure
+compliance with all other federal, state and local regulations, including but not
+limited to those listed in OSHA 29 CFR1962.1 150, 152.1, 153 and 191-110 as they
+apply to heat-weld application.
+12. A fire watch of sufficient length must be kept during and after all heat welding is
+completed. A fire watch is never shorter than 1 hour after all application has been
+completed for a given day. A fire watch may need to be longer depending on the
+size of the roofing project and the design or configuration of the building. Special
+attention should be given to potential hot spots or smoldering material, such as
+carts, wall flashings and around penetrations, rooftop equipment and the roof
+perimeter. The person performing the fire watch should use an infrared heat-sensing
+device to detect hot spots and smoldering materials. For more information, contact
+the NFPA. Should fire result, take immediate, appropriate action; notify the owner of
+fire response.
+13. Remember, it is the contractor’s responsibility to observe all fire prevention and
+safety policies and practices during the installation of the roof system, as well as
+provide training to their personnel for proper roofing and safety practices as well
+as responding to emergency situations at the job site. Always keep a first aid
+kit on the job site; individuals administering first aid must be properly qualified per
+OSHA 29 CFR1910.151(b).
+JOHNS MANVILLE DOES NOT SUPERVISE BUILDING OWNERS, CONTRACTORS,
+MECHANICS OR ANY OTHER PERSON IN THE APPLICATION OF HEAT-WELDED
+APPLIED MODIFIED BITUMENS AND ASSUMES NO RESPONSIBILITY FOR FIRE
+DAMAGE OR ANY OTHER DAMAGES.
+
+2-11
+
+
+===== PAGE 31 =====
+Section Two:
+APP Modified Bitumen
+Cold-Applied Application Guide
+
+APP
+Modified Bitumen
+Cold-Applied
+Application Guide
+
+APP Modified Bitumen
+Cold-Applied Application Guide
+
+2B
+
+SECTION
+
+TWO
+
+
+===== PAGE 32 =====
+Section Two:
+APP Modified Bitumen
+Cold-Applied Application Guide
+Section Two Contents
+1.0 General Information . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 2-13
+2.0 Membrane Substrate . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  2-14
+3.0 Roofing Over Non-nailable Decks . . . . . . . . . . . . . . . . . . . . . . . . . .  2-14
+4.0 Roofing Over Nailable Decks  . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  2-14
+5.0 General Guidelines for Application of Materials . . . . . . . . . . . .  2-14
+6.0 Roofing Felts . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  2-15
+
+APP Modified Bitumen
+Cold-Applied Application Guide
+
+7.0 Cold Adhesive Application . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  2-15
+
+SECTION
+
+TWO
+
+8.0	Health and Safety . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  2-16
+9.0 One-part Cold Adhesive Application  . . . . . . . . . . . . . . . . . . . . . . .  2-16
+10.0 One-Part Cold Adhesive Membrane Specifications . . . . . . . . .  2-16
+11.0 Steep Slope Requirements – Systems Incorporating
+Asphalt or Adhesive . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  2-16
+12.0 Phase Construction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 2-17
+13.0 Cold Weather Application  . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  2-18
+14.0 Temporary Roof Coverings . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  2-18
+15.0 Protected Roofing Membrane Assemblies (PRMA)  . . . . . . . . .  2-19
+
+
+===== PAGE 33 =====
+APP Modified Bitumen
+Cold-Applied Application Guide
+
+1.0 General Information
+1.1 This section provides application information, and outlines specifications currently
+available from Johns Manville (JM) Roofing Systems, for APP (Atactic Polypropylene)
+modified bitumen roofing products. APP modified bitumen products may be installed by
+heat welding and select products in JM MBR Cold Application Adhesive.
+Note: For the most current information on general guidelines, please refer to the
+System Considerations tab under Systems Introduction & Selection on the JM Roofing
+Web site. For specifications, flashing details and general installation information
+please refer to the System Application tab.
+1.2 All general instructions contained in this guide book and in the current JM Commercial
+Roofing Product Manual should be considered part of this specification.
+
+1.4 For heat-weld application, all safety procedures must be reviewed prior to application.
+All contractors must understand, review and adhere to the information contained in
+the following sources:
+Johns Manville Safety Guidelines for Heat Weld Application
+ARMA Guide to Torch Safety
+ARMA Torch Safety Video
+1.5 JM does not recommend the use of traditional asphalt cut-back mastics under any
+APP modified bitumen product. The use of cutback mastics over the modified bitumen
+product (e.g., to strip in the edges of a base flashing) is acceptable. JM has developed
+two adhesives — MBR Cold Application Adhesive and MBR Utility Cement — that are
+compatible with all of the JM APP bitumen products. They should be used whenever a
+cold adhesive application is necessary or preferred.
+1.6 Each specification in this section is eligible to receive a JM Peak Advantage Guarantee.
+Refer to the information on guarantees in the current JM Commercial Roofing Product
+Manual, or contact a JM representative for additional information.
+1.6.1 This manual clearly differentiates between requirements and recommendations.
+This manual has been written to assist the specifier to develop a comprehensive bid
+package. The information is presented in an explanatory fashion rather than the
+authoritative, instructive manner commonly utilized in construction specifications.
+When experience, technical knowledge or established testing procedures support a
+policy or position, it is clearly identified,(i.e., “JM requires” or “is not acceptable”).
+When the use of a particular product or practice is desirable, the reference is stated as
+an opinion rather than an absolute fact (i.e., “JM recommends” or JM suggests”).
+It is mandatory that all requirements be complied with; however, it may not be necessary
+to follow all recommendations to qualify for a guarantee.
+1.7 Drainage of water off any roof membrane is necessary to prolong the service life of
+the system. JM, therefore, has the following policy:
+Drainage: Design and installation of the deck and/or substrate must result in the roof
+draining freely and to outlets numerous enough and so located as to remove water
+promptly and completely. Areas where water ponds for more than 48 hours are
+unacceptable and will not be eligible for a JM Peak Advantage Guarantee.
+1.8 Flashings: Refer to Section 3 of this book for Flashing Specifications and Details.
+
+2-13
+
+APP Modified Bitumen
+Cold-Applied Application Guide
+
+1.3 Specifications are available for systems installed over insulation, nailable, non-nailable
+and lightweight insulating fill substrates. JM offers systems that can be installed by heat
+welding or in JM MBR Cold Application Adhesive.
+
+SECTION
+
+TWO
+
+
+===== PAGE 34 =====
+APP Modified Bitumen
+Cold-Applied Application Guide
+
+2.0 Membrane Substrate
+2.1 The surface on which the APP modified bitumen roofing membrane is to be applied
+should be one of the following JM products: DuraBoard, JM APP Base Sheet, Ventsulation
+Felt, DuraFoam, PermaPly 28 or an approved structural substrate. GlasPly Premier and
+GlasPly IV may be used in selected specifications. (See “Roof Finder Index,” in Section
+3 of this book.) The surface must be clean, smooth, flat and dry.
+
+3.0 Roofing Over Non-Nailable Decks
+
+APP Modified Bitumen
+Cold-Applied Application Guide
+
+3.1 These specifications are for use over any type of structural deck which is not nailable,
+and which offers a suitable surface to receive the roof. Poured and precast concrete
+decks require priming with Asphalt Primer prior to the application of hot asphalt.
+
+SECTION
+
+TWO
+
+3.2 These specifications are also for use over JM roof insulations – DuraBoard, Fesco
+Board, Tapered Fesco Board, DuraFoam, Fesco Foam, Tapered Fesco Foam, ENRGY 3,
+Tapered ENRGY 3 and ½” (13 mm) Retro-Fit Board or other insulations that offer a suitable
+surface to receive the roof. For heat-weld application directly to the insulation, the top
+layer of insulation must be DuraBoard or DuraFoam. See Book 2 of the JM Commercial
+Roofing Application Guide for more information.
+3.3 These specifications are denoted by an “I” as the third character in the specification
+designation (e.g., 2CIN-CA). See the “Roof Finder Index” on page 2-213 of this book for
+further information.
+
+4.0 Roofing Over Nailable Decks
+4.1 These specifications are for use over any type of structural deck (without insulation)
+which can receive and adequately retain nails or other types of mechanical fasteners
+recommended by the deck manufacturer. Examples of such decks are wood and
+plywood. Certain specifications are eligible for use over lightweight insulating concrete
+decks or over fill made of lightweight insulating concrete. Consult the “Roof Decks”
+section of the current JM Commercial Roofing Product Manual, or contact a JM
+Technical Services Specialist for approval of the lightweight concrete to be used.
+4.2 Nailable specifications are denoted by an”N” or an “L” as the third character in the
+specification designation (e.g., 3CLN-CA or 2CNN-CA). See the “Roof Finder Index” on
+page 2-213 of this book for more information.
+4.3 Over wood board decks, one ply of sheathing paper must be used under the base felt,
+next to the deck. Sheathing paper is not required on plywood decks.
+4.4 All of the specifications in this section require the use of a nailable base felt. Use
+nails or fasteners appropriate to the type of deck. See the “Roof Decks” section of the
+current JM Commercial Roofing Product Manual.
+
+5.0 General Guidelines for Application
+of Materials
+5.1 The proper application of roofing materials is as important to the satisfactory performance of the roofing system as the materials themselves. JM strongly recommends
+the following guidelines for the application of APP modified bitumen roofing materials
+be followed. Always follow all recommended safety procedures when applying any
+heat-welded product.
+A.	Never use wet or damaged materials.
+B.	Never apply any roofing materials during rain or snow, or to wet surfaces. Moisture
+
+2-14
+
+
+===== PAGE 35 =====
+APP Modified Bitumen
+Cold-Applied Application Guide
+
+6.0 Roofing Felts
+
+APP Modified Bitumen
+Cold-Applied Application Guide
+
+trapped within the roofing system may cause severe damage to the roofing membrane,
+insulation and deck.
+C.	Take special care when applying any APP modified bitumen in cold weather (below
+40°F [4°C]). All rolls must be stored on end in a heated trailer or building. Only rolls
+needed for immediate application should be exposed to ambient conditions.
+D. Never throw or drop rolls of APP in cold weather; sudden shocks can cause cracking
+of the APP coating asphalt.
+E. Do not double stack (with or without pallets) in cold weather.
+F. Remove all packaging from product and dispose of properly. Be sure to have the
+appropriate side of the product in position to be heat welded (polyolefin side down).
+G. APP modified bitumen sheets shall be rolled or scrolled into place as they are
+heat welded.
+H. Do not use traditional cut-back asphalt cements under APP modified bitumen products.
+The use of these mastics over the top of APP products is acceptable; however, the
+MBR cement products are preferred.
+I. Install the entire roofing system at one time. Phased construction may result in blisters
+due to entrapment of moisture, as well as poor adhesion due to dust or foreign
+materials that have collected on the exposed felts of an incomplete roofing system.
+J. All smooth APP-surfaced products must be coated with a JM-approved coating.
+Acceptable roof coatings for APP systems may be found in the built-up roofing
+Paragraph 6.9 of Section 3b.
+K.	Always comply with published safety procedures for all products being used. See
+the “Introduction” section of the current JM Commercial Roofing Product Manual,
+SDS and container labels for health and safety recommendations.
+
+SECTION
+
+TWO
+
+6.1 JM manufactures different products for a variety of roofing needs: membranes,
+flashing, venting and vapor retarders.
+6.2 Roofing felts are furnished in rolls consisting typically of one square. Flashing
+materials are sold in square feet.
+
+7.0 Cold Adhesive Application
+7.1 There are situations where the use of heat welding and hot asphalt are undesirable
+or prohibited. In such cases, it may be necessary to use alternative materials such as
+cold adhesives (typically referred to as “cold process cements” or “cold application
+cements/adhesives”). JM research and development staff has determined that
+traditional cut-back asphalt mastics, as well as some of the newer “modified bitumen
+adhesives,” can have an adverse effect on APP modified bitumen products. This is due
+to the very high levels of solvent used in most of these cements. Softening, blisters and
+excessive granule loss can occur as the solvent from the cement passes through the
+membrane. This can cause accelerated aging of the underlying waterproofing with the
+potential for premature membrane failure.
+7.2 Through the evaluation of numerous alternate adhesive systems, JM has developed
+a viable cold application system for use with APP modified bitumen products.
+
+2-15
+
+
+===== PAGE 36 =====
+APP Modified Bitumen
+Cold-Applied Application Guide
+
+8.0 Health and Safety
+8.1 J M develops and maintains Safety Data Sheets (SDS) for all of its products.
+These SDS contain health and safety information for development of appropriate
+product handling procedures to protect the users of our products. These sheets
+are available on the JM Web site (www.jm.com/roofing). They should be read and
+understood by all involved personnel prior to using and handling JM materials. In
+addition to the SDS, JM products have health and safety precautions printed on the
+product label or packaging. The user is strongly urged to familiarize himself with this
+information prior to using the product, and observe certain precautions during use.
+
+APP Modified Bitumen
+Cold-Applied Application Guide
+
+9.0 One-Part Cold Adhesive Application
+
+SECTION
+
+TWO
+
+9.1 MBR Cold Application Adhesive and MBR Utility Cement are similar in consistency
+and application to traditional built‑up roofing cold process cements. These adhesives
+form a durable, elastomeric and waterproof layer once cured.
+9.2 MBR Cold Application Adhesive is used in the field of the roof and is used to adhere
+roofing plies, modified bitumen sheets and roof insulation. Fiber glass ply sheets, such as
+GlasPly Premier and GlasPly IV, cannot be used with this material. The adhesive is ready
+to use as shipped and does not require mixing. Do not thin with additional solvents.
+9.3 The adhesive is applied at a nominal rate of 1½ gal/100 ft2 (0.61 l/m2) over nonporous
+substrates, e.g., primed concrete or fiber glass base felts. If applied to porous materials,
+such as insulations, the application rate will increase, depending on the absorbency
+of the material.
+9.4 Position several rolls, beginning at the low edge of the work area, and unroll
+completely. Once the material has had time to relax, reroll the material from both ends
+(scroll) prior to applying the MBR Cold Application Adhesive.
+9.5 The simplest means of adhesive application is by pouring a 2” to 4” (51 mm - 102 mm)
+wide bead of the adhesive along the substrate, about 12” (305 mm) from the lower edge
+of the work area. The adhesive is spread with a ¼” (6 mm) (max.) saw-toothed rubber
+squeegee to obtain a uniform bed of adhesive. (The Roofer-Rite Brand squeegee has
+been found to work very well for these applications.) Spread the adhesive first toward
+the lower edge of the work area. Then, continue to spread the adhesive up the roof until
+the bed of adhesive is wide enough to receive several sheets.
+
+10.0 One-part Cold Adhesive Membrane
+Specifications
+10.1 Refer to page 2-113 of this book for membrane construction recommendations.
+
+11.0 Steep Slope Requirements – Systems
+Incorporating Asphalt or Adhesive
+11.1 APP roofing membranes that incorporate asphalt adhered base/ intermediate felts
+can be applied on inclines up to 3” per ft (250 mm/m) when proper precautions are taken.
+On non-nailable decks, wood nailers must be used. Nailers act as insulation stops for
+the roof insulation and as a facility to nail the membrane.
+On slopes up to ½” per ft (42 mm/m), the roofing sheets may be installed either
+perpendicular or parallel to the roof incline.
+11.2 Non-nailable Decks: On decks with a slope over ½” per ft (42 mm/m), the roofing
+felts must be installed parallel to the incline and must be back nailed. Pressure-treated
+
+2-16
+
+
+===== PAGE 37 =====
+APP Modified Bitumen
+Cold-Applied Application Guide
+
+wood nailers shall be attached to the deck, run perpendicular to the incline, be capable of
+retaining the nails securing the roofing sheets, have the same thickness as the insulation
+and be at least 3½” (89 mm) wide. They should be securely attached to the deck with
+mechanical fasteners to resist a pullout force of 200 pounds (890 N). Wood nailers shall
+be provided at the ridge and at the following approximate intermediate points:
+Incline (Inches/Foot)
+
+Nailer Spacing (D) 1
+
+Type of Asphalt
+
+0”-½” (0-41 mm/m)
+
+Not required
+
+Type III or IV*
+
+½”-2” (41-167 mm/m)
+
+32’ (9.8 m) (max.) face to face
+
+Type IV
+
+2”-3” (167-250 mm/m)
+
+10’ (3.1m) (max.) face to face
+
+Type IV
+
+* Consult with a JM Technical Service Specialist regarding projects in hot climates as Type III asphalt
+
+11.3 Cut the modified bitumen cap sheet to conform to the nailer spacing. Nail the end
+lap across the width of the sheet, with the first nail spaced ¾” (19 mm) from the leading
+edge of the sheet, and the remaining nails spaced approximately 8½” (216 mm) o.c. The
+nails shall be staggered across the width of the nailer to reduce the risk of the sheet
+tearing along the nail line. Nails must have an integral 1” (25 mm) (min.) diameter cap.
+Where capped nails are not used, fasteners must be driven through caps having a 1”
+(25 mm) (min.) diameter. All nails are to be covered by the lap of the next sheet.
+11.4 Nailers must also be used around the roof perimeter, openings and penetrations,
+for nailing felts, gravel stops, roof fixtures and fascia systems.
+11.5 Nailable and Lightweight Concrete Decks: On decks with a slope over ½” per ft
+(42 mm/m), the roofing felts must be installed parallel to the incline. Nail the end laps of
+the modified bitumen cap sheet across the width of the sheet on 8½” (216 mm) centers.
+All nails are to be covered by the lap of the next sheet. For slopes from ½” to 2” per ft
+(42 to 167 mm/m), a full-length sheet can be used. For slopes from 2” to 3” per ft (167 to
+250 mm/m), a half-length sheet should be used.
+Incline (Inches/Foot)
+
+Type of Asphalt
+
+0”-½” (0-41 mm/m)
+
+Type III or IV*
+
+½”-2” (41-167 mm/m)
+
+Type IV
+
+2”-3” (167-250 mm/m)
+
+Type IV
+
+* Consult with a JM Technical Services Specialist regarding projects in hot climates as Type III asphalt
+may not be permitted in some areas.
+
+12.0 Phase Construction
+12.1 One of the greatest hazards of roof construction is the application of a roofing system
+in “phases,” where a partially completed roof system is left exposed to the weather
+overnight or longer. This can lead to entrapped moisture which can cause premature
+failure of the membrane.
+12.2 When the installation of the cap sheet is delayed for any reason, the following
+procedures should be followed:
+A. Prior to the application of the modified bitumen cap sheet, the surface of the membrane
+must be examined thoroughly for the presence of any moisture. If moisture is present,
+the application of the cap sheet is not to proceed until the moisture has been removed
+or evaporated and the surface is dry.
+
+2-17
+
+APP Modified Bitumen
+Cold-Applied Application Guide
+
+Nailers may also be laid out to conform to the roll length being used. For slopes between
+½” to 2” per ft (42 to 167 mm/m), nailers should be spaced to accommodate full-length
+modified bitumen rolls. For slopes between 2” to 3” per ft (167 to 250 mm/m), the nailers
+should be spaced to accommodate half-length rolls.
+
+SECTION
+
+TWO
+
+
+===== PAGE 38 =====
+APP Modified Bitumen
+Cold-Applied Application Guide
+
+B. The surface of the membrane must be properly cleaned and primed if contaminated
+by dirt, dust or debris. The primer must be completely dry prior to installation of the
+modified bitumen cap sheet.
+12.3 Under no circumstances shall the installation of the modified bitumen cap sheet be
+delayed more than 5 days after completion of the intermediate plies of the roofing system.
+12.4 Only multiple felt (two felts with modified cap sheet) should be considered for
+the delay in application of the modified bitumen cap sheet. Single ply felt or base felt
+systems must receive the modified bitumen cap sheet on the same day.
+
+APP Modified Bitumen
+Cold-Applied Application Guide
+
+13.0 Cold Weather Application
+
+SECTION
+
+TWO
+
+13.1 APP modified bitumens require special application techniques when they are being
+installed in cold weather. The following precautions shall be taken when the ambient
+temperature drops below 50°F (10°C), and are mandatory below 40°F (4°C):
+A. Modified bitumen products shall be kept warm, or warmed prior to installation. Store
+these materials indoors or in heated storage units or warming boxes. If these facilities
+are not available, placing the materials in direct sunlight may help. Make certain that
+modified bitumen rolls are stored on end only; do not store rolls on their side.
+B. When the conditions are extreme (below 40°F [4°C]), the rolls must be heated or
+completely unwound and allowed to warm on the roof for 15 to 20 minutes. This shall
+be done with the darker side of the sheet up. The sheet may then be installed using
+conventional application techniques.
+C. When the ambient temperature is below 40°F (4°C), extra care must be used when
+handling and storing APP modified products. During cold weather, these modified
+bitumen products must be stored on end in a heated trailer or building, and only the
+rolls needed for immediate application should be outside. Materials must be kept dry.
+Never throw or drop rolls of modified bitumen products during cold weather. Sudden
+shocks can cause cracking of the asphalt. DO NOT DOUBLE STACK (with or without
+pallets). For heat-weld applied products, heat the substrate prior to rolling the molten
+modified bitumen into place. Special attention should be given to the lap area so proper
+adhesion can be obtained.
+D. The adhesive can be installed in temperatures between 40°F and 100°F (4°C and 38°C).
+However, when the temperature is below 50°F (10°C), the adhesive must be stored in
+a warm area (approximately 70°F [21°C]), for 24 hours before being used, to facilitate
+spreading. Note: Temperature affects the cure rate of the adhesive. Even in cooler
+weather, the product will develop bond strengths comparable to fully adhered single
+ply systems in a relatively short time. The membrane ultimately will develop adhesive
+bonds that exceed those of systems using asphalt as the adhesive.
+
+14.0 Temporary Roof Coverings
+14.1 At times, an owner or general contractor may require the building to be closed at a
+time when the weather is not conducive to good roof construction, or the roof area may
+have to be used as a work platform during construction. Historically, this situation has
+led to phase construction, which has resulted in premature roof failure.
+14.2 When the complete roof cannot be installed in one operation, the following procedures
+are recommended:
+A. Nailable Decks:
+1. Apply one layer of an approved JM base felt, lapping the felt 2” (51 mm), and nailing
+9” (229 mm) o.c. along the lap and 12” (305 mm) o.c. through the center of the sheet.
+(Sheathing paper should first be installed on wood board decks.)
+2. Mop one ply of an approved JM ply felt in ASTM D 312, Type III asphalt and apply a
+glaze coat of 10 - 15 lb/100 ft2 (0.49 - 0.73 kg/m2) of Type III asphalt.
+
+2-18
+
+
+===== PAGE 39 =====
+APP Modified Bitumen
+Cold-Applied Application Guide
+
+14.3 The decision as to whether or not a temporary roof is to be left in place is a judgment
+factor that must be made by the building owner or his representative. Although a JM
+representative may make suggestions in this area, JM will not be responsible for any
+problems that may develop with the roofing system due to the fact that the temporary
+roof is left in place.
+
+15.0 Protected Roofing Membrane
+Assemblies (PRMA)
+15.1 General Information. All general information contained in this section and in the current
+JM Commercial Roofing Product Manual shall be considered part of these specifications.
+JM APP modified bitumen specifications are eligible for use with protected roofing
+membrane assemblies. When these specifications are modified, the last digit of the
+specification designation should be changed to a “P” to denote “Protected” (e.g., 3CIP-W).
+Flashings: All flashings must conform to the requirements stated in this section and
+in Section 3 of this guide book. The flashing material must extend above the top of the
+extruded polystyrene insulation a minimum of 8” (203 mm). The standard flashing details
+for modified bitumen roofing can be found in Section 3.
+
+2-19
+
+APP Modified Bitumen
+Cold-Applied Application Guide
+
+3. An alternate would be to heat weld one layer of an APP modified bitumen cap sheet
+(smooth or mineral surfaced) over the base felt. No glaze coat of asphalt is applied.
+4. When the permanent roof is to be installed, inspect the roof and remove all damaged
+and blistered areas. Apply a layer of approved JM base felt nailed through the
+temporary roof and into the deck as the first layer of the roofing system. As an
+alternate, a layer of approved JM roof insulation may be mechanically fastened
+(with appropriate fasteners) through the temporary roof into the deck.
+5. Proceed with installing the appropriate permanent roof specification.
+B. Steel Decks:
+1. Apply a minimum layer of Fesco Board of adequate thickness to the steel deck
+using appropriate length UltraFast fasteners.
+2. Install a ply of a JM ply or base felt and an additional ply of fiber glass felt, both
+in hot steep asphalt.
+3. Finish with a 10 - 15 lb/100 ft2 (0.49 - 0.73 kg/m2) glaze coat of hot steep asphalt.
+4. When the permanent roof is to be applied, inspect the roof area. If the insulation
+has not been damaged and is dry, remove any blistered or damaged felt. Prime
+the temporary roof with Asphalt Primer at the rate of 1 gal/100 ft2 (0.4 l/m2) and
+then solid mop a layer of insulation board to the temporary roof with hot asphalt.
+Then apply the permanent roof system.
+5. If the membrane and/or roof insulation has been excessively damaged, remove
+all unusable material and replace.
+C. Non-nailable Decks, Other than Steel:
+1. Prepare the deck as would be done for a permanent roof.
+2. Solid mop two plies of approved JM ply felt in hot Type III asphalt.
+3. Finish with a 10 - 15 lb/100 ft2 (0.49 - 0.73 kg/m2) glaze coat of Type III asphalt.
+4. When the permanent roof is to be installed, inspect and repair all defects in the
+temporary roof. Clean the surface of the temporary roof and prime with Asphalt Primer
+if the surface is unusually worn. Proceed with the installation of the permanent roof.
+5. As an alternate to step 2, spot mop an approved JM base sheet using a mechanical
+spot mopping machine. Next, solid mop one ply of approved JM ply felt in hot Type III
+asphalt. When the permanent roof is to be installed, remove the entire temporary
+roof, prime the deck as required in the “Roof Decks” section of this manual, and
+proceed with the installation of the permanent roof.
+
+SECTION
+
+TWO
+
+
+===== PAGE 40 =====
+APP Modified Bitumen
+Cold-Applied Application Guide
+
+Drainage: Design and installation of the deck and/or roof substrate must result in the
+roof draining freely, to outlets numerous enough and so located as to remove water
+promptly and completely. Areas where water ponds for more than 48 hours are
+unacceptable, and will not be eligible for a JM Roofing System Guarantee.
+15.2 When designing a protected membrane roofing system, the designer must make
+sure that positive drainage exists on the roof. Even though some extruded polystyrene
+roof insulation products are designed with integral drainage channels, they will retard
+the flow of water due to the contact between the membrane and the insulation. JM
+recommends a minimum of ¼” per ft (20.8 mm/m) slope be obtained on the finished roof
+membrane. This will greatly reduce the amount of water that will be retained against
+the membrane after a rain.
+
+APP Modified Bitumen
+Cold-Applied Application Guide
+
+15.3 Ballast Requirements (for use with extruded polystyrene roof insulation):
+
+SECTION
+
+TWO
+
+15.4 The ballast should be similar to ASTM D 448, Gradation #57. The following gradation
+is typical:
+Passing ½” (13 mm) .......................................................... 10-60%
+Passing ¾” (19 mm) ............................................................ 100%
+
+15.5 Ballast is applied at a rate of approximately 10 to 12 lb/ft2 (49 - 59 kg/m2) in the field
+of the roof over a layer of filter fabric. Twenty (20) lb/ft2 (97.6 kg/m2) of ballast is required
+over a 4’ (1.22 m) wide area at the roof perimeter and at all penetrations. The following
+fabrics have been found to be acceptable:
+A. Confil 689H – 3.0 oz./yd. (93.5 g/m) black polyester from International Paper Company.
+B. Rufon P3B – 3.0 oz./yd. (93.5 g/m) black polypropylene from Phillips Fiber Corporation.
+15.6 JM makes no claims as to the quality of these products nor their performance when
+exposed on the roof. See the product warranty supplied by the fabric manufacturer.
+15.7 When pavers are used as ballast, the pavers must be placed on supports or
+pedestals. These supports or pedestals can either be commercially available products
+or 6” (152 mm) square pieces of JM DynaTred Plus (to give a minimum ½” [13 mm] air
+space). These supports should be located at the intersection of the corners of the paver
+blocks, such that where the four corners come together, all rest on the same 6” (152
+mm) square piece of DynaTred Plus or pedestal. The ½” (13 mm) air space between
+the pavers and the insulation will allow moisture vapor to vent to the atmosphere. If
+the moisture is not allowed to vent to the atmosphere, the top surface of the insulation
+will begin to absorb water and the thermal performance will be reduced. ROOF AREAS
+THAT HAVE PAVERS IN DIRECT CONTACT WITH THE INSULATION ARE EXCLUDED
+FROM COVERAGE UNDER A JM PEAK ADVANTAGE GUARANTEE, INCLUDING THE
+THERMAL OVERLAY PORTION OF THE GUARANTEE.
+15.8 The use of pavers in high traffic areas, to and around equipment and other
+maintenance areas, is strongly recommended.
+15.9 It is the owner’s and/or specifier’s responsibility to determine if the building
+structure can support the required amount of ballast and still meet the code design
+requirements for anticipated dead and live loads (including snow, wind, etc.).
+15.10 Decks (PRMA)
+15.11 Precast slabs and prestressed “T” or “TT” decks require a minimum of one layer
+of approved JM roof insulation as a leveling course prior to the installation of the roof
+membrane.
+15.12 For lightweight insulating concrete, gypsum decks, etc., consult a JM Technical
+Services Specialist for specifications and guarantee information.
+15.13 For information on roof deck requirements not mentioned here, refer to the “Roof
+Decks” section of the current JM Commercial Roofing Product Manual, or contact a
+
+2-20
+
+
+===== PAGE 41 =====
+APP Modified Bitumen
+Cold-Applied Application Guide
+
+JM Technical Services Specialist.
+15.14 Warning: Extruded polystyrene insulation is combustible and may constitute a
+fire hazard if improperly used or installed. It should be adequately protected. Use only
+as directed by the specific instructions for this product. This material should NEVER be
+exposed to an open flame or other source of ignition.
+15.15 All roof deck systems over which the protected system is installed should provide
+an adequate fire barrier for the extruded polystyrene insulation.
+15.16 For proper protection of plastic foam in storage, consult the National Fire Protection
+Association (NFPA) standards or the authority having jurisdiction.
+15.17 Installing Ballasted PRMA Roof Insulation Over Modified Bitumen Roof Membranes
+15.18 The following are general recommendations for installing ballasted PRMA roof
+insulation over modified bitumen roof membranes.
+
+Insulation
+Fabric
+Ballast
+
+Extruded polystyrene roof insulation
+100 ft2 (9.29 m2) per layer
+12’ wide, 105 ft2 (3.66 m wide, 9.75 m2)
+10’ wide, 106 ft2 (3.05 m wide, 9.84 m2)
+8’ wide, 107 ft2 (2.44 m wide, 9.94 m2)
+¾” (19 mm) stone or crushed rock,
+1,000 - 1,200 lb/100 ft2 (48.8 - 58.6 kg/m2)*
+
+*Additional ballast is required at the perimeter and at penetrations.
+
+15.19 Insulation: Place extruded polystyrene roof insulation directly on the membrane
+with channel side down. The insulation boards should be tightly butted together. The
+maximum allowable gap between boards is 3⁄8” (10 mm). The boards shall be installed
+to within approximately ¾” (19 mm) of all projections and cant strips.
+15.20 For multilayer installations, install subsequent layers, unattached over the first
+layer. Stagger all joints in relation to the underlying layer. The bottom layer in multi-layer
+applications must be at least 2” (51 mm) thick and as thick or thicker than the top layer.
+15.21 Fabric: Loose lay an approved fabric over the extruded polystyrene roof insulation,
+with all joints lapped a minimum of 12” (305 mm). There should not be any end laps
+within 6’ (1.83 m) of the perimeter. The fabric should extend 2” to 3” (51 - 76 mm) above
+the stone at the perimeter and at penetrations.
+15.22 Wetting the fabric is helpful in holding it in place on the insulation until the
+ballast is installed.
+15.23 Ballast: Apply the correct size ballast at the rate of 1,000 - 1,200 lb/100 ft2 (10 - 12 lb/ft2
+[48.8 - 58.6 kg/m2]), over the fabric, as the fabric is being laid out in the field of the roof.
+For a width of 4’ (1.22 m) at the roof perimeter or penetrations, install ballast at a rate
+of 20 lb/ft2 (98 kg/m2) or pavers at a rate of 22 lb/lin ft (32.7 kg/lin m). If pavers are used,
+the fabric is not required. Pavers must be placed on pedestals. Pedestals can be either
+commercially available products or 6” (152 mm) square pieces of JM DynaTred Plus.
+15.24 Ballast should be washed ¾” (19 mm) gravel or crushed stone, with fines (smaller
+than ½” [13 mm]) accounting for not less than 10% or more than 60%. This gradation is
+similar to ASTM D 448, Gradation #57.
+
+2-21
+
+APP Modified Bitumen
+Cold-Applied Application Guide
+
+Materials per 100 ft2 (9.29 m2) of membrane area
+
+SECTION
+
+TWO
+
+
+===== PAGE 42 =====
+Section Three:
+Mechanically Fastened
+Base Sheet Fastening Patterns
+
+3
+
+Mechanically Fastened
+Base Sheet Fastening Patterns
+
+Mechanically
+Fastened Base Sheet
+Fastening Patterns
+
+SECTION
+
+THREE
+
+
+===== PAGE 43 =====
+–
+–
+–
+AD-8
+AD-16
+BM-6
+BM-7,7,7
+BM-7,9,9
+BM-75,75,75
+BM-9,9,9
+BM-9,12,12
+BM-9,18,18
+BM-12
+BM-12,12,12
+BM-18
+BM-18, 12, 6
+
+4x2 Ft. Roof Insulation Fastener Placement
+
+4x4 Ft. Roof Insulation Fastener Placement
+
+4x8 Ft. Roof Insulation Fastener Placement
+
+Fully Adhered Cover (8-16-32)
+
+Fully Adhered Cover (16-24-32)
+
+Mecanically Fastened Base Sheet (6" o.c.)
+
+Mecanically Fastened Base Sheet (7", 7", 7" o.c.)
+
+Mecanically Fastened Base Sheet (7", 9", 9" o.c.)
+
+Mecanically Fastened Base Sheet (7.5", 7.5", 7.5" o.c.)
+
+Mecanically Fastened Base Sheet (9", 9", 9" o.c.)
+
+Mecanically Fastened Base Sheet (9", 12", 12" o.c.)
+
+Mecanically Fastened Base Sheet (9", 18", 18" o.c.)
+
+Mecanically Fastened Base Sheet (12" o.c.)
+
+Mecanically Fastened Base Sheet (12", 12", 12" o.c.)
+
+Mecanically Fastened Base Sheet (18" o.c.)
+
+Mecanically Fastened DynaFast® Base Sheet (18", 12", 6" o.c.)
+
+Mechanically Fastened
+Base Sheet Fastening Patterns
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+APP
+CA
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+HA
+
+BUR
+
+Key: HA = Hot Applied CA = Cold Applied MF = Mechanically Fastened FA = Fully Adhered
+
+Pattern Number
+
+Description
+
+Fastening Patterns Compatibility Guide and Contents
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+CA
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+HA
+
+SBS
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+X
+
+CA
+
+3-12
+
+3-11
+
+3-10
+
+3-9
+
+3-8
+
+3-7
+
+3-6
+
+3-5
+
+3-4
+
+3-3
+
+3-2
+
+1-11
+
+1-10
+
+1-6
+
+1-4
+
+1-3
+
+Page
+
+Section Three:
+Mechanically Fastened
+Base Sheet Fastening Patterns
+
+THREE
+
+SECTION
+
+Note: For the most current information on general guidelines, please refer to the System Considerations
+tab under Commercial Roofing Products on the JM Roofing Web site. For specifications, flashing details
+and general installation information please refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+3-1
+
+
+===== PAGE 44 =====
+Mechanically Fastened
+Base Sheet Fastening Patterns
+
+	Mechanically Fastened Base
+Sheet Fastening Pattern BM-6
+
+SECTION
+
+THREE
+
+Note: For the most current information on general guidelines, please refer to the System Considerations
+tab under Commercial Roofing Products on the JM Roofing Web site. For specifications, flashing details
+and general installation information please refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+3-2
+
+
+===== PAGE 45 =====
+Mechanically Fastened Base
+Sheet Fastening Pattern BM-7,7,7
+
+Mechanically Fastened
+Base Sheet Fastening Patterns
+SECTION
+
+THREE
+
+Note: For the most current information on general guidelines, please refer to the System Considerations
+tab under Commercial Roofing Products on the JM Roofing Web site. For specifications, flashing details
+and general installation information please refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+3-3
+
+
+===== PAGE 46 =====
+Mechanically Fastened
+Base Sheet Fastening Patterns
+
+	Mechanically Fastened Base Sheet
+Fastening Pattern BM-7,9,9
+
+SECTION
+
+THREE
+
+Note: For the most current information on general guidelines, please refer to the System Considerations
+tab under Commercial Roofing Products on the JM Roofing Web site. For specifications, flashing details
+and general installation information please refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+3-4
+
+
+===== PAGE 47 =====
+
+Mechanically Fastened Base Sheet
+Fastening Pattern BM-75,75,75
+
+Mechanically Fastened
+Base Sheet Fastening Patterns
+SECTION
+
+THREE
+
+Note: For the most current information on general guidelines, please refer to the System Considerations
+tab under Commercial Roofing Products on the JM Roofing Web site. For specifications, flashing details
+and general installation information please refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+3-5
+
+
+===== PAGE 48 =====
+Mechanically Fastened
+Base Sheet Fastening Patterns
+
+	
+Mechanically Fastened Base Sheet
+Fastening Pattern BM-9,9,9
+
+SECTION
+
+THREE
+
+Note: For the most current information on general guidelines, please refer to the System Considerations
+tab under Commercial Roofing Products on the JM Roofing Web site. For specifications, flashing details
+and general installation information please refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+3-6
+
+
+===== PAGE 49 =====
+
+Mechanically Fastened Base Sheet
+Fastening Pattern BM-9,12,12
+
+Mechanically Fastened
+Base Sheet Fastening Patterns
+SECTION
+
+THREE
+
+Note: For the most current information on general guidelines, please refer to the System Considerations
+tab under Commercial Roofing Products on the JM Roofing Web site. For specifications, flashing details
+and general installation information please refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+3-7
+
+
+===== PAGE 50 =====
+
+Mechanically Fastened Base Sheet
+Fastening Pattern BM-9,18,18
+
+Mechanically Fastened
+Base Sheet Fastening Patterns
+
+Mechanically Fastened
+Base Sheet Fastening Patterns
+
+SECTION
+
+THREE
+
+Note: For the most current information on general guidelines, please refer to the System Considerations
+tab under Commercial Roofing Products on the JM Roofing Web site. For specifications, flashing details
+and general installation information please refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+3-8
+
+
+===== PAGE 51 =====
+
+Mechanically Fastened Base Sheet
+Fastening Pattern BM-12
+
+Mechanically Fastened
+Base Sheet Fastening Patterns
+SECTION
+
+THREE
+
+Note: For the most current information on general guidelines, please refer to the System Considerations
+tab under Commercial Roofing Products on the JM Roofing Web site. For specifications, flashing details
+and general installation information please refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+3-9
+
+
+===== PAGE 52 =====
+
+Mechanically Fastened Base Sheet
+Fastening Pattern BM-12,12,12
+
+Mechanically Fastened
+Base Sheet Fastening Patterns
+
+Mechanically Fastened
+Base Sheet Fastening Patterns
+
+SECTION
+
+THREE
+
+Note: For the most current information on general guidelines, please refer to the System Considerations
+tab under Commercial Roofing Products on the JM Roofing Web site. For specifications, flashing details
+and general installation information please refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+3-10
+
+
+===== PAGE 53 =====
+
+Mechanically Fastened Base Sheet
+Fastening Pattern BM-18
+
+Mechanically Fastened
+Base Sheet Fastening Patterns
+SECTION
+
+THREE
+
+Note: For the most current information on general guidelines, please refer to the System Considerations
+tab under Commercial Roofing Products on the JM Roofing Web site. For specifications, flashing details
+and general installation information please refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+3-11
+
+
+===== PAGE 54 =====
+
+Mechanically Fastened Base Sheet
+Fastening Pattern BM-18, 12, 6
+
+Mechanically Fastened
+Base Sheet Fastening Patterns
+
+Mechanically Fastened
+Base Sheet Fastening Patterns
+
+SECTION
+
+THREE
+
+Note: For the most current information on general guidelines, please refer to the System Considerations
+tab under Commercial Roofing Products on the JM Roofing Web site. For specifications, flashing details
+and general installation information please refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+3-12
+
+
+===== PAGE 55 =====
+Section Four:
+APP Flashing Details
+
+4
+
+APP Flashing Details
+
+Section Four Contents
+1.0 General Information . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 4-1
+2.0 Flashing Principles . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  4-1
+3.0 Substrate/Flashing Preparation . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  4-2
+4.0 Typical Flashing Conditions . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  4-3
+5.0 Recommend JM SBS and JM APP . . . . . . . . . . . . . . . . . . . . . . . . . .  4-5
+Flashing Details Table of Contents . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  4-6
+
+APP Flashing Details
+
+Download a free QR Reader app on your smart
+phone. When you see a QR code, use your phone
+to scan the code. It will then redirect your phone to
+a specific video or detail. These codes will allow you
+to view step by step instructional videos and will
+allow you to zoom in on details for better readability.
+If you are viewing this booklet online you can click
+on these codes to direct you to the online videos
+and details as well.
+
+SECTION
+
+FOUR
+
+
+===== PAGE 56 =====
+APP Flashing Details
+
+1.0 General Information
+1.1 Flashings are used to make watertight any roof area where the roof membrane
+terminates, is interrupted or intersects an area or projection having a marked change
+in slope or direction. This condition can occur at gravel stops, curbs, parapets, walls,
+built-in gutters, expansion joints, skylights, vents, drains, pipes and other penetrations.
+1.2 Flashings are generally divided into several categories: bituminous flashing (base
+flashings and stripping), counterflashings/cap flashings, copings, perimeter edge
+metal and “flanged” metal flashings.
+A. Base flashings are, in a sense, a continuation of the membrane, turned up onto a
+surface that is in a different plane from the field of the roof, and installed as a
+separate operation. They are usually fabricated using a nonmetallic material, such
+as a bituminous-coated felt. Stripping is a bituminous flashing used to waterproof
+metal flanges.
+B. Perimeter edge metal (gravel stop, drip edge, gutter edge, fascia) is available in
+various configurations and is critical in sealing the roof membrane edges and roof
+system attachments.
+C. “Flanged” metal flashings are those metal flashings in which the horizontal deck
+flange is “sandwiched” between the primary roof membrane and bituminous
+stripping materials. Examples include vent stack leads, metal cone jacks,
+penetration pans, etc. JM recommends the use of better, more maintenance-free
+details for flashing roof projections. JM also recognizes that, at times, these types
+of flashings may be the best or only alternative.
+D. Counterflashings, or cap flashings, can be fabricated with metal, coated felt or
+other materials. They shield and seal the exposed edges of the base flashing.
+E. Copings also shield and seal the exposed edges of the base flashing. The vast
+majority of copings are fabricated from metal. Stone and tile are also common
+coping materials.
+1.3 JM markets several different metal coping and perimeter edge metal systems.
+These systems are manufactured to meet stringent JM standards and, therefore,
+can be incorporated into the JM Peak Advantage Guarantee. It is permissible to
+incorporate “shop-fabricated” copings and perimeter edge metal into the roof system;
+however, these components are not generally covered under the JM guarantee. In
+some instances, JM will extend coverage on shop-fabricated metal if the request is
+made prior to job start. JM must review and approve all metal details. There may be
+additional fees for this service
+1.4 All general instructions contained in the current JM Roofing Solutions Product
+Manual are to be considered part of this specification.
+
+APP Flashing Details
+
+1.5 All health, safety and environmental procedures involving the storage, use and
+disposal of roofing materials should be followed. These precautions are outlined in the
+“Introduction” section of the current Johns Manville Roofing Systems Product Manual.
+
+SECTION
+
+FOUR
+
+2.0 Flashing Principles
+2.1 The performance of any flashing system is ultimately dependent on proper design,
+attachment and preparation.
+2.2 Flashings must allow for differential movement in the flashing system, particularly
+when the deck and wall are not directly tied to each other (non-load-bearing
+construction). Differential movement between the roof deck and the wall is usually
+evidenced by diagonal wrinkles in the base flashing. Continued movement can
+cause tears in the flashing, particularly at the most restricted areas. Use roof-to-wall
+expansion joint details if the movement cannot be handled by standard base flashing
+systems. Expansion joints are typically installed at changes in the structural deck type,
+
+4-1
+
+
+===== PAGE 57 =====
+APP Flashing Details
+
+changes in the direction of metal decking, at the base, transition of non-wallsupported decks and/or any area where significant differential movement is
+anticipated.
+2.3 Avoid sharp bends in built-up and modified bitumen base flashings. Right-angle
+bends in bituminous flashings create high stress areas and can result in premature
+aging of the flashing material. To alleviate this condition and to provide solid backing,
+which protects the flashing from impact, the use of cant strips is necessary.
+2.4 The combined use of nonmetallic materials for base flashings and metal for
+counterflashings brings out the best in each material. Bituminous base flashing
+materials have the same coefficient of expansion and contraction as the roof
+membrane, and they work together as a unit. They are the only type of material
+acceptable for use in constructing base flashings in bituminous systems.
+2.5 Because of the rigidity of metal and its extreme movement with temperature
+changes, its use is not acceptable for base flashings. Cap flashings or counter
+flashings made of metal, removed from any area of possible standing water are
+acceptable, provided they are properly installed in accordance with industryaccepted sheet metal details.
+
+3.0 Substrate/Flashing Preparation
+3.1 All surfaces to be flashed/stripped should be inspected before any flashing work is
+started. Surfaces must be sound, dry and free of any loose materials or contaminants.
+Fins, sharp ridges, metal rods, etc., or any other circumstance that would puncture or
+cut the bituminous flashing/stripping or prevent proper adhesion of the same must be
+corrected.
+3.2 Provide wood blocking (pressure treated with a salt preservative) to serve as
+a base for attaching the flanges of metal edging and “flanged” metal flashings.
+Treatment of the nailers with creosote or asphaltic preservatives is not acceptable.
+Extend the wood nailers horizontally beyond the flanges of the metal edgings and
+flashings. All new and existing wood nailers must be firmly attached to the structure
+with the appropriate fasteners at a rate sufficient for the project as required by the
+local building code. Information on nailer attachment can be found in FM Global Loss
+Prevention Data Sheet 1-49, entitled “Perimeter Flashing,” found on www.roofnav.com.
+3.3 Any sheet metal flanges that are to be “sandwiched” between the primary roof
+membrane and bituminous flashing materials shall be properly cleaned and primed
+with JM Asphalt Primer on both top and bottom surfaces. Allow the primer to dry
+thoroughly prior to application.
+3.4 Masonry Construction: Walls should be built with hard-burned brick, soundreinforced concrete or waterproof concrete block construction. Common faults
+encountered are:
+1. Soft or scaling brick or concrete.
+2. Poor mortar or faulty pointing of joints.
+
+3.5 Frame Construction: Frame walls are not acceptable to receive flashing unless
+suitable solid backing for the flashing is provided. A bituminous base sheet is
+typically mechanically attached over the surface prior to flashing installation. Gypsum
+wallboard is not acceptable as a substrate for bituminous flashings. Suitable stops
+and sheet metal flashing should be provided in EIFS and stucco construction to seal
+the top of the base flashing.
+
+4-2
+
+APP Flashing Details
+
+3. Broken copings and inadequate pointing of joints between copings. Walls of
+ordinary hollow tile, or other materials that in themselves are not waterproof, are
+not suitable to receive flashings unless they are properly waterproofed. Prime all
+masonry surfaces that are to receive bituminous flashing with JM Asphalt Primer.
+Allow the primer to dry thoroughly prior to application of flashing.
+
+SECTION
+
+FOUR
+
+
+===== PAGE 58 =====
+APP Flashing Details
+
+3.6 Any previously installed metal coping or counterflashing must be lifted or removed,
+to permit application of the base flashing.
+
+4.0 Typical Flashing Conditions
+4.1 Bituminous Base Flashing
+A. Install all layers comprising the primary roof membrane to the top of the cant
+before installing the base flashing. Do not carry the roofing membrane all the way
+up a wall, parapet or curb to act as a base flashing.
+B. The completed base flashing should extend between 8" (203 mm) and 24" (610mm)
+above the level of the roof and onto the roof membrane a minimum of 4" 		
+(102 mm). In multiple-layer flashings, all layers shall be offset a minimum of 6"
+(152 mm) from each other. All vertical joints are to be overlapped a minimum of 4"
+(102 mm) and well sealed.
+C. Good roofing practice dictates that the top edge of all base flashings must be
+carried a minimum of 8" (203 mm) above the roof. Certain project conditions may
+necessitate lower base flashing heights. The decision to incorporate base
+flashing heights less than 8" (203 mm) into a roof system rests solely with the
+building owner and the design professional. Typically, this decision is made as an
+initial cost-saving initiative on behalf of the owner. The building owner and design
+professional take full responsibility for this decision and acknowledge that the
+guarantee effectively stops at the top of the membrane base flashing.
+D. Secure all base flashings at the top edge with appropriate mechanical fasteners,
+spaced 6" (152 mm) o.c. maximum. The fasteners shall have a minimum 1" (25 mm)
+diameter head or plate. Fasteners shall be placed 1.5" (38 mm) from the top edge
+of the base flashing.
+E. Never install new base flashing above or over the top of existing thru-wall
+flashing. If the existing thru-wall flashing prohibits proper flashing height, the
+building owner and the design professional must be notified promptly. The
+decision to incorporate base flashing heights less than 8" (203 mm) into a roof
+system rests solely with the building owner and the design professional. Both the
+building owner and design professional take full responsibility for this decision
+and acknowledge that the guarantee effectively stops at the top of the membrane
+base flashing.
+
+APP Flashing Details
+
+4.2 Perimeter Edge Metal (drip edge, gravel stop, etc.)
+A. Install all layers of the primary roof membrane so that it fully covers the perimeter
+wood blocking.
+
+SECTION
+
+FOUR
+
+B. All perimeter edge metal must be securely anchored over the top of the primary
+roof membrane. The solid attachment of all edge-metal-to-wood nailers is critical.	
+The wood nailers must extend horizontally beyond the metal flange. Perimeter edge
+metal shall be attached at a rate sufficient for the project as required by the local
+building code. Information on perimeter edge metal attachment can be found in
+FM Global Loss Prevention Data Sheet 1-49, entitled “Perimeter Flashing,” found
+on www.roofnav.com. Movement due to poor securement will result in abnormal
+stress on the membrane and flashing, which can cause leaks.
+C. Locate metal flanges (drip edge, gravel stop, etc.) that will be flashed or “stripped
+in” above the highest water level on the roof. Good roofing practice dictates that
+roof edges should be raised above the plane of the roof, whenever possible.
+D. All edge metal flanges (drip edge, gravel stop, etc.) that will be flashed or “stripped
+in” should be thoroughly cleaned to remove oil, oxidation or other contaminants, and
+then primed on both sides with JM Asphalt Primer. Set the metal sections on top of
+the primary roof membrane and into a 1⁄8" (3 mm) thick bed of MBR Flashing Cement
+or MBR Utility Cement, and fasten 3" (76 mm) o.c. on the horizontal flange, staggering
+the fasteners. Strip in the horizontal flange with the appropriate flashing material.
+
+4-3
+
+
+===== PAGE 59 =====
+APP Flashing Details
+
+4.3 “Flanged” Metal Flashings (pipe jacks, cone jacks, penetration pans, etc.)
+A. Install all layers of the primary roof membrane so that it fully covers the wood
+blocking around the penetration.
+B. All “flanged” metal flashings must be securely anchored over the top of the primary
+roof membrane. The solid attachment of all metal flanges to wood nailers is critical.
+The wood nailers must extend horizontally beyond the metal flanges. Movement
+due to poor securement will result in abnormal stress on the membrane and flashing,
+which can cause leaks.
+C. Locate metal flanges that will be flashed or “stripped in” above the highest water
+level on the roof. Good roofing practice dictates that “sandwiched” metal flanges
+should be raised above the plane of the roof whenever possible.
+D. All metal flashing flanges that will be flashed or “stripped in” should be thoroughly
+cleaned to remove oil, oxidation or other contaminants and then primed on both
+sides with JM Asphalt Primer. Set the metal sections on top of the primary roof
+membrane and into a 1⁄8" (3 mm) thick bed of MBR Flashing Cement or MBR Utility
+Cement, and fasten 3" (76 mm) o.c. on the horizontal flange, staggering the fasteners.	
+Flash the horizontal flange with the appropriate flashing material.
+E. JM does not recommend the use of penetration pan details, as by definition they
+require regular maintenance on the part of the owner.
+4.4 High Wall Flashings
+A. High wall flashings or wall coverings are defined as membrane flashings on a
+vertical element in excess of 24" (610 mm) above the roof level. Bituminous flashings
+are very durable, but are also comparatively heavy. Two different flashing approach
+es are provided below.
+B. EPDM membrane: Apply base flashing, as outlined above. The completed base
+flashing should extend between 8" (203 mm) and 24" (610 mm) above the level of the
+roof membrane. Terminate the base flashing with an approved surface-mounted
+metal counterflashing, fastened 6" (152 mm) o.c. maximum with the appropriate
+fasteners. Apply JM EPDM membrane over the top of the wall and extending down
+over the metal counterflashing, using JM EPDM Bonding Cement. The EPDM wall
+cover should cover the metal counterflashing to the top of its drip edge, and must
+cover the fasteners in the metal counterflashing by a minimum of 2" (51 mm). The
+JM EPDM membrane shall be bonded to the properly primed sheet metal counter
+flashing with JM EPDM Seam Tape. Terminate the top of the EPDM membrane wall
+cover as required.
+C. Self-adhering flashings are not acceptable for this application.
+4.5 Sheet Metal: All sheet metal (counterflashing, cap flashing, coping, edge metal,
+etc.) shall be installed in accordance with and conform to SMACNA guidelines and
+the manufacturer’s requirements. All counterflashing and coping should overlap the
+base flashing by a minimum of 4" (102 mm).
+4.6 Coping: All copings, regardless of their makeup, should be set/installed on top of
+a waterproofing membrane, metal flashing, or both, so as to prevent any moisture
+originating from the coping entering the roof system.
+
+4-4
+
+APP Flashing Details
+
+4.7 Surfacing of Bituminous Flashing: Granule, “CR” and foil-surfaced flashings do not
+require additional surfacing. Unsurfaced flashing materials may be surfaced with any
+one of the appropriate coating materials provided by JM.
+
+SECTION
+
+FOUR
+
+
+===== PAGE 60 =====
+APP Flashing Details
+
+5.0 Recommend JM SBS and JM APP
+5.1 Products for use in heat-weld installations:
+SBS – Cap Sheets
+DynaWeld Cap FR
+DynaWeld Cap FR CR
+DynaWeld Cap 180 FR
+Dynaweld Cap 180 FR CR
+DynaWeld Cap 250 FR
+DynaWeld Cap 250 FR CR
+DynaWeld Cap
+DynaKap FR HW
+
+SBS – Base Sheets
+DynaWeld Base
+DynaBase HW
+DynaWeld 180S
+DynaWeld 250S
+DynaPly HW
+
+APP – Cap Sheets
+
+APP – Base Sheets
+APPeX 4S
+Tricor 2
+Bicor S
+
+APP Flashing Details
+
+APPeX 4.5M
+APPeX 4.5M FR
+Tricor M FR
+Bicor M FR
+
+SECTION
+
+FOUR
+
+4-5
+
+
+===== PAGE 61 =====
+APP Flashing Details
+
+JM PermaFlash® Flashing Details
+Roof Area Base Tie In Attachment
+Corner
+PMF-3
+PermaFlash® Inside Corner Detail
+PMF-3S
+PermaFlash® Inside Corner Scrim Detail
+
+4-12
+4-13
+
+Lap Angle Change
+PMF-10
+PMF-9
+
+PermaFlash® Standard Base Flashing Detail
+PermaFlash® Standard Canted Base Flashing Detail
+
+4-14
+4-15
+
+Penetration, Equipment Support and Protection
+Curb
+PMF-4
+PermaFlash® Curb Corner Detail
+PMF-4Sa
+PermaFlash® OS Corner Scrim Layout (Top)
+PMF-4Sb
+PermaFlash® OS Corner Scrim Layout (Bottom)
+
+4-16
+4-17
+4-18
+
+Drain
+PMF-5
+PMF-5S
+PMF-7
+PMF-7S
+PMF-8
+PMF-8S
+
+PermaFlash®-To-Drain-Detail
+PermaFlash® Drain Scrim Detail
+PermaFlash® Through-Wall Scupper Detail
+PermaFlash® Through-Wall Scupper Scrim Detail
+PermaFlash® Overflow Scupper Detail
+PermaFlash® Overflow Scupper Scrim Detail
+
+4-19
+4-20
+4-21
+4-22
+4-23
+4-24
+
+Equipment Support
+PMF-1
+PMF-11
+PMF-11S
+PMF-1S
+PMF-2
+PMF-2S
+
+PermaFlash® I-Beam Detail
+PermaFlash® Square Metal Tube Detail
+PermaFlash® Square Metal Tube Scrim Detail
+PermaFlash® I-Beam Scrim Detail
+PermaFlash® Angle Iron Detail
+PermaFlash® Angle Iron Scrim Detail
+
+4-25
+4-26
+4-27
+4-28
+4-29
+4-30
+
+Pipe & Vent
+PMF-6
+PMF-6S
+
+PermaFlash® Pipe Penetration Detail
+PermaFlash® Pipe Penetration Scrim Detail
+
+4-31
+4-32
+
+JM APP Heat Weldable Flashing Details
+4-33
+4-34
+4-35
+4-36
+4-37
+4-38
+
+Expansion, Tie-In and Transition
+HW-7
+Curb Mounted Roof-to-Roof Expansion Joint Cover
+HW-1 (NLB)
+Curb to Wall E.J.	
+
+4-39
+4-40
+
+Penetration, Equipment Support and Protection
+Curb
+HW-26
+Base Flashing at Outside Corner
+HW-8
+Prefabricated Curb
+
+4-41
+4-42
+
+Drain
+HW-12
+HW-11
+HW-22
+HW-21
+
+JM Flex-I-Drain
+Metal Drain
+Overflow Metal Scupper
+Primary Metal Scupper in Sump
+
+4-43
+4-44
+4-45
+4-46
+
+Equipment Support
+HW-17
+HW-16
+
+Lightning Rod on Roof Surface
+Penetration Pocket
+
+4-47
+4-48
+
+4-6
+
+APP Flashing Details
+
+Roof Area
+Edge
+HW-4 (GS)
+Gravel Stop
+HW-4 (GS-ALT)
+Gravel Stop Alternate
+HW-4 (GTR)
+Gutter
+HW-4 (PRESTO LOCK) Presto Lock Fascia System
+HW-4 (PRESTO-TITE) Presto-Tite Edge Metal System
+HW-4 (RMCF)
+Raised Metal Cant Fascia
+
+SECTION
+
+FOUR
+
+
+===== PAGE 62 =====
+APP Flashing Details
+
+Pipe & Vent
+HW-10
+HW-9
+HW-23
+Wall Flashing
+HW-27
+HW-15 (E)
+HW-20 (WH)
+HW-20 (WL)
+HW-6 (TH)
+HW-6 (TL)
+HW-1 (LB)
+HW-25 (LB)
+			
+HW-15 (T)
+HW-15 (T-ALT)
+HW-24
+HW-3 (WH)
+HW-3 (WL)
+Non Load Bearing
+HW-1 (NLB)
+HW-5 (NLB-ALT)
+
+FP-10 One Way® Roof Vent
+Plumbing Vent
+Vent Stack (Warm)
+
+4-49
+4-50
+4-51
+
+Base Flashing at Inside Corner
+EPDM Wall Covering with Bituminous Base Flashing
+Gypsum Wall on Metal Studs >24” w/ Coping
+Gypsum Wall on Metal Studs <24” w/ Coping
+Masonry Wall >24” with Coping
+Masonry Wall <24” with Coping
+Masonry Wall w/ Counterflashing
+Optional Two-Ply Base Flashing for Load-Bearing
+Masonry Wall w/Counterflashing
+TPO Wall Covering with Bituminous Base Flashing
+TPO Wall Covering with Bituminous Base Flashing
+Venting Lightweight Concrete
+Wood Wall >24” with Coping
+Wood Wall <24” with Coping
+
+4-52
+4-53
+4-54
+4-55
+4-56
+4-57
+4-58
+
+Curb to Wall E.J.
+Metal E.J. Alternate
+
+4-65
+4-66
+
+JM Vapor Barrier SA - Wall Base Detail
+JM Vapor Barrier SA - Wall Base Detail (Alt)
+JM Vapor Barrier SA - Pipe Penetration Detail
+JM Vapor Barrier SA - Drain Detail
+JM Vapor Barrier SA - Detail at Field Laps
+JM Vapor Barrier SA - Outside Curb Detail
+JM Vapor Barrier SA - Inside Curb Detail
+
+4-68
+4-69
+4-70
+4-71
+4-72
+4-73
+4-74
+
+4-59
+4-60
+4-61
+4-62
+4-63
+4-64
+
+Vapor Barriers
+
+APP Flashing Details
+
+VB-1
+VB-1 (ALT)
+VB-2
+VB-3
+VB-4
+VB-5
+VB-6
+
+SECTION
+
+FOUR
+
+4-7
+
+
+===== PAGE 63 =====
+
+PermaFlash™ Bituminous Flashing
+System Penetration Flashing
+Application Guide
+
+Ensure all surfaces are clean, dry and free of any loose debris, dust, dirt and rust
+before coating.
+1. Items you will need:
+• MBR® Flashing Cement Cartridges
+• Applicator (Gun), Nozzle and Restrictor
+• PermaFlash Primer
+• PermaFlash Scrim
+• Scissors
+• Masking Tape
+• Brush or Roller
+• Tape Measure or Ruler
+• Clean Rag or Spray Bottle for Applying Primer
+• Xylene* or other Cleaner
+• Rubber Gloves
+* Caution: Xylene may cause skin, eye and respiratory irritation. Review the manufacturer’s Safety Data
+Sheet for safety and personal protective equipment information for the cleaning product used.
+
+2. Where necessary, prepare surfaces
+using a grinder or other suitable means.
+
+3. Prime the penetration with a light coating
+of PermaFlash Primer. A rag or spray bottle
+works best; a brush may apply too liberally.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-8
+
+JM PermaFlash™ Application Guide
+
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+SECTION
+
+FOUR
+
+
+===== PAGE 64 =====
+
+PermaFlash™ Bituminous Flashing
+System Penetration Flashing
+Application Guide
+
+4. Use tape to mask off the top of the detail 8”
+(203 mm) above the roof and an 8” (203 mm)
+perimeter surrounding the detail.
+
+5. Precut the first piece of PermaFlash Scrim.
+Start 6” (152 mm) above the roof surface and
+extend fingers 6” (152 mm) onto the roof
+surface. PermaFlash Scrim is 12” (305 mm)
+wide for ease of application.
+
+JM PermaFlash™ Application Guide
+
+6. Precut the second piece of PermaFlash Scrim
+to serve as a target piece laying flat on the
+roof surrounding the penetration. Extend a
+minimum of 6” (152 mm) on the roof surface
+in all directions. (This will be 2” (51 mm)
+inside the masked off perimeter.)
+
+SECTION
+
+FOUR
+
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-9
+
+
+===== PAGE 65 =====
+
+PermaFlash™ Bituminous Flashing
+System Penetration Flashing
+Application Guide
+
+7. Coat the masked off area with a very thin
+coating [30 mil (0.76 mm)] of MBR Flashing
+Cement. A brush works best.
+
+8. Embed the first piece of PermaFlash Scrim.
+
+9. Apply a light coating of MBR Flashing Cement.
+
+10. Embed the second piece of PermaFlash Scrim.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-10
+
+JM PermaFlash™ Application Guide
+
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+SECTION
+
+FOUR
+
+
+===== PAGE 66 =====
+
+PermaFlash™ Bituminous Flashing
+System Penetration Flashing
+Application Guide
+
+11. Re-coat the entire masked off area with
+a thicker [60 mil (1.52 mm)] coating of MBR
+Flashing Cement.
+
+12. After drying, remove masking tape.
+
+JM PermaFlash™ Application Guide
+
+Completed Detail. ½ cartridge of MBR Flashing
+Cement used to complete detail.
+
+SECTION
+
+FOUR
+
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-11
+
+
+===== PAGE 67 =====
+PMF-3
+
+PermaFlash® Inside Corner Detail
+
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-12
+
+JM PermaFlash™ Flashing Details
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+
+SECTION
+
+FOUR
+
+
+===== PAGE 68 =====
+PMF-3S
+
+™ ™
+JM
+JM
+PermaFlash
+PermaFlash
+Application
+Flashing Details
+Guide
+
+PermaFlash® Inside Corner Scrim Detail
+
+SECTION
+
+FOUR
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-13
+
+
+===== PAGE 69 =====
+PMF-10
+
+PermaFlash® Standard Base Flashing Detail
+
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-14
+
+JM PermaFlash™ Flashing Details
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+
+SECTION
+
+FOUR
+
+
+===== PAGE 70 =====
+PMF-9
+
+™ ™
+JM
+JM
+PermaFlash
+PermaFlash
+Application
+Flashing Details
+Guide
+
+PermaFlash® Standard Canted Base Flashing Detail
+
+SECTION
+
+FOUR
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-15
+
+
+===== PAGE 71 =====
+PMF-4
+
+PermaFlash® Curb Corner Detail
+
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-16
+
+JM PermaFlash™ Flashing Details
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+
+SECTION
+
+FOUR
+
+
+===== PAGE 72 =====
+PMF-4Sa
+
+™ ™
+JM
+JM
+PermaFlash
+PermaFlash
+Application
+Flashing Details
+Guide
+
+PermaFlash® OS Corner Scrim Layout (Top)
+
+SECTION
+
+FOUR
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-17
+
+
+===== PAGE 73 =====
+PMF-4Sb
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-18
+
+JM PermaFlash™ Flashing Details
+
+PermaFlash™ Flashing Details
+
+PermaFlash® OS Corner Scrim Layout (Bottom)
+
+SECTION
+
+FOUR
+
+
+===== PAGE 74 =====
+PMF-5
+
+JM PermaFlash™ Flashing Details
+
+PermaFlash®-To-Drain-Detail
+
+SECTION
+
+FOUR
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-19
+
+
+===== PAGE 75 =====
+PMF-5S
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-20
+
+JM PermaFlash™ Flashing Details
+
+PermaFlash™ Flashing Details
+
+PermaFlash® Drain Scrim Detail
+
+SECTION
+
+FOUR
+
+
+===== PAGE 76 =====
+PMF-7
+
+JM PermaFlash™ Flashing Details
+
+PermaFlash® Through-Wall Scupper Detail
+
+SECTION
+
+FOUR
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-21
+
+
+===== PAGE 77 =====
+PMF-7S
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-22
+
+JM PermaFlash™ Flashing Details
+
+PermaFlash™ Flashing Details
+
+PermaFlash® Through-Wall Scupper Scrim Detail
+
+SECTION
+
+FOUR
+
+
+===== PAGE 78 =====
+PMF-8
+
+JM PermaFlash™ Flashing Details
+
+PermaFlash® Overflow Scupper Detail
+
+SECTION
+
+FOUR
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-23
+
+
+===== PAGE 79 =====
+PMF-8S
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-24
+
+JM PermaFlash™ Flashing Details
+
+PermaFlash™ Flashing Details
+
+PermaFlash® Overflow Scupper Scrim Detail
+
+SECTION
+
+FOUR
+
+
+===== PAGE 80 =====
+PMF-1
+
+JM PermaFlash™ Flashing Details
+
+PermaFlash® I-Beam Detail
+
+SECTION
+
+FOUR
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-25
+
+
+===== PAGE 81 =====
+PMF-11
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-26
+
+JM PermaFlash™ Flashing Details
+
+PermaFlash™ Flashing Details
+
+PermaFlash® Square Metal Tube Detail
+
+SECTION
+
+FOUR
+
+
+===== PAGE 82 =====
+PMF-11S
+
+JM PermaFlash™ Flashing Details
+
+PermaFlash® Square Metal Tube Scrim Detail
+
+SECTION
+
+FOUR
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-27
+
+
+===== PAGE 83 =====
+PMF-1S
+
+PermaFlash® I-Beam Scrim Detail
+
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-28
+
+JM PermaFlash™ Flashing Details
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+
+SECTION
+
+FOUR
+
+
+===== PAGE 84 =====
+PMF-2
+
+JM PermaFlash™ Flashing Details
+
+PermaFlash® Angle Iron Detail
+
+SECTION
+
+FOUR
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-29
+
+
+===== PAGE 85 =====
+PMF-2S
+
+PermaFlash® Angle Iron Scrim Detail
+
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-30
+
+JM PermaFlash™ Flashing Details
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+
+SECTION
+
+FOUR
+
+
+===== PAGE 86 =====
+PMF-6
+
+JM PermaFlash™ Flashing Details
+
+PermaFlash® Pipe Penetration Detail
+
+SECTION
+
+FOUR
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-31
+
+
+===== PAGE 87 =====
+PMF-6S
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-32
+
+JM PermaFlash™ Flashing Details
+
+PermaFlash™ Flashing Details
+
+PermaFlash® Pipe Penetration Scrim Detail
+
+SECTION
+
+FOUR
+
+
+===== PAGE 88 =====
+HW-4 (GS)
+
+JM SBS
+APP Heat Weldable
+Flashing Details
+
+Gravel Stop
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+SECTION
+
+FOUR
+
+4-33
+
+
+===== PAGE 89 =====
+HW-4 (GS-ALT)
+
+Gravel Stop Alternate
+
+JM APP Heat Weldable
+Flashing Details
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-34
+
+SECTION
+
+FOUR
+
+
+===== PAGE 90 =====
+HW-4 (GTR)
+
+JM SBS
+APP Heat Weldable
+Flashing Details
+
+Gutter
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+SECTION
+
+FOUR
+
+4-35
+
+
+===== PAGE 91 =====
+HW-4 (PRESTO LOCK)
+
+Presto Lock Fascia System
+
+JM APP Heat Weldable
+Flashing Details
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-36
+
+SECTION
+
+FOUR
+
+
+===== PAGE 92 =====
+HW-4 (PRESTO-TITE)
+
+JM SBS
+APP Heat Weldable
+Flashing Details
+
+Presto-Tite Edge Metal System
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+SECTION
+
+FOUR
+
+4-37
+
+
+===== PAGE 93 =====
+HW-4 (RMCF)
+
+Raised Metal Cant Fascia
+
+JM APP Heat Weldable
+Flashing Details
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-38
+
+SECTION
+
+FOUR
+
+
+===== PAGE 94 =====
+HW-7
+
+JM SBS
+APP Heat Weldable
+Flashing Details
+
+Curb Mounted Roof-to-Roof Expansion Joint Cover
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+SECTION
+
+FOUR
+
+4-39
+
+
+===== PAGE 95 =====
+HW-1 (NLB)
+
+Curb to Wall E.J.
+
+JM APP Heat Weldable
+Flashing Details
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-40
+
+SECTION
+
+FOUR
+
+
+===== PAGE 96 =====
+HW-26
+
+JM SBS
+APP Heat Weldable
+Flashing Details
+
+Base Flashing at Outside Corner
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+SECTION
+
+FOUR
+
+4-41
+
+
+===== PAGE 97 =====
+HW-8
+
+Prefabricated Curb
+
+JM APP Heat Weldable
+Flashing Details
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-42
+
+SECTION
+
+FOUR
+
+
+===== PAGE 98 =====
+HW-12
+
+JM SBS
+APP Heat Weldable
+Flashing Details
+
+JM Flex-I-Drain
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+SECTION
+
+FOUR
+
+4-43
+
+
+===== PAGE 99 =====
+HW-11
+
+Metal Drain
+
+JM APP Heat Weldable
+Flashing Details
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-44
+
+SECTION
+
+FOUR
+
+
+===== PAGE 100 =====
+HW-22
+
+JM SBS
+APP Heat Weldable
+Flashing Details
+
+Overflow Metal Scupper
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+SECTION
+
+FOUR
+
+4-45
+
+
+===== PAGE 101 =====
+HW-21
+
+Primary Metal Scupper in Sump
+
+JM APP Heat Weldable
+Flashing Details
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-46
+
+SECTION
+
+FOUR
+
+
+===== PAGE 102 =====
+HW-17
+
+JM SBS
+APP Heat Weldable
+Flashing Details
+
+Lightning Rod on Roof Surface
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+SECTION
+
+FOUR
+
+4-47
+
+
+===== PAGE 103 =====
+HW-16
+
+Penetration Pocket
+
+JM APP Heat Weldable
+Flashing Details
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-48
+
+SECTION
+
+FOUR
+
+
+===== PAGE 104 =====
+HW-10
+
+JM SBS
+APP Heat Weldable
+Flashing Details
+
+FP-10 One Way® Roof Vent
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+SECTION
+
+FOUR
+
+4-49
+
+
+===== PAGE 105 =====
+HW-9
+
+Plumbing Vent
+
+JM APP Heat Weldable
+Flashing Details
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-50
+
+SECTION
+
+FOUR
+
+
+===== PAGE 106 =====
+HW-23
+
+JM SBS
+APP Heat Weldable
+Flashing Details
+
+Vent Stack (Warm)
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+SECTION
+
+FOUR
+
+4-51
+
+
+===== PAGE 107 =====
+HW-27
+
+Base Flashing at Inside Corner
+
+JM APP Heat Weldable
+Flashing Details
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-52
+
+SECTION
+
+FOUR
+
+
+===== PAGE 108 =====
+HW-15 (E)
+
+JM SBS
+APP Heat Weldable
+Flashing Details
+
+EPDM Wall Covering with Bituminous Base Flashing
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+SECTION
+
+FOUR
+
+4-53
+
+
+===== PAGE 109 =====
+HW-20 (WH)
+
+Gypsum Wall on Metal Studs >24” w/ Coping
+
+JM APP Heat Weldable
+Flashing Details
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-54
+
+SECTION
+
+FOUR
+
+
+===== PAGE 110 =====
+HW-20 (WL)
+
+JM SBS
+APP Heat Weldable
+Flashing Details
+
+Gypsum Wall on Metal Studs <24” w/ Coping
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+SECTION
+
+FOUR
+
+4-55
+
+
+===== PAGE 111 =====
+HW-6 (TH)
+
+Masonry Wall >24” with Coping
+
+JM APP Heat Weldable
+Flashing Details
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-56
+
+SECTION
+
+FOUR
+
+
+===== PAGE 112 =====
+HW-6 (TL)
+
+JM SBS
+APP Heat Weldable
+Flashing Details
+
+Masonry Wall <24” with Coping
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+SECTION
+
+FOUR
+
+4-57
+
+
+===== PAGE 113 =====
+HW-1 (LB)
+
+Masonry Wall w/ Counterflashing
+
+JM APP Heat Weldable
+Flashing Details
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-58
+
+SECTION
+
+FOUR
+
+
+===== PAGE 114 =====
+HW-25 (LB)
+
+JM SBS
+APP Heat Weldable
+Flashing Details
+
+Optional Two-Ply Base Flashing for Load-Bearing Masonry Wall
+w/ Counterflashing
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+SECTION
+
+FOUR
+
+4-59
+
+
+===== PAGE 115 =====
+HW-15 (T)
+
+TPO Wall Covering with Bituminous Base Flashing
+
+JM APP Heat Weldable
+Flashing Details
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-60
+
+SECTION
+
+FOUR
+
+
+===== PAGE 116 =====
+HW-15 (T-ALT)
+
+JM SBS
+APP Heat Weldable
+Flashing Details
+
+TPO Wall Covering with Bituminous Base Flashing
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+SECTION
+
+FOUR
+
+4-61
+
+
+===== PAGE 117 =====
+HW-24
+
+Venting Lightweight Concrete
+
+JM APP Heat Weldable
+Flashing Details
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-62
+
+SECTION
+
+FOUR
+
+
+===== PAGE 118 =====
+HW-3 (WH)
+
+JM SBS
+APP Heat Weldable
+Flashing Details
+
+Wood Wall >24” with Coping
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+SECTION
+
+FOUR
+
+4-63
+
+
+===== PAGE 119 =====
+HW-3 (WL)
+
+Wood Wall <24” with Coping
+
+JM APP Heat Weldable
+Flashing Details
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-64
+
+SECTION
+
+FOUR
+
+
+===== PAGE 120 =====
+HW-1 (NLB)
+
+JM SBS
+APP Heat Weldable
+Flashing Details
+
+Curb to Wall E.J.
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+SECTION
+
+FOUR
+
+4-65
+
+
+===== PAGE 121 =====
+HW-5 (NLB-ALT)
+
+Metal E.J. Alternate
+
+JM APP Heat Weldable
+Flashing Details
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-66
+
+SECTION
+
+FOUR
+
+
+===== PAGE 122 =====
+Vapor Barrier Flashing Details
+
+Introduction
+Vapor barriers can play an important role in the construction of a roof system and
+proper installation of these products are critical to their performance. Although many
+products can be used as a vapor barrier, this installation guide is specific to the JM
+Vapor Barrier SA product and the corresponding primers, SA Primer and SA Primer
+Low VOC.
+General Application Instructions
+Surface Preparation: All surfaces must be swept clean and free from oil, grease, rust,
+scale, loose paint and dirt. NOTE: If the material has been left exposed, the membrane
+must be free of dust, frost or any other debris prior to application of any adhesives to
+the top surface. The surface may need to be broomed or cleaned with a light rinse and
+allowed to dry prior to application of any adhesives. An adhesion test may need to be
+performed to determine if the polyethylene is a viable substrate.
+Primer
+SA Primer and SA Primer Low VOC must be mixed well before use. Do not thin. Please
+see data sheet for coverage information. Apply with a roller or a spray can. Primers
+should be applied uniform with no streaks or puddles. Allow to dry completely. Do
+not accelerate drying of primers by heating with a torch. Primer should be tacky but
+should not transfer to a clean dry finger.
+Vapor Barrier SA
+Roll out Vapor Barrier SA membrane over the areas that have received the SA Primer
+or SA Primer Low VOC. Be sure to stagger the end laps and overlap the side laps by
+a minimum of 3”. Once the membrane is in the desired location, hold the membrane
+tight while peeling away the silicone release liner at an angle. Install additional rolls in
+the same way, with 3” side laps and 6” end laps. A minimum 75 lb split linoleum roller
+should be used over the entire surface and a 4” rubber roller should be used in the
+overlap areas.
+Clean Up
+
+Vapor Barriers
+
+Tools can be cleaned with petroleum solvents such as mineral spirits. Use care when
+handling solvents. Clean hands with waterless hand cleaner.
+
+SECTION
+
+FOUR
+
+4-67
+
+
+===== PAGE 123 =====
+VB-1
+
+JM Vapor Barrier SA - Wall Base Detail
+
+Vapor Barriers
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-68
+
+SECTION
+
+FOUR
+
+
+===== PAGE 124 =====
+VB-1 (ALT)
+
+Vapor Barriers
+
+JM Vapor Barrier SA - Wall Base Detail (Alt)
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+SECTION
+
+FOUR
+
+4-69
+
+
+===== PAGE 125 =====
+VB-2
+
+JM Vapor Barrier SA - Pipe Penetration Detail
+
+Vapor Barriers
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-70
+
+SECTION
+
+FOUR
+
+
+===== PAGE 126 =====
+VB-3
+
+Vapor Barriers
+
+JM Vapor Barrier SA - Drain Detail
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+SECTION
+
+FOUR
+
+4-71
+
+
+===== PAGE 127 =====
+VB-4
+
+JM Vapor Barrier SA - Detail at Field Laps
+
+Vapor Barriers
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-72
+
+SECTION
+
+FOUR
+
+
+===== PAGE 128 =====
+VB-5
+
+Vapor Barriers
+
+JM Vapor Barrier SA - Outside Curb Detail
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+SECTION
+
+FOUR
+
+4-73
+
+
+===== PAGE 129 =====
+VB-6
+
+JM Vapor Barrier SA - Inside Curb Detail
+
+Vapor Barriers
+
+Johns Manville is a manufacturer of commercial roofing products and offers this general conceptual information to you as a
+courtesy. This complimentary assistance is not to be used or relied upon by anyone as a substitute for professional engineering
+design and documentation required by building code, contract, or applicable law. By accepting these comments you agree
+they do not constitute any representations, endorsements of, or an assumption by Johns Manville of any liability for either the
+adequacy of design of this building or any other material not supplied by Johns Manville.
+Note: For the most current information on general guidelines, please refer to the System Considerations tab under Commercial
+Roofing Products on the JM Roofing Web site. For specifications, flashing details and general installation information please
+refer to the Application Tools tab.
+
+Refer to the Safe Use Instructions and product label prior to using this product.
+
+4-74
+
+SECTION
+
+FOUR
+
+
+===== PAGE 130 =====
+
+
+
+===== PAGE 131 =====
+
+
+
+===== PAGE 132 =====
+One manufacturer, one full-system guarantee
+Johns Manville offers one of the most comprehensive guarantees in the
+roofing industry. That’s the advantage you can expect from a longtime,
+dependable leader with the financial backing of Berkshire Hathaway.
+
+facebook.com/JohnsManville
+@JMRoofingSystem
+JohnsManvillevideos
+www.jmroofing.news
+
+717 17th St,
+Denver, CO 80202
+(800) 922-5922
+www.jm.com/roofing
+
+RS-7869 2-24 (Replaces 2-19)
+
+1-77
+
+© 2024 Johns Manville. All rights reserved.

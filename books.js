@@ -134,6 +134,21 @@
       bookGroupId: "duro-last-maintenance",
       displayTitle: "Duro-Last Care & Maintenance Guide",
       parts: []
+    },
+    {
+      bookGroupId: "ultra-thane-230-hfo-roofing",
+      displayTitle: "Ultra-Thane 230 HFO Roofing SPF",
+      parts: []
+    },
+    {
+      bookGroupId: "ultra-guard-5700-hs",
+      displayTitle: "Ultra-Guard 5700 HS Silicone Coating",
+      parts: []
+    },
+    {
+      bookGroupId: "ultra-guard-5700-mastic",
+      displayTitle: "Ultra-Guard 5700 Silicone Mastic",
+      parts: []
     }
   ];
 

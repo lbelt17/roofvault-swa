@@ -1,0 +1,3868 @@
+SOURCE: 166964.pdf
+TOTAL_PAGES: 32
+
+
+===== PAGE 1 =====
+Elevate UltraPly™ TPO Roofing Systems
+Application Guide
+
+May 2026
+
+NOTE: The contents of this guide are considered accurate at the time of posting. All information contained within
+should be validated for accuracy as it relates to specific project conditions or requirements. Specific codes, uplifts
+or other factors may result in changes to the information contained within this document. Validate all specific
+conditions with a Elevate Regional Technical Coordinator prior to its use.
+ELEVATE IS A PART OF THE AMRIZE FAMILY OF BRANDS.
+May 27, 2026
+Page 1
+
+
+===== PAGE 2 =====
+Table of Contents
+General .................................................................................................................................................................................... 4
+Jobsite Considerations ............................................................................................................................................................ 4
+Roof Substrate Preparation .................................................................................................................................................... 5
+Wood Nailer Locations and Installation .................................................................................................................................. 6
+Air or Vapor Barrier Installation .............................................................................................................................................. 7
+V-Force FR Vapor Barrier Installation ..................................................................................................................................... 7
+V-Force Vapor Barrier Installation .......................................................................................................................................... 7
+Base Sheet installation ............................................................................................................................................................ 7
+Insulation Installation ............................................................................................................................................................. 9
+Table 1: EPS Installation Requirements for Warranty ...................................................................................................... 10
+Membrane Installation ......................................................................................................................................................... 10
+Membrane Seaming .............................................................................................................................................................. 15
+Additional Membrane Securement and Base Tie-In Flashing ............................................................................................... 16
+Flashing – Penetrations ......................................................................................................................................................... 16
+Flashing – Walls, Parapets, Mechanical Equipment Curbs, Etc. ........................................................................................... 18
+Sheet Metal Work ................................................................................................................................................................. 18
+Flashing Gravel Stops or Roof Edge Metals .......................................................................................................................... 20
+Roof Walkways ...................................................................................................................................................................... 21
+Temporary Closure and Tie-Ins ............................................................................................................................................. 23
+Finished Roof Protection....................................................................................................................................................... 24
+Membrane Repair ................................................................................................................................................................. 24
+Clean Up ................................................................................................................................................................................ 24
+Weld Windows ...................................................................................................................................................................... 25
+Table 2: Elevate UltraPly TPO and TPO XR Membrane Weld Windows ........................................................................... 25
+Thermoplastic Detail Lists ..................................................................................................................................................... 26
+Detail Table 1: Base Tie-In Details ..................................................................................................................................... 26
+Detail Table 2: Corner Details ........................................................................................................................................... 26
+Detail Table 3: Drain and Scupper Details......................................................................................................................... 27
+Detail Table 4: Expansion Joint Details ............................................................................................................................. 27
+Detail Table 5: Lap Splice Details ...................................................................................................................................... 27
+Detail Table 6: Miscellaneous Details ............................................................................................................................... 28
+Detail Table 7: Penetration Details ................................................................................................................................... 28
+Detail Table 8: Perimeter Enhancement Details ............................................................................................................... 29
+Detail Table 9: Roof Edge Details ...................................................................................................................................... 29
+Detail Table 10: Termination Details ................................................................................................................................ 29
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+2
+
+
+===== PAGE 3 =====
+Detail Table 11: Thermoplastic XR Base Tie-In Details...................................................................................................... 30
+Detail Table 12: Thermoplastic XR Drain and Scupper Details ......................................................................................... 30
+Detail Table 13: Thermoplastic XR Lap Splice Details ....................................................................................................... 30
+Detail Table 14: Thermoplastic XR Perimeter Enhancement Details ................................................................................ 30
+Detail Table 15: Thermoplastic XR Roof Edge Details ....................................................................................................... 31
+Detail Table 16: Thermoplastic InvisiWeld Details............................................................................................................ 31
+Detail Table 17: Thermoplastic Metal Building Retrofit Details ....................................................................................... 31
+Detail Table 18: Thermoplastic Membrane Layout Details .............................................................................................. 31
+Detail Table 19: Fleece Backed Thermoplastic Membrane and Modified Bitumen Hybrid Details ................................. 32
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+3
+
+
+===== PAGE 4 =====
+General
+This Elevate Technical Manual provides instructions for the basic installation of Elevate™ UltraPly TPO Roofing
+Systems. Reference to the UltraPly TPO Design Guide, technical Information sheets (TIS), and other published
+information is necessary to ensure that the finished roof system is installed in compliance with Elevate requirements.
+Extended warranties, 15, 20, 25, and 30 year, and wind warranties in excess of 55 mph may require special
+considerations regarding fasteners, insulation, membrane gauge and securement. Refer to the system design guide
+or Elevate website (www.elevatecommercialbp.com) for specific requirements and information for other TPO
+systems: UltraPly Platinum, UltraPly TPO XR, UltraPly TPO SA, UltraBlend and InvisiWeld.
+The Elevate Platinum System and Warranty requires special considerations with regards to fasteners, insulations,
+membrane gauge and attachment requirements. These requirements are provided as a part of this application guide.
+NOTE: If a proposed application falls outside of the specification, contact a Elevate Regional Technical Coordinator
+for additional information.
+
+Jobsite Considerations
+Safety
+ Comply with all applicable regulatory safety and health regulations.
+ Consult container labels, Safety Data Sheets (SDS) and Technical Information Sheets (TIS) for specific safety instructions
+for all products used on the project.
+ Keep all adhesives, sealants, and cleaning materials away from ALL ignition sources (i.e., flames, fire, sparks, etc.). Do not
+smoke while using these materials.
+ Care must be used when installing fasteners or other required roof related items to avoid possible conduits and other piping
+in or under the deck.
+ Fumes from adhesive solvents may be drawn into the building during installation through rooftop intakes. Take suitable
+precautions when using such products on an occupied building.
+ Do not use heat guns or open flames to dry adhesives and primers.
+
+Cautions
+ Store Elevate UltraPly TPO membranes in the original undisturbed plastic wrap in a manner to protect it from becoming
+damaged. Insulation must be properly stored and protected from ignition sources, moisture, and damage. Consult container
+labels, Safety Data Sheets and Technical Information Sheets for specific safety, use and storage instructions for all products
+used on the project.
+ Do not use oil-base or bituminous-base roof cement with any Elevate TPO products.
+ Store Elevate Insulations properly protected from ignition sources, moisture, and damage.
+ Membrane may stain if direct contact with asphalt products occur.
+
+Cold Weather
+ When the outside temperature is below 40 °F (4 °C), certain combinations of temperature and humidity may cause
+condensation on the surface of solvent-based adhesives and primers. If this condition occurs, discontinue the application.
+When the ambient air conditions no longer cause condensation on adhesive surfaces and the membrane is clean and dry then
+proceed with application of adhesive or primer.
+ The consistency of sealants, adhesives and primers will begin to thicken as the temperature drops. To minimize this
+consequence:
+• Start work with sealants, adhesives and primers that have been stored between 60 °F to 80 °F (16 °C to 27 °C).
+• Complete test areas to determine if conditions will cause problems such as condensation with the application of the
+materials.
+• Stop the operation or change to another warm container when material becomes too thick to properly apply.
+ When the outside temperature is below 40 °F (4 °C), installation of the Elevate TPO System requires additional precautionary
+measures:
+• Ensure that the roof surface is dry. Even trace amounts of moisture may cause poor adhesion and lead to moisture
+entrapment within the roofing system.
+• Use of temporary roofs should be considered when roof applications must occur in cold or potentially wet weather to
+permit continued interior construction or roof-top work.
+• Refer to the product Technical Information Sheets for individual product temperature restrictions / limitations if
+applicable.
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+4
+
+
+===== PAGE 5 =====
+Roof Substrate Preparation
+It is the roofing contractor’s responsibility for ensuring that the substrate is acceptable for the Elevate roof system.
+Elevate Platinum System warranties require either new construction or a complete removal of the existing systems
+down to the deck.
+It is the roofing contractor’s responsibility to ensure that the substrate is acceptable for the Elevate roof
+system.
+Elevate does not approve of or recognize the results of destructive testing by others for the purposes of
+project close-out or to satisfy contract requirements. Any damage caused by such testing may prevent
+Elevate from issuing a warranty. Elevate is not responsible for costs associated with repairs or
+enhancements performed to the roof system as a result of testing.
+Correct Substrate Defects
+ Defects that need to be corrected before work can commence should be brought to the attention of the General Contractor
+or Owner in writing and addressed by them.
+ For re-roofing applications, remove existing roof system components as specified by the project designer. If components are
+discovered during installation that could be detrimental to the performance of the new roof system, they should be brought
+to the attention of the project designer for corrective action.
+ Recovering an existing roof system is an alternative to removing existing roof components. However, if soundness and
+integrity of the existing roof system cannot be verified, good roofing practice requires a complete tear-off to the structural
+deck. Non-destructive testing, in conjunction with core cuts, must be completed to determine the condition of the existing
+roof system and decking.
+ The building owner or project designer is responsible for assuring that all wet insulation and/or wet substrate materials are
+removed in a re-roofing application. The best diagnostic technique is taking and evaluating a series of roof cuts. There are
+three other techniques that are currently available to make this determination by indirect means. These are:
+• Nuclear moisture detection
+• Infrared thermography
+• Electric capacitance
+These techniques provide measurement of factors that can be associated with the presence of moisture, which can then be
+verified with the use of roof core cuts to confirm the results of the non-destructive testing.
+ In the absence of a design professional, the roofer should coordinate with the building owner to assure conditions are
+satisfactory to commence with the project as designed.
+
+Remove Moisture
+Ponded water, snow, frost and/or ice, present in more than trace amounts must be removed from the work surface(s)
+prior to installing the Elevate TPO Roofing System.
+Prepare Surface
+Acceptable substrates to which the Elevate TPO Roofing System is installed must be properly prepared prior to roof
+system installation. The surface must be relatively even, clean, dry, smooth, free of sharp edges, fins, lose or foreign
+materials, oil, grease, and other materials that may damage the roof system. Rough surfaces that could cause
+damage to the membrane must be overlaid with insulation or cover boards as determined by the design professional.
+ Re-Cover projects require the existing system to be prepared for the new system application. This may include the following:
+•
+Remove wet/damaged materials and replace with like products.
+•
+Remove loose granules and debris from existing mod-bit surfaces.
+•
+Spud/Power broom gravel surfaces.
+•
+Detach and prepare new flashings as required.
+
+Fill Voids
+All surface voids of the immediate membrane substrate greater than ¼" (6.35 mm) wide must be filled with insulation.
+Concrete Additives can have a negative impact on the adhesion of asphaltic membranes and insulation
+products. The concrete supplier/installer should verify that any additives in the mix will not render the deck
+unsuitable for roofing application. Elevate does not accept surface-applied curing compounds for
+warranted systems.
+Elevate does not accept for warranty any concrete substrates that have been sealed with chemical sealers
+or silicon surface treatments.
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+5
+
+
+===== PAGE 6 =====
+Wood Nailer Locations and Installation
+Elevate no longer requires the use of treated wood nailers. This is due to the new EPA requirements that have caused
+treated lumber to have more corrosive properties than the previous generation of wood treatments.
+If architectural specifications require the use of treated wood nailers, the following Elevate requirements apply:
+ Refer to the Elevate Design Guide for the appropriate Elevate fastener to be used for securing membrane into wood nailers.
+ Nails penetrating treated wood nailers must be hot-dipped galvanized, meeting ASTM A653, Class G185 or as currently
+recommended by industry associations.
+ Aluminum fasteners, flashings and accessory products must not make direct contact with treated wood nailers.
+ Uncoated metal and painted metal flashing and accessories, except for 300-series stainless steel, must not make direct
+contact with treated wood nailers.
+ When in doubt of the type of treatment of the wood nailer or its compatibility with a metal component, use UltraPly TPO
+membrane as a separator.
+
+Because of recent EPA regulations regarding treated wood, new treatments for lumber may be highly corrosive to
+fasteners. Contact the fastener manufacturer for their recommendations on fasteners if attaching nailers that have
+been treated with corrosive materials.
+Wood nailers must be installed as specified by the project designer or as noted in Elevate Details and the TPO System
+Design Guide. Install wood nailers as follows:
+Wood Nailer Grade
+ When wood nailers are used, Elevate specifications require the use of wood that is kiln- dried (Southern Pine, Douglas Fir)
+structural grade #2 or better, unless otherwise noted.
+ While being stored on the roof, properly elevate, and cover non-treated wood to protect from the weather and keep dry.
+ Nailers must be properly anchored to provide secure attachment through the warranty term.
+ Nailers are not covered by the Red Shield Warranty.
+
+Size of Nailer
+Nailers shall be a min. thickness of 2ʺ x 4ʺ (51 mm x 102 mm) nominal 1½ʺ x 3½ʺ (38 mm x 89 mm) and exceed the
+width of any metal flange attached to it by a min. of ½ʺ (13 mm).
+Position of Nailer
+ Total wood nailer height must match the total thickness of insulation being used and should be installed with a ⅛" (3.2 mm)
+gap between each length and each change of direction.
+ When nailers are stacked, end joints should be staggered a min. of 12ʺ (305 mm) from the prior layer in straight runs.
+
+Secure Wood Nailer
+ Wood nailers must be firmly fastened to the deck or building.
+ Mechanically fasten wood nailers to resist a min. force of 200 lb/f (890 N) in any direction.
+ Refer to attachment requirements of the roofing system as specified by the project designer if greater than 200 lb/f (890 N).
+
+Taper Wood Nailer
+The wood nailer must be tapered (if applicable) so that it will always be flush at the point of contact with the
+insulation (refer to Elevate Details).
+Pour-In-Place Decks
+For new construction over poured-in-place decks or fill, and all recover projects, a waterproof separator membrane
+shall be placed between the non-treated lumber and the deck.
+Installation of Wood Nailers by Others
+ Make these specifications and details available when nailers are to be installed by others.
+ Work that compromises the integrity of the roof system may jeopardize the roof warranty.
+
+For Additional Information
+Please consult the NRCA Special Report, “Use of Treated Wood in Roof Assemblies”.
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+6
+
+
+===== PAGE 7 =====
+Air or Vapor Barrier Installation
+Install Vapor Retarder (when specified):
+Install a vapor retarder as specified by the project designer or as required by Elevate.
+Install Air Barrier (when specified):
+Install an air barrier as specified by the project designer or as required by Elevate.
+
+V-Force FR Vapor Barrier Installation
+Elevate V-Force FR Membrane is intended for use in applications where a vapor barrier is specified.
+1.
+2.
+3.
+4.
+5.
+
+6.
+
+7.
+
+8.
+9.
+10.
+11.
+12.
+13.
+14.
+15.
+
+Ensure all surfaces are dry, sound, clean, “as new” condition, and free of oil, grease, dirt, excess mortar, or other
+contaminants detrimental to the adhesive of the membrane.
+Fill voids and gaps in the substrate greater than ⅞" (22.2 mm) in width to provide an even surface.
+Plan layout prior to application to help minimum waste.
+Pre-plan special application areas like curbs and penetrations to achieve the proper detailing to ensure water and airtight
+installation.
+Cold weather may affect the adhesion properties of the pressure sensitive adhesive. It is always recommended to conduct
+field adhesion testing separately or in conjunction with mock-up construction on the job site. Primers can improve adhesion
+to substrates in these conditions.
+Stage rolls prior to application to follow a shingle fashion installation with the upper courses lapped over the lower courses.
+All side and head laps are a minimum of 3" (76.2 mm). Laps from vertical to horizontal application should be a minimum of
+6" (152.4 mm).
+On steel decks, laps of sheets should be supported by deck flutes. Cover flutes where the end laps will occur with 24 gauge
+6" (152.4 mm) wide metal strips spanning the flutes. Attach with #10 pancake head screws through 9/32" (7.14 mm) oval
+holes (by others).
+Roll our membrane out into position.
+Lift leading edge of membrane enough to peel enough of the first half of the release liner back to allow it to extend past
+the edge of the roll. Repeat for other half of release liner.
+Roll membrane back and hand press adhesive to substrate.
+Have someone hold the non-adhered end of roll membrane while release liner is removed.
+Continue to pull release liner from underside of roll at a 45-degree angle at a pace to not tear liner.
+Roll the membrane with a weighted roller, minimum 70 lb (31.75 kg).
+Position and install additional rolls in a shingles application to achieve a 3" (76.2 mm) minimum lap at all head and side
+locations.
+Refer to the Elevate website (www.elevatecommercialbp.com) for details and additional product and installation
+information.
+
+V-Force Vapor Barrier Installation
+Elevate V-Force Membrane is intended for use in applications where a vapor barrier is specified.
+1. All substrates except metal decks must be primed with either Elevate SA Water Based or SA Solvent Based Primer.
+2. Position V-Force Membrane with min. 3ʺ (76 mm) side laps and 6ʺ (152 mm) end laps.
+3. Shingle side laps up the roof slope wherever possible and stagger end laps min. 12" (305 mm).
+4. Peel back approximately 5' (1.5 m) of release liner from the end of the roll and adhere it to the substrate.
+5. Keeping the V-Force flat and properly positioned, remove the remaining release liner on a 45° angle.
+6. Roll the V-Force with a 75 lb (34 kg) roller to fully mate the product to the substrate.
+7. Refer to the Elevate website (www.elevatecommercialbp.com) for details and additional product and installation
+information.
+
+Base Sheet installation
+This section is intended for applications where it has been determined that a base sheet is required for roof system
+installation. Refer to the design section of the Elevate database for suitable substrates, and the Technical
+Information Sheets for additional product and installation information.
+General
+1. Starting at the low point of the roof, align the base sheet, unroll, and allow the sheet to relax prior to attaching. After allowing
+the base sheet to relax, adhere or attach to the substrate with appropriate materials as indicated below.
+2. Roofing base ply shall never touch roofing single ply, even at roof edges, laps, tapered edge strips, and cants. Cut out
+fishmouths/side laps, which are not completely sealed, and repair accordingly. Fully adhered base sheets which are not fully
+and continuously bonded shall be replaced.
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+7
+
+
+===== PAGE 8 =====
+Hot Asphalt Attachment
+1. The base sheet may be attached using a solid mopping of Elevate SEBS mopping asphalt or ASTM D 312 Type III or IV hot
+steep asphalt.
+2. The substrate must be suitable for asphalt attachment (structural concrete, base sheet, coverboard, etc.). Refer to the
+Design section of this manual for suitable substrates and the Technical Information Sheets for additional information on
+specific base sheets.
+3. The asphalt shall be at the manufacturer’s stated EVT at point of installation.
+4. Align subsequent rolls, shingling the laps, maintaining a min. 3ʺ (51 mm) side lap and min. 6" (152 mm) end lap and repeat the
+application.
+5. Elevate recommends that a half sheet be used as the first roll to ensure that the base sheet laps and the cap sheet laps are
+not aligned. Half sheets may be required, depending on the roof slope.
+6. Refer to the Design section for slope limitations.
+7. Do not install any base or ply sheets in solid mopping of asphalt directly to polyisocyanurate insulation. The base sheet must
+be mechanically attached, or spot attached using ASTM D312 Type III or IV asphalt or Elevate SEBS Mopping Asphalt. An
+overlayment of Structodek® HD Fiberboard, SECUROCK®, DensDeck® or DEXcell® (FA® Glass Mat, Cement Board or FA VSH®
+Glass Mat) may be installed over the Elevate ISO 95+ GL / ISOGARD™ GL polyisocyanurate insulation before the base sheet
+is installed.
+8. Solid Mopping
+1. Starting at the low point of the roof, align the base sheet and unroll into a solid mopping of hot asphalt.
+2. With a stiff push broom, immediately broom the base sheet ensuring full contact.
+
+Mechanical Attachment
+Starting at the low point of the roof, align the base sheet, unroll, and allow the sheet to relax prior to attaching. After
+allowing to relax, begin attachment at one end and work towards the other end, keeping the roll tight and wrinkle
+free. Align subsequent rolls, shingling the laps, maintaining a min. 3ʺ (76 mm) side lap and min. (152 mm) end lap and
+repeat the application. Stagger all end laps.
+Fasten Base Sheet Using Elevate Insulation Plates and Fasteners
+ Using Elevate Insulation Plates and Fasteners, base sheets may be attached through insulation into the deck, or directly to
+poured in place concrete, wood, gypsum, cementitious wood fiber, lightweight concrete decks, or through a smooth surfaced
+built-up or modified bitumen roof system. Refer to the TPO Design Guide for information on fasteners for specific deck types.
+ 39ʺ (1 m) Elevate compatible base sheets and cap sheets used as base sheets. The Base sheet must be mechanically attached
+12ʺ (305 mm) o.c. in the side laps and 18ʺ (457 mm) o.c. in two staggered rows in the field of the sheet. Each row shall be 13ʺ
+(330 mm) approximately in from the sides of the base sheet.
+
+Fasten Base Sheet Using Cap Nails
+ Using cap nails with 1ʺ (25 mm) diameter steel heads, base sheets may be attached to plywood, wood plank, and oriented
+strand board decks.
+ Mechanically attach with cap nails specified by the project designer at 9ʺ (229 mm) o.c. in the side laps and 18ʺ (457 mm) o.c.
+in two staggered rows in the field of the sheet. Each row shall be 12ʺ (305 mm) approximately in from the sides of the base
+sheet.
+ Cap nails cannot be used to attach insulation, attach a base sheet through an existing insulated roof, attach a base sheet over
+a gravel surfaced built-up roof, or through a smooth surfaced un-insulated built-up roof over ½" (13 mm) thick.
+ Fasteners used to attach base sheet must be manufactured for the deck type and be Factory Mutual Approved. This
+attachment pattern applies to all Elevate compatible base sheets and cap sheets used as base sheets.
+
+Fasten Base Sheet Using Specialty Fasteners
+ Using nail-in type fasteners and plates, base sheets may be attached to gypsum, cementitious wood fiber or lightweight
+insulating concrete decks. The base sheet must be mechanically attached with fasteners as acceptable to the substrate.
+ Nail-in fasteners cannot be used to:
+• Attach insulation
+• Attach a base sheet through an existing insulated roof
+• Attach a base sheet over a gravel surfaced built-up roof
+• Attach a base sheet through a smooth surfaced built-up roof
+
+Base Sheet Laps
+ Hot steep asphalt applied Base sheets must be lapped a min. of 3ʺ (50.8 mm) in the side laps.
+ Mechanically attached torch applied, or automatic heat welded base sheets must be lapped a min. of 3" (76 mm) in side laps.
+ End laps must be min. 6" (152 mm).
+ In all cases, an offset of 12" (305 mm) min. must be maintained between the side and end laps of the base sheet and the cap
+sheet.
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+8
+
+
+===== PAGE 9 =====
+Insulation Installation
+InvisiWeld Systems require a min. 1½ʺ (38 mm) of insulation over the metal deck for operation of induction welding
+equipment. Elevate UltraPly Platinum TPO Roofing System warranties require a new approved substrate board.
+Ballast systems are not permitted when the membrane is installed directly over any mechanically attached insulation
+or over a hard surface such as HailGard / ISOGARD HG, ISOGARD HD, DensDeck, SECUROCK, DEXcell, OSB or
+concrete. Ballast systems are not approved for use when Elevate Platinum System warranties are desired.
+Install Insulation
+ Install only as much insulation as can be covered with roofing membrane and completed before the end of the day’s work or
+before the onset of inclement weather.
+ Form continuous insulation joints over deck flange. Do not cantilever insulation edges over deck ribs. Min. bearing surface: 1ʺ
+(25 mm).
+
+Multiple Layers of Insulation
+When installing multiple layers of insulation, all joints between layers shall be staggered 6ʺ (152 mm) min.
+Fit Insulation.
+ Neatly fit insulation to all penetrations, projections, and nailers. Insulation should be loosely fitted, with no gaps greater than
+¼" (6 mm) filled with acceptable insulation. The membrane shall not be left unsupported over a space greater than ¼" (6
+mm).
+ On metal decks, the edge of the board parallel with the roof deck flutes should be completely supported by the flange.
+ Tapered insulation with acceptable facers for bonding must be installed around roof drains to provide proper slope for
+drainage as shown in Elevate Details.
+
+Insulation Attachment - Mechanical
+ Insulation must be attached using Elevate Insulation Plates and Fasteners. HailGard fasteners may be used to attach HailGard
+/ ISOGARD HG insulation without the use of insulation plates.
+ If installing on a metal deck (where allowed by specification), the edge of the board parallel with the roof deck should be
+completely supported and fasteners must penetrate the top flange of the deck.
+ When installing fasteners, care should be taken to avoid penetration of conduits and other piping below or encased in the
+deck.
+ For insulation attachment please refer to the Technical Information Sheets that reference the specific insulation being used.
+Use appropriate attachment patterns and fastening rates of that specific insulation and desired warranty term. Elevate
+Platinum Warranties requires increased fastening.
+ For specific deck penetration requirements refer to the Technical Information Sheet that references the specific fastener
+being used.
+ When installing a multi-layer insulation assembly, the fastening pattern is determined by the type and thickness of the top
+layer of insulation and the performance criteria of the system. MAS systems with a fully adhered perimeter shall require the
+perimeter insulation to use fastening pattern used in a fully adhered system as determined by the top layer of insulation.
+ Multiple layers of insulation may be installed using a common fastener.
+ Ensure that the fasteners are fully seated, but not overdriven. Use a properly adjusted clutch or depth sensing type of drill.
+Do not use a standard single speed drill. If a fastener must be removed after installation, do not reinstall fastener into same
+hole.
+ Fastener pull tests should be conducted on existing decks or decks with conditions that are not “like new”. Pull values below
+Elevate requirements may require increased fastening, alternate system requirements or refusal of warranty coverage.
+
+Insulation Attachment – Asphalt Attachment
+ The substrate may require priming or a base sheet prior to installing the insulation. Refer to the Design Guide for specific
+information.
+ The insulation shall be no larger than 4' x 4' (1.2 m x 1.2 m) panels.
+ Insulation may be attached using a solid mopping of Elevate SEBS Asphalt (as required by warranty terms) or ASTM D 312
+Type III or Type IV asphalt. Resista™ / ISOGARD CG and ISOGARD HD may not be asphalt attached.
+ The asphalt shall be at the manufacturer’s stated EVT less ~ 25 °F (-4 °C) at the point of installation. Install enough asphalt
+to achieve complete adhesion, approximately 25-30 lb per 100 ft² (1.2-1.4 k/m²), depending on substrate.
+ It is necessary to “walk” boards in to ensure complete adhesion to the substrate.
+ Additional layers of insulation should be installed in the same fashion.
+
+Insulation Attachment – Adhesive Attachment
+ Insulation may be attached using I.S.O. Twin Pack™, I.S.O. Stick™, I.S.O. SPRAY™ R, Twin Jet or Twin Jet Y.
+ Apply the adhesive in strict accordance with the instructions provided with the product and the Technical Information Sheets
+that are a part of this Technical Database.
+ It may be necessary to prime the substrate prior to installing the insulation adhesive with a prescribed primer.
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+9
+
+
+===== PAGE 10 =====
+ If installing on a metal deck (where allowed by specification), the edge of the board parallel with the roof deck flutes must be
+completely supported.
+ The insulation or coverboard shall be no larger than 4' x 4' (1.2 m x 1.2 m).
+ It is necessary to weight each board, using full pails of bonding adhesive or other available source of weight that will not
+damage the insulation board, at each corner, to ensure complete adhesion to the foam and substrate. Refer to the specific
+product Technical Information Sheet for min. wait times.
+
+EPS Fanfold and Flute Fill Insulation Attachment
+Table 1: EPS Installation Requirements for Warranty
+
+EPS INSTALLATION REQUIREMENTS FOR WARRANTY
+Product
+
+Minimum Installation Requirements
+
+Alleguard Fanfold Rigid Board Insulation
+(TIS 967)
+
+ Preliminarily fastened with appropriate fasteners and plates at a minimum
+of 5 fasteners and plates per 32 ft² (2.97 m²) into appropriate substrate.
+ Approved for use in appropriate re-cover applications only.
+
+Alleguard Flute Fill Rigid Insulation
+(TIS 968)
+
+ Loose laid or preliminarily attached with appropriate fastener and plates.
+
+NOTE:
+1. EPS direct to deck application is acceptable but may not meet building code or Factory Mutual (FM) requirements.
+2. Performance validation (uplift and/or fire) may not be available when EPS insulation is used.
+3. Non-Faced EPS shall not be in direct contact with bonding adhesives, asphalt products, PVC, or PVC KEE membrane.
+4. FanFold Insulation is not approved for use directly under Invisiweld Applications without the use of the Elevate InvisWeld Cardboard Disc (TIS 1150) being
+used. Contact a Regional Technical Coordinator for more information.
+
+ Fanfold insulation is approved for use when recover applications call for mechanically attached membrane applications of
+Elevate UltraPly TPO membrane systems.
+ Fanfold must be Type VIII with a minimum thickness of 1/2 (12.7 mm) and must meet the following minimum physical properties
+outlined below.
+ Existing gravel surfaced roofs should be spud/scraped clean and vacuumed.
+ Existing single-ply membrane should be cut into 10' x 10' (3.05 m x 3.05 m) grids and all flashings and base tie-ins should be
+detached/removed before attaching Fanfold with appropriate fasteners and insulation plates. Those may include Elevate #12
+Insulation Fasteners, All Purpose Fasteners and Heavy-Duty Fasteners with Elevate Insulation Plates, as well as IsoFast™
+Bested Fasteners and Insulation Plates or AP AccuTrac® Kits.
+ FanFold Insulation is not approved for use directly under Invisiweld Applications without the use of the Elevate InvisWeld
+Cardboard Disc (TIS 1150) being used.
+ Damaged or wet components of the existing roofing system must be removed/replaced.
+ Fanfold must have a suitable facer. “Bare” EPS must never come into contact with PVC or PVC KEE membranes, or with
+residual asphalt.
+ Adjacent Fanfold sheets should be laid parallel and staggered ever 2' (0.61 m).
+ For projects requiring performance validation, switch to an appropriate Elevate insulation and/or cover board.
+ Check with local building code authorities for requirements for partial tear-offs and recovers.
+ The maximum Red Shield™ Warranty term for systems including Fanfold is 20 years. Wind speeds up to 55 MPH may be
+approved based on project characteristics. Hail and Cut & Puncture Protection are not available when Fanfold is used in lieu
+of an Elevate insulation and/or cover board.
+ Contact a Regional Technical Coordinator for more information.
+
+Membrane Installation
+This section contains information for standard Elevate UltraPly TPO membrane systems. Read all the information to
+ensure that it is the correct system and application. Elevate Platinum Warranties require the use of our UltraPly TPO
+80 mil membrane or UltraPly TPO XR 135 membrane.
+Additional securement details for the membrane (base tie-in) will occur at all locations where the membrane goes
+through an angle change greater than 1" (25 mm) in 12" (305 mm) (i.e., roof edges, curbs, interior walls, etc.) and other
+areas as details indicate. See Elevate details for more information
+TPO Membrane installations may require the use of a TPO QuickSeam Reinforced Perimeter Fastening Strip,
+requiring coordination with the many substrates at perimeters and layout and installation of the membrane system
+in a logical sequence. These steps should be addressed early in the roofing process.
+For Wide Weld mechanically attached systems, specialized equipment is required for installation.
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+10
+
+
+===== PAGE 11 =====
+Ensure proper welds are being achieved. If welding problems occur validate the following:
+ Ensure the weld area is clean, dry, and free of contaminants prior to welding.
+ If cleaning occurs completely dry area prior to welding.
+ Perform test welds with scrap membrane to dial in the proper welding temperatures.
+ Perform test welds prior to job start, after breaks in installation, and during temperature swings.
+NOTE: Once weld areas have cooled, validate weld is fully bonded and no gaps, fish mouths, pin holes or
+cold welds exist. Probe all welds to verify weld is completed properly.
+NOTE: It is important to verify that welds completed at any transition from machine to hand application
+is completed properly. Validate weld transition is fully bonded and no gaps, fish mouths, pin holes or
+cold welds exist. Probe all welds to verify weld is completed properly.
+NOTE: Lap membrane to cover membrane printed areas (lap lines, fastener location marks and product
+identifications printing) whenever possible.
+Adhered Membrane
+1. Position Membrane
+ Place membrane panel, starting at the low side of the roof and unroll over the acceptable substrate. Allow the panel to
+relax for 30 minutes before attaching or splicing.
+ The Elevate TPO Adhered System shall be installed so that the seams shed or run parallel to the flow of water wherever
+possible.
+ Placement of additional rolls of membrane shall provide for overlapping the sides of adjoining sheets 3½ʺ (90 mm) as
+marked on the top side of the membrane and overlapping the ends of adjoining sheets a min. of 3ʺ (76 mm). For sufficient
+membrane overlap distance, see standard lap splice details for robotic and hand welding.
+ If possible, sheets cut along one side shall have the cut edge installed as the underside of the seam. If cut edges are
+exposed on the weather side, they are to be sealed to specification with Elevate UltraPly TPO Clear Cut Edge Sealant.
+
+2. Fold the Membrane Back
+After making sure the sheet is placed in its final position allowing for the proper lap width per Elevate details and
+specifications, fold it back evenly onto itself without wrinkles to expose the underside bonding surface of the sheet and
+substrate.
+
+3. Remove any Debris or Dirt
+Sweep the mating surfaces with a stiff broom to remove any debris or dirt that may have accumulated. If required, wash
+membrane with Splice Wash SW-100 and allow to dry.
+
+4. Apply the Bonding Adhesive
+Always stop bonding adhesive short of membrane seam area. Care must be taken not to apply bonding adhesive over an area
+that is to be later hot air welded to another sheet or flashing. All bonding adhesives must be completely removed from the
+seam area.
+ Apply bonding adhesive with either a 9" (228 mm) wide solvent-resistant paint roller or a commercial-grade adhesive
+sprayer.
+ Adhesive must be applied in a relatively uniform thickness to both surfaces at approximately the same time.
+ If adhesive is spray-applied, it must be back-rolled with a solvent-resistant paint roller to assure proper contact and
+uniform coverage. Refer to Elevate Technical Information Sheets and container labels for specific application
+instructions.
+Apply bonding adhesive at specified coverage rate. Refer to the container label and Technical Information Sheet for specific
+application requirements and coverage rates.
+
+5. Test Bonding Adhesive for Readiness (Touch-Push Test)
+Allow the bonding adhesive to flash-off. Touch the adhesive surface in several places with a clean, dry finger to be certain
+that the adhesive does not stick or string. As you are touching the adhesive, push forward on the adhesive at an angle to
+ensure that the adhesive is ready throughout its thickness. If motion exposes wet or stringy adhesive when the finger is
+lifted, the adhesive is not ready for mating. Flash-off time will vary depending on ambient conditions of temperature, wind,
+and humidity.
+
+6. Bond the Membrane to the Substrate
+Starting at the fold, roll the previously coated portion of the membrane into the coated substrate slowly and evenly to
+prevent wrinkles.
+
+7. Broom the Membrane
+To assure proper contact, compress the bonded half of the membrane to the substrate with a stiff push broom.
+
+8. Repeat Procedure to Complete the Membrane Installation
+Fold the unadhered half of the membrane back onto itself and repeat the procedure.
+
+9. Weld the Lap
+ If membrane has been open for more than 12 hours or become contaminated with dirt, debris or moisture, wash mating
+surfaces with Splice Wash SW-100 and allow to dry.
+ Complete the laps with hot air welds as specified and refer to TPM-LS details.
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+11
+
+
+===== PAGE 12 =====
+Mechanically Attached System
+Elevate suggests that when installing mechanically fastened membranes over steel decks, the field attachment
+should run perpendicular to the deck panels. If a project is Factory Mutual insured or specified, per FM 1-29 Loss
+Prevention Data Sheet, attachment must run perpendicular to the deck panels.
+The perimeter of the Elevate UltraPly TPO mechanically attached roofing system may be adhered or mechanically
+attached. When mechanically attaching a perimeter, the fastener layout must be as specified in the Elevate
+Membrane Layout and Attachment Guide at a min., or as required by the owner’s design professional or local building
+code. Should a fully adhered perimeter be selected, the perimeter area is the same as for mechanically attached.
+Securing with Plates and Fasteners
+1. Position Membrane
+ Elevate UltraPly TPO Mechanically Attached Roofing Systems are installed starting at the low point of the roof using up
+to four sheets, determined by job requirements, that are half the width of the field panels. Place membrane panel, unroll
+over the acceptable substrate and allow panel to relax for a min. of 30 minutes before attaching or splicing. Ensure proper
+sheet overlap allowances for roof edge details and flashing seams. (Consult Elevate UltraPly TPO Lap, edge, and base
+tie-in details.).
+ The Elevate TPO Adhered System should be installed so that the seams shed or run parallel to the flow of water wherever
+possible.
+ Placement of additional rolls of membrane shall provide for overlapping the sides of adjoining sheets 6ʺ (152 mm) as
+marked on the top side of the membrane and overlapping the ends of adjoining sheets a min. of 3ʺ (76 mm). For sufficient
+membrane overlap distance, see standard lap splice details for robotic and hand welding.
+NOTE: If possible, sheets cut along one side shall have the cut edge installed as the underside of the seam. If cut edges
+are exposed on the weather side, they are to be sealed to specification with Elevate UltraPly TPO Clear Cut Edge Sealant.
+
+2. Secure the Panel
+ The inside edge of the half sheet lap is fastened to the deck using approved Elevate UltraPly TPO Seam Plates and
+fasteners as required by specification.
+ Position each fastener 2ʺ (51 mm) inside the membrane edge and 1ʺ (26 mm) from the area to be heat welded, per lap
+splice details.
+ Install each fastener so that it is properly engaged in the deck and the head is flush within the countersunk portion of the
+seam plate.
+
+3. Position Second Perimeter Panel
+Roll out the second perimeter panel and position along the lap line of the first.
+
+4. Fold the Membrane Back at the Lap
+After confirming the sheet is positioned allowing for the proper lap width, fold it back evenly onto itself without wrinkles or
+creases to expose the underside mating surface of the lap.
+
+5. Remove Dirt or Debris
+Sweep surfaces with a stiff broom to remove any debris or dirt that may have accumulated.
+
+6. Weld the Lap
+Fold the membrane back into position, heat weld the side lap per the Membrane Seaming section of this specification, then
+fasten along the opposite edge of the panel.
+
+7. Install Subsequent Perimeter Panels
+Continue this procedure of lay-out, fastening and welding for perimeter sheets.
+
+8. Position First Field Panel
+ Roll out the first field panel and position along the lap line of the last perimeter panel allowing for 6ʺ (152 mm) side lap
+and 3ʺ (76 mm) end laps.
+ Follow procedure outlined above to secure the last perimeter panel and heat weld the first field lap.
+
+9. Position and Secure Subsequent Field Panels
+ Roll out, position, secure and complete adjoining field panels as above.
+ Install each fastener so that it is properly engaged in the deck and the head is flush within the countersunk portion of the
+Seam Plate.
+ If the slope changes direction, begin working at the lower edge of the adjoining side of the roof up the slope with
+perimeter and field panels until reaching previous work. A half sheet is installed over a ridgeline, secured, and welded to
+the two panels.
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+12
+
+
+===== PAGE 13 =====
+Securing with Batten Strips (Wide Weld Systems Only)
+1. Position Perimeter and Field Panels
+Position perimeter and field panels according to the design layout, and as described in section 2.08.2.a, above.
+
+2. Position Batten Strips
+1. The inside edge of the half sheet lap is fastened to the deck using appropriate Elevate Batten Strip and Fasteners as
+required by the project design layout. To appropriately position the batten strip for the Wide Weld seam, center the
+batten 3 9/16ʺ (90.5 mm) from membrane edge.
+2. When batten strips must be field cut, round the cut end. Assure that all burrs created by cutting are removed.
+3. Where field drilling of metal battens is necessary, use a ¼ʺ (6.4 mm) diameter drill bit.
+4. Install 2ʺ (50 mm) field cut membrane circle patches centered under the ends of metal batten strips and end fasteners.
+
+3. Fasten Batten Strips (WIDE WELD SYSTEM ONLY)
+1. Place the Elevate fastener starting 1" (25 mm) in from the end of the Elevate Batten Strip, then every 12" (305 mm) o.c.
+(unless a more frequent fastener spacing is required per wind/application design guide) using the pre-punched holes in
+the battens.
+2. Fasten batten strips working from one end only. Install each fastener so that it is properly engaged in the deck and the
+head is flush with the batten strip surface. Use caution not to overdrive the fastener as this will cause the batten strip
+to buckle between the fasteners and interfere with the Wide Weld nozzle.
+3. Lap Field Runs of Elevate Batten Strips
+4. Use a common fastener to anchor overlapping Elevate Batten Strips using a common hole.
+
+4. Complete the Lap
+Fold the membrane back into position, heat weld the side lap using the Wide Weld nozzle, per the section on membrane
+seaming in this specification, then fasten along the opposite edge of the panel.
+
+Adhered Perimeter
+1. Position Perimeter Panel
+1. Place membrane panel, starting at the low side of the roof and unroll over the acceptable substrate. Allow the panel to
+relax for 30 minutes before attaching or welding.
+2. Membrane panels shall be installed so that the seams shed or run parallel to the flow of water wherever possible.
+3. Placement of additional rolls of membrane shall provide for overlapping the sides of adjoining sheets 3½ʺ (90 mm) as
+marked on the top side of the membrane and overlapping the ends of adjoining sheets a min. of 3" (76 mm). For sufficient
+membrane overlap distance, see standard lap splice details for robotic and hand welding.
+4. If possible, sheets cut along one side shall have the cut edge installed as the underside of the seam.
+
+2. Fold the Membrane Back
+After making sure the sheet is placed in its final position allowing for the proper lap width per Elevate details and
+specifications, fold it back evenly onto itself without wrinkles to expose the underside bonding surface of the sheet and
+substrate.
+
+3. Remove any Debris or Dirt
+Sweep the mating surfaces with a stiff broom to remove any debris or dirt that may have accumulated. If required, wash
+membrane with Splice Wash SW-100 and allow to dry.
+
+4. Apply the Bonding Adhesive
+1. Always stop bonding adhesive short of membrane seam area.
+2. Care must be taken not to apply bonding adhesive over an area that is to be hot air welded to another sheet or flashing.
+All bonding adhesive must be completely removed from the seam area before welding.
+3. Apply bonding adhesive with either a 9" (228 mm) wide solvent-resistant paint roller or a commercial-grade adhesive
+sprayer.
+4. Adhesive must be applied in a relatively uniform thickness to both surfaces at approximately the same time.
+5. If adhesive is spray-applied, it must be back-rolled with a solvent-resistant paint roller to assure proper contact and
+uniform coverage. Refer to Elevate Technical Information Sheets and container labels for specific application
+instructions.
+6. Apply bonding adhesive at specified coverage rate.
+7. Refer to the container label and Technical Information Sheet for specific application requirements and coverage rates.
+
+5. Test Bonding Adhesive for Readiness (Touch-Push Test)
+Allow the bonding adhesive to flash-off. Touch the adhesive surface in several places with a clean, dry finger to be certain
+that the adhesive does not stick or string. As you are touching the adhesive, push forward on the adhesive at an angle to
+ensure that the adhesive is ready throughout its thickness. If motion exposes wet or stringy adhesive when the finger is
+lifted, the adhesive is not ready for mating. Flash-off time will vary depending on ambient conditions of temperature, wind
+and humidity.
+
+6. Bond the Membrane to the Substrate
+Starting at the fold, roll the previously coated portion of the membrane into the coated substrate slowly and evenly to
+prevent wrinkles.
+
+7. Broom the Membrane
+To assure proper contact, compress the bonded half of the membrane to the substrate with a stiff push broom.
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+13
+
+
+===== PAGE 14 =====
+NOTE: If possible, sheets cut along one side shall have the cut edge installed as the underside of the seam. If cut
+edges are exposed on the weather side, they are to be sealed to specification with Elevate UltraPly TPO Clear Cut
+Edge Sealant.
+8. Repeat Procedure to Complete the Membrane Panel Installation
+Fold the un-adhered half of the membrane back onto itself and repeat the procedure.
+
+9. Terminate the Membrane at the Perimeter
+After the perimeter sheets are adhered to the substrate, they must be terminated along the outside edge using appropriate
+Elevate roof edge or base tie-in detail.
+
+10. Install Perimeter Isolation
+Install Elevate fasteners and TPO seam plates continuously along the inside edge of the adhered perimeter area per Elevate
+details.
+
+11. Position First Field Panel
+1. Roll out the first field panel and position along the lap line of the adhered perimeter panel allowing for 6ʺ (152 mm) side
+lap and 3ʺ (76 mm) end laps.
+2. Heat weld the first field lap.
+
+12. Position and Secure Subsequent Field Panels
+1. Roll out, position, secure and splice adjoining field panels as above.
+2. Install each fastener so that it is properly engaged in the deck and the head is flush within the countersunk portion of
+the Seam Plate.
+3. If the slope changes direction, begin working at the lower edge of the adjoining side of the roof up the slope with
+perimeter and field panels until reaching previous work. A half sheet is installed over a ridgeline, secured, and welded
+to the two panels.
+
+Ballasted System
+Ballasted systems are not permitted when the membrane is installed directly over or onto a hard surface, such as
+HailGard / ISOGARD HG, DensDeck, SECUROCK, DEXcell, OSB, ISOGARD HD, ISOGARD HD Composite, or concrete.
+Ballasted systems are not allowed when the membrane is installed directly to a layer of insulation, which has been
+mechanically attached.
+Adhesive attachment of insulation is acceptable for Ballasted systems, if required.
+1. Position Membrane
+1. Position membrane panel, without stretching, over the acceptable substrate and allow to relax for 30 minutes.
+2. Good roofing practice dictates that seams shed or run parallel to the flow of water wherever possible.
+3. Move Membrane to its Final Position. Shift the membrane panel to its final position allowing for a min. 4" (102 mm) field
+seam onto adjacent panels and sufficient membrane for proper flashing and termination.
+
+2. Complete the Lap
+Heat weld the side lap per section 2.09 (Membrane Seaming) of this specification, then fasten along the opposite edge of
+the panel.
+
+3. Ballast Information
+a. Elevate Ballast Paver System
+Install Elevate Ballast Paver System and Accessories as required in proper sequence for membrane protection and
+paver system performance, according to the Elevate SkyScape™ Ballast Paver Technical Information Sheet and as
+determined by the design professional.
+b. Stone Ballast
+ Spread stone ballast over the TPO membrane at the rate specified by the project designer but never less than 10
+lb/ft² (4.5 kg/ft²) using ASTM #4 stone. Refer to the System Design Guide of this manual for additional ballast type
+and size requirements. Ballast must be spread over the membrane using soft rubber-tired ballast buggies. Spread
+ballast around penetrations by hand. Take special care not to damage TPO membrane when distributing ballast.
+ Protect membrane and underlying insulation at staging areas where ballast is loaded, by layering additional
+insulation and/or plywood over a sacrificial layer of Elevate membrane. Remove and replace all roofing components
+damaged from ballasting operation.
+ Distribute ballast around Walkway Pads: Any ballast displaced by a walkway should be distributed around the pad
+to maintain the specified average ballast rate. (Do not position walkway within 10' (3.04 m) of a roof edge.) Use
+appropriate ballast pavers around mechanical equipment.
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+14
+
+
+===== PAGE 15 =====
+Membrane Seaming
+The following information provides for typical set up and heat welding of Elevate UltraPly TPO membrane. For
+information beyond the scope of this document, we encourage installers to contact a Elevate Regional Technical
+Coordinator or local Elevate Field Technical Representative.
+Equipment and Test Splice Requirements
+1. The air intake, temperature and speed of the welder shall be adjusted to provide proper seam strength.
+2. An ample power source shall be provided for all heat welding equipment. A dedicated generator must be
+provided for each robotic welder. For specifics on welding equipment and generator, consult the welder
+manufacturer’s data sheets.
+3. Adjust the welding equipment according to membrane thickness and varying weather conditions. It is
+recommended that this be completed using spare material before starting welding of the finished roofing
+material. In addition, destructive tests shall be completed at the beginning of each day of welding and every
+time there is an interruption in the welding process (i.e., power failure, welder shut down, change in job site
+conditions, after lunch, etc.) to verify adequate seam strength.
+4. Automatic Welder Settings – See additional weld window tables at the end of this document.
+Elevate UltraPly TPO allows for successful welding through a wide range of automatic welder settings for
+temperature and momentum. Typical settings near the center of this welding range are as follows (ambient
+temperatures between 20 °F to 90 °F and -6.7 °C to 32.2 °C):
+ Leister Varimat - Temperature: 1000 °F Air Flow: 80%, Speed: 11.5' min.
+ Leister Varimat V2 - Temperature: 1100 °F Air Flow: 70%, Speed: 12.5' min.
+ Contact a local Elevate Technical Representative for additional information.
+
+Clean the Lap Splice Area
+If membrane has been exposed for more than 12 hours or becomes contaminated with dirt, debris, or moisture, it must
+be cleaned. Wearing chemical resistant gloves and using a clean white cotton rag dampened with Elevate SW-100
+Splice Wash, thoroughly clean the involved area on both sheets at least 6ʺ (15.24 cm) wide prior to any welding
+activity. For aged membrane, or when additional cleaning is desired, a Elevate QuickScrubber Plus pad moistened
+with Splice Wash may be used to clean the weld area, followed by wiping with a clean white cotton rag dampened
+with Splice Wash. Allow cleaner to flash off completely, as residual cleaner can contaminate the membrane bond.
+Hot Air Weld Lap Splices
+1. Horizontal field welds should be completed first. Wherever possible, field splices on the horizontal surface
+(including flashings) are to be completed using an automatic heat welder that has been designed for hot air
+welding of thermoplastic membranes. For specifics on welding equipment and generator, consult the equipment
+manufacturer’s data sheet.
+2. Seam Width Requirements
+ Seams made with the automatic welder must be a min. of 1½ʺ (38 mm) wide.
+ Seams made with a hand welder must be a min. of 2ʺ (50 mm) wide. Use silicone hand rollers to assure proper compression
+of the heated surfaces as hand welding proceeds.
+ Wide Weld seams require a Wide Weld kit for the Varimat welder. The kit system includes specialized hardware to adapt
+the existing welder to the special 4½ʺ (114 mm) wide nozzle and guides.
+NOTE: It is important to verify that welds completed at any transition from machine to hand application is completed
+properly. Validate weld transition is fully bonded and no gaps, fish mouths, pin holes or cold welds exist. Probe all
+welds to verify weld is completed properly.
+
+3. Vertical Splices
+Handheld welders are to be used on vertical welds or where an automatic welder is not practical or cannot be
+used.
+ T-Joint and Membrane Transition Patches:
+• Install T-joint patches at reinforced membrane seam intersections when membrane thicker than .045ʺ (1.14 mm) is
+used.
+• Install T-Joint patches wherever TPO reinforced membrane seams extend through angle changes 1:12 or greater.
+• Membrane to receive T-joint cover shall have the edge chamfered by heating and rolling to minimize any step-down.
+Refer to Lap Splice and T-Joint Detail Section of Elevate’s Technical Manual.
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+15
+
+
+===== PAGE 16 =====
+Seam Inspection
+Probe all completed welds with a dull cotter pin puller type tool to verify seam integrity, paying special attention to
+hand welded areas (i.e., corners, t-joints, angle changes, etc.). Do not probe welds until they have cooled. Any welds
+found to be insufficiently fused need to be repaired daily. Avoid damaging membrane when checking welds.
+Seal Cut Edges
+1. Ensure that all cut edge areas are clean and dry. Clean with Splice Wash SW-100 to remove any contamination.
+2. All edges of TPO reinforced membrane with scrim exposed are to be sealed daily with Elevate UltraPly TPO
+Clear Cut Edge Sealant.
+NOTE: Solvent welding is NOT acceptable.
+
+Additional Membrane Securement and Base Tie-In Flashing
+Secure the membrane at all locations where the membrane goes through an angle change greater than 1ʺ (25 mm)
+in 12ʺ (305 mm). i.e.: roof edges, curbs, interior walls, etc.
+Using Screws and Plates
+1. Mechanically fasten Elevate HD Seam Plates for TPO membrane with Elevate Fasteners either horizontally into
+the deck or vertically into the wall in accordance with Elevate Base Tie-In Details (typically 12" (305 mm) o.c. for
+standard applications).
+2. Refer to the Elevate System Design Guide or Elevate Technical Information Sheets of this manual to determine
+the applicable fastener and the associated penetration requirements for the specific substrate conditions.
+Using Coated Metal
+1. Fasten Elevate UltraPly TPO Coated Metal into Wood Nailers as shown in Elevate Details.
+2. The Elevate coated metal must be completely supported by wood nailers in accordance with Elevate Details.
+3. Heat weld membrane to Elevate UltraPly TPO Coated Metal flashing.
+4. Seams made with an automatic welder must be a min. of 1½ʺ (38 mm) wide. Seams made with hand welders
+must be a min. of 2ʺ (51 mm) wide.
+Using UltraPly TPO QuickSeam Reinforced Perimeter Fastening Strip (RPFS)
+1. Attach the RPFS to the parapet wall or deck using Elevate Heavy Duty Seam Plates fastened a max. of 12" (305
+mm) o.c. Roll the membrane into place and then fold back, exposing the underside of the membrane and the
+QSRPF Strip.
+2. Apply the appropriate Elevate Primer to the membrane where it will mate with the QuickSeam Splice Tape on
+the RPFS and allow to dry completely. Apply Elevate Bonding Adhesive to the membrane that is to be bonded
+to the penetration or wall, and to the penetration or wall itself.
+3. After the primer has dried completely and the adhesive has flashed off properly as determined by using the
+Touch-Push Test, remove the release paper from the RPFS and roll the membrane into place, assuring a tight fit
+into the transition between the horizontal and vertical surfaces. Continue to roll the membrane up the wall and
+broom in place with a stiff push broom. Roll the membrane over the QuickSeam Tape portion with a 1½" to 2"
+(38 mm to 51 mm) wide silicone roller across the tape and then along its length.
+NOTE: QuickSeam RPFS is not acceptable for 25- and 30-year warranties on TPO installations.
+
+Flashing – Penetrations
+General
+
+
+
+
+
+
+Remove all loose existing flashing (i.e., metal, bituminous materials, mastic, etc.).
+Flash all penetrations passing through the membrane.
+The flashing seal must be made directly to the penetration.
+Elevate Flashing foam may be used to fill voids around penetrations, wall/roof perimeters, and other gaps where
+fill may be needed.
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+16
+
+
+===== PAGE 17 =====
+Pipes, Round Supports, Structural Steel Tubing, Etc.
+1. Flash penetrations with Elevate TPO Pre-Molded Pipe Flashings wherever possible. Do not cut or patch TPO PreMolded Pipe Flashings vertically to assist in their installation.
+2. Flash penetrations using Elevate UltraPly TPO Unsupported Flashing when the use of Pre-Molded or Custom
+TPO Pipe Flashings is not feasible.
+3. Refer to Elevate’s Technical Information Sheet for min. and max. pipe diameters that can be successfully
+flashed with Pre-Molded TPO Pipe Flashings.
+4. Structural Steel Tubing: Use a field-fabricated pipe flashing detail when the corner radius is greater than ¼ʺ
+(6.4 mm) and the longest side of the tube does not exceed 4ʺ (102 mm). When the tube exceeds 4ʺ (102 mm), use
+a standard curb detail including base-tie in and suitable termination.
+5. Elevate manufactures Custom pipe flashings round, square, or conical, with or without a split. Contact a Elevate
+Sales Representative for additional information.
+Roof Drains
+The following applies to new or reused cast iron drains. For all other drain types contact a Elevate Regional Technical
+Coordinator.
+1. Remove existing clamping ring. Remove any broken clamping hardware and replace.
+2. Remove all existing flashing (including lead flashing), roofing materials and cement from the existing drain in
+preparation for membrane and Water Block Seal.
+3. Provide a clean even finish on the mating surfaces between the clamping ring and the drain bowl.
+4. Install tapered insulation with suitable bonding surfaces around the drain to provide a smooth transition from
+the roof surface to the drain. Slope into drain cannot be greater than 1ʺ in 12ʺ (25 mm in 305 mm).
+5. Position the membrane and cut a hole for the roof drain allowing ½ʺ (13 mm) to ¾" (19 mm) of membrane inside
+the clamping ring. Make round holes in the membrane to align with clamping bolts (a paper punch may be used).
+Do not cut the membrane back to the bolt holes.
+6. Install Elevate Water Block Seal on the clamping ring seat flange below the membrane. Use a min. of one half of
+a 10 oz (295 cc) tube for a 10" (254 mm) drain.
+7. Install the roof drain clamping ring and all clamping bolts. Tighten the clamping bolts to achieve constant
+compression.
+Insert Drains
+Elevate 3ʺ & 4ʺ Insert Drains are intended for installation when existing drains are deteriorated and not suitable for
+reuse or for re-roofing situations where existing drain sumps exceed Elevate’s min. requirements. For conditions
+outside of these, contact a Elevate Regional Technical Coordinator.
+1. Remove existing clamping ring. Remove any broken clamping hardware and debris.
+2. Remove all existing flashing (including lead flashing), roofing materials and cement from the existing drain.
+3. Install wood blocking as required to support, level and square drain insert with new insulation sump.
+4. Install insulation, flat and tapered, with suitable bonding surfaces around the drain to provide a smooth
+transition from the roof surface to the drain. Slope into drain cannot be greater than 1ʺ in 12ʺ for reinforced
+membrane.
+5. Install Elevate Insert Drain, securing to a solid substrate in accordance with instructions, in preparation to
+receive the roof membrane.
+6. Install Elevate Water Block Seal in a continuous bead on the clamping ring seat flange below the membrane.
+Use a min. of one half of a 10 oz (295 cc) tube for a 10" (254 mm) strainer basket/clamping ring.
+7. Install Elevate roof membrane as prescribed and secure with strainer basket and bolt assembly.
+Rigid Pipe Clusters and Unusual Shaped Penetrations
+1. Install Elevate UltraPly TPO molded penetration pockets per instructions. Allow a min. clearance of 1" (25 mm)
+between the penetration(s) and from all sides of the penetration pocket.
+2. Flash detail with shop fabricated penetration pockets per Elevate Details.
+3. Fill penetration pockets with Elevate Pourable Sealer or FillGard M and mound to shed water. Pourable Sealer
+must be a min. of 2" (51 mm) deep and 1" (25 mm) thick around all penetrations. Be sure to prime penetration and
+inside of pocket before installing sealer.
+Hot Pipes
+Protect the UltraPly TPO components from direct contact with steam or heat sources when the in-service
+temperature is more than 160 °F (71 °C). In all such cases flash to an intermediate “cool” sleeve per Elevate Details.
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+17
+
+
+===== PAGE 18 =====
+Flexible Penetrations
+1. Provide a weathertight gooseneck set in Water Block Seal and secured to the deck.
+2. Flash in accordance with current Elevate Details.
+Scuppers
+Scuppers shall refer to all primary and overflow devices for roof drainage.
+1. Install welded watertight sleeve and flashing assembly.
+2. Set sleeve in Water Block Seal.
+3. Round all corners of metal flange.
+4. Fasten flange 4ʺ (102 mm) o.c.
+5. Flash in accordance with current Elevate Details.
+Expansion Joints
+1. Install where specified by the project designer in accordance with Elevate details.
+2. Expansion Joint assemblies shall be sized as needed to provide for all anticipated movement and make logical
+transition to other materials at perimeters.
+
+Flashing – Walls, Parapets, Mechanical Equipment Curbs, Etc.
+General
+Using the largest pieces of UltraPly TPO membrane, TPO Custom Curb Flashing or TPO 18" Curb Flashing practical,
+flash all walls, parapets, curbs, etc., to a min. height of 8" or as specified by the project designer.
+1. Evaluate Substrate
+The following substrates require an overlay of ⅝ʺ (16 mm) exterior grade or “Wolmanized” plywood,
+mechanically fastened in accordance with project designer’s requirements:
+ Interior Gypsum board
+ Stucco
+ Cobblestone
+ Textured Masonry
+ Corrugated Metal Panels
+ Other Uneven Substrates
+NOTE: All loose existing flashing must be removed.
+2. Install Additional Membrane Securement at Curbs, Penetrations, Walls, etc.: Refer to 1.11 of this specification.
+3. Provide Termination in accordance with Elevate specifications and details.
+4. The membrane can be installed up to a maximum height of 72” (182.9 cm) without intermittent attachment as
+long as the following conditions are present:
+1. Wall surface is smooth without noticeable high spots or depressions: such as plywood, poured or precast concrete, hollow core block or masonry walls where mortar joints are flush with masonry
+surface, AND
+2. The termination of membrane flashing is a Termination Bar or membrane flashing extending
+completely under coping to the outside wall to the outside face edge.
+5. Intermittent termination IS REQUIRED:
+ When flashing heights exceed 72” (182.9 cm), intermittent termination is required at 36” o.c
+(91.44 cm) on center beyond the maximum height.
+ When the wall surface does not meet the conditions stated above, intermittent termination is
+required at 36” o.c (91.44 cm).
+ When the wall or substrate is non-structural (see detail TPM-T-26), intermittent termination
+is required at 36” o.c (91.44 cm).
+
+Sheet Metal Work
+General
+
+ Sheet metal work is not waterproofing. The installed membrane roofing system must be made watertight before
+metal application.
+ No roof system is complete until all the edges are terminated in such a way as to prevent water infiltration into
+the roofed structure. This typically involves the use of manufactured or shop fabricated metal detailing, such
+as coping caps, gravel stops, roof edging, flashing and counter-flashing components.
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+18
+
+
+===== PAGE 19 =====
+ All sheet metal work should be fabricated and installed according to SMACNA and National Roofing Contractors
+Association (NRCA) guidelines. Unless specifically agreed to in writing by Elevate prior to installation, sheet
+metal work manufactured by others is not included in the Elevate warranty coverage.
+Codes and Standards
+ The designer and roofing contractor should be aware that many municipalities and states are beginning to
+enforce metal codes that, until recently, were merely used as guidelines. These metal codes relate to min.
+standards on material, fabrication, and testing of roof related sheet metal work. It is the contractor’s
+responsibility to review and know the building codes relating to their roofing projects to avoid costly remedial
+work to bring a project into compliance.
+ If the sheet metal work on a project is specified by the designer to be included in a full system warranty, use
+Elevate brand edge metal and coping products, and install per Elevate published details and specifications.
+Contact an Elevate Sales Representative for additional information.
+ If a metal flashing product by others is submitted via a deviation request for inclusion in the warranty coverage,
+the following are min. requirements for consideration:
+• The sheet metal work must be shop or factory formed or extruded.
+• The sheet metal work must be configured and installed in accordance with SMACNA guidelines and NRCA
+installation instructions.
+• Min. requirements regarding sheet metal work material are 24 ga (0.61 mm) G-90 Kynar pre-finished steel or
+0.040" (1.02 mm) aluminum (mill finished, pre-finished or anodized).
+• A deviation request for inclusion of sheet metal work in warranty coverage must accompany the PIN form
+submitted by the installing contractor.
+• The deviation request must include shop drawings of the sheet metal work to be included and a roof plan
+showing the installed location and linear dimension for each profile.
+• Should the deviation request be granted, the installing contractor will be responsible to Elevate for a period
+of two years from the date of Elevate’s inspection and acceptance under their installer’s agreement.
+Application
+ Sheet metal work installation, regardless of material source, must be according to the sheet metal
+manufacturer’s instructions available from the manufacturer or supplier.
+ Sheet metal work formed by roofing contractors must be fabricated and installed in accordance with SMACNA
+and NRCA recommendations.
+ All flange-mounted sheet metal work must be flashed per the appropriate Elevate material type’s standard
+details.
+ Sheet metal work formed by contractors is not eligible for warranty coverage unless the conditions listed above
+are met and Elevate accepts the sheet metal work for warranty coverage in writing.
+ Sheet metal work by roofing contractors must have metal joints stripped-in to the uppermost edge of the metal
+dam on the roof side.
+ Projects utilizing UltraPly TPO QuickSeam Flashing to strip-in sheet metal work with a gravel dam (or a formed
+configuration that can hold water on the edge of the installed cover tape) must have UltraPly TPO Generalpurpose Sealant applied on both sides of the cover tape, and the vertical metal joints are to be covered with a
+section of TPO QuickSeam Flashing.
+ Gravel stop type sheet metal work on UltraPly TPO roof systems may be fabricated from UltraPly TPO Coated
+Metal to provide a suitable welding surface to seal the roof system to the sheet metal work.
+ As an alternative on some UltraPly TPO applications, it may be appropriate and permissible to use a two-piece
+snap on fascia assembly instead of UltraPly TPO Coated metal.
+ The approval of sheet metal work for inclusion in warranty coverage is conditional upon acceptance by Elevate,
+and, if approved, is subject to the “terms, conditions and limitations” of the requested warranty. Under no
+circumstance will any warranty coverage for sheet metal work exceed the wind speed limitation of the warranty
+issued for the roof system. Aesthetic appearance is expressly excluded from warranty coverage.
+ Sheet metal work by others is not permitted on projects requiring full system warranties and wind speed
+coverage equal to, or greater than, 90 mph.
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+19
+
+
+===== PAGE 20 =====
+Flashing Gravel Stops or Roof Edge Metals
+USING Elevate ULTRAPLY TPO QUICKSEAM FLASHING (Warrantable up to 20 Years)
+Install Edge Metals (fascia, coping, gutter, accessories)
+1. Prepare substrate and roofing membrane as required by product installation details and instructions.
+2. Install metals and accessories in the longest sections possible in accordance with Elevate details.
+Flash Edge Metal with UltraPly TPO QuickSeam Flashing
+1. Prime Area to Receive Flashing.
+1. Clean the application surfaces to remove heavy debris or contaminates with a rag or broom.
+2. Stir the approved Elevate Primer thoroughly before and during use.
+3. Dip the Elevate QuickScrubber or QuickScrubber Plus into the bucket of primer, keeping the scrubber flat.
+4. Apply the primer to the TPO membrane and metal edging to receive UltraPly TPO QuickSeam Flashing using
+long back and forth type strokes with heavy pressure along the length of the splicing area.
+5. Additional scrubbing is required at areas of heavy contamination.
+6. Change the scrub pad every 200' (61 m) or when the pad will no longer hold the proper amount of primer.
+7. Allow the primer to dry completely before installing flashing.
+2. Install Elevate UltraPly TPO QuickSeam Flashing
+1. Place the roll of Elevate UltraPly TPO QuickSeam Flashing on the roof a few feet prior to the application
+starting point, positioned so that it unrolls form the top of the roll (release liner will be on top).
+2. Remove approximately 2' to 3' (.6 m to.9 m) of release liner and apply flashing to the metal flange and
+UltraPly TPO membrane.
+3. Lap adjacent rolls of flashing a min. of 1ʺ (25 mm).
+4. Roll the QuickSeam Flashing with a 2ʺ (51 mm) wide silicone hand roller to assure proper adhesion.
+5. Apply heat while rolling to form UltraPly TPO QuickSeam Flashing at steps, laps, and angle changes.
+6. Refer to published Elevate details and specifications for additional information.
+Special Considerations (End Laps, T-Joints, etc.)
+1. Apply a 6ʺ (152 mm) length of UltraPly TPO QuickSeam Flashing or an UltraPly QuickSeam T-Joint Patch to the
+inside edge of the UltraPly TPO QuickSeam Flashing at all overlaps and intersections. Refer to roof edge details
+for additional information.
+NOTE: UltraPly TPO QuickSeam products must be heat-formed to conform to seam step-offs, metal laps, angle
+changes, etc.
+2. Optimal Application:
+ The optimal application of UltraPly TPO QuickSeam Flashing is where a 3" (76 mm) edge metal flange is
+used. This will provide the min. 2" (51 mm) bonded area to the UltraPly TPO roofing membrane, with the
+remaining 3" (76 mm) of the flashing material covering the metal flange.
+ If more than ½ʺ (13 mm) of metal flange is exposed at the sheet metal laps, the laps of the metal flange
+must be stripped in using additional QuickSeam Flashing set in an appropriate TPO primer, after the primary
+flashing is complete (see Elevate roof edge details).
+ It is recommended that 3" (76 mm) QuickSeam Splice Tape be placed in the sheet metal lap to help seal the
+metal edge.
+3. Special Considerations for Copper Edging:
+ Copper may be weathered or coated with an anti-tarnish lacquer which makes adhesion difficult. Therefore,
+Elevate requires that special cleaning techniques be used to prepare the copper surface to receive the TPO
+QuickSeam Flashing.
+ Scrub the copper with acetone or lacquer thinner, using clean cotton cloths. Cleaning before installation is
+recommended but can take place after metal is attached if care is taken not to allow the solvents to
+encounter the membrane.
+ After the cleaner dries, apply the appropriate Elevate primer and flashing per Elevate Specifications.
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+20
+
+
+===== PAGE 21 =====
+Roof Walkways
+General
+1. Elevate UltraPly TPO Walkway Pads or acceptable pavers are required at all access points to the roof system
+and recommended anywhere routine traffic on the membrane surface is anticipated. Walkway pads are used to
+protect the weatherproofing membrane from damage or excessive wear and tear.
+2. Traffic-related roof damage is not covered by the Red Shield Warranty. In areas of extreme traffic, contact
+Elevate for options to enhance the roof system to prevent or mitigate damage to roofing components.
+3. Install walkway pads in locations as specified by the project designer and in accordance with published Elevate
+specifications.
+4. Walkway maintenance is the responsibility of the building owner and not part of the warranted waterproofing
+assembly.
+Walkway Pad Application Instructions – Adhered UltraPly TPO Walkway Pads
+1. Ensure the existing area to which new UltraPly TPO Walkway Pads are to be mated is clean, smooth, and free of
+all contaminants. If the membrane has been installed more than thirty (30) days, thoroughly clean the work area
+with detergent and water. It is recommended that a water-soluble granular cleaner be used such as T-M-T
+brand, which is manufactured by the U.S. Borax Company. Liquid cleaners can leave a film residue that can
+interfere with adhesion quality.
+ It is recommended that a polypropylene scouring pad be used for maximum cleaning. This is the type
+manufactured by 3M. Coupled with the granular detergent it allows for enough abrasive action to
+thoroughly clean the sheet without causing damage.
+ DO NOT use steel wire brushes under any circumstances.
+ Thoroughly rinse the area several times to remove all detergent and contaminants.
+ The areas cleaned must be allowed to dry completely before continuing.
+2. Unroll each roll of UltraPly™ TPO Walkway Pad and allow it to relax for a minimum of 30 minutes PRIOR TO
+cutting and installing the Walkway Pad. Once the Walkway Pad is sufficiently relaxed, measure and cut the
+Walkway Pad into maximum 10′ (3 m) long sections. Plan to position each section with a minimum 4” gap to
+allow for positive drainage and at least 4” from any system seam or penetration. Allow a minimum of 18” (0.45
+m) between Walkway Pad and any roof drainage device. Walkway Pad may be cut length-wise or width-wise to
+ensure minimum spacing requirements. To achieve the best aesthetic quality, install when ambient temperature
+is between 60 and 80 °F (16 and 27 °C). Chalk lines may be used but excessive chalk should be shaken off the
+line to avoid contaminating the cleaned area.
+3. Place each cut section of Walkway Pad with the textured side down. For each section, measure and cut to length
+strips of Elevate 3” EcoWhite™ QuickSeam™ Splice Tape that will be applied around the entire perimeter of the
+Walkway Pad and length-wise down the middle of the Walk Pad. NOTE: For this application, DO NOT use black
+QuickSeam Splice Tape. Only use EcoWhite QuickSeam Splice Tape.
+4. Apply Elevate Single-Ply QuickPrime™ Primer using a QuickPrime scrub pad and handle, according to the
+instructions on the Technical Information Sheet. Apply primer in 4” wide strips around the entire perimeter of
+the Walkway Pad and down the center of the Walkway Pad. Once the primer is tacky but firm to the touch,
+carefully lay the EcoWhite QuickSeam Splice Tape into the primer with the removeable paper backing facing
+up. Lay the Splice Tape into the primer gradually, starting at one end and apply consistent pressure as the Tape
+makes contact with the primer. Do not lay the Splice Tape over the primer all at once. With the paper backing
+still in place, smooth the seam tape into place using your hand then roll the Splice Tape with a 1½” to 2” (38 mm
+to 51 mm) wide silicone roller or a Elevate QuickRoller™ to ensure good adhesion of the EcoWhite QuickSeam
+Splice Tape to the Walkway Pad. NOTE: Shelf life of EcoWhite QuickSeam Spice Tape will be shortened if
+exposed to elevated temperatures.
+ Every five (5) Lf, leave a 1” gap in the Splice Tape running down the middle of the Walkway Pad and the low
+side of the WalkWay Pad (based on the flow of water). This will allow any accumulated moisture to drain.
+5. Ensure the UltraPly TPO roof surface is clean, completely dry, and free of debris. For existing roofs and new
+roofs that have been in service, it is necessary to remove accumulated dirt. Proper membrane preparation is
+made by scrubbing the membrane with a scrub brush and warm soapy water, rinsing with clear water, and drying
+with clean cotton cloths. After this initial cleaning, clean the area again using clean cotton cloths and Elevate
+SW100 Splice Wash. Additional cleaning using Elevate Splice Wash is often necessary. The entire area must be
+cleaned, and cleaning must extend a minimum of 6” Elevate past the edges of the Walkway Pad’s final position.
+6. Once the TPO membrane is completely clean and dry, position each section of Walkway Pad over the membrane.
+Do not remove the paper backing from the Splice Tape at this time. Simply position each section of Walkway
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+21
+
+
+===== PAGE 22 =====
+Pad where it will be installed. Using a chalk-line, mark the areas of the membrane to be primed. Then, remove
+the Walkway Pad from the area until it is ready to install.
+7. Prime the TPO membrane with Single-Ply QuickPrime Primer in 4” wide strips to align with the QuickSeam Splice
+Tape applied to the Walkway Pad. Allow the primer to set up.
+8. Install each section of Walkway Pad over the properly cleaned and primed TPO membrane:
+1. First, set each section of Walkway Pad into position. NOTE: Do not remove the paper backing from the
+EcoWhite QuickSeam Splice Tape and do not apply downward pressure to the Walkway Pad at this time.
+Simply lay the Walkway Pad in place over the TPO membrane and ensure the primed areas align with the
+QuickSeam Splice Tape.
+2. Fold back each section of Walkway Pad length-wise, making sure to keep the Walkway Pad, QuickSeam
+Tape, and primed membrane aligned. Only fold back the Walkway Pad approximately 10” initially to make it
+easier to keep the entire section in place. With the Walkway Pad folded back, remove the exposed portions
+of paper backing from the Splice Tape, then return the Walkway Pad to its original flat position.
+3. Repeat this process, but fold the Walkway Pad back farther this time to fully expose the QuickSeam Tape
+running down the center of the Walkway Pad. Ensure all paper backing has been removed before returning
+the Walkway Pad to its original flat position.
+4. Roll the Walkway Pad with a 1½” to 2” (38 mm to 51 mm) wide silicone roller or a Elevate QuickRoller™ to
+ensure good adhesion of all mated surfaces.
+NOTE: To achieve the best quality of the application, follow these guidelines:
+ When possible, apply the Walk Pad when ambient temperature is between 60 and 80 °F (16 and 27 °C).
+ Cut Walk Pad as required to avoid applying directly over a welded seam in the roofing membrane or any
+other flashing application (Walk Pad should be bonded directly to the field sheet – not flashings).
+ Round corners on cut Walk Pad.
+ Apply EcoWhite™ QuickSeam™ Splice Tape along perimeter of Walk Pad extending 1/8” to 1/4” beyond
+edge of Walk Pad so tape is slightly exposed upon completion of the application.
+ Be sure to leave a 2” gap in the middle and lower side seam tape in the center of the Walk Pad run to
+allow for drainage of any water that should get below the Walk Pad during the service life of the roof.
+When in doubt about the direction of slope, leave a 1” wide gap in the center of all three long runs of
+seam tape.
+Walkway Pad Application Instructions – Welded UltraPly TPO Walkway Pads
+1. Ensure the existing area to which new UltraPly TPO Walkway Pads are to be mated is clean, smooth, and free of
+all contaminants. If the membrane has been installed more than thirty (30) days, thoroughly clean the work area
+with detergent and water. It is recommended that a water-soluble granular cleaner be used such as T-M-T
+brand, which is manufactured by the U.S. Borax Company. Liquid cleaners can leave a film residue that can
+interfere with adhesion quality.
+ It is recommended that a polypropylene scouring pad be used for maximum cleaning. This is the type
+manufactured by 3M. Coupled with the granular detergent it allows for enough abrasive action to
+thoroughly clean the sheet without causing damage.
+ DO NOT use steel wire brushes under any circumstances.
+ Thoroughly rinse the area several times to remove all detergent and contaminants.
+ The areas cleaned must be allowed to dry completely before continuing.
+2. Unroll each roll of UltraPly™ TPO Walkway Pad and allow it to relax for a minimum of 30 minutes PRIOR TO
+cutting and installing the Walkway Pad. Once the Walkway Pad is sufficiently relaxed, measure and cut the
+Walkway Pad into maximum 10′ (3 m) long sections. Plan to position each section with a minimum 4” gap to
+allow for positive drainage and at least 4” from any system seam or penetration. Allow a minimum of 18” (0.45
+m) between Walkway Pad and any roof drainage device. Walkway Pad may be cut length-wise or width-wise to
+ensure minimum spacing requirements. To achieve the best aesthetic quality, install when ambient temperature
+is between 60 and 80 °F (16 and 27 °C). Chalk lines may be used but excessive chalk should be shaken off the
+line to avoid contaminating the cleaned area.
+3. Fully heat weld the perimeter of each section of the UltraPly TPO Walkway Pad to the UltraPly TPO roof
+membrane, leaving one or two 1" gaps in the weld at the low side of the pad to allow for the escape of inadvertent
+moisture.
+Walkway Pad Application Instructions – X-Tred – Membrane Strip Securement
+1. Ensure the existing area to which new UltraPly TPO X-Tred Walkway Pads are to be mated is clean, smooth, and
+free of all contaminants. If the membrane has been installed more than thirty (30) days, thoroughly clean the
+work area with detergent and water. It is recommended that a water-soluble granular cleaner be used such as
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+22
+
+
+===== PAGE 23 =====
+T-M-T brand, which is manufactured by the U.S. Borax Company. Liquid cleaners can leave a film residue that
+can interfere with adhesion quality.
+ It is recommended that a polypropylene scouring pad be used for maximum cleaning. This is the type
+manufactured by 3M. Coupled with the granular detergent it allows for enough abrasive action to
+thoroughly clean the sheet without causing damage.
+ DO NOT use steel wire brushes under any circumstances.
+ Thoroughly rinse the area several times to remove all detergent and contaminants.
+ The areas cleaned must be allowed to dry completely before continuing.
+2. Unroll each roll of X-Tred Walkway Pad and allow it to relax for a minimum of 30 minutes PRIOR TO cutting and
+installing the Walkway Pad. Once the Walkway Pad is sufficiently relaxed, measure and cut the Walkway Pad
+into appropriate lengths. Plan to position each section with a minimum 4” gap to allow for positive drainage and
+at least 4” from any system seam or penetration. Allow a minimum of 18” (0.45 m) between Walkway Pad and
+any roof drainage device. Walkway Pad may be cut length-wise or width-wise to ensure minimum spacing
+requirements. To achieve the best aesthetic quality, install when ambient temperature is between 60 and 80 °F
+(16 and 27 °C). Chalk lines may be used but excessive chalk should be shaken off the line to avoid contaminating
+the cleaned area.
+3. Install Side A as the top surface on Elevate UltraPly TPO systems.
+4. Cut strips of UltraPly TPO membrane to ¾" (19 mm) wide x 10" (254 mm) long.
+5. Thread the TPO strips through the X-Tred pad at the first loop using two 90-degree folds. DO NOT attach strips
+over seams or flashing locations.
+6. Using a hot air welding tool, weld the ends of the UltraPly TPO strip (weathering side up) onto the fled membrane.
+7. Space the strips approximately 36" (914 mm) apart on both sides of the walkway pad and at the roll ends.
+8. For the full 30" (762 mm) x 30′ (9 m) roll, there should be 20 attachment strips installed, i.e., 10 strips per side
+(Refer to Detail Drawing TPM-M-07).
+Walkway Pad Application Instructions – X-Tred – All Purpose Sealant Securement
+1. Ensure the existing area to which new UltraPly TPO X-Tred Walkway Pads are to be mated is clean, smooth, and
+free of all contaminants. If the membrane has been installed more than thirty (30) days, thoroughly clean the
+work area with detergent and water. It is recommended that a water-soluble granular cleaner be used such as
+T-M-T brand, which is manufactured by the U.S. Borax Company. Liquid cleaners can leave a film residue that
+can interfere with adhesion quality.
+ It is recommended that a polypropylene scouring pad be used for maximum cleaning. This is the type
+manufactured by 3M. Coupled with the granular detergent it allows for enough abrasive action to
+thoroughly clean the sheet without causing damage.
+ DO NOT use steel wire brushes under any circumstances.
+ Thoroughly rinse the area several times to remove all detergent and contaminants.
+ The areas cleaned must be allowed to dry completely before continuing.
+2. Unroll each roll of X-Tred Walkway Pad and allow it to relax for a minimum of 30 minutes PRIOR TO cutting and
+installing the Walkway Pad. Once the Walkway Pad is sufficiently relaxed, measure and cut the Walkway Pad
+into appropriate lengths. Plan to position each section with a minimum 4” gap to allow for positive drainage and
+at least 4” from any system seam or penetration. Allow a minimum of 18” (0.45 m) between Walkway Pad and
+any roof drainage device. Walkway Pad may be cut length-wise or width-wise to ensure minimum spacing
+requirements. To achieve the best aesthetic quality, install when ambient temperature is between 60 and 80 °F
+(16 and 27 °C). Chalk lines may be used but excessive chalk should be shaken off the line to avoid contaminating
+the cleaned area.
+3. Install Side A as the top surface on Elevate UltraPly TPO systems.
+4. Layout X-Tred Walkway Pad in the desired locations.
+5. Prime membrane areas below each side of the walkway pad every 5′ along both sides of the X-Tred Walkway
+Pad with Single-Ply QuickSeam Primer.
+6. Place X-Tred Walkway Pad over primed areas then apply a generous dab of AP sealant over a rib of the X-Tred
+flowing onto the primed membrane below. DO NOT attach X-Tred over seams or flashing locations.
+
+Temporary Closure and Tie-Ins
+1. At the completion of each day’s work or before the onset of inclement weather, a watertight temporary seal
+must be established by the roofing applicator at any loose edge of membrane.
+2. Install a temporary seal or flashing strip to ensure that moisture does not flow beneath or damage any
+completed section of the new roofing system.
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+23
+
+
+===== PAGE 24 =====
+3. Membrane contaminated with the sealant or flashing used as a night seal must be cut away and discarded prior
+to resumption of work.
+
+Finished Roof Protection
+1. When it becomes necessary for other trades to work over a completed area of new roof, the roofing membrane
+and flashing must be protected from physical damage.
+2. Proper and adequate protection includes installation of a slip-sheet in the work area overlaid with plywood or
+OSB, to minimize damage to the finished roof surface due to construction equipment and activities that
+encounter the membrane.
+3. If damage does occur to the roof system, it should be repaired immediately to preserve the integrity of the
+roofing components.
+
+Membrane Repair
+Clean the Membrane
+When repairing “in-service” Elevate UltraPly TPO Membrane it is necessary to remove accumulated field dirt. The
+membrane is properly prepared by scrubbing with a scrub brush and warm soapy water, rinsing with clear water,
+drying with clean cloths, then wiping with a clean cotton cloth dipped in Elevate SW-100 Splice Wash.
+Install Repair Patch
+1. Repair damaged Elevate UltraPly TPO Membrane with like material.
+2. The repair material must extend a min. of 2ʺ (51 mm) beyond the boundary of the affected area in all directions.
+Example: A pinhole will require a min. 4ʺ x 4ʺ (102 mm x 102 mm) patch.
+3. Round all corners of the repair piece.
+Multiple Repairs
+1. If the membrane is damaged in more than six (6) locations within a 100 ft² (9.3 m²) area, new membrane extending
+6" (152 mm) beyond the border of the damaged area must be installed over existing membrane in accordance
+with published Elevate specifications.
+2. Secure the replacement membrane in the same manner as the existing membrane.
+3. Contact a Regional Technical Coordinator with questions on how to address comprehensive damage.
+
+Clean Up
+If required by the specifier to ensure the aesthetics of the Elevate UltraPly membrane, (i.e., handprints, footprints,
+general traffic grime, industrial pollutants, and environmental dirt), the membrane may be cleaned by scrubbing with
+non-abrasive soapy water and rinsing the area completely with clean water. Elevate SW-100 Splice Wash can be
+used sparingly to clean small areas of membrane.
+Cleaning Procedure for In-Service Thermoplastic Membrane
+1. Ensure that the existing area to which new thermoplastic membrane is to be mated is clean, smooth, and free of
+all contaminants.
+2. Thoroughly clean this area with detergent and water. It is recommended that a water-soluble granular cleaner
+be used such as T-M-T brand, which is manufactured by the U.S. Borax Company. Liquid cleaners tend to leave
+a film residue that can interfere with heat-weld quality. The cleaner must be completely rinsed/removed from
+areas where welding may occur and allowed to completely dry before any welding is performed.
+3. It is recommended that a polypropylene scouring pad be used for maximum cleaning. This is the type
+manufactured by 3M. Coupled with the granular detergent it allows for enough abrasive action to thoroughly
+clean the sheet without causing damage to it.
+NOTE: DO NOT USE STEEL WIRE BRUSHES UNDER ANY CIRCUMSTANCES.
+4. It is imperative that the area be thoroughly rinsed several times to remove all cleaner and contaminants before
+heat welding. Further, the area must be allowed to dry completely before continuing. If blisters form upon heat
+welding, the area has not been allowed to dry sufficiently and heat welding should discontinue.
+5. After allowing to dry sufficiently, the heat-welding areas on the existing membrane shall be cleaned a second
+time with denatured alcohol and wiped clean with a clean cotton rag to remove all surface impediments and
+eliminate any surface curing which may have occurred.
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+24
+
+
+===== PAGE 25 =====
+AGAIN: THOROUGH CLEANING WITH DENATURED ALCOHOL IS THE MOST CRITICAL PROCEDURE TO
+ENSURE THE PERFORMANCE OF THE NEW TO EXISTING MEMBRANE HEAT-WELD.
+6. All heat welding shall be in accordance with Elevate thermoplastic details and specifications as published. Keep
+in mind that the existing sheet is aged, which may call for more allowance. Care should be taken not to overheat
+and scorch either membrane.
+7. Upon completion, allow newly welded seams to cool.
+IMPORTANT: ALL WELDS MUST BE THOROUGHLY PROBED AND CHECKED FOR COMPLETE INTEGRITY
+AND REWELDED OR STRIPPED IN AS REQUIRED.
+
+Weld Windows
+Table 2: Elevate UltraPly TPO and TPO XR Membrane Weld Windows
+
+ELEVATE ULTRAPLY TPO AND TPO XR MEMBRANE WELD WINDOWS
+Material
+Thickness (Mil)
+45-80
+
+Leister VARIMAT V Robot Welder
+(15 lb weight)
+AirFlow Setting
+Speed (ft/min)
+Temp (°F)
+(%)
+2.2
+
+80
+
+789
+
+Leister VARIMAT V2 Robot Welder
+(15 lb weight)
+AirFlow Setting
+Speed (ft/min)
+Temp (°F)
+(%)
+2.2
+
+70
+
+858
+
+45-80
+
+3.2
+
+80
+
+813
+
+3.2
+
+70
+
+884
+
+45-80
+
+4.2
+
+80
+
+836
+
+4.2
+
+70
+
+911
+
+45-80
+
+5.2
+
+80
+
+860
+
+5.2
+
+70
+
+937
+
+45-80
+
+6.2
+
+80
+
+883
+
+6.2
+
+70
+
+963
+
+45-80
+
+7.2
+
+80
+
+907
+
+7.2
+
+70
+
+990
+
+45-80
+
+8.2
+
+80
+
+930
+
+8.2
+
+70
+
+1016
+
+45-80
+
+9.1
+
+80
+
+951
+
+9.1
+
+70
+
+1039
+
+45-80
+
+10.2
+
+80
+
+977
+
+10.1
+
+70
+
+1066
+
+45-80
+
+11.2
+
+80
+
+998
+
+11.1
+
+70
+
+1092
+
+45-80
+
+12.1
+
+80
+
+1022
+
+12.1
+
+70
+
+1118
+
+45-80
+
+13.1
+
+80
+
+1045
+
+13.1
+
+70
+
+1145
+
+45-80
+
+14.1
+
+80
+
+1069
+
+45-80
+
+15
+
+80
+
+1090
+
+45-80
+
+16
+
+80
+
+1113
+
+45
+
+9.1
+
+80-100
+
+1148
+
+45-60
+
+10.1
+
+80-100
+
+1148
+
+45-60
+
+11.1
+
+80-100
+
+1148
+
+45-60
+
+12.1
+
+80-100
+
+1148
+
+45-60
+
+14.1
+
+80-100
+
+1148
+
+45-60
+
+16.1
+
+80-100
+
+1148
+
+80
+
+12.1
+
+80
+
+1148
+
+80
+
+14.1
+
+80-90
+
+1148
+
+80
+
+16.1
+
+80-90
+
+1148
+
+80
+
+18.1
+
+80-90
+
+1148
+
+NOTE:
+1. Leister VARIMAT V Robot Welder with 2 additional weight plates (15 lb).
+2. Leister VARIMAT V2 Robot Welder with 2 additional weight plates (15 lb).
+3. Validate temperature settings and weld quality at the various times throughout the day including start/stop times and change in weather.
+4. Visual observation should occur during welding to avoid scorching/burning of membrane. Adjust temperature as needed to avoid membrane
+damage.
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+25
+
+
+===== PAGE 26 =====
+Thermoplastic Detail Lists
+Detail Table 1: Base Tie-In Details
+
+Base Tie-In Details
+TPO
+
+Detail Number
+PVC
+Thermoplastic
+
+Detail Name
+
+UT-BT-01
+UT-BT-02
+UT-BT-03
+UT-BT-04
+UT-BT-05
+UT-BT-06
+UT-BT-07
+UT-BT-08
+UT-BT-09
+UT-BT-09A
+UT-BT-09B
+UT-BT-10
+UT-BT-11
+UT-BT-11A
+UT-BT-11B
+UT-BT-12
+UT-BT-13
+UT-BT-14
+UT-BT-15
+UT-BT-16
+UT-BT-17
+UT-BT-18
+UT-BT-19
+UT-BT-20
+UT-BT-21
+UT-BT-22
+UT-BT-23
+UT-BT-24
+N/A
+N/A
+N/A
+N/A
+N/A
+UT-LS-16
+NEW
+NEW
+
+PVC-BT-01
+PVC-BT-02
+N/A
+N/A
+PVC-BT-03
+N/A
+PVC-BT-04
+PVC-BT-05
+PVC-BT-06
+PVC-BT-06A
+PVC-BT-06B
+PVC-BT-07
+PVC-BT-08
+PVC-BT-08A
+PVC-BT-08B
+N/A
+N/A
+N/A
+N/A
+PVC-BT-09
+PVC-BT-10
+N/A
+N/A
+N/A
+N/A
+N/A
+N/A
+N/A
+PVC-LS-10
+PVC-LS-11
+PVC-LS-12
+PVC-LS-13
+PVC-LS-14
+N/A
+N/A
+NEW
+
+TPM-BT-01
+TPM-BT-02
+TPM-BT-03
+TPM-BT-04
+TPM-BT-05
+TPM-BT-06
+TPM-BT-07
+TPM-BT-08
+TPM-BT-09
+TPM-BT-09A
+TPM-BT-09B
+TPM-BT-10
+TPM-BT-11
+TPM-BT-11A
+TPM-BT-11B
+TPM-BT-12
+TPM-BT-13
+TPM-BT-14
+TPM-BT-15
+TPM-BT-16
+TPM-BT-17
+TPM-BT-18
+TPM-BT-19
+TPM-BT-20
+TPM-BT-21
+TPM-BT-22
+TPM-BT-23
+TPM-BT-24
+TPM-BT-25
+TPM-BT-26
+TPM-BT-27
+TPM-BT-28
+TPM-BT-29
+TPM-BT-30
+TPM-BT-31
+TPM-BT-32
+
+TPM-BT-01 - BASE TIE-IN WITH HD SEAM PLATE FASTENED TO DECK
+TPM-BT-02 - BASE TIE-IN WITH HD SEAM PLATE TO WALL OR CURB
+TPM-BT-03 - BASE TIE-IN WITH QUICKSEAM RPF AND 2" METAL PLATES FASTENED TO DECK
+TPM-BT-04 - BASE TIE-IN WITH QUICKSEAM RPF AND 2" METAL PLATES FASTENED TO WALL/CURB
+TPM-BT-05 - BASE TIE-IN WITH HD PLATE - DECK OBSTRUCTION
+TPM-BT-06 - BASE TIE-IN WITH QUICKSEAM RPF AND 2" METAL PLATES - DECK OBSTRUCTION
+TPM-BT-07 - BASE TIE-IN AT CURB / PARAPET WITH EXISTING CANT
+TPM-BT-08 - BASE TIE-IN WITH THERMOPLASTIC COATED METAL (WITH BRAKE)
+TPM-BT-09 - BASE TIE-IN WITH THERMOPLASTIC COATED METAL (WITH BRAKE)
+TPM-BT-09A - BASE TIE-IN WITH THERMOPLASTIC COATED METAL (WITH BRAKE) - INSTALLATION STEPS 1 AND 2
+TPM-BT-09B - BASE TIE-IN WITH THERMOPLASTIC COATED METAL (WITH BRAKE) - INSTALLATION STEPS 3 AND 4
+TPM-BT-10 - BASE TIE-IN WITH THERMOPLASTIC COATED METAL
+TPM-BT-11 - BASE TIE-IN WITH THERMOPLASTIC COATED METAL SPLICE
+TPM-BT-11A - BASE TIE-IN WITH THERMOPLASTIC COATED METAL SPLICE - INSTALLATION STEPS 1 AND 2
+TPM-BT-11B - BASE TIE-IN WITH THERMOPLASTIC COATED METAL SPLICE - INSTALLATION STEPS 3 AND 4
+TPM-BT-12 - BASE TIE-IN AT WELDED WATERTIGHT CURB (FLANGES UNDER 2")
+TPM-BT-13 - BASE TIE-IN AT WELDED WATERTIGHT CURB (FLANGES UNDER 2"-3")
+TPM-BT-14 - QUICKSEAM RPF LAYOUT AT OUTSIDE CORNER
+TPM-BT-15 - QUICKSEAM RPF LAYOUT AT INSIDE CORNER
+TPM-BT-16 - THERMOPLASTIC MEMBRANE SECUREMENT AT OUTSIDE CORNER
+TPM-BT-17 - THERMOPLASTIC MEMBRANE SECUREMENT AT INSIDE CORNER
+TPM-BT-18- TIE-IN ULTRAPLY TPO SYSTEM TO EXISTING THERMOPLASTIC SYSTEM (MONOLITHIC SUBSTRATE)
+TPM-BT-19 - TIE-IN ULTRAPLY TPO SYSTEM TO EXISTING THERMOPLASTIC SYSTEM (NON-MONOLITHIC SUBSTRATE)
+TPM-BT-20 - TIE-IN ULTRAPLY TPO SYSTEM TO EXISTING EPDM SYSTEM (MONOLITHIC SUBSTRATE)
+TPM-BT-21 - TIE-IN ULTRAPLY TPO SYSTEM TO EXISTING EPDM SYSTEM (NON-MONOLITHIC SUBSTRATE)
+TPM-BT-22 - TIE-IN ULTRAPLY TPO SYSTEM TO EXISTING ASPHALT SYSTEM (MONOLITHIC SUBSTRATE)
+TPM-BT-23 - TIE-IN ULTRAPLY TPO SYSTEM TO EXISTING ASPHALT SYSTEM (NON-MONOLITHIC SUBSTRATE)
+TPM-BT-24 - TIE-IN WITH METAL ROOF DECK
+TPM-BT-25 - TIE-IN LAP SPLICE WELDED NEW TO EXISTING PVC - MECHANICALLY ATTACHED
+TPM-BT-26 - TIE-IN LAP SPLICE PVC CLAD METAL NEW TO EXISTING PVC - MECHANICALLY ATTACHED
+TPM-BT-27 - TIE-IN LAP SPLICE VERTICAL SEPARATION WITH COPING NEW TO EXISTING PVC
+TPM-BT-28 - TIE-IN LAP SPLICE TIE-IN NEW PVC TO EXISTING PVC - MONOLITHIC SUBSTRATE
+TPM-BT-29 - TIE-IN LAP SPLICE - VERTICAL SEPARATION WITH COPING - NEW PVC OR PVC KEE TO EXISTING SINGLE-PLY
+TPM-BT-30 - TIE-IN LAP SPLICE - VERTICAL SEPARATION WITH COPING - NEW TPO TO EXISTING SINGLE-PLY
+TPM-BT-31 - TRANSITION - ULTRAPLY TPO MEMBRANE - ADHERED TO MECHANICALLY ATTACHED
+TPM-BT-32 - TRANSITION - ELEVATE THERMOPLASTIC MEMBRANE - ADHERED TO MECHANICALLY ATTACHED
+
+PUT-BT-01
+PUT-BT-02
+ADD
+PUT-BT-07
+PUT-BT-08
+PUT-BT-09
+ADD
+ADD
+PUT-BT-10
+PUT-BT-11
+ADD
+ADD
+PUT-BT-16
+PUT-BT-17
+
+PKE-BT-01
+PKE-BT-02
+PKE-BT-03
+PKE-BT-04
+PKE-BT-05
+PKE-BT-06
+PKE-BT-06A
+PKE-BT-06B
+PKE-BT-07
+PKE-BT-08
+PKE-BT-08A
+PKE-BT-08B
+PKE-BT-09
+PKE-BT-10
+
+PTPM-BT-01
+PTPM-BT-02
+PTPM-BT-03
+PTPM-BT-07
+PTPM-BT-08
+PTPM-BT-09
+PTPM-BT-09A
+PTPM-BT-09B
+PTPM-BT-10
+PTPM-BT-11
+PTPM-BT-11A
+PTPM-BT-11B
+PTPM-BT-16
+PTPM-BT-17
+
+ADD
+
+PKE-LS-12
+
+PTPM-BT-18
+
+PTPM-BT-01 - BASE TIE-IN WITH SEAM PLATES FASTENED TO DECK
+PTPM-BT-02 - BASE TIE-IN WITH SEAM PLATES FASTENED TO WALL OR CURB
+PTPM-BT-03 - BASE TIE-IN WITH SEAM PLATE - DECK OBSTRUCTION
+PTPM-BT-07 - BASE TIE-IN CURB/PARAPET WITH EXISTING CANT
+PTPM-BT-08 - BASE TIE-IN WITH THERMOPLASTIC COATED METAL (WITH BREAK)
+PTPM-BT-09 - THERMOPLASTIC COATED METAL WITH SPLICE (WITH BREAK)
+PTPM-BT-09A - THERMOPLASTIC COATED METAL WITH SPLICE (WITH BREAK) - INSTALLATION STEPS 1 AND 2
+PTPM-BT-09B - THERMOPLASTIC COATED METAL WITH SPLICE (WITH BREAK) - INSTALLATION STEPS 3 AND 4
+PTPM-BT-10 - BASE TIE-IN WITH THERMOPLASTIC COATED METAL (WITH BREAK)
+PTPM-BT-11 - BASE TIE-IN WITH THERMOPLASTIC COATED METAL SPLICE
+PTPM-BT-11A - BASE TIE-IN WITH THERMOPLASTIC COATED METAL SPLICE - INSTALLATION STEPS 1 AND 2
+PTPM-BT-11B - BASE TIE-IN WITH THERMOPLASTIC COATED METAL SPLICE - INSTALLATION STEPS 3 AND 4
+PTPM-BT-16 - MEMBRANE SECUREMENT AT OUTSIDE CORNER
+PTPM-BT-17 - MEMBRANE SECUREMENT AT INSIDE CORNER
+PTPM-BT-18 - TIE-IN LAP SPLICE - VERTICAL SEPARATION WITH COPING - NEW THERMOPLASTIC MEMBRANE TO EXISTING
+THERMOPLASTIC MEMBRANE
+
+Platinum Base Tie-In Details
+
+Detail Table 2: Corner Details
+
+Corner Details
+TPO
+
+Detail Number
+PVC
+Thermoplastic
+
+Detail Name
+
+UT-C-01
+UT-C-01A
+UT-C-02
+UT-C-02A
+UT-C-02B
+UT-C-03
+UT-C-03A
+UT-C-03B
+UT-C-04
+UT-C-05
+UT-C-05A
+UT-C-05B
+UT-C-06
+UT-C-06A
+UT-C-07
+UT-C-07A
+UT-C-08
+UT-C-08A
+UT-C-08B
+UT-C-09
+UT-C-09A
+UT-C-10
+UT-C-11
+
+PVC-C-01
+PVC-C-01A
+N/A
+N/A
+N/A
+N/A
+N/A
+N/A
+PVC-C-02
+ADD
+N/A
+PVC-C-05B
+PVC-C-04
+PVC-C-04A
+PVC-C-05
+PVC-C-05A
+PVC-C-06
+PVC-C-06A
+PVC-C-06B
+PVC-C-07
+PVC-C-07A
+N/A
+N/A
+
+TPM-C-01 - OUTSIDE CORNER
+TPM-C-01A - OUTSIDE CORNER FIELD FABRICATED WITH THERMOPLASTIC UNSUPPORTED FLASHING
+TPM-C-02 - OUTSIDE CORNER AT WELDED WATERTIGHT CURB USING QUICKSEAM FLASHING (FLANGES UNDER 2")
+TPM-C-02A - OUTSIDE CORNER AT WELDED WATERTIGHT CURB USING QUICKSEAM FLASHING (FLANGES UNDER 2") - STEPS 1 & 2
+TPM-C-02B - OUTSIDE CORNER AT WELDED WATERTIGHT CURB USING QUICKSEAM FLASHING (FLANGES UNDER 2") - STEPS 3 & 4
+TPM-C-03 - OUTSIDE CORNER AT WELDED WATERTIGHT CURB (FLANGES 2" - 3")
+TPM-C-03A - OUTSIDE CORNER AT WELDED WATERTIGHT CURB (FLANGES 2" - 3") - INSTALLATION STEPS 1 AND 2
+TPM-C-03B - OUTSIDE CORNER AT WELDED WATERTIGHT CURB (FLANGES 2" - 3") - INSTALLATION STEPS 3 AND 4
+TPM-C-04 - INSIDE CORNER WITH SEPARATE WALL FLASHING
+TPM-C-05 - INSIDE CORNER WITH CONTINUOUS WALL FLASHING
+TPM-C-05A - INSIDE CORNER
+TPM-C-05B - INSIDE CORNER - FABRICATED WITH THERMOPLASTIC UNSUPPORTED FLASHING
+TPM-C-06 - OUTSIDE CORNER WITH THERMOPLASTIC COATED METAL (WITH BRAKE)
+TPM-C-06A - OUTSIDE CORNER WITH THERMOPLASTIC COATED METAL (WITH BRAKE) - INSTALLATION STEPS
+TPM-C-07 - OUTSIDE CORNER WITH THERMOPLASTIC COATED METAL
+TPM-C-07A - OUTSIDE CORNER WITH THERMOPLASTIC COATED METAL - INSTALLATION STEPS
+TPM-C-08 - INSIDE CORNER WITH THERMOPLASTIC COATED METAL (WITH BRAKE)
+TPM-C-08A - INSIDE CORNER WITH THERMOPLASTIC COATED METAL (WITH BRAKE) - INSTALLATION STEPS 1 AND 2
+TPM-C-08B - INSIDE CORNER WITH THERMOPLASTIC COATED METAL (WITH BRAKE) - INSTALLATION STEPS 3 AND 4
+TPM-C-09 - INSIDE CORNER WITH THERMOPLASTIC COATED METAL
+TPM-C-09A - INSIDE CORNER WITH THERMOPLASTIC COATED METAL - INSTALLATION STEPS
+TPM-C-10 - CURB FLASHING WITH ULTRAPLY TPO REINFORCED CURB CORNERS
+TPM-C-11 - CURB FLASHING WITH ULTRAPLY TPO CUSTOM CURB FLASHING
+
+5/27/2026
+
+TPM-C-01
+TPM-C-01A
+TPM-C-02
+TPM-C-02A
+TPM-C-02B
+TPM-C-03
+TPM-C-03A
+TPM-C-03B
+TPM-C-04
+TPM-C-05
+TPM-C-05A
+TPM-C-05B
+TPM-C-06
+TPM-C-06A
+TPM-C-07
+TPM-C-07A
+TPM-C-08
+TPM-C-08A
+TPM-C-08B
+TPM-C-09
+TPM-C-09A
+TPM-C-10
+TPM-C-11
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+26
+
+
+===== PAGE 27 =====
+Platinum Corner Details
+PUT-C-01
+PUT-C-05
+PUT-C-06
+PUT-C-07
+PUT-C-08
+PUT-C-09
+
+PKE-C-01
+PKE-C-02
+PKE-C-04
+PKE-C-05
+PKE-C-06
+PKE-C-07
+
+PTPM-C-01
+PTPM-C-05
+PTPM-C-06
+PTPM-C-07
+PTPM-C-08
+PTPM-C-09
+
+PTPM-C-01 - OUTSIDE CORNER
+PTPM-C-05 - INSIDE CORNER
+PTPM-C-06 - OUTSIDE CORNER WITH THERMOPLASTIC COATED METAL (WITH BREAK)
+PTPM-C-07 - OUTSIDE CORNER WITH THERMOPLASTIC COATED METAL
+PTPM-C-08 - BASE TIE-IN WITH THERMOPLASTIC COATED METAL (WITH BREAK)
+PTPM-C-09 - INSIDE CORNER WITH THERMOPLASTIC COATED METAL
+
+Detail Table 3: Drain and Scupper Details
+
+Drian & Scupper Details
+TPO
+
+Detail Number
+PVC
+Thermoplastic
+
+Detail Name
+
+UT-D-01
+UT-D-02
+UT-D-03
+UT-D-04
+UT-S-01
+UT-S-01A
+UT-S-01B
+UT-S-02
+UT-S-02A
+UT-S-02B
+UT-S-03
+UT-S-03A
+UT-S-03B
+UT-S-03C
+UT-S-04
+UT-S-04A
+UT-S-04B
+UT-S-04C
+UT-S-05
+UT-S-05A
+UT-S-05B
+UT-S-06
+UT-S-06A
+UT-S-06B
+
+PVC-D-01
+PVC-D-02
+PVC-D-03
+PVC-D-04
+N/A
+N/A
+N/A
+N/A
+N/A
+N/A
+N/A
+N/A
+N/A
+N/A
+N/A
+N/A
+N/A
+N/A
+PVC-S-01
+PVC-S-01A
+PVC-S-01B
+PVC-S-02
+PVC-S-02A
+PVC-S-02B
+
+TPM-D-01
+TPM-D-02
+TPM-D-03
+TPM-D-04
+TPM-S-01
+TPM-S-01A
+TPM-S-01B
+TPM-S-02
+TPM-S-02A
+TPM-S-02B
+TPM-S-03
+TPM-S-03A
+TPM-S-03B
+TPM-S-03C
+TPM-S-04
+TPM-S-04A
+TPM-S-04B
+TPM-S-04C
+TPM-S-05
+TPM-S-05A
+TPM-S-05B
+TPM-S-06
+TPM-S-06A
+TPM-S-06B
+
+TPM-D-01 - ROOF DRAIN
+TPM-D-02 - OVERFLOW ROOF DRAIN WITH WATER DAM
+TPM-D-03 - DRAIN INSERT
+TPM-D-04 - ROOF DRAIN WITH OVERFLOW ROOF DRAIN
+TPM-S-01 - THRU-WALL SCUPPER (WELDED SLEEVE)
+TPM-S-01A - THRU-WALL SCUPPER (WELDED SLEEVE) INSTALLATION STEPS 1 AND 2
+TPM-S-01B - THRU-WALL SCUPPER (WELDED SLEEVE) INSTALLATION STEPS 3 AND 4
+TPM-S-02 - OVERFLOW THRU-WALL SCUPPER (WELDED SLEEVE)
+TPM-S-02A - OVERFLOW THRU-WALL SCUPPER (WELDED SLEEVE) INSTALLATION STEPS 1 AND 2
+TPM-S-02B - OVERFLOW THRU-WALL SCUPPER (WELDED SLEEVE)
+TPM-S-03 - THRU-WALL SCUPPER (NON-WELDED SLEEVE)
+TPM-S-03A - THRU-WALL SCUPPER (NON-WELDED SLEEVE) INSTALLATION STEPS 1 AND 2
+TPM-S-03B - THRU-WALL SCUPPER (NON-WELDED SLEEVE) INSTALLATION STEPS 3 AND 4
+TPM-S-03C - THRU-WALL SCUPPER (NON-WELDED SLEEVE) INSTALLATION STEP 5
+TPM-S-04 - OVERFLOW THRU-WALL SCUPPER (NON-WELDED SLEEVE)
+TPM-S-04A - OVERFLOW THRU-WALL SCUPPER (NON-WELDED SLEEVE) INSTALLATION STEPS 1 AND 2
+TPM-S-04B - OVERFLOW THRU-WALL SCUPPER (NON-WELDED SLEEVE) INSTALLATION STEPS 3 AND 4
+TPM-S-04C - OVERFLOW THRU-WALL SCUPPER (NON-WELDED SLEEVE) INSTALLATION STEP 5
+TPM-S-05 - THRU-WALL THERMOPLASTIC COATED METAL SCUPPER
+TPM-S-05A - THRU-WALL THERMOPLASTIC COATED METAL SCUPPER INSTALLATION STEPS 1 AND 2
+TPM-S-05B - THRU-WALL THERMOPLASTIC COATED METAL SCUPPER INSTALLATION STEPS 3 AND 4
+TPM-S-06 - OVERFLOW THRU-WALL THERMOPLASTIC COATED METAL SCUPPER
+TPM-S-06A - OVERFLOW THRU-WALL THERMOPLASTIC COATED METAL SCUPPER INSTALLATION STEPS 1 AND 2
+TPM-S-06B - OVERFLOW THRU-WALL THERMOPLASTIC COATED METAL SCUPPER INSTALLATION STEPS 3 AND 4
+
+PUT-D-01
+PUT-D-02
+PUT-D-03
+PUT-D-04
+PUT-S-05
+N/A
+N/A
+PUT-S-06
+N/A
+N/A
+
+PKE-D-01
+PKE-D-02
+PKE-D-03
+PKE-D-04
+PKE-S-01
+PKE-S-01A
+PKE-S-01B
+PKE-S-02
+PKE-S-02A
+PKE-S-02B
+
+PTPM-D-01
+PTPM-D-02
+PTPM-D-03
+PTPM-D-04
+PTPM-S-05
+PTPM-S-05A
+PTPM-S-05B
+PTPM-S-06
+PTPM-S-06A
+PTPM-S-06B
+
+PTPM-D-01 - ROOF DRAIN
+PTPM-D-02 - OVERFLOW ROOF DRAIN WITH WATER DAM
+PTPM-D-03 - DRAIN INSERT
+PTPM-D-04 - ROOF DRAIN WITH OVERFLOW ROOF DRAIN
+PTPM-S-05 - THRU-WALL THERMOPLASTIC COATED METAL SCUPPER
+PTPM-S-05A - THRU-WALL THERMOPLASTIC COATED METAL SCUPPER - INSTALLATION STEPS 1 AND 2
+PTPM-S-05B - THRU-WALL THERMOPLASTIC COATED METAL SCUPPER - INSTALLATION STEPS 2 AND 3
+PTPM-S-06 - OVERFLOW THRU WALL THERMOPLASTIC COATED METAL SCUPPER
+PTPM-S-06A - OVERFLOW THRU WALL THERMOPLASTIC COATED METAL SCUPPER - INSTALLATION STEPS 1 AND 2
+PTPM-S-06B - OVERFLOW THRU WALL THERMOPLASTIC COATED METAL SCUPPER - INSTALLATION STEPS 3 AND 4
+
+Platinum Drain and Scupper Details
+
+Detail Table 4: Expansion Joint Details
+
+Expansion Joint Details
+TPO
+
+Detail Number
+PVC
+Thermoplastic
+
+Detail Name
+
+UT-E-01
+UT-E-02
+UT-E-03
+UT-E-04
+UT-E-05
+UT-E-06
+UT-E-07
+UT-E-08
+UT-E-09
+UT-E-10
+UT-E-11
+UT-E-12
+
+N/A
+PVC-E-01
+N/A
+PVC-E-02
+N/A
+PVC-E-03
+N/A
+PVC-E-04
+N/A
+PVC-E-05
+N/A
+N/A
+
+TPM-E-01
+TPM-E-02
+TPM-E-03
+TPM-E-04
+TPM-E-05
+TPM-E-06
+TPM-E-07
+TPM-E-08
+TPM-E-09
+TPM-E-10
+TPM-E-11
+TPM-E-12
+
+TPM-E-01 - EXPANSION JOINT (FIELD FABRICATED) WITH QUICKSEAM RPF - ROOF TO WALL
+TPM-E-02 - EXPANSION JOINT (FIELD FABRICATED) WITH WELDED SPLICE - ROOF TO WALL
+TPM-E-03 - EXPANSION JOINT (FIELD FABRICATED) WITH QUICKSEAM RPF AND WOOD NAILER - ROOF TO ROOF
+TPM-E-04 - EXPANSION JOINT (FIELD FABRICATED) WITH WELDED SPLICE AND WOOD NAILER - ROOF TO ROOF
+TPM-E-05 - EXPANSION JOINT (FIELD FABRICATED) WITH QUICKSEAM RPF – ROOF TO ROOF
+TPM-E-06 - EXPANSION JOINT (FIELD FABRICATED) WITH WELDED SPLICE - ROOF TO ROOF
+TPM-E-07 - EXPANSION JOINT (MANUFACTURED COVER) WITH QUICKSEAM RPF
+TPM-E-08 - EXPANSION JOINT (MANUFACTURED COVER) WITH WELDED SPLICE
+TPM-E-09 - EXPANSION JOINT (FIELD FABRICATED) WITH QUICKSEAM RPF - CURB TO CURB
+TPM-E-10 - EXPANSION JOINT (FIELD FABRICATED) WITH WELDED SPLICE - CURB TO CURB
+TPM-E-11 - EXPANSION JOINT WITH SLIP PLATE - ROOF TO WALL
+TPM-E-12 - EXPANSION JOINT WITH SLIP PLATE - ROOF TO ROOF
+
+PKE-E-01
+PKE-E-02
+PKE-E-03
+PKE-E-04
+PKE-E-05
+
+PKE-E-01
+PKE-E-02
+PKE-E-03
+PKE-E-04
+PKE-E-05
+
+PTPM-E-02
+PTPM-E-04
+PTPM-E-06
+PTPM-E-08
+PTPM-E-10
+
+PTPM-E-02 - EXPANSION JOINT (FIELD FABRICATED) WITH WELDED SPLICE ROOF TO WALL
+PTPM -E-04 - EXPANSION JOINT (FIELD FABRICATED) WITH WELDED SPLICE AND WOOD NAILER - ROOF TO ROOF
+PTPM -E-06 - EXPANSION JOINT (FIELD FABRICATED) WITH WELDED SPLICE - ROOF TO ROOF
+PTPM -E-08 - EXPANSION JOINT (MANUFACTURED COVER) WITH WIDE WELD SPLICE
+PTPM -E-10 - EXPANSION JOINT (FIELD FABRICATED) WIDE WELD SPLICE - CURB TO CURB
+
+Platinum Expansion Joint Details
+
+Detail Table 5: Lap Splice Details
+
+Lap Splice Details
+TPO
+
+Detail Number
+PVC
+Thermoplastic
+
+Detail Name
+
+UT-LS-01
+UT-LS-02
+UT-LS-03
+UT-LS-04
+UT-LS-05
+UT-LS-06
+UT-LS-07
+UT-LS-08
+UT-LS-09
+UT-LS-10
+
+PVC-LS-1
+PVC-LS-2
+N/A
+PVC-LS-3
+N/A
+PVC-LS-4
+N/A
+PVC-LS-5
+N/A
+PVC-LS-6
+
+TPM-LS-01 - LAP SPLICE WITH 1 1/2" AUTOMATIC WELDER
+TPM-LS-02 - LAP SPLICE WITH 2" HAND WELD
+TPM-LS-03 - LAP SPLICE WITH ELEVATE METAL BATTEN STRIP AND WIDE WELD
+TPM-LS-04 - LAP SPLICE FASTENER LAYOUT FOR STANDARD WELD SEAM
+TPM-LS-05 - LAP S SPLICE FASTENER LAYOUT FOR WIDE WELD SEAM
+TPM-LS-06 - LAP SPLICE WITH HEADLAP UNDER FIELD SEAM USING T-JOINT COVER
+TPM-LS-07 - LAP SPLICE WITH HEADLAP UNDER FIELD SEAM USING TPO QUICKSEAM T-JOINT
+TPM-LS-08 - LAP SPLICE WITH HEADLAP OVER FIELD SEAM USING T-JOINT COVER
+TPM-LS-09 - LAP SPLICE WITH HEADLAP OVER FIELD SEAM USING TPO QUICKSEAM T-JOINT
+TPM-LS-10 - LAP SPLICE WITH HEADLAP UNDER CURB OR WALL FLASHING USING T-JOINT COVER
+
+5/27/2026
+
+TPM-LS-01
+TPM-LS-02
+TPM-LS-03
+TPM-LS-04
+TPM-LS-05
+TPM-LS-06
+TPM-LS-07
+TPM-LS-08
+TPM-LS-09
+TPM-LS-10
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+27
+
+
+===== PAGE 28 =====
+UT-LS-11
+UT-LS-12
+UT-LS-13
+UT-LS-14
+UT-LS-15
+
+N/A
+PVC-LS-7
+N/A
+PVC-LS-8
+PVC-LS-9
+
+TPM-LS-11
+TPM-LS-12
+TPM-LS-13
+TPM-LS-14
+TPM-LS-15
+
+TPM-LS-11 - LAP SPLICE WITH HEADLAP UNDER CURB OR WALL FLASHING USING TPO QUICKSEAM FLASHING
+TPM-LS-12 - LAP SPLICE AT CURB OR WALL FLASHING USING T-JOINT COVER
+TPM-LS-13 - LAP SPLICE AT FIELD TO CURB/WALL FLASHING TRANSITION USING T-JOINT COVER
+TPM-LS-14 - CUT EDGE TREATMENT APPLICATION
+TPM-LS-15 - LAP SPLICE AT EXPANSION JOINT TUBE
+
+PUT-LS-09
+PUT-LS-02
+ADD
+PUT-LS-06
+PUT-LS-08
+ADD
+ADD
+ADD
+ADD
+PUT-LS-03
+
+PKE-LS-01
+PKE-LS-02
+PKE-LS-03
+PKE-LS-04
+PKE-LS-05
+PKE-LS-06
+PKE-LS-07
+PKE-LS-08
+PKE-LS-09
+ADD
+
+PTPM-LS-01
+PTPM-LS-02
+PTPM-LS-03
+PTPM-LS-04
+PTPM-LS-05
+PTPM-LS-06
+PTPM-LS-07
+PTPM-LS-08
+PTPM-LS-09
+PTPM-LS-10
+
+PTPM-LS-01 - LAP SPICE WITH 1-1/2" AUTOMATIC WELDER
+PTPM-LS-02 - LAP SPLICE WITH 2" HAND WELD
+PTPM-LS-03 - LAP SPLICE - LAYOUT
+PTPM-LS-04 - LAP SPLICE WITH HEADLAP UNDER FIELD SEAM - T-JOINT COVER
+PTPM-LS-05 - LAP SPLICE WITH HEADLAP OVER FIELD SEAM - T-JOINT COVER
+PTPM-LS-06 - LAP SPLICE UNDER CURB OR WALL FLASHING - T-JOINT COVER
+PTPM-LS-07 - FLASHING LAP SPLICE WITH WELDED T-JOINT COVER AND ANGLE CHANGE PATCH
+PTPM-LS-08 - CUT EDGE SEALANT APPLICATION
+PTPM-LS-09 - LAP SPLICE AT EXPANSION JOINT TUBE
+PTPM-LS-10 - LAP SPLICE WITH CONTINUOUS WIDE WELD
+
+Platinum Lap Splice Details
+
+Detail Table 6: Miscellaneous Details
+
+Miscellaneous Details
+TPO
+
+Detail Number
+PVC
+Thermoplastic
+
+UT-M-01
+UT-M-02
+UT-M-03
+UT-M-04
+UT-M-05
+UT-M-06
+UT-M-07
+UT-M-08
+UT-M-08A
+UT-M-08B
+
+UT-M-01
+UT-M-02
+UT-M-03
+UT-M-04
+UT-M-05
+UT-M-06
+UT-M-07
+N/A
+N/A
+N/A
+
+TPM-M-01
+TPM-M-02
+TPM-M-03
+TPM-M-04
+TPM-M-05
+TPM-M-06
+TPM-M-07
+TPM-M-08
+TPM-M-08A
+TPM-M-08B
+
+UT-M-08C
+
+N/A
+
+TPM-M-08C
+
+NEW
+N/A
+
+PVC-M-08
+NEW
+
+TPM-M-09
+TPM-M-10
+
+Detail Name
+TPM-M-01 - THERMOPLASTIC WALKWAY PAD
+TPM-M-02 - CONCRETE WALKWAY PAVER
+TPM-M-03 - EQUIPMENT OR PIPE SUPPORT
+TPM-M-04 - WOOD SLEEPER
+TPM-M-05 - GREASE CATCH PAN
+TPM-M-06 - LIGHTNING ROD
+TPM-M-07 - X-TRED WALKWAY PAD
+TPM-M-08 - ULTRAPLY TPO WALKWAY PAD INSTALLATION OVER ADHERED MEMBRANE SYSTEM - STEP 1 OF 4
+TPM-M-08A - ULTRAPLY TPO WALKWAY PAD INSTALLATION OVER ADHERED MEMBRANE SYSTEM - STEP 2 OF 4
+TPM-M-08B - ULTRAPLY TPO WALKWAY PAD INSTALLATION OVER ADHERED MEMBRANE SYSTEM - STEP 3 OF 4
+TPM-M-08C - ULTRAPLY TPO WALKWAY PAD INSTALLATION AT DIRECTION CHANGE OR MEMBRANE SEAM WITH QUICKSEAM TAPE
+- STEP 4 OF 4
+TPM-M-09 - FLASHING AT EQUIPMENT PAD WITH SELF ADHERED FLASHING
+TPM-M-10 - VINYL RIB INSTALLATION
+
+Detail Table 7: Penetration Details
+
+Penetration Details
+TPO
+
+Detail Number
+PVC
+Thermoplastic
+
+Detail Name
+
+UT-P-01
+UT-P-02
+UT-P-03
+UT-P-04
+UT-P-05
+UT-P-06
+UT-P-07
+UT-P-08
+UT-P-09
+UT-P-10
+UT-P-11
+UT-P-12
+UT-P-13
+UT-P-14
+UT-P-15
+UT-P-16
+UT-P-17
+UT-P-18
+UT-P-19
+UT-P-20
+UT-P-21
+N/A
+
+N/A
+PVC-P-01
+N/A
+PVC-P-02
+PVC-P-03
+PVC-P-04
+PVC-P-05
+N/A
+N/A
+N/A
+PVC-P-06
+N/A
+N/A
+N/A
+PVC-P-07
+PVC-P-08
+N/A
+N/A
+N/A
+N/A
+N/A
+PVC-P-09
+
+TPM-P-01
+TPM-P-02
+TPM-P-03
+TPM-P-04
+TPM-P-05
+TPM-P-06
+TPM-P-07
+TPM-P-08
+TPM-P-09
+TPM-P-10
+TPM-P-11
+TPM-P-12
+TPM-P-13
+TPM-P-14
+TPM-P-15
+TPM-P-16
+TPM-P-17
+TPM-P-18
+TPM-P-19
+TPM-P-20
+TPM-P-21
+TPM-P-21A
+
+TPM -P-01 - PENETRATION WITH ULTRAPLY TPO LARGE PIPE FLASHING
+TPM -P-02 - PENETRATION WITH THERMOPLASTIC UNIVERSAL PIPE FLASHING (SMALL)
+TPM -P-03 - PENETRATION WITH QUICKSEAM PIPE FLASHING
+TPM -P-04 - PENETRATION WITH THERMOPLASTIC FLASHING (UNSUPPORTED)
+TPM -P-05 - PENETRATION WITH THERMOPLASTIC MEMBRANE
+TPM -P-06 - PENETRATION (HOT STACK) WITH THERMOPLASTIC FLASHING (UNSUPPORTED)
+TPM -P-07 - PENETRATION (HOT STACK) WITH THERMOPLASTIC MEMBRANE
+TPM -P-08 - PENETRATION WITH TPO PENETRATION POCKET KIT
+TPM -P-09 - PENETRATION WITH QUICKSEAM 6 INCH PENETRATION POCKET
+TPM -P-10 - PENETRATION WITH FIELD FABRICATED ROUND PVC PENETRATION POCKET
+TPM -P-11 - PENETRATION WITH THERMOPLASTIC COATED METAL PENETRATION POCKET TO WOOD NAILER
+TPM -P-12 - PENETRATION WITH METAL PENETRATION POCKET TO NAILER
+TPM -P-13 - PENETRATION WITH METAL PENETRATION POCKET TO DECK
+TPM -P-14 - PENETRATION WITH METAL PENETRATION POCKET TO NAILER FOR RECOVER OR REROOF
+TPM -P-15 - MEMBRANE SECUREMENT AT PENETRATION WITH HD SEAM PLATES AND TARGET PATCH
+TPM -P-16 - MEMBRANE SECUREMENT AT PENETRATION WITH HD SEAM PLATES AND COVER STRIPS
+TPM -P-17 - PENETRATION WITH ULTRAPLY QUICKSEAM PIPE FLASHING
+TPM -P-18 - SQUARE PENETRATION WITH SQUARE ULTRAPLY TPO CUSTOM PIPE BOOT
+TPM -P-19 - ROUND PENETRATION WITH CONICAL ULTRAPLY TPO CUSTOM PIPE BOOT
+TPM -P-20 - ROUND PENETRATION WITH ROUND ULTRAPLY TPO CUSTOM PIPE BOOT
+TPM -P-21 - ROUND PENETRATION WITH ULTRAPLY TPO SPLIT PIPE BOOT
+TPM-P-21A - ROUND PENETRATION WITH PVC SPLIT PIPE BOOT
+
+PUT-P-01
+PUT-P-02
+PUT-P-04
+PUT-P-09
+PUT-P-11
+PUT-P-13
+PUT-P-14
+PUT-P-15
+N/A
+N/A
+ADD
+ADD
+
+N/A
+N/A
+N/A
+N/A
+PKE-P-06
+N/A
+N/A
+N/A
+PKE-P-01
+PKE-P-04
+PKE-P-07
+PKE-P-08
+
+PTPM-P-01
+PTPM-P-02
+PTPM-P-04
+PTPM-P-09
+PTPM-P-11
+PTPM-P-13
+PTPM-P-14
+PTPM-P-15
+PTPM-P-16
+PTPM-P-18
+PTPM-P-19
+PTPM-P-20
+
+PTPM-P-01 - PENETRATION WITH ULTRAPLY TPO LARGE PIPE FLASHING
+PTPM-P-02 - PENETRATION WITH ULTRAPLY TPO LARGE PIPE FLASHING
+PTPM-P-04 - PENETRATION WITH ULTRAPLY TPO FLASHING
+PTPM-P-09 - PENETRATION WITH TPO PENETRATION POCKET
+PTPM-P-11 - PENETRATION WITH THERMOPLASTIC COATED METAL PENETRATION POCKET TO NAILER
+PTPM-P-13 - PENETRATION WITH METAL PENETRATION POCKET ATTACHED TO DECK
+PTPM-P-14 - PENETRATION WITH METAL PENETRATION POCKET TO NAILER FOR RE-COVER OR RE-ROOF
+PTPM-P-15 - PENETRATION HOT STACK WITH ULTRAPLY TPO PLATINUM MEMBRANE
+PTPM-P-16 - PENETRATION WITH ELEVATE PVC UNIVERSAL PIPE FLASHING
+PTPM-P-18 - PENETRATION (HOT STACK WITH ELEVATE PVC UNSUPPORTED FLASHING
+PTPM-P-19 - MEMBRANE SECUREMENT AT PENETRATION WITH HD SEAM PLATES AND TARGET PATCH
+PTPM-P-20 - MEMBRANE SECUREMENT AT PENETRATION WITH HD SEAM PLATES AND WELDED COVER STRIP
+
+Platinum Penetration Details
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+28
+
+
+===== PAGE 29 =====
+Detail Table 8: Perimeter Enhancement Details
+
+Perimeter Enhancement Details
+TPO
+
+Detail Number
+PVC
+Thermoplastic
+
+UT-PE-01
+UT-PE-02
+UT-PE-03
+UT-PE-04
+UT-PE-05
+UT-PE-06
+
+PVC-PE-01
+N/A
+N/A
+N/A
+PVC-PE-02
+PVC-PE-03
+
+TPM-PE-01
+TPM-PE-02
+TPM-PE-03
+TPM-PE-04
+TPM-PE-05
+TPM-PE-06
+
+UT-PE-07
+
+N/A
+
+TPM-PE-07
+
+UT-PE-08
+
+N/A
+
+TPM-PE-08
+
+Detail Name
+TPM-PE-01 - BATTEN OR HD PLATE WITH 8" WELDED THERMOPLASTIC COVER STRIP AT PERIMETER ENHANCEMENT
+TPM-PE-02 - BATTEN OR HD PLATE WITH 9.5" ULTRAPLY TPO QUICKSEAM FLASHING AT PERIMETER ENHANCEMENT
+TPM-PE-03 - BATTEN WITH 5.5" ULTRAPLY TPO QUICKSEAM FLASHING AT PERIMETER ENHANCEMENT
+TPM-PE-04 - BATTEN OR HD PLATE WITH ULTRAPLY TPO QUICKSEAM R.M.A. AT PERIMETER ENHANCEMENT
+TPM-PE-05 - THERMOPLASTIC MEMBRANE ENHANCEMENT AT PERIMETER WITH INVISIWELD PLATES AND FASTENERS
+TPM-PE-06 - PERIMETER ENHANCEMENT - HD SEAM PLATE OR BATTEN STRIP WITH THERMOPLASTIC 8" COVER STRIP
+TPM-PE-07 - BATTEN STRIP OR HD PLATE AND FASTENER WITH ULTRAPLY TPO 9.5" QUICKSEAM FLASHING AT PERIMETER
+ENHANCEMENT
+TPM-PE-08 - ULTRAPLY TPO PEEL STOP EXAMPLE WITH STANDARD PLATES AND FASTENERS OR INVISIWELD PLATES
+
+Detail Table 9: Roof Edge Details
+
+Roof Edge Details
+TPO
+
+Detail Number
+PVC
+Thermoplastic
+
+Detail Name
+
+UT-RE-01
+UT-RE-02
+UT-RE-03
+UT-RE-04
+UT-RE-05
+UT-RE-06
+UT-RE-07
+UT-RE-08
+UT-RE-09
+UT-RE-10
+UT-RE-11
+UT-RE-12
+UT-RE-13
+UT-RE-14
+UT-RE-15
+UT-RE-16
+UT-RE-17
+UT-RE-18
+UT-RE-19
+UT-RE-20
+UT-RE-20A
+UT-RE-20B
+New
+UT-RE-21
+UT-RE-21A
+UT-RE-21B
+UT-RE-22
+UT-RE-23
+UT-RE-23A
+UT-RE-23B
+UT-RE-24
+UT-RE-25
+UT-RE-26
+UT-RE-27
+
+PVC-RE-01
+N/A
+N/A
+N/A
+PVC-RE-02
+N/A
+PVC-RE-03
+N/A
+PVC-RE-04
+PVC-RE-05
+N/A
+PVC-RE-06
+PVC-RE-07
+N/A
+N/A
+N/A
+PVC-RE-08
+PVC-RE-09
+N/A
+N/A
+N/A
+N/A
+New
+N/A
+N/A
+N/A
+PVC-RE-10
+PVC-RE-11
+PVC-RE-11A
+PVC-RE-11B
+N/A
+N/A
+N/A
+N/A
+
+TPM-RE-01
+TPM-RE-02
+TPM-RE-03
+TPM-RE-04
+TPM-RE-05
+TPM-RE-06
+TPM-RE-07
+TPM-RE-08
+TPM-RE-09
+TPM-RE-10
+TPM-RE-11
+TPM-RE-12
+TPM-RE-13
+TPM-RE-14
+TPM-RE-15
+TPM-RE-16
+TPM-RE-17
+TPM-RE-18
+TPM-RE-19
+TPM-RE-20
+TPM-RE-20A
+TPM-RE-20B
+TPM-RE-20C
+TPM-RE-21
+TPM-RE-21A
+TPM-RE-21B
+TPM-RE-22
+TPM-RE-23
+TPM-RE-23A
+TPM-RE-23B
+TPM-RE-24
+TPM-RE-25
+TPM-RE-26
+TPM-RE-27
+
+TPM-RE-01 - THERMOPLASTIC ROOF EDGE WITH ANCHORGARD SP FASCIA
+TPM-RE-02 - TPO ROOF EDGE WITH ANCHORGARD SP FASCIA AND QUICKSEAM RPF STRIP
+TPM-RE-03 - TPO ROOF EDGE WITH ANCHORGARD - BALLASTED
+TPM-RE-04 - TPO ROOF EDGE WITH ANCHORGARD SP EXTENDED FASCIA AND ELEVATE BALLAST PAVER
+TPM-RE-05 - THERMOPLASTIC ROOF EDGE WITH ANCHORGARD SP EXTENDED FASCIA
+TPM-RE-06 - TPO ROOF EDGE WITH ANCHORGARD SP EXTENDED FACE AND QUICKSEAM RPF STRIP
+TPM-RE-07 - THERMOPLASTIC ROOF EDGE WITH ELEVATE EDGEGARD+ FASCIA - CRIMP-ON
+TPM-RE-08 - TPO ROOF EDGE WITH ELEVATE EDGEGARD+ AND QUICKSEAM RPF STRIP
+TPM-RE-09 - THERMOPLASTIC ROOF EDGE WITH ELEVATE EDGEGARD+ AND SEPARATE FLASHING
+TPM-RE-10 - THERMOPLASTIC ROOF EDGE WITH ELEVATE EDGEGARD+ - SNAP-ON VERSION
+TPM-RE-11 - TPO ROOF EDGE WITH ELEVATE EDGEGARD AND QUICKSEAM RPF STRIP
+TPM-RE-12 - THERMOPLASTIC ROOF EDGE WITH ELEVATE EDGEGARD AND SEPARATE FLASHING
+TPM-RE-13 - THERMOPLASTIC ROOF EDGE - GUTTER WITH ELEVATE DRAIN BAR
+TPM-RE-14 - ROOF EDGE - GUTTER WITH SLOTTED DRAIN BAR (BY OTHERS)
+TPM-RE-15 - TPO ROOF EDGE AT GUTTER WITH FLANGE - 20 YEARS
+TPM-RE-16 - TPO ROOF EDGE AT GUTTER WITH FLANGE - 25 YEARS
+TPM-RE-17 - ROOF EDGE - GUTTER WITH THERMOPLASTIC COATED METAL
+TPM-RE-18 - THERMOPLASTIC ROOF EDGE WITH ELEVATE DRAIN BAR
+TPM-RE-19 - TPO ROOF EDGE WITH SLOTTED DRAIN BAR - (BY OTHERS)
+TPM-RE-20 - TPO ROOF EDGE WITH FASCIAL METAL (BY OTHERS)
+TPM-RE-20A - TPO ROOF EDGE WITH ELEVATE DRIP EDGE SYSTEM
+TPM-RE-20B - TPO ROOF EDGE WITH ELEVATE GRAVEL STOP SYSTEM
+TPM-RE-20C - THERMOPLASTIC ROOF EDGE WITH FASCIA METAL (BY OTHERS) WITH THERMOPLASTIC FLASHING STRIP
+TPM-RE-21 - TPO ROOF EDGE WITH FASCIA METAL BY OTHERS
+TPM-RE-21A - TPO ROOF EDGE WITH ELEVATE DRIP EDGE SYSTEM
+TPM-RE-21B - TPO ROOF EDGE WITH ELEVATE GRAVEL STOP SYSTEM
+TPM-RE-22 - ROOF EDGE WITH THERMOPLASTIC COATED METAL
+TPM-RE-23 - ROOF EDGE SPLICE WITH THERMOPLASTIC COATED METAL
+TPM-RE-23A - ROOF EDGE SPLICE WITH THERMOPLASTIC COATED METAL - INSTALLATION STEPS 1 AND 2
+TPM-RE-23B - ROOF EDGE SPLICE WITH THERMOPLASTIC COATED METAL - INSTALLATION STEPS 3 AND 4
+TPM-RE-24 - ROOF EDGE WITH TPO QUICKSEAM FLASHING - END SPLICE OVERLAP
+TPM-RE-25 - ROOF EDGE AT CORNER WITH TPO QUICKSEAM FLASHING
+TPM-RE-26 - ROOF EDGE WITH TPO QUICKSEAM FLASHING AT FIELD SEAM
+TPM-RE-27 - ROOF EDGE AT METAL SPLICE WITH TPO QUICKSEAM FLASHING COVER
+
+PUT-RE-01
+PUT-RE-05
+PUT-RE-09
+PUT-RE-12
+PUT-RE-13
+PUT-RE-16
+NEW
+PUT-RE-17
+
+PKE-RE-01
+PKE-RE-02
+PKE-RE-04
+PKE-RE-06
+PKE-RE-07
+PKE-RE-08
+NEW
+PKE-RE-09
+
+PTPM-RE-01
+PTPM-RE-05
+PTPM-RE-09
+PTPM-RE-12
+PTPM-RE-13
+PTPM-RE-16
+PTPM-RE-16A
+PTPM-RE-17
+
+PTPM-RE-01 - THERMOPLASTIC MEMBRANE ROOF EDGE WITH ELEVATE ANCHORGARD SP FASCIA
+PTPM-RE-05 - THERMOPLASTIC MEMBRANE ROOF EDGE WITH ELEVATE ANCHORGARD SP EXTENDED FASCIA
+PTPM-RE-09 - THERMOPLASTIC MEMBRANE ROOF EDGE WITH ELEVATE EDGEGARD+ FASCIA - CRIMP-ON SINGLE-PLY
+PTPM-RE-12 - THERMOPLASTIC MEMBRANE ROOF EDGE WITH ELEVATE EDGEGARD+ FASCIA - SNAP-ON SINGLE-PLY
+PTPM-RE-13 - THERMOPLASTIC MEMBRANE ROOF EDGE WITH ELEVATE DRAIN BAR
+PTPM-RE-16 - THERMOPLASTIC MEMBRANE ROOF EDGE GUTTER WITH THERMOPLASTIC COATED METAL
+PTPM-RE-16A - THERMOPLASTIC MEMBRANE ROOF EDGE WITH THERMOPLASTIC COATED METAL
+PTPM-RE-17 - THERMOPLASTIC MEMBRANE ROOF EDGE WITH ELEVATE DRAIN BAR
+
+Platinum Roof Edge Details
+
+Detail Table 10: Termination Details
+
+Termination Details
+TPO
+
+Detail Number
+PVC
+Thermoplastic
+
+Detail Name
+
+UT-T-01
+UT-T-02
+UT-T-03
+UT-T-04
+UT-T-05
+UT-T-06
+UT-T-07
+UT-T-08
+UT-T-09
+UT-T-10
+UT-T-11
+UT-T-12
+UT-T-12A
+UT-T-13
+UT-T-14
+UT-T-15
+UT-T-16
+UT-T-17
+UT-T-18
+UT-T-19
+
+PVC-T-01
+PVC-T-02
+PVC-T-03
+PVC-T-04
+PVC-T-05
+PVC-T-06
+PVC-T-07
+PVC-T-08
+PVC-T-09
+PVC-T-10
+PVC-T-11
+PVC-T-12
+PVC-T-12A
+PVC-T-13
+PVC-T-14
+PVC-T-15
+N/A
+N/A
+PVC-T-16
+PVC-T-17
+
+TPM-T-01 - TERMINATION WITH ELEVATE TERMINATION BAR
+TPM-T-02 - TERMINATION ON OUTSIDE OF PARAPET WALL WITH ELEVATE TERMINATION BAR
+TPM-T-03 - TERMINATION WITH REGLET COUNTER-FLASHING
+TPM-T-04 - TERMINATION WITH REGLET COUNTER-FLASHING AND ELEVATE TERMINATION BAR
+TPM-T-05 - TERMINATION WITH SURFACE MOUNTED COUNTERFLASHING
+TPM-T-06 - TERMINATION WITH SURFACE MOUNTED COUNTER-FLASHING AND TERMINATION BAR
+TPM-T-07 - TERMINATION AT EIFS OR WALL CLADDING
+TPM-T-08 - ELEVATE TERMINATION BAR AT ELEVATION CHANGE
+TPM-T-09 - ELEVATE TERMINATION BAR AT TILT UP PANEL JOINT
+TPM-T-10 - ELEVATE TERMINATION BAR AT TILT UP PANEL JOINT WITH REGLET COUNTER-FLASHING
+TPM-T-11 - TERMINATION AT TOP OF WALL WITH COPING STONE
+TPM-T-12 - TERMINATION AT TOP OF WALL WITH ELEVATE COPING
+TPM-T-12A - TERMINATION AT TOP OF WALL WITH UNA-EDGE COPING
+TPM-T-13 - TERMINATION AT TOP OF WALL WITH ELEVATE ANCHORGARD STANDARD
+TPM-T-14 - TERMINATION AT R.T.U. (UNIT FLANGE ABOVE ROOF MEMBRANE)
+TPM-T-15 - TERMINATION AT R.T.U. WITH COUNTER-FLASHING (UNIT FLANGE ABOVE MEMBRANE)
+TPM-T-16 - TERMINATION AT R.T.U. WITH QUICKSEAM RPF (UNIT FLANGE MOUNTED TO SUBSTRATE)
+TPM-T-17 - TERMINATION AT R.T.U. WITH QUICKSEAM RPF AND COUNTER-FLASHING (UNIT FLANGE MOUNTED TO SUBSTRATE)
+TPM-T-18 - TERMINATION AT R.T.U. WITH SEPARATE FLASHING (UNIT FLANGE MOUNTED TO SUBSTRATE)
+TPM-T-19 - TERMINATION AT R.T.U. WITH COUNTER-FLASHING AND SEPARATE FLASHING (UNIT FLANGE MOUNTED TO SUBSTRATE)
+
+5/27/2026
+
+TPM-T-01
+TPM-T-02
+TPM-T-03
+TPM-T-04
+TPM-T-05
+TPM-T-06
+TPM-T-07
+TPM-T-08
+TPM-T-09
+TPM-T-10
+TPM-T-11
+TPM-T-12
+TPM-T-12A
+TPM-T-13
+TPM-T-14
+TPM-T-15
+TPM-T-16
+TPM-T-17
+TPM-T-18
+TPM-T-19
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+29
+
+
+===== PAGE 30 =====
+UT-T-20
+UT-T-21
+N/A
+UT-T-22
+UT-T-23
+UT-T-24
+UT-T-25
+UT-T-25A
+
+PVC-T-18
+N/A
+PVC-T-19
+PVC-T-20
+PVC-T-21
+PVC-T-24
+PVC-T-22
+PVC-T-25A
+
+TPM-T-20
+TPM-T-21
+TPM-T-21A
+TPM-T-22
+TPM-T-23
+TPM-T-24
+TPM-T-25
+TPM-T-25A
+
+TPM-T-20 - TERMINATION AT SHINGLES
+TPM-T-21 - TPO MEMBRANE TERMINATION AT METAL ROOF PANEL
+TPM-T-21A - PVC MEMBRANE TERMINATION AT METAL ROOF PANEL
+TPM-T-22 - INTERMEDIATE WALL FLASHING ATTACHMENT (WITH COVER STRIP)
+TPM-T-23 - INTERMEDIATE WALL FLASHING ATTACHMENT (WITH WELDED SPLICE)
+TPM-T-24 - INTERMEDIATE WALL FLASHING ATTACHMENT (MEMBRANE NOT ADHERED TO WALL/CURB)
+TPM-T-25 - TERMINATION AT TOP OF WALL WITH ELEVATE COPING OVER SELF ADHERED MEMBRANE
+TPM-T-25A - TERMINATION AT TOP OF WALL WITH ELEVATE ONE COPING OVER SELF ADHERED MEMBRANE
+
+PUT-T-06
+PUT-T-11
+PUT-T-12
+PUT-T-13
+PUT-T-15
+PUT-T-18
+PUT-T-19
+PUT-T-23
+
+PKE-T-06
+PKT-T-11
+PKT-T-12
+PKT-T-13
+PKT-T-15
+PKT-T-16
+PKT-T-17
+PKT-T-21
+
+PTPM-T-06
+PTPM-T-11
+PTPM-T-12
+PTPM-T-13
+PTPM-T-15
+PTPM-T-18
+PTPM-T-19
+PTPM-T-23
+
+PTPM-T-06 - TERMINATION WITH SURFACE MOUNTED COUNTER-FLASHING AND TERMINATION BAR
+PTPM-T-11 - TERMINATION AT TOP OF WALL WITH COPING STONE
+PTPM-T-12 - TERMINATION AT TOP OF WALL WITH ELEVATE COPING
+PTPM-T-13 - ALTERNATE TERMINATION AT TOP OF WALL WITH ELEVATE ANCHORGARD PLATINUM FASCIA
+PTPM-T-15 - TERMINATION AT R.T.U. WITH COUNTER-FLASHING (UNIT FLANGE ABOVE MEMBRANE)
+PTPM-T-18 - TERMINATION AT R.T.U. WITH SEPARATE FLASHING (UNIT FLANGE MOUNTED TO SUBSTRATE)
+PTPM-T-19 - TERMINATION AT R.T.U. WITH WELDED SPLICE AND COUNTER-FLASHING (UNIT FLANGE MOUNTED TO SUBSTRATE)
+PTPM-T-23 - INTERMEDIATE WALL FLASHING ATTACHMENT WITH WELDED SPLICE
+
+Platinum Termination Details
+
+Detail Table 11: Thermoplastic XR Base Tie-In Details
+
+Thermoplastic XR Base Tie-In Details
+TPO
+
+Detail Number
+PVC
+Thermoplastic
+
+Detail Name
+
+UTXR-BT-01
+UTXR-BT-02
+UTXR-BT-03
+UTXR-BT-04
+UTXR-BT-05
+UTXR-BT-06
+UTXR-BT-07
+UTXR-BT-08
+UTXR-BT-09
+UTXR-BT-10
+UTXR-BT-12
+UTXR-BT-13
+
+PVCXR-BT-01
+PVCXR-BT-02
+PVCXR-BT-03
+PVCXR-BT-04
+PVCXR-BT-05
+PVCXR-BT-06
+PVCXR-BT-07
+PVCXR-BT-08
+PVCXR-BT-09
+PVCXR-BT-10
+PVCXR-BT-12
+PVCXR-BT-13
+
+TPMXR-BT-01
+TPMXR-BT-02
+TPMXR-BT-03
+TPMXR-BT-04
+TPMXR-BT-05
+TPMXR-BT-06
+TPMXR-BT-07
+TPMXR-BT-08
+TPMXR-BT-09
+TPMXR-BT-10
+TPMXR-BT-12
+TPMXR-BT-13
+
+TPMXR-BT-01 - BASE TIE-IN WITH STANDARD THERMOPLASTIC MEMBRANE FLASHING AND HD SEAM PLATES FASTENED TO DECK
+TPMXR-BT-02 - BASE TIE-IN WITH HD SEAM PLATES FASTENED TO WALL OR CURB
+TPMXR-BT-03 - BASE TIE-IN AT CURB / PARAPET WITH EXISTING CANT
+TPMXR-BT-04 - TIE-IN AT SHINGLES
+TPMXR-BT-05 - BASE TIE-IN WITH THERMOPLASTIC COATED METAL (WITH BRAKE)
+TPMXR-BT-06 - BASE TIE-IN WITH THERMOPLASTIC COATED METAL (WITH BRAKE) SPLICE
+TPMXR-BT-07 - BASE TIE-IN WITH THERMOPLASTIC COATED METAL (WITHOUT BRAKE)
+TPMXR-BT-08 - BASE TIE-IN WITH THERMOPLASTIC COATED METAL (WITHOUT BRAKE) SPLICE
+TPMXR-BT-09 - MEMBRANE SECUREMENT AT OUTSIDE CORNER
+TPMXR-BT-10 - MEMBRANE SECUREMENT AT INSIDE CORNER
+TPMXR-BT-12 - BASE TIE-IN WITH FOAM ADHESIVE AND SEPARATE THERMOPLASTIC FLASHING
+TPMXR-BT-13 - BASE TIE-IN WITH HD SEAM PLATE INTO DECK WITH DECK OBSTRUCTION
+
+ADD
+ADD
+ADD
+ADD
+ADD
+ADD
+ADD
+ADD
+ADD
+ADD
+
+PKEXR-BT-01
+PKEXR-BT-02
+PKEXR-BT-03
+PKEXR-BT-04
+PKEXR-BT-05
+PKEXR-BT-06
+PKEXR-BT-07
+PKEXR-BT-08
+PKEXR-BT-09
+PKEXR-BT-10
+
+PTPMXR-BT-01
+PTPMXR-BT-02
+PTPMXR-BT-03
+PTPMXR-BT-04
+PTPMXR-BT-05
+PTPMXR-BT-06
+PTPMXR-BT-07
+PTPMXR-BT-08
+PTPMXR-BT-09
+PTPMXR-BT-10
+
+PTPMXR-BT-01 - BASE TIE-IN WITH STANDARD THERMOPLASTIC FLASHING AND HD SEAM PLATES FASTENED TO THE DECK
+PTPMXR-BT-02 - BASE TIE-IN WITH HD SEAM PLATES FASTENED TO WALL OR CURB
+PTPMXR-BT-03 - BASE TIE-IN CURB OR PARAPET WITH EXISTING CANT
+PTPMXR-BT-04 - TIE-IN AT SHINGLES
+PTPMXR-BT-05 - BASE TIE-IN WITH THERMOPLASTIC COATED METAL (WITH BRAKE)
+PTPMXR-BT-06 - BASE TIE-IN WITH THERMOPLASTIC COATED METAL (WITH BRAKE) SPLICE
+PTPMXR-BT-07 - BASE TIE-IN WITH THERMOPLASTIC COATED METAL (WITHOUT BRAKE)
+PTPMXR-BT-08 - BASE TIE-IN WITH THERMOPLASTIC COATED METAL (WITHOUT BRAKE) SPLICE
+PTPMXR-BT-09 - MEMBRANE SECUREMENT AT OUTSIDE CORNER
+PTPMXR-BT-10 - MEMBRANE SECUREMENT AT INSIDE CORNER
+
+Platinum Thermoplastic XR Base Tie-In Details
+
+Detail Table 12: Thermoplastic XR Drain and Scupper Details
+
+ThermoplasƟc XR Drain and Scupper Details
+TPO
+
+Detail Number
+PVC
+Thermoplastic
+
+Detail Name
+
+UTXR-D-01
+UTXR-D-02
+
+PVCXR-D-01
+PVCXR-D-02
+
+TPMXR-D-01
+TPMXR-D-02
+
+TPMXR-D-01 - ROOF DRAIN (TARGET PATCH REQUIRED) - THERMOPLASTIC XR ADHERED SYSTEM
+TPMXR-D-02 - ROOF DRAIN (TARGET PATCH REQUIRED) - THERMOPLASTIC XR MECHANICALLY ATTACHED SYSTEM
+
+ADD
+
+PKEXR-D-01
+
+PTPMXR-D-01
+
+PTPMXR-D-01 - ROOF DRAIN (TARGET PATCH REQUIRED) THERMOPLASTIC XR MEMBRANE ADHERED SYSTEM
+
+Platinum Thermoplastic XR Drain and Scupper Details
+Detail Table 13: Thermoplastic XR Lap Splice Details
+
+Thermoplastic XR Lap Splice Details
+TPO
+
+Detail Number
+PVC
+Thermoplastic
+
+Detail Name
+
+UTXR-LS-01
+UTXR-LS-02
+UTXR-LS-03
+UTXR-LS-04
+UTXR-LS-05
+UTXR-LS-06
+
+PVCXR-LS-01
+PVCXR-LS-02
+PVCXR-LS-03
+PVCXR-LS-04
+ADD
+ADD
+
+TPMXR-LS-01
+TPMXR-LS-02
+TPMXR-LS-03
+TPMXR-LS-04
+TPMXR-LS-05
+TPMXR-LS-06
+
+TPMXR-LS-01 - THERMOPLASTIC XR MEMBRANE SPLICE WITH CONTINUOUS WELD (WITH SELVEDGE EDGE)
+TPMXR-LS-02 - THERMOPLASTIC XR MEMBRANE SPLICE WITH WELDED COVER STRIP (WITHOUT SELVEDGE EDGE)
+TPMXR-LS-03 - LAP SPLICE WITH MECHANICAL ATTACHMENT
+TPMXR-LS-04 - THERMOPLASTIC XR MEMBRANE END LAP SPLICE OVER FIELD SEAM
+TPMXR-LS-05 - LAP SPLICE WITH HEADLAP UNDER FIELD SEAM USING T-JOINT COVER
+TPMXR-LS-06 - LAP SPLICE WITH HEADLAP OVER FIELD SEAM USING T-JOINT COVER
+
+ADD
+ADD
+ADD
+
+PKEXR-LS-01
+PKEXR-LS-02
+PKEXR-LS-04
+
+PTPMXR-LS-01
+PTPMXR-LS-02
+PTPMXR-LS-04
+
+PTPMXR-LS-01 - THERMOPLASTIC XR MEMBRANE LAP SPLICE WITH CONTINUOUS WELD (WITH SELVEDGE EDGE)
+PTPMXR-LS-02 - THERMOPLASTIC XR MEMBRANE SPLICE WITH WELDED COVER STRIP (WITHOUT SELVEDGE EDGE)
+PTPMXR-LS-04 - THERMOPLASTIC XR MEMBRANE WITH END LAP SPLICE WITH WELDED COVER STRIP
+
+Platinum Thermoplastic XR Lap Splice Details
+
+Detail Table 14: Thermoplastic XR Perimeter Enhancement Details
+
+Thermoplastic XR Perimeter Enhancement Details
+TPO
+
+Detail Number
+PVC
+Thermoplastic
+
+NEW
+
+NEW
+
+TPMXR-PE-09
+
+NEW
+
+NEW
+
+TPMXR-PE-10
+
+5/27/2026
+
+Detail Name
+TPMXR-PE-09 – PERIMETER ENHANCEMENT USING FLEECE BACK MEMBRANE STRIP ATTACHED WITH BATTEN OR HD PLATES WITH WELDED
+THERMOPLASTIC COVER STRIP
+TPMXR-PE-10 - PERIMETER ENHANCEMENT WITH METAL BATTEN OR HD PLATES WITH XR FLEECE MEMBRANE PROTECTION STRIP
+(MECHANICALLY ATTACHED / HAIL COVERAGE)
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+30
+
+
+===== PAGE 31 =====
+Detail Table 15: Thermoplastic XR Roof Edge Details
+
+Thermoplastic XR Roof Edge Details
+TPO
+
+Detail Number
+PVC
+Thermoplastic
+
+UTXR-RE-01
+UTXR-RE-02
+UTXR-RE-03
+UTXR-RE-04
+UTXR-RE-05
+
+PVCXR-RE-01
+PVCXR-RE-02
+PVCXR-RE-03
+N/A
+PVCXR-RE-05
+
+TPMXR-RE-01
+TPMXR-RE-02
+TPMXR-RE-03
+TPMXR-RE-04
+TPMXR-RE-05
+
+UTXR-RE-05A
+
+PVCXR-RE-05A
+
+TPMXR-RE-05A
+
+UTXR-RE-05B
+
+PVCXR-RE-05B
+
+TPMXR-RE-05B
+
+ADD
+ADD
+ADD
+
+PKEXR-RE-01
+PKEXR-RE-02
+PKEXR-RE-03
+
+PTPMXR-RE-01
+PTPMXR-RE-02
+PTPMXR-RE-03
+
+Detail Name
+TPMXR-RE-01 - THERMOPLASTIC XR MEMBRANE ROOF EDGE WITH ANCHORGARD SP FASCIA
+TPMXR-RE-02 - THERMOPLASTIC XR MEMBRANE ROOF EDGE WITH ELEVATE EDGEGARD+ FASCIA AND SEPARATE FLASHING
+TPMXR-RE-03 - THERMOPLASTIC XR MEMBRANE ROOF EDGE GUTTER WITH ELEVATE DRAIN BAR
+TPMXR-RE-04 - ULTRAPLY TPO XR MEMBRANE ROOF EDGE WITH FASCIA METAL BY OTHERS
+TPMXR-RE-05 - ROOF EDGE WITH THERMOPLASTIC COATED METAL (WITH XR MEMBRANE SELVEDGE EDGE)
+TPMXR-RE-05A - ROOF EDGE WITH THERMOPLASTIC COATED METAL (WITH XR MEMBRANE SELVEDGE EDGE AT SPLICE INSTALLATION STEPS 1 & 2)
+TPMXR-RE-05B - ROOF EDGE WITH THERMOPLASTIC COATED METAL (WITH XR MEMBRANE SELVEDGE EDGE AT SPLICE INSTALLATION STEPS 3 & 4)
+
+Platinum Thermoplastic XR Roof Edge Details
+PTPMXR-LS-01 - THERMOPLASTIC XR ROOF EDGE WITH ANCHORGARD PLATINUM FASCIA
+PTPMXR-LS-02 - THERMOPLASTIC XR ROOF EDGE WITH ELEVATE EDGEGARD+ FASCIA ON SINGLE-PLY
+PTPMXR-LS-03 - THERMOPLASTIC XR ROOF EDGE GUTTER WITH ELEVATE DRAIN BAR
+
+Detail Table 16: Thermoplastic InvisiWeld Details
+
+Thermoplastic InvisiWeld Details
+TPO
+
+Detail Number
+PVC
+Thermoplastic
+
+UT-IW-1A
+UT-IW-2
+UT-IW-3
+
+PVC-IW-01
+PVC-IW-02
+PVC-IW-03
+
+TPM-IW-01
+TPM-IW-02
+TPM-IW-03
+
+UT-IW-4
+
+PVC-IW-04
+
+TPM-IW-04
+
+UT-IW-4A
+
+PVC-IW-04A
+
+TPM-IW-04A
+
+UT-IW-5
+UT-IW-6
+UT-IW-7
+UT-IW-8
+UT-IW-9
+UT-IW-10
+UT-IW-11
+UT-IW-12
+
+PVC-IW-05
+PVC-IW-06
+PVC-IW-07
+PVC-IW-08
+PVC-IW-09
+PVC-IW-10
+PVC-IW-11
+PVC-IW-12
+
+TPM-IW-05
+TPM-IW-06
+TPM-IW-07
+TPM-IW-08
+TPM-IW-09
+TPM-IW-10
+TPM-IW-11
+TPM-IW-12
+
+Detail Name
+TPM-IW-01 - THERMOPLASTIC COATED INVISIWELD PLATE
+TPM-IW-02 - THERMOPLASTIC MEMBRANE INVISIWELD ASSEMBLY
+TPM-IW-03 - THERMOPLASTIC MEMBRANE INVISIWELD METAL ROOF RETROFIT ASSEMBLY
+TPM-IW-04 - THERMOPLASTIC MEMBRANE INVISIWELD METAL ROOF RETROFIT PURLIN FASTENING EXAMPLE LAYOUT - 60' OR
+LESS
+TPM-IW-04A - THERMOPLASTIC MEMBRANE INVISIWELD METAL ROOF RETROFIT PURLIN FASTENING EXAMPLE LAYOUT - GREATER
+THAN 60'
+TPM-IW-05 - THERMOPLASTIC MEMBRANE INVISIWELD METAL RETROFIT RIDGE DETAIL
+TPM-IW-06 - THERMOPLASTIC MEMBRANE INVISIWELD METAL RETROFIT DETAIL
+TPM-IW-07 - THERMOPLASTIC MEMBRANE INVISIWELD INSULATION ATTACHMENT PATTERNS
+TPM-IW-08 - THERMOPLASTIC MEMBRANE REPAIR OVER INVISIWELD PLATE
+TPM-IW-09 - BASE TIE-IN USING THERMOPLASTIC COATED INVISIWELD PLATE - CONTINUOUS FLASHING
+TPM-IW-10 - BASE TIE-IN USING THERMOPLASTIC COATED INVISIWELD PLATE - SEPARATE FLASHING
+TPM-IW-11 - INVISIWELD ATTACHED WALL FLASHING SECUREMENT (MEMBRANE NOT ADHERED TO WALL OR CURB)
+TPM-IW-12 - THERMOPLASTIC MEMBRANE INVISIWELD PATTER LAYOUT - EXAMPLE BASED ON ROOF ZONES
+
+Detail Table 17: Thermoplastic Metal Building Retrofit Details
+
+Thermoplastic Metal Building Retrofit Details
+TPO
+
+Detail Number
+PVC
+Thermoplastic
+
+MBRT-LS-01
+MBRT-LS-02
+MBRT-LS-03
+UT-IW-13
+MBRT-RE-01
+MBRT-RE-02
+MBRT-RE-03
+MBRT-RE-04
+MBRT-RE-05
+MBRT-T-01
+MBRT-T-02
+MBRT-T-03
+MBRT-T-04
+
+ADD
+N/A
+ADD
+N/A
+ADD
+N/A
+ADD
+ADD
+ADD
+ADD
+N/A
+ADD
+ADD
+
+Detail Name
+
+TPM-MBR-LS-01
+TPM-MBR-LS-02
+TPM-MBR-LS-03
+TPM-MBR-LS-04
+TPM-MBR-RE-01
+TPM-MBR-RE-02
+TPM-MBR-RE-03
+TPM-MBR-RE-04
+TPM-MBR-RE-05
+TPM-MBR-T-01
+TPM-MBR-T-02
+TPM-MBR-T-03
+TPM-MBR-T-04
+
+TPM-MBR-LS-01 - IN-SEAM ATTACHMENT WITH PLATE INTO PURLIN
+TPM-MBR-LS-02 - QUICKSEAM R.M.A. STRIP ATTACHMENT INTO PURLIN
+TPM-MBR-LS-03 - MEMBRANE SECUREMENT USING INVISIWELD PLATE INTO PURLIN
+TPM-MBR-LS-04 - THERMOPLASTIC MEMBRANE METAL ROOF RETROFIT ASSEMBLY - R.M.A. ATTACHMENT
+TPM-MBR-RE-01 - ROOF EDGE AT EAVE OR RAKE USING THERMOPLASTIC COATED METAL
+TPM-MBR-RE-02 - ROOF EDGE AT EAVE OR RAKE USING METAL FASCIA AND QUICKSEAM FLASHING
+TPM-MBR-RE-03 - GUTTER DETAIL USING THERMOPLASTIC COATED METAL FASCIA
+TPM-MBR-RE-04 - GUTTER DETAIL USING METAL TERMINATION BAR
+TPM-MBR-RE-05 - ROOF EDGE AT EAVE OR RAKE USING ANCHORGARD NAILER-T
+TPM-MBR-T-01 - ROOF RIDGE IN-SEAM PLATE SECUREMENT
+TPM-MBR-T-02 - ROOF RIDGE SECUREMENT - R.M.A. STRIP
+TPM-MBR-T-03 - ROOF RIDGE - INVISIWELD SECUREMENT
+TPM-MBR-T-04 - ROOF RIDGE - EXISTING VENT CONDITION
+
+Detail Table 18: Thermoplastic Membrane Layout Details
+
+Thermoplastic Membrane Layout Details
+TPO
+
+Detail Number
+PVC
+Thermoplastic
+
+Detail Name
+
+UT-120-1-06
+UT-120-1-12
+UT-120-2-06
+UT-120-2-12
+UT-120-4-06
+UT-120-4-12
+UT-148-2-06
+UT-148-2-12
+UT-148-4-06
+UT-148-4-12
+UT-96-1-06
+UT-96-1-12
+UT-96-2-06
+UT-96-2-12
+
+ADD
+ADD
+ADD
+PVC-120-2-12
+ADD
+PVC-120-4-12
+N/A
+N/A
+N/A
+N/A
+ADD
+ADD
+ADD
+ADD
+
+LAYOUT TPM-120-1-06 ULTRAPLY TPO ATTACHMENT LAYOUT - PICTURE FRAME METHOD
+LAYOUT TPM-120-1-12 ULTRAPLY TPO ATTACHMENT LAYOUT - PICTURE FRAME METHOD
+LAYOUT TPM-120-2-06 ULTRAPLY TPO ATTACHMENT LAYOUT - PICTURE FRAME METHOD
+LAYOUT TPM-120-2-12-ULTRAPLY TPO ATTACHMENT LAYOUT - PICTURE FRAME METHOD
+LAYOUT TPM-120-4-06-ULTRAPLY TPO ATTACHMENT LAYOUT - PICTURE FRAME METHOD
+LAYOUT TPM-120-4-12-ULTRAPLY TPO ATTACHMENT LAYOUT - PICTURE FRAME METHOD
+LAYOUT TPM-148-2-06-ULTRAPLY TPO ATTACHMENT LAYOUT - PICTURE FRAME METHOD
+LAYOUT TPM-148-2-12-ULTRAPLY TPO ATTACHMENT LAYOUT - PICTURE FRAME METHOD
+LAYOUT TPM-148-4-06-ULTRAPLY TPO ATTACHMENT LAYOUT - PICTURE FRAME METHOD
+LAYOUT TPM-148-4-12-ULTRAPLY TPO ATTACHMENT LAYOUT - PICTURE FRAME METHOD
+LAYOUT TPM-96-1-06-ULTRAPLY TPO ATTACHMENT LAYOUT - PICTURE FRAME METHOD
+LAYOUT TPM-96-1-12-ULTRAPLY TPO ATTACHMENT LAYOUT - PICTURE FRAME METHOD
+LAYOUT TPM-96-2-06-ULTRAPLY TPO ATTACHMENT LAYOUT - PICTURE FRAME METHOD
+LAYOUT TPM-96-2-12-ULTRAPLY TPO ATTACHMENT LAYOUT - PICTURE FRAME METHOD
+
+5/27/2026
+
+TPM-120-1-06
+TPM-120-1-12
+TPM-120-2-06
+TPM-120-2-12
+TPM-120-4-06
+TPM-120-4-12
+TPM-148-2-6
+TPM-148-2-12
+TPM-148-4-06
+TPM-148-4-12
+TPM-96-1-06
+TPM-96-1-12
+TPM-96-2-06
+TPM-96-2-12
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+31
+
+
+===== PAGE 32 =====
+Detail Table 19: Fleece Backed Thermoplastic Membrane and Modified Bitumen Hybrid Details
+
+Fleece Backed Thermoplastic Membrane and Modified Bitumen Hybrid Details
+TPO
+
+Detail Number
+PVC
+Thermoplastic
+
+NEW
+NEW
+NEW
+NEW
+NEW
+NEW
+
+NEW
+NEW
+NEW
+NEW
+NEW
+NEW
+
+XBH-BT-01
+XBH-BT-02
+XBH-D-01
+XBH-D-01A
+XBH-D-02
+XBH-D-03
+
+NEW
+
+NEW
+
+XBH-E-02
+
+NEW
+
+NEW
+
+XBH-E-04
+
+NEW
+
+NEW
+
+XBH-E-06
+
+NEW
+
+NEW
+
+XBH-E-08
+
+NEW
+
+NEW
+
+XBH-E-10
+
+NEW
+
+NEW
+
+XBH-RE-01
+
+NEW
+
+NEW
+
+XBH-RE-02
+
+NEW
+NEW
+
+NEW
+N/A
+
+XBH-RE-03
+XBH-RE-04
+
+NEW
+
+NEW
+
+XBH-T-14
+
+NEW
+
+NEW
+
+XBH-T-15
+
+NEW
+
+NEW
+
+XBH-T-18
+
+NEW
+
+NEW
+
+XBH-T-19
+
+Detail Name
+XBH-BT-01 - BASE TIE-IN (DECK ATTACHMENT) - FLEECE BACKED THERMOPLASTIC AND MODIFIED BITUMEN HYBRID SYSTEM
+XBH-BT-02 - BASE TIE-IN (WALL ATTACHMENT) - FLEECE BACKED THERMOPLASTIC AND MODIFIED BITUMEN HYBRID SYSTEM
+XBH-D-01 - ROOF DRAIN (TARGET PATCH REQUIRED) - FLEECE BACKED THERMOPLASTIC AND MODIFIED BITUMEN HYBRID SYSTEM
+XBR-D-01A - ROOF DRAIN (TARGET PATCH REQUIRED) THERMOPLASTIC XR AND CUT BACK MOD-BIT HYBRID ADHERED SYSTEM
+XBH-D-02 - ROOF DRAIN (MEMBRANE INTO DRAIN) - FLEECE BACKED THERMOPLASTIC AND MODIFIED BITUMEN HYBRID SYSTEM
+XPH-D-03 - ROOF DRAIN INSERT (MEMBRANE INTO DRAIN) - FLEECE BACKED THERMOPLASTIC AND MODIFIED BITUMEN HYBRID SYSTEM
+XBH-E-02 - EXPANSION JOINT (FIELD FABRICATED) WITH WELDED SEAM - ROOF TO WALL - FLEECE BACKED THERMOPLASTIC AND MODIFIED
+BITUMEN HYBRID SYSTEM
+XBH-E-04 - EXPANSION JOINT (FIELD FABRICATED) WITH WELDED SPICE AND WOOD NAILER - ROOF TO WALL - FLEECE BACKED
+THERMOPLASTIC AND MODIFIED BITUMEN HYBRID SYSTEM
+XBH-E-06 - EXPANSION JOINT (FIELD FABRICATED) WITH WELDED SPLICE - ROOF TO ROOF - FLEECE BACKED THERMOPLASTIC AND MODIFIED
+BITUMEN HYBRID SYSTEM
+XBH-E-08 - EXPANSION JOINT (MANUFACTURED COVER) WITH WELDED SPLICE - FLEECE BACKED THERMOPLASTIC AND MODIFIED BITUMEN
+HYBRID SYSTEM
+XPH-E-10 - EXPANSION JOINT (FIELD FABRICATED) WITH WELDED SPLICE - CURB TO CURB - FLEECE BACKED THERMOPLASTIC AND MODIFIED
+BITUMEN HYBRID SYSTEM
+XBH-RE-01 - ROOF EDGE WITH ANCHORGARD SP FASCIA - FLEECE BACKED THERMOPLASTIC AND MODIFIED BITUMEN HYBRID SYSTEM
+XBH-RE-02 - MEMBRANE ROOF EDGE WITH ELEVATE EDGEGARD + FASCIA AND SEPARATE FLASHING FLEECE BACKED THERMOPLASTIC AND
+MODIFIED BITUMEN HYBRID SYSTEM
+XBH-RE-03 - ROOF EDGE WITH ELEVATE DRAIN BAR - FLEECE BACKED THERMOPLASTIC AND MODIFIED BITUMEN HYBRID SYSTEM
+XBH-RE-04 - ROOF EDGE WITH FASCIAL METAL BY OTHERS - FLEECE BACKED THERMOPLASTIC AND MODIFIED BITUMEN HYBRID SYSTEM
+XBH-T-14 - TERMINATION AT R.T.U. (UNIT FLANGE ABOVE ROOF MEMBRANE) - FLEECE BACKED THERMOPLASTIC AND MODIFIED BITUMEN
+HYBRID SYSTEM
+XBH-T-15 - TERMINATION AT R.T.U. WITH COUNTER-FLASHING (UNIT FLANGE ABOVE MEMBRANE) - FLEECE BACKED THERMOPLASTIC AND
+MODIFIED BITUMEN HYBRID SYSTEM
+XBH-T-18 - TERMINATION AT R.T.U. WITH SEPARATE FLASHING (UNIT FLANGE MOUNTED TO SUBSTRATE) - FLEECE BACKED THERMOPLASTIC
+AND MODIFIED BITUMEN HYBRID SYSTEM
+XBH-T-19 - TERMINATION AT R.T.U. WITH COUNTER-FLASHING AND SEPARATE FLASHING (UNIT FLANGE MOUNTED TO SUBSTRATE) - FLEECE
+BACKED THERMOPLASTIC AND MODIFIED BITUMEN HYBRID SYSTEM
+
+This guide is meant to highlight Elevate products and specifications provided by Amrize Building Envelope LLC and is subject to change without
+notice. Amrize takes responsibility for furnishing quality materials which meet published Elevate product specifications or other technical
+documents, subject to normal roof manufacturing tolerances. Neither Amrize nor its representatives practice architecture. Amrize Building
+Envelope LLC offers no opinion on and expressly disclaims any responsibility for the soundness of any structure. Amrize accepts no liability for
+structural failure or resultant damages. Consult a competent structural engineer prior to installation if the structural soundness or structural
+ability to properly support a planned installation is in question. No Amrize representative is authorized to vary this disclaimer.
+
+5/27/2026
+
+Elevate UltraPly TPO Roofing Systems Application Guide
+
+32
