@@ -488,6 +488,11 @@
     return group === "duro-last-maintenance";
   }
 
+  function isUltraThane230HfoRoofing(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "ultra-thane-230-hfo-roofing";
+  }
+
   function bankKeyForSelection(selection) {
     if (isRwcStudyGuide(selection)) return "rwc";
     if (isRrcStudyGuide(selection)) return "rrc";
@@ -513,6 +518,7 @@
     if (isPolyglassTechnicalGuide(selection)) return "polyglass_technical_guide";
     if (isElevateUltraplyTpo(selection)) return "elevate_ultraply_tpo";
     if (isDuroLastMaintenance(selection)) return "duro_last_maintenance";
+    if (isUltraThane230HfoRoofing(selection)) return "ultra_thane_230_hfo_roofing";
     return "";
   }
 
