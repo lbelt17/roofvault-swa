@@ -149,6 +149,21 @@
       bookGroupId: "ultra-guard-5700-mastic",
       displayTitle: "Ultra-Guard 5700 Silicone Mastic",
       parts: []
+    },
+    {
+      bookGroupId: "karnak-501-elasto-brite",
+      displayTitle: "Karnak 501 Elasto-Brite",
+      parts: []
+    },
+    {
+      bookGroupId: "karnak-670hs-karna-sil-ultra",
+      displayTitle: "Karnak 670HS Karna-Sil Ultra",
+      parts: []
+    },
+    {
+      bookGroupId: "karnak-97-fibered-aluminum",
+      displayTitle: "Karnak 97 Fibered Aluminum Roof Coating",
+      parts: []
     }
   ];
 
