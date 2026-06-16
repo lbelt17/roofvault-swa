@@ -503,6 +503,21 @@
     return group === "ultra-guard-5700-mastic";
   }
 
+  function isKarnak501ElastoBrite(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "karnak-501-elasto-brite";
+  }
+
+  function isKarnak670hsKarnaSilUltra(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "karnak-670hs-karna-sil-ultra";
+  }
+
+  function isKarnak97FiberedAluminum(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "karnak-97-fibered-aluminum";
+  }
+
   function bankKeyForSelection(selection) {
     if (isRwcStudyGuide(selection)) return "rwc";
     if (isRrcStudyGuide(selection)) return "rrc";
@@ -531,6 +546,9 @@
     if (isUltraThane230HfoRoofing(selection)) return "ultra_thane_230_hfo_roofing";
     if (isUltraGuard5700Hs(selection)) return "ultra_guard_5700_hs";
     if (isUltraGuard5700Mastic(selection)) return "ultra_guard_5700_mastic";
+    if (isKarnak501ElastoBrite(selection)) return "karnak_501_elasto_brite";
+    if (isKarnak670hsKarnaSilUltra(selection)) return "karnak_670hs_karna_sil_ultra";
+    if (isKarnak97FiberedAluminum(selection)) return "karnak_97_fibered_aluminum";
     return "";
   }
 
