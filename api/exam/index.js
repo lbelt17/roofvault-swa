@@ -1816,6 +1816,64 @@ if (bank === "karnak_97_fibered_aluminum") {
   }
 }
 
+if (bank === "pfas") {
+  const bankSource = "pfas-question-bank-2026.js";
+  try {
+    const bankObj = require("./pfas-question-bank-2026.js");
+    const questionsAll = Array.isArray(bankObj?.questions) ? bankObj.questions : [];
+
+    const take = Math.min(Math.max(count, 1), questionsAll.length);
+    const shuffled = questionsAll.slice();
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    const selected = shuffled.slice(0, take);
+
+    const items = selected.map((q, idx) => {
+      const answerLetter = String(q.answer || "").toUpperCase().trim();
+      const ci = answerLetter.charCodeAt(0) - 65;
+      const correctIndexes = (Number.isFinite(ci) && ci >= 0 && ci < (Array.isArray(q.options) ? q.options.length : 0))
+        ? [ci]
+        : [];
+
+      return {
+        id: String(q.id || idx + 1),
+        type: q.type || "mcq",
+        question: q.question || "",
+        options: Array.isArray(q.options) ? q.options : [],
+        answer: answerLetter,
+        multi: !!q.multi,
+        correctIndexes,
+        expectedSelections: q.expectedSelections || 1,
+        cite: q.cite || bankObj?.book || "Personal Fall Arrest Systems (PFAS)",
+        explanation: q.explanation || "",
+        exhibitImage: q.exhibitImage || "",
+        imageRef: q.imageRef || q.exhibitImage || "",
+      };
+    });
+
+    jsonRes(context, 200, {
+      ok: true,
+      deployTag: DEPLOY_TAG,
+      method: "GET",
+      bank: "pfas",
+      count: items.length,
+      items,
+    });
+    context.res.headers["x-roofvault-bank-source"] = bankSource;
+    context.res.headers["x-roofvault-bank-name"] = "pfas";
+    return;
+  } catch (e) {
+    return jsonRes(context, 500, {
+      ok: false,
+      deployTag: DEPLOY_TAG,
+      error: "Failed to load PFAS bank",
+      message: e?.message || String(e),
+    });
+  }
+}
+
       // Default GET (health)
       return jsonRes(context, 200, {
         ok: true,
@@ -1823,7 +1881,7 @@ if (bank === "karnak_97_fibered_aluminum") {
         method: "GET",
         hint: 'POST { "parts":["<part1>","<part2>"], "count":25 }',
         note:
-          "Exam endpoint is multi-part grounded; sources are not returned. Bank mode: GET /api/exam?bank=rwc|rrc|frsa|frsa_g13|frsa_ss48|frsa_ls911|frsa_mod1113|frsa_rr14|frsa_maint15|astm_d5898|astm_d4263|field_wisdom_joe_feb_2026|field_wisdom_cost_effectiveness_coatings_vs_single_ply|field_wisdom_joe_april_2026|carlisle_sure_seal_epdm_kleen|carlisle_sure_tough_epdm_reinforced|carlisle_sure_weld_tpo_reinforced|carlisle_sure_weld_tpo_field_install|carlisle_sure_flex_pvc_field_install|nrca_roof_coating_applicator_fundamentals|nrca_roofing_equipment_cost_fundamentals|jm_app_roofing_systems|polyglass_technical_guide|elevate_ultraply_tpo|duro_last_maintenance|ultra_thane_230_hfo_roofing|ultra_guard_5700_hs|ultra_guard_5700_mastic|karnak_501_elasto_brite|karnak_670hs_karna_sil_ultra|karnak_97_fibered_aluminum&count=25",
+          "Exam endpoint is multi-part grounded; sources are not returned. Bank mode: GET /api/exam?bank=rwc|rrc|frsa|frsa_g13|frsa_ss48|frsa_ls911|frsa_mod1113|frsa_rr14|frsa_maint15|astm_d5898|astm_d4263|field_wisdom_joe_feb_2026|field_wisdom_cost_effectiveness_coatings_vs_single_ply|field_wisdom_joe_april_2026|carlisle_sure_seal_epdm_kleen|carlisle_sure_tough_epdm_reinforced|carlisle_sure_weld_tpo_reinforced|carlisle_sure_weld_tpo_field_install|carlisle_sure_flex_pvc_field_install|nrca_roof_coating_applicator_fundamentals|nrca_roofing_equipment_cost_fundamentals|jm_app_roofing_systems|polyglass_technical_guide|elevate_ultraply_tpo|duro_last_maintenance|ultra_thane_230_hfo_roofing|ultra_guard_5700_hs|ultra_guard_5700_mastic|karnak_501_elasto_brite|karnak_670hs_karna_sil_ultra|karnak_97_fibered_aluminum|pfas&count=25",
       });
     }
 

@@ -74,6 +74,14 @@
       label: "ASTM D4263 (Bank)",
       selection: { bookGroupId: "astm-d4263", displayTitle: "ASTM D4263" },
     },
+    {
+      key: "__rv_bank_pfas__",
+      label: "Personal Fall Arrest Systems (PFAS) \u2014 OSHA 29 CFR 1926 Subpart M (2026) (Bank)",
+      selection: {
+        bookGroupId: "pfas-osha-subpart-m-2026",
+        displayTitle: "Personal Fall Arrest Systems (PFAS) \u2014 OSHA 29 CFR 1926 Subpart M (2026)",
+      },
+    },
   ];
 
   // ================== DOM HELPERS ==================
@@ -518,6 +526,11 @@
     return group === "karnak-97-fibered-aluminum";
   }
 
+  function isPfasOshaSubpartM2026(selection) {
+    const group = String(selection?.bookGroupId || "").toLowerCase();
+    return group === "pfas-osha-subpart-m-2026";
+  }
+
   function bankKeyForSelection(selection) {
     if (isRwcStudyGuide(selection)) return "rwc";
     if (isRrcStudyGuide(selection)) return "rrc";
@@ -549,6 +562,7 @@
     if (isKarnak501ElastoBrite(selection)) return "karnak_501_elasto_brite";
     if (isKarnak670hsKarnaSilUltra(selection)) return "karnak_670hs_karna_sil_ultra";
     if (isKarnak97FiberedAluminum(selection)) return "karnak_97_fibered_aluminum";
+    if (isPfasOshaSubpartM2026(selection)) return "pfas";
     return "";
   }
 

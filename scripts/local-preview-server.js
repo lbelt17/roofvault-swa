@@ -18,6 +18,7 @@ const BANK_MODULES = {
   polyglass_technical_guide: "../api/exam/polyglass-technical-guide-question-bank-2026.js",
   elevate_ultraply_tpo: "../api/exam/elevate-ultraply-tpo-question-bank-2026.js",
   duro_last_maintenance: "../api/exam/duro-last-maintenance-question-bank-2026.js",
+  pfas: "../api/exam/pfas-question-bank-2026.js",
 };
 
 function sendJson(res, status, obj) {
