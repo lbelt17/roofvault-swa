@@ -164,6 +164,11 @@
       bookGroupId: "karnak-97-fibered-aluminum",
       displayTitle: "Karnak 97 Fibered Aluminum Roof Coating",
       parts: []
+    },
+    {
+      bookGroupId: "pfas-osha-subpart-m-2026",
+      displayTitle: "Personal Fall Arrest Systems (PFAS) \u2014 OSHA 29 CFR 1926 Subpart M (2026) (Bank)",
+      parts: []
     }
   ];
 
