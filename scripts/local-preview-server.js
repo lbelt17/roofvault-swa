@@ -19,6 +19,7 @@ const BANK_MODULES = {
   elevate_ultraply_tpo: "../api/exam/elevate-ultraply-tpo-question-bank-2026.js",
   duro_last_maintenance: "../api/exam/duro-last-maintenance-question-bank-2026.js",
   pfas: "../api/exam/pfas-question-bank-2026.js",
+  rrc: "../api/exam/rrc-question-bank-2026.js",
 };
 
 function sendJson(res, status, obj) {
@@ -30,7 +31,9 @@ function loadBankItems(bankKey, count) {
   const rel = BANK_MODULES[bankKey];
   if (!rel) return null;
   const bankObj = require(path.join(__dirname, rel));
-  const questionsAll = Array.isArray(bankObj?.questions) ? bankObj.questions : [];
+  const questionsAll = Array.isArray(bankObj?.questions)
+    ? bankObj.questions
+    : (Array.isArray(bankObj?.items) ? bankObj.items : []);
   const take = Math.min(Math.max(count, 1), questionsAll.length);
   const shuffled = questionsAll.slice();
   for (let i = shuffled.length - 1; i > 0; i--) {
