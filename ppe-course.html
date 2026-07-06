@@ -1,0 +1,1304 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>RoofVault – PPE Course</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="A simple field course for new roofers covering basic personal protective equipment." />
+
+  <style>
+    :root {
+      --bg-page: #f5f7fb;
+      --card: #ffffff;
+      --border: rgba(15, 23, 42, 0.10);
+      --border-strong: rgba(15, 23, 42, 0.14);
+      --text: #0b0d12;
+      --muted: #5b6b82;
+      --accent-blue-soft: rgba(33, 179, 255, 0.12);
+      --accent-purple-soft: rgba(104, 64, 255, 0.10);
+      --shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+      --shadow-soft: 0 4px 14px rgba(15, 23, 42, 0.06);
+      --radius-xl: 22px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    .rv-home {
+      position: fixed;
+      top: 18px;
+      left: 18px;
+      z-index: 1000;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px 9px 11px;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid var(--border-strong);
+      border-radius: 999px;
+      text-decoration: none;
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .rv-home:hover {
+      background: #ffffff;
+      border-color: rgba(22, 121, 255, 0.28);
+      color: #1679ff;
+      box-shadow: 0 6px 18px rgba(22, 121, 255, 0.12);
+    }
+    .rv-home svg { opacity: 0.85; }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      color: var(--text);
+      margin: 0;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      background:
+        radial-gradient(1200px 800px at 25% 0%, var(--accent-blue-soft), transparent 60%),
+        radial-gradient(900px 700px at 70% 10%, var(--accent-purple-soft), transparent 62%),
+        var(--bg-page);
+      padding: 70px 16px 28px;
+    }
+
+    header { width: 100%; max-width: 1040px; margin: 0 auto; padding: 6px 2px 0; }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-left: 5.5rem;
+    }
+
+    .logo-pill {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 0, #46cdff 0, #008dff 45%, #0046b3 100%);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 14px;
+      color: #02111c;
+      box-shadow: 0 6px 16px rgba(22, 121, 255, 0.28);
+    }
+
+    .brand-title { font-size: 16px; font-weight: 650; letter-spacing: 0.2px; }
+    .brand-subtitle { font-size: 14px; color: var(--muted); }
+
+    .shell {
+      width: min(1040px, 100%);
+      margin: 14px auto 0;
+      padding: 26px 26px 22px;
+      border-radius: var(--radius-xl);
+      background: var(--card);
+      border: 1px solid var(--border-strong);
+      box-shadow: var(--shadow);
+    }
+
+    .course-intro {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+
+    .course-intro h1 {
+      margin: 0 0 8px;
+      font-size: 26px;
+      font-weight: 760;
+      letter-spacing: -0.02em;
+    }
+
+    .course-intro p {
+      margin: 0 auto;
+      max-width: 62ch;
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .course-video {
+      margin-bottom: 28px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .course-video h2 {
+      margin: 0 0 12px;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.1px;
+      text-align: center;
+    }
+
+    .video-player-wrap {
+      width: 100%;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #0b0d12;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .course-video-player {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      vertical-align: middle;
+      background: #000;
+    }
+
+    .video-fallback-text {
+      margin: 0;
+      padding: 16px;
+      font-size: 14px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .video-load-help {
+      margin: 8px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.45;
+    }
+
+    .course-video-note {
+      margin: 12px auto 0;
+      max-width: 62ch;
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.55;
+      text-align: center;
+    }
+
+    .training-flow-callout {
+      margin: 16px auto 0;
+      max-width: 62ch;
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(22, 121, 255, 0.14);
+      background: rgba(22, 121, 255, 0.06);
+    }
+
+    .training-flow-callout h3 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #1679ff;
+    }
+
+    .training-flow-callout ol {
+      margin: 0;
+      padding-left: 1.2rem;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text);
+    }
+
+    .training-flow-callout li { margin-bottom: 4px; }
+
+    .lessons-heading {
+      margin: 0 0 14px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.1px;
+    }
+
+    .lessons {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .lesson {
+      border-radius: var(--radius-lg);
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 18px 18px 16px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .lesson-head {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .lesson-num {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: #1679ff;
+      background: rgba(22, 121, 255, 0.1);
+      border: 1px solid rgba(22, 121, 255, 0.18);
+    }
+
+    .lesson-title {
+      margin: 2px 0 0;
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: 0.1px;
+    }
+
+    .lesson-purpose {
+      margin: 0 0 14px;
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .lesson-accordion {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .lesson-accordion > summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 18px 44px 16px 18px;
+      position: relative;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .lesson-accordion > summary::-webkit-details-marker { display: none; }
+
+    .lesson-accordion > summary::after {
+      content: "";
+      position: absolute;
+      top: 26px;
+      right: 18px;
+      width: 9px;
+      height: 9px;
+      border-right: 2px solid var(--muted);
+      border-bottom: 2px solid var(--muted);
+      transform: rotate(45deg);
+      transition: transform 0.15s ease;
+    }
+
+    .lesson-accordion[open] > summary::after {
+      transform: rotate(-135deg);
+      top: 30px;
+    }
+
+    .lesson-accordion > summary .lesson-head {
+      margin-bottom: 0;
+    }
+
+    .lesson-purpose-short {
+      margin: 6px 0 0;
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-weight: 400;
+    }
+
+    .lesson-accordion[open] > summary {
+      border-bottom: 1px solid var(--border);
+      background: rgba(22, 121, 255, 0.03);
+    }
+
+    .lesson-body {
+      padding: 16px 18px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .training-section {
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .training-section:last-child {
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .section-label {
+      margin: 0 0 8px;
+      font-size: 13px;
+      font-weight: 650;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--muted);
+    }
+
+    .training-text {
+      margin: 0 0 10px;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .knowledge-check {
+      padding: 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.02);
+    }
+
+    .knowledge-check-question {
+      margin: 0 0 10px;
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.5;
+    }
+
+    .knowledge-check-options {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .knowledge-check-options li {
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+
+    .knowledge-check-answer {
+      margin: 12px 0 0;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.5;
+      color: #0b5e2e;
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .learn-label {
+      margin: 0 0 6px;
+      font-size: 13px;
+      font-weight: 650;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--muted);
+    }
+
+    .learn-list {
+      margin: 0 0 14px;
+      padding-left: 1.2rem;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .learn-list li { margin-bottom: 4px; }
+
+    .field-takeaway {
+      margin: 0;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.5;
+      color: #0b3d7a;
+      background: rgba(22, 121, 255, 0.08);
+      border: 1px solid rgba(22, 121, 255, 0.14);
+    }
+
+    .field-takeaway span {
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      font-size: 11px;
+      display: block;
+      margin-bottom: 2px;
+      color: #1679ff;
+    }
+
+    .completion-section {
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .completion-section h2 {
+      margin: 0 0 10px;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.1px;
+    }
+
+    .completion-section p {
+      margin: 0 0 16px;
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.55;
+      max-width: 72ch;
+    }
+
+    .coming-soon-card {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 56px;
+      padding: 14px 18px;
+      border-radius: var(--radius-md);
+      border: 1px dashed rgba(15, 23, 42, 0.18);
+      background: rgba(15, 23, 42, 0.03);
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 720px) {
+      .nav { padding-left: 0; }
+      .shell { padding: 18px 16px 16px; }
+      .lesson-head { gap: 10px; }
+      .lesson-title { font-size: 17px; }
+      .lesson-accordion > summary { padding-right: 40px; }
+    }
+  </style>
+</head>
+
+<body>
+  <a class="rv-home" href="/" aria-label="Home">
+    <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
+      <path d="M10 2.8 2.6 9.2c-.3.3-.1.8.3.8H4v6.4c0 .3.3.6.6.6H8v-4.4c0-.4.3-.7.7-.7h2.6c.4 0 .7.3.7.7V17h3.4c.3 0 .6-.3.6-.6V10h1.1c.4 0 .6-.5.3-.8L10 2.8z" fill="currentColor"/>
+    </svg>
+    <span>Home</span>
+  </a>
+
+  <header>
+    <div class="nav">
+      <div class="logo-pill">RV</div>
+      <div>
+        <div class="brand-title">RoofVault Courses</div>
+        <div class="brand-subtitle">Field training for new roofers.</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div class="course-intro">
+      <h1>Personal Protection Equipment (PPE) Course</h1>
+      <p>A simple field course for new roofers covering the basic protective gear needed before stepping onto a roofing jobsite.</p>
+    </div>
+
+    <section class="course-video" aria-label="PPE training video">
+      <h2>PPE Training Video</h2>
+      <div class="video-player-wrap">
+        <video
+          class="course-video-player"
+          controls
+          preload="metadata"
+          playsinline
+          aria-label="PPE Safety Training video"
+        >
+          <source
+            src="https://theroofvaultstorage.blob.core.windows.net/roofdocs/PPE%20Safety%20Training%20Your%20Shield%20Against%20Workplace%20Hazards%20-%20Atlantic%20Training%20Online%20Safety%20Training%20(720p).mp4?sp=r&amp;st=2026-07-06T16:00:00Z&amp;se=2027-07-02T01:16:36Z&amp;spr=https&amp;sv=2026-02-06&amp;sr=b&amp;sig=1QvYrFlzPHYnf5VF8BYh8dZCTkMFvIMKSNQYRf%2BOTMo%3D"
+            type="video/mp4"
+          />
+          <p class="video-fallback-text">Your browser does not support the video tag.</p>
+        </video>
+      </div>
+      <p class="video-load-help" id="videoLoadHelp" hidden>Unable to load the training video. Please contact your administrator.</p>
+      <p class="course-video-note">Watch the full PPE training video first. Then review the lesson summaries below before taking the PPE exam.</p>
+      <aside class="training-flow-callout" aria-label="Recommended training flow">
+        <h3>Recommended Training Flow</h3>
+        <ol>
+          <li>Watch the complete PPE training video.</li>
+          <li>Review each lesson below.</li>
+          <li>Complete the PPE Exam.</li>
+          <li>Sign the training acknowledgment.</li>
+          <li>Receive your completion record.</li>
+        </ol>
+      </aside>
+    </section>
+
+    <h2 class="lessons-heading">Lesson Summaries</h2>
+    <div class="lessons">
+
+      <details class="lesson lesson-accordion" id="lesson-1">
+        <summary class="lesson-summary" aria-label="Lesson 1: Why PPE Matters on a Roofing Jobsite">
+          <div class="lesson-head">
+            <div class="lesson-num" aria-hidden="true">1</div>
+            <div>
+              <h2 class="lesson-title">Why PPE Matters on a Roofing Jobsite</h2>
+              <p class="lesson-purpose-short">PPE is the first layer of protection before tools, materials, or production speed.</p>
+            </div>
+          </div>
+        </summary>
+
+        <div class="lesson-body">
+          <section class="training-section" aria-labelledby="lesson-1-section-1">
+            <h3 class="section-label" id="lesson-1-section-1">Section 1 — What PPE Means</h3>
+            <p class="training-text">PPE means Personal Protective Equipment. It is the gear worn to help protect your body from jobsite hazards. On a roofing job, PPE may include a hard hat, safety glasses, gloves, proper boots, hearing protection, high-visibility clothing, fall protection, respiratory protection, and weather protection.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>PPE helps protect your head, eyes, hands, feet, lungs, hearing, and body.</li>
+              <li>PPE is selected based on the task and the hazards around you.</li>
+              <li>PPE does not remove the hazard; it helps reduce the chance of injury.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>PPE is not just gear. It is part of the safety plan.</p>
+          </section>
+
+          <section class="training-section" aria-labelledby="lesson-1-section-2">
+            <h3 class="section-label" id="lesson-1-section-2">Section 2 — Why Roofers Need PPE</h3>
+            <p class="training-text">Roofing work exposes workers to hazards that can change throughout the day. A roof may be dry in the morning and slippery later. A simple material-handling task can turn dangerous if tools, debris, heat, chemicals, or moving equipment are nearby.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Roofers may face falls, sharp edges, hot surfaces, chemicals, dust, noise, falling objects, and bad weather.</li>
+              <li>Different tasks require different PPE.</li>
+              <li>Wearing PPE correctly helps prevent small mistakes from becoming serious injuries.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>The roof environment changes fast. Your protection has to match the work.</p>
+          </section>
+
+          <section class="training-section" aria-labelledby="lesson-1-section-3">
+            <h3 class="section-label" id="lesson-1-section-3">Section 3 — PPE Must Be Worn Correctly</h3>
+            <p class="training-text">PPE only works when it fits, is worn correctly, and is used for the right task. Wearing PPE the wrong way can give a worker false confidence.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Safety glasses should protect the eyes, not sit on top of the head.</li>
+              <li>Gloves should match the hazard, such as cuts, heat, or chemicals.</li>
+              <li>Boots should have proper traction and be in good condition.</li>
+              <li>Respirators must be the right type and fit properly.</li>
+              <li>Damaged or worn-out PPE should be reported and replaced.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>PPE that is worn wrong may not protect you when you need it.</p>
+          </section>
+
+          <section class="training-section" aria-labelledby="lesson-1-section-4">
+            <h3 class="section-label" id="lesson-1-section-4">Section 4 — PPE Has Limits</h3>
+            <p class="training-text">PPE is important, but it is not magic. PPE should not be the only safety control. Workers still need safe work practices, hazard awareness, training, and supervision.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>PPE does not stop a fall from happening.</li>
+              <li>Gloves do not make sharp metal safe to handle carelessly.</li>
+              <li>Safety glasses do not replace safe cutting or grinding practices.</li>
+              <li>Respirators do not fix poor ventilation or unknown chemical hazards.</li>
+              <li>PPE works best when combined with good safety habits.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>PPE helps protect you, but you still have to work safely.</p>
+          </section>
+
+          <section class="training-section" aria-labelledby="lesson-1-section-5">
+            <h3 class="section-label" id="lesson-1-section-5">Section 5 — Before Starting Work</h3>
+            <p class="training-text">Before beginning a roofing task, stop and check the hazard, the task, and the required PPE. If you are unsure what PPE is needed, ask a supervisor before starting.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>What task am I doing?</li>
+              <li>What can hurt me?</li>
+              <li>What PPE is required?</li>
+              <li>Is my PPE clean, working, and undamaged?</li>
+              <li>Am I wearing it correctly?</li>
+              <li>Do I need to stop and ask before continuing?</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>Check your PPE before the job starts, not after something goes wrong.</p>
+          </section>
+
+          <section class="training-section" aria-labelledby="lesson-1-section-6">
+            <h3 class="section-label" id="lesson-1-section-6">Section 6 — Quick Knowledge Check</h3>
+            <div class="knowledge-check">
+              <p class="knowledge-check-question">Before starting a roofing task, what should a worker do first?</p>
+              <ul class="knowledge-check-options" aria-label="Answer options">
+                <li>A. Start working and adjust PPE later</li>
+                <li>B. Check the task, hazards, and required PPE</li>
+                <li>C. Only wear PPE if the job looks dangerous</li>
+                <li>D. Let another worker decide</li>
+              </ul>
+              <p class="knowledge-check-answer">Correct answer: B — Check the task, hazards, and required PPE.</p>
+            </div>
+          </section>
+        </div>
+      </details>
+
+      <details class="lesson lesson-accordion" id="lesson-2">
+        <summary class="lesson-summary" aria-label="Lesson 2: Hard Hats and Head Protection">
+          <div class="lesson-head">
+            <div class="lesson-num" aria-hidden="true">2</div>
+            <div>
+              <h2 class="lesson-title">Hard Hats and Head Protection</h2>
+              <p class="lesson-purpose-short">Head protection helps protect roofers from falling objects, flying debris, bumps, overhead hazards, and certain electrical hazards.</p>
+            </div>
+          </div>
+        </summary>
+
+        <div class="lesson-body">
+          <section class="training-section" aria-labelledby="lesson-2-section-1">
+            <h3 class="section-label" id="lesson-2-section-1">Section 1 — Why Head Protection Matters</h3>
+            <p class="training-text">On a roofing jobsite, head injuries can happen quickly. Tools, fasteners, materials, buckets, debris, and equipment can fall or move unexpectedly. Roofers may also work around ladders, hoists, cranes, scaffolds, roof edges, low beams, and overhead work.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>A hard hat helps protect the head from impact.</li>
+              <li>Head protection may be needed when objects can fall from above.</li>
+              <li>Head protection may be needed when flying debris is possible.</li>
+              <li>Head protection may be needed near overhead work or equipment.</li>
+              <li>Some jobs may require helmets rated for electrical hazards.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>If something can hit your head, fall toward you, or fly toward you, head protection matters.</p>
+          </section>
+
+          <section class="training-section" aria-labelledby="lesson-2-section-2">
+            <h3 class="section-label" id="lesson-2-section-2">Section 2 — When Roofers Should Wear Head Protection</h3>
+            <p class="training-text">Roofers should wear head protection whenever the jobsite has a possible head-injury hazard. The need depends on the work being done, the people working nearby, and the hazards around the roof.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Wear head protection when workers are above you.</li>
+              <li>Wear head protection when tools or materials are being lifted.</li>
+              <li>Wear head protection around cranes, forklifts, hoists, or loading areas.</li>
+              <li>Wear head protection near demolition, tear-off, or debris removal.</li>
+              <li>Wear head protection when the company, site, or supervisor requires it.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>Do not wait until something falls. Put head protection on before entering active work areas.</p>
+          </section>
+
+          <section class="training-section" aria-labelledby="lesson-2-section-3">
+            <h3 class="section-label" id="lesson-2-section-3">Section 3 — Hard Hat Fit and Proper Use</h3>
+            <p class="training-text">A hard hat must fit correctly and be worn the way it was designed. If it is loose, backwards without approval, tilted, cracked, or modified, it may not protect the worker properly.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Adjust the suspension so the hard hat fits securely.</li>
+              <li>Keep the hard hat level on the head.</li>
+              <li>Do not wear it loose or barely sitting on the head.</li>
+              <li>Do not drill holes, cut, paint, or modify it unless allowed by the manufacturer.</li>
+              <li>Do not wear it backwards unless the hard hat is designed or approved for that use.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>A hard hat only helps when it is worn correctly.</p>
+          </section>
+
+          <section class="training-section" aria-labelledby="lesson-2-section-4">
+            <h3 class="section-label" id="lesson-2-section-4">Section 4 — Inspecting a Hard Hat</h3>
+            <p class="training-text">Hard hats should be checked before use. Heat, sunlight, impact, chemicals, age, and rough handling can weaken the shell or suspension system.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Look for cracks, dents, holes, chalky surfaces, or brittleness.</li>
+              <li>Check the suspension straps for damage or wear.</li>
+              <li>Replace the hard hat after a strong impact, even if it looks okay.</li>
+              <li>Remove damaged hard hats from service.</li>
+              <li>Follow the manufacturer’s replacement guidance.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>If the hard hat is damaged, do not trust it.</p>
+          </section>
+
+          <section class="training-section" aria-labelledby="lesson-2-section-5">
+            <h3 class="section-label" id="lesson-2-section-5">Section 5 — Common Roofing Head Hazards</h3>
+            <p class="training-text">Roofing work creates many head hazards because people, tools, and materials often move at the same time. A worker may be safe one minute and exposed the next.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Falling tools, screws, plates, fasteners, rolls, buckets, and debris.</li>
+              <li>Flying debris from cutting, grinding, tear-off, or wind.</li>
+              <li>Low beams, roof hatches, ladders, equipment, and pipe supports.</li>
+              <li>Material loading zones and hoisting areas.</li>
+              <li>Electrical hazards near exposed conductors or energized equipment.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>Look up, look around, and think about what could move or fall.</p>
+          </section>
+
+          <section class="training-section" aria-labelledby="lesson-2-section-6">
+            <h3 class="section-label" id="lesson-2-section-6">Section 6 — What a Hard Hat Does Not Do</h3>
+            <p class="training-text">A hard hat is important, but it does not make unsafe work safe. Workers still need safe material handling, controlled loading zones, proper communication, and awareness of overhead hazards.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>A hard hat does not stop objects from falling.</li>
+              <li>A hard hat does not replace good housekeeping.</li>
+              <li>A hard hat does not protect the face or eyes by itself.</li>
+              <li>A hard hat does not protect against every electrical hazard.</li>
+              <li>A hard hat does not remove the need to stay out of drop zones.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>Head protection helps reduce injury, but the safer move is preventing the strike in the first place.</p>
+          </section>
+
+          <section class="training-section" aria-labelledby="lesson-2-section-7">
+            <h3 class="section-label" id="lesson-2-section-7">Section 7 — Quick Knowledge Check</h3>
+            <div class="knowledge-check">
+              <p class="knowledge-check-question">When should a roofer wear head protection?</p>
+              <ul class="knowledge-check-options" aria-label="Answer options">
+                <li>A. Only when the roof is steep</li>
+                <li>B. Only during hot work</li>
+                <li>C. When there is a possible danger from impact, falling or flying objects, overhead hazards, or required site rules</li>
+                <li>D. Only after materials are already being lifted</li>
+              </ul>
+              <p class="knowledge-check-answer">Correct answer: C — Wear head protection when there is a possible head-injury hazard or when the jobsite requires it.</p>
+            </div>
+          </section>
+        </div>
+      </details>
+
+      <details class="lesson lesson-accordion" id="lesson-3">
+        <summary class="lesson-summary" aria-label="Lesson 3: Eye and Face Protection">
+          <div class="lesson-head">
+            <div class="lesson-num" aria-hidden="true">3</div>
+            <div>
+              <h2 class="lesson-title">Eye and Face Protection</h2>
+              <p class="lesson-purpose-short">Eye and face protection helps protect roofers from dust, debris, chemicals, blades, fasteners, and flying particles.</p>
+            </div>
+          </div>
+        </summary>
+        <div class="lesson-body">
+          <section class="training-section" aria-labelledby="lesson-3-section-1">
+            <h3 class="section-label" id="lesson-3-section-1">Section 1 — Common Eye and Face Hazards</h3>
+            <p class="training-text">Roofing work can create hazards that hit the eyes or face without warning. Small particles, dust, liquid splash, sparks, and flying debris can cause serious injuries.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Dust and debris from tear-off, sweeping, cutting, and grinding.</li>
+              <li>Flying fasteners, metal pieces, granules, chips, and particles.</li>
+              <li>Chemical splash from coatings, cleaners, primers, adhesives, or solvents.</li>
+              <li>Bright light, sparks, or hot particles from certain tools or hot work.</li>
+              <li>Wind can blow dust or loose material into the face.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>If debris, dust, liquid, sparks, or particles can reach your face, protect your eyes and face first.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-3-section-2">
+            <h3 class="section-label" id="lesson-3-section-2">Section 2 — Choosing the Right Protection</h3>
+            <p class="training-text">Different tasks may require different protection. Safety glasses may be enough for some work, while goggles or a face shield may be needed for higher-risk tasks.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Safety glasses help protect against basic flying particles.</li>
+              <li>Goggles may be needed when dust or splash can come from different directions.</li>
+              <li>Face shields help protect the face, but they are usually worn with safety glasses or goggles.</li>
+              <li>Chemical work may require splash-rated eye protection.</li>
+              <li>Follow the jobsite, supervisor, or product safety instructions.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>Match the eye and face protection to the task, not just the job title.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-3-section-3">
+            <h3 class="section-label" id="lesson-3-section-3">Section 3 — Proper Use and Inspection</h3>
+            <p class="training-text">Eye and face protection only works when it is clean, fits correctly, and is worn during the task. Damaged or dirty lenses can reduce visibility and safety.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Wear eye protection over the eyes, not on top of the head.</li>
+              <li>Clean dirty lenses before the task starts.</li>
+              <li>Replace scratched, cracked, or broken lenses.</li>
+              <li>Make sure goggles or shields fit securely.</li>
+              <li>Do not remove eye protection while hazards are still present.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>Eye protection cannot help if it is dirty, damaged, or not being worn.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-3-section-4">
+            <h3 class="section-label" id="lesson-3-section-4">Quick Knowledge Check</h3>
+            <div class="knowledge-check">
+              <p class="knowledge-check-question">When should a roofer use eye or face protection?</p>
+              <ul class="knowledge-check-options" aria-label="Answer options">
+                <li>A. Only when someone is watching</li>
+                <li>B. Only after debris starts flying</li>
+                <li>C. When dust, flying particles, chemicals, sparks, or splash hazards are possible</li>
+                <li>D. Only when working on a steep roof</li>
+              </ul>
+              <p class="knowledge-check-answer">Correct answer: C — Use eye or face protection before the hazard reaches your eyes or face.</p>
+            </div>
+          </section>
+        </div>
+      </details>
+
+      <details class="lesson lesson-accordion" id="lesson-4">
+        <summary class="lesson-summary" aria-label="Lesson 4: Gloves and Hand Protection">
+          <div class="lesson-head">
+            <div class="lesson-num" aria-hidden="true">4</div>
+            <div>
+              <h2 class="lesson-title">Gloves and Hand Protection</h2>
+              <p class="lesson-purpose-short">Hand protection helps roofers reduce injuries from sharp edges, hot materials, chemicals, adhesives, tools, and rough surfaces.</p>
+            </div>
+          </div>
+        </summary>
+        <div class="lesson-body">
+          <section class="training-section" aria-labelledby="lesson-4-section-1">
+            <h3 class="section-label" id="lesson-4-section-1">Section 1 — Common Hand Hazards</h3>
+            <p class="training-text">Roofers use their hands constantly. Cuts, burns, punctures, chemical contact, and crushed fingers can happen during normal work if the wrong gloves are used or no gloves are worn.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Sharp metal, flashing, fasteners, knives, blades, and torn material.</li>
+              <li>Hot materials, hot surfaces, torches, or heated equipment.</li>
+              <li>Chemicals, adhesives, coatings, cleaners, primers, and solvents.</li>
+              <li>Rough surfaces, splinters, pinch points, and moving materials.</li>
+              <li>Wet or slippery materials that are hard to grip.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>Your hands are always exposed, so glove choice matters.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-4-section-2">
+            <h3 class="section-label" id="lesson-4-section-2">Section 2 — Choosing the Right Glove</h3>
+            <p class="training-text">No single glove is right for every roofing task. A glove that works for material handling may not protect against chemicals or heat.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Cut-resistant gloves may be needed for sharp metal or blades.</li>
+              <li>Chemical-resistant gloves may be needed for coatings, adhesives, primers, or solvents.</li>
+              <li>Heat-resistant gloves may be needed around hot materials or hot work.</li>
+              <li>Grip gloves may help with material handling.</li>
+              <li>The product label, SDS, supervisor, or company rules may identify required gloves.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>Match the glove to the hazard.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-4-section-3">
+            <h3 class="section-label" id="lesson-4-section-3">Section 3 — Proper Use and Inspection</h3>
+            <p class="training-text">Gloves should fit correctly and be checked before use. Loose, torn, soaked, contaminated, or worn-out gloves may create more risk instead of reducing it.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Check for holes, tears, stiffness, contamination, or worn palms.</li>
+              <li>Do not use chemical-soaked gloves without direction.</li>
+              <li>Remove gloves safely if chemicals are on them.</li>
+              <li>Do not wear loose gloves near moving parts where they can catch.</li>
+              <li>Replace damaged gloves before continuing work.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>A damaged glove can give false confidence.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-4-section-4">
+            <h3 class="section-label" id="lesson-4-section-4">Quick Knowledge Check</h3>
+            <div class="knowledge-check">
+              <p class="knowledge-check-question">What is the best way to choose gloves for a roofing task?</p>
+              <ul class="knowledge-check-options" aria-label="Answer options">
+                <li>A. Use the same gloves for every job</li>
+                <li>B. Pick the cheapest gloves available</li>
+                <li>C. Match the glove to the hazard, such as cuts, heat, or chemicals</li>
+                <li>D. Only wear gloves when carrying heavy rolls</li>
+              </ul>
+              <p class="knowledge-check-answer">Correct answer: C — Gloves should match the hazard.</p>
+            </div>
+          </section>
+        </div>
+      </details>
+
+      <details class="lesson lesson-accordion" id="lesson-5">
+        <summary class="lesson-summary" aria-label="Lesson 5: Footwear and Slip Protection">
+          <div class="lesson-head">
+            <div class="lesson-num" aria-hidden="true">5</div>
+            <div>
+              <h2 class="lesson-title">Footwear and Slip Protection</h2>
+              <p class="lesson-purpose-short">Proper roofing footwear helps with traction, stability, puncture protection, and safer movement on roof surfaces.</p>
+            </div>
+          </div>
+        </summary>
+        <div class="lesson-body">
+          <section class="training-section" aria-labelledby="lesson-5-section-1">
+            <h3 class="section-label" id="lesson-5-section-1">Section 1 — Common Foot and Slip Hazards</h3>
+            <p class="training-text">Roof surfaces can become slippery or unstable because of weather, materials, dust, coatings, granules, oil, debris, or slope. Poor footwear increases the chance of slips and foot injuries.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Wet roofs, coatings, dust, loose granules, and debris.</li>
+              <li>Steep slopes, ladders, roof edges, and uneven surfaces.</li>
+              <li>Nails, screws, plates, sharp objects, and rough materials.</li>
+              <li>Heavy rolls, buckets, tools, or materials dropped near the feet.</li>
+              <li>Worn-out soles that no longer grip the surface.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>Bad footing can turn a simple step into a serious incident.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-5-section-2">
+            <h3 class="section-label" id="lesson-5-section-2">Section 2 — Choosing Proper Footwear</h3>
+            <p class="training-text">Roofing footwear should fit the jobsite and the work being done. Boots or shoes should provide traction, support, and protection based on the hazards present.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Use footwear with good traction for the roof surface.</li>
+              <li>Use puncture-resistant or safety-toe footwear when required.</li>
+              <li>Avoid worn-out soles, slick bottoms, or damaged boots.</li>
+              <li>Keep laces tied and secure.</li>
+              <li>Follow company, site, or manufacturer requirements.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>Your boots are part of your fall prevention.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-5-section-3">
+            <h3 class="section-label" id="lesson-5-section-3">Section 3 — Proper Use and Inspection</h3>
+            <p class="training-text">Footwear should be checked before stepping onto the roof. Even good boots can become unsafe when the soles are worn, contaminated, or damaged.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Inspect soles for wear, cuts, separation, or slick spots.</li>
+              <li>Remove mud, oil, wet coating, or debris from footwear when possible.</li>
+              <li>Do not use damaged footwear on active roof work.</li>
+              <li>Pay attention when moving from ladder to roof surface.</li>
+              <li>Slow down when the roof condition changes.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>Check your footing before trusting your next step.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-5-section-4">
+            <h3 class="section-label" id="lesson-5-section-4">Quick Knowledge Check</h3>
+            <div class="knowledge-check">
+              <p class="knowledge-check-question">Why does footwear matter on a roofing jobsite?</p>
+              <ul class="knowledge-check-options" aria-label="Answer options">
+                <li>A. It only matters for appearance</li>
+                <li>B. It helps with traction, stability, and protection from foot hazards</li>
+                <li>C. It replaces fall protection</li>
+                <li>D. It only matters in cold weather</li>
+              </ul>
+              <p class="knowledge-check-answer">Correct answer: B — Proper footwear helps with traction, stability, and foot protection.</p>
+            </div>
+          </section>
+        </div>
+      </details>
+
+      <details class="lesson lesson-accordion" id="lesson-6">
+        <summary class="lesson-summary" aria-label="Lesson 6: Hearing Protection">
+          <div class="lesson-head">
+            <div class="lesson-num" aria-hidden="true">6</div>
+            <div>
+              <h2 class="lesson-title">Hearing Protection</h2>
+              <p class="lesson-purpose-short">Hearing protection helps protect roofers from loud tools and equipment that can damage hearing over time.</p>
+            </div>
+          </div>
+        </summary>
+        <div class="lesson-body">
+          <section class="training-section" aria-labelledby="lesson-6-section-1">
+            <h3 class="section-label" id="lesson-6-section-1">Section 1 — Common Noise Hazards</h3>
+            <p class="training-text">Roofing jobsites can be loud. Hearing damage may not happen all at once, but repeated exposure to loud noise can cause permanent hearing loss.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Saws, grinders, drills, compressors, generators, and blowers.</li>
+              <li>Heavy equipment, trucks, cranes, forklifts, and hoists.</li>
+              <li>Metal cutting, fastening, demolition, and tear-off work.</li>
+              <li>Noise bouncing off walls, decks, or enclosed areas.</li>
+              <li>Long exposure can be harmful even when the noise feels normal.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>If the work is loud, protect your hearing early.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-6-section-2">
+            <h3 class="section-label" id="lesson-6-section-2">Section 2 — When to Use Hearing Protection</h3>
+            <p class="training-text">Hearing protection should be used when noise levels are high or when company or jobsite rules require it. Workers should not wait until their ears hurt.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Use hearing protection around loud tools and equipment.</li>
+              <li>Use hearing protection when you have to raise your voice to talk nearby.</li>
+              <li>Use hearing protection during cutting, grinding, or prolonged equipment operation.</li>
+              <li>Follow posted signs and supervisor instructions.</li>
+              <li>Ask if you are unsure whether hearing protection is required.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>Hearing damage can happen before you notice it.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-6-section-3">
+            <h3 class="section-label" id="lesson-6-section-3">Section 3 — Proper Use and Inspection</h3>
+            <p class="training-text">Earplugs or earmuffs must be worn correctly to work. Poor fit can greatly reduce protection.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Insert earplugs correctly and with clean hands when possible.</li>
+              <li>Make sure earmuffs seal around the ears.</li>
+              <li>Do not remove protection while loud work continues.</li>
+              <li>Replace dirty, damaged, or worn-out protection.</li>
+              <li>Store reusable hearing protection clean and dry.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>Hearing protection only works when it fits and stays in place.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-6-section-4">
+            <h3 class="section-label" id="lesson-6-section-4">Quick Knowledge Check</h3>
+            <div class="knowledge-check">
+              <p class="knowledge-check-question">When should a worker put on hearing protection?</p>
+              <ul class="knowledge-check-options" aria-label="Answer options">
+                <li>A. After ears start ringing</li>
+                <li>B. Before loud work begins</li>
+                <li>C. Only at the end of the shift</li>
+                <li>D. Only when standing next to the supervisor</li>
+              </ul>
+              <p class="knowledge-check-answer">Correct answer: B — Put hearing protection on before loud work begins.</p>
+            </div>
+          </section>
+        </div>
+      </details>
+
+      <details class="lesson lesson-accordion" id="lesson-7">
+        <summary class="lesson-summary" aria-label="Lesson 7: Respiratory Protection and Dust Awareness">
+          <div class="lesson-head">
+            <div class="lesson-num" aria-hidden="true">7</div>
+            <div>
+              <h2 class="lesson-title">Respiratory Protection and Dust Awareness</h2>
+              <p class="lesson-purpose-short">Respiratory protection helps protect roofers from breathing hazards such as dust, fumes, fibers, vapors, and spray materials.</p>
+            </div>
+          </div>
+        </summary>
+        <div class="lesson-body">
+          <section class="training-section" aria-labelledby="lesson-7-section-1">
+            <h3 class="section-label" id="lesson-7-section-1">Section 1 — Common Breathing Hazards</h3>
+            <p class="training-text">Roofing tasks can create dust, fumes, vapors, fibers, or mist that workers should not breathe. Some hazards are obvious, while others may not have a strong smell or warning sign.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Dust from cutting, grinding, sweeping, tear-off, or insulation.</li>
+              <li>Fumes or vapors from adhesives, primers, coatings, solvents, or cleaners.</li>
+              <li>Spray materials, mists, or airborne particles.</li>
+              <li>Smoke or fumes from hot work.</li>
+              <li>Unknown materials that should be checked before disturbing.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>Do not guess with breathing hazards.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-7-section-2">
+            <h3 class="section-label" id="lesson-7-section-2">Section 2 — When Respiratory Protection May Be Needed</h3>
+            <p class="training-text">Respiratory protection may be needed when dust, fumes, vapors, fibers, or spray materials cannot be avoided or controlled. The correct protection depends on the hazard.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Use respiratory protection when required by the task, product, SDS, company, or supervisor.</li>
+              <li>Different hazards require different respirators or filters.</li>
+              <li>A dust mask is not the same as a respirator for every chemical hazard.</li>
+              <li>Better ventilation or work controls may also be needed.</li>
+              <li>Stop and ask before working around unknown breathing hazards.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>The right respirator depends on what is in the air.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-7-section-3">
+            <h3 class="section-label" id="lesson-7-section-3">Section 3 — Proper Use and Limits</h3>
+            <p class="training-text">Respirators must fit and be used correctly. The wrong respirator, poor fit, facial hair, damaged straps, or wrong filters can reduce protection.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Use the respirator type assigned for the task.</li>
+              <li>Check straps, seal, filters, and facepiece before use.</li>
+              <li>Facial hair can prevent a proper seal on tight-fitting respirators.</li>
+              <li>Replace filters or cartridges as directed.</li>
+              <li>Leave the area and report problems if breathing becomes difficult or irritation occurs.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>A respirator that does not fit correctly may not protect you.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-7-section-4">
+            <h3 class="section-label" id="lesson-7-section-4">Quick Knowledge Check</h3>
+            <div class="knowledge-check">
+              <p class="knowledge-check-question">What should a worker do before using respiratory protection?</p>
+              <ul class="knowledge-check-options" aria-label="Answer options">
+                <li>A. Guess which mask looks best</li>
+                <li>B. Use any mask found in the truck</li>
+                <li>C. Make sure the respirator is the right type, fits properly, and is required for the hazard</li>
+                <li>D. Hold their breath during dusty work</li>
+              </ul>
+              <p class="knowledge-check-answer">Correct answer: C — Use the correct respiratory protection for the hazard and make sure it fits properly.</p>
+            </div>
+          </section>
+        </div>
+      </details>
+
+      <details class="lesson lesson-accordion" id="lesson-8">
+        <summary class="lesson-summary" aria-label="Lesson 8: High-Visibility Clothing and Weather Protection">
+          <div class="lesson-head">
+            <div class="lesson-num" aria-hidden="true">8</div>
+            <div>
+              <h2 class="lesson-title">High-Visibility Clothing and Weather Protection</h2>
+              <p class="lesson-purpose-short">High-visibility clothing and weather protection help roofers stay seen, alert, and protected from heat, cold, sun, rain, and wind.</p>
+            </div>
+          </div>
+        </summary>
+        <div class="lesson-body">
+          <section class="training-section" aria-labelledby="lesson-8-section-1">
+            <h3 class="section-label" id="lesson-8-section-1">Section 1 — Visibility and Weather Hazards</h3>
+            <p class="training-text">Roofers may work around trucks, equipment, loading areas, traffic, crews, and changing weather. Visibility and weather exposure can affect safety and performance.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Workers may be near trucks, forklifts, cranes, deliveries, or equipment.</li>
+              <li>Low light, shadows, rain, dust, or busy jobsites can make workers harder to see.</li>
+              <li>Heat, sun, cold, wind, and rain can affect focus and movement.</li>
+              <li>Wet clothing or heat stress can create safety risks.</li>
+              <li>Weather can change roof conditions quickly.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>Being seen and protected from weather helps keep workers safe.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-8-section-2">
+            <h3 class="section-label" id="lesson-8-section-2">Section 2 — When High-Visibility Clothing Is Needed</h3>
+            <p class="training-text">High-visibility clothing helps workers stand out around vehicles, equipment, and active work zones. It may be required by company rules, site rules, or the work environment.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Wear high-vis clothing around moving vehicles or equipment.</li>
+              <li>Wear it in loading zones, staging areas, parking lots, or near traffic.</li>
+              <li>Wear it when visibility is reduced by weather, dust, darkness, or shadows.</li>
+              <li>Keep high-vis clothing visible and not fully covered by other clothing.</li>
+              <li>Replace faded, torn, or dirty high-vis gear when it no longer stands out.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>If people or equipment need to see you, high-vis matters.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-8-section-3">
+            <h3 class="section-label" id="lesson-8-section-3">Section 3 — Weather Protection Basics</h3>
+            <p class="training-text">Weather protection is part of jobsite safety. Roofers may need protection from sun, heat, cold, rain, and wind depending on the day and task.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Use sun protection, shade breaks, hydration, and cooling gear when needed.</li>
+              <li>Use warm layers and dry clothing in cold or wet conditions.</li>
+              <li>Use rain gear when appropriate, but watch for reduced traction.</li>
+              <li>Secure loose clothing so it does not catch on tools or materials.</li>
+              <li>Stop and report unsafe weather conditions.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>Weather can become a hazard, not just an inconvenience.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-8-section-4">
+            <h3 class="section-label" id="lesson-8-section-4">Quick Knowledge Check</h3>
+            <div class="knowledge-check">
+              <p class="knowledge-check-question">Why might a roofer need high-visibility clothing?</p>
+              <ul class="knowledge-check-options" aria-label="Answer options">
+                <li>A. To look professional only</li>
+                <li>B. To be easier to see around vehicles, equipment, traffic, or busy jobsites</li>
+                <li>C. To replace a hard hat</li>
+                <li>D. Only when working indoors</li>
+              </ul>
+              <p class="knowledge-check-answer">Correct answer: B — High-vis clothing helps workers be seen around vehicles, equipment, and active jobsites.</p>
+            </div>
+          </section>
+        </div>
+      </details>
+
+      <details class="lesson lesson-accordion" id="lesson-9">
+        <summary class="lesson-summary" aria-label="Lesson 9: PPE Inspection and Replacement">
+          <div class="lesson-head">
+            <div class="lesson-num" aria-hidden="true">9</div>
+            <div>
+              <h2 class="lesson-title">PPE Inspection and Replacement</h2>
+              <p class="lesson-purpose-short">PPE must be inspected before use because damaged, contaminated, expired, or worn gear may not protect the worker.</p>
+            </div>
+          </div>
+        </summary>
+        <div class="lesson-body">
+          <section class="training-section" aria-labelledby="lesson-9-section-1">
+            <h3 class="section-label" id="lesson-9-section-1">Section 1 — Why Inspection Matters</h3>
+            <p class="training-text">PPE can wear out, break, become contaminated, or lose effectiveness. A worker should not assume PPE is safe just because it is available.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Heat, sunlight, chemicals, water, impact, and daily use can damage PPE.</li>
+              <li>Cracks, tears, worn soles, scratched lenses, and broken straps matter.</li>
+              <li>Contaminated PPE may create a new hazard.</li>
+              <li>Expired or worn-out PPE may not perform as expected.</li>
+              <li>Bad PPE can give false confidence.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>Inspect PPE before trusting it.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-9-section-2">
+            <h3 class="section-label" id="lesson-9-section-2">Section 2 — What to Check</h3>
+            <p class="training-text">Each type of PPE has different inspection points, but the same basic rule applies: look for damage, wear, contamination, missing parts, poor fit, or anything that seems unsafe.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Hard hats: cracks, dents, brittleness, damaged suspension.</li>
+              <li>Eye protection: scratched, cracked, dirty, or loose lenses.</li>
+              <li>Gloves: holes, tears, chemical contamination, worn grip.</li>
+              <li>Footwear: worn soles, damage, poor traction, exposed toe or sole issues.</li>
+              <li>Respirators: damaged straps, dirty facepiece, wrong or expired filters.</li>
+              <li>High-vis clothing: faded, torn, dirty, or no longer visible.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>Small defects can become big problems during the task.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-9-section-3">
+            <h3 class="section-label" id="lesson-9-section-3">Section 3 — Reporting and Replacement</h3>
+            <p class="training-text">Damaged PPE should be removed from use and reported. Workers should not keep using gear that may not protect them.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Stop using PPE that is cracked, torn, broken, contaminated, or unsafe.</li>
+              <li>Report damaged PPE to a supervisor.</li>
+              <li>Replace PPE after serious impact or when required by manufacturer guidance.</li>
+              <li>Do not repair PPE in a way the manufacturer does not allow.</li>
+              <li>Keep PPE clean and stored properly when not in use.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>If PPE is bad, stop and replace it.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-9-section-4">
+            <h3 class="section-label" id="lesson-9-section-4">Quick Knowledge Check</h3>
+            <div class="knowledge-check">
+              <p class="knowledge-check-question">What should a worker do with damaged PPE?</p>
+              <ul class="knowledge-check-options" aria-label="Answer options">
+                <li>A. Keep using it until the end of the week</li>
+                <li>B. Hide it so nobody gets blamed</li>
+                <li>C. Report it and replace it before continuing the task</li>
+                <li>D. Tape it up and assume it is fine</li>
+              </ul>
+              <p class="knowledge-check-answer">Correct answer: C — Damaged PPE should be reported and replaced.</p>
+            </div>
+          </section>
+        </div>
+      </details>
+
+      <details class="lesson lesson-accordion" id="lesson-10">
+        <summary class="lesson-summary" aria-label="Lesson 10: PPE Field Checklist Before Starting Work">
+          <div class="lesson-head">
+            <div class="lesson-num" aria-hidden="true">10</div>
+            <div>
+              <h2 class="lesson-title">PPE Field Checklist Before Starting Work</h2>
+              <p class="lesson-purpose-short">A simple pre-job PPE checklist helps roofers pause, identify hazards, choose the right gear, and start work safely.</p>
+            </div>
+          </div>
+        </summary>
+        <div class="lesson-body">
+          <section class="training-section" aria-labelledby="lesson-10-section-1">
+            <h3 class="section-label" id="lesson-10-section-1">Section 1 — Stop Before Starting</h3>
+            <p class="training-text">Before starting work, take a short pause to think through the task and the hazards. This helps prevent rushing into work with the wrong protection.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>What task am I doing?</li>
+              <li>What tools, materials, chemicals, or equipment are involved?</li>
+              <li>What could hit, cut, burn, splash, trip, or expose me?</li>
+              <li>Is anyone working above, below, or near me?</li>
+              <li>Has the roof condition changed?</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>A short pause can prevent a serious mistake.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-10-section-2">
+            <h3 class="section-label" id="lesson-10-section-2">Section 2 — Choose and Check PPE</h3>
+            <p class="training-text">After identifying the hazards, choose PPE that matches the task. Then inspect it before use.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Head protection if objects, overhead hazards, or site rules require it.</li>
+              <li>Eye and face protection for debris, dust, splash, or particles.</li>
+              <li>Gloves matched to cuts, heat, chemicals, or grip needs.</li>
+              <li>Footwear with proper traction and protection.</li>
+              <li>Hearing protection for loud work.</li>
+              <li>Respiratory protection when breathing hazards require it.</li>
+              <li>High-vis or weather protection when needed.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>Pick PPE based on the hazard, then inspect it before use.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-10-section-3">
+            <h3 class="section-label" id="lesson-10-section-3">Section 3 — Wear It Correctly and Ask If Unsure</h3>
+            <p class="training-text">PPE must be worn correctly during the task. If the worker is unsure what PPE is required, the safest move is to stop and ask before continuing.</p>
+            <p class="learn-label">Key points</p>
+            <ul class="learn-list">
+              <li>Put PPE on before starting the task.</li>
+              <li>Keep PPE on while the hazard is present.</li>
+              <li>Adjust PPE so it fits correctly.</li>
+              <li>Replace or report damaged PPE.</li>
+              <li>Ask a supervisor if the required PPE is unclear.</li>
+              <li>Stop work if the hazard changes and PPE no longer matches the task.</li>
+            </ul>
+            <p class="field-takeaway"><span>Field takeaway</span>Do not guess. Stop and ask before the work starts.</p>
+          </section>
+          <section class="training-section" aria-labelledby="lesson-10-section-4">
+            <h3 class="section-label" id="lesson-10-section-4">Quick Knowledge Check</h3>
+            <div class="knowledge-check">
+              <p class="knowledge-check-question">What is the best PPE routine before starting roof work?</p>
+              <ul class="knowledge-check-options" aria-label="Answer options">
+                <li>A. Start fast and fix PPE later</li>
+                <li>B. Copy whatever another worker is wearing without thinking</li>
+                <li>C. Identify the task and hazards, choose the right PPE, inspect it, wear it correctly, and ask if unsure</li>
+                <li>D. Only wear PPE after the supervisor complains</li>
+              </ul>
+              <p class="knowledge-check-answer">Correct answer: C — Check the task, hazards, PPE, condition, fit, and ask if unsure.</p>
+            </div>
+          </section>
+        </div>
+      </details>
+
+    </div>
+
+    <section class="completion-section" aria-label="Training acknowledgment and completion record">
+      <h2>Training Acknowledgment &amp; Completion Record</h2>
+      <p>After this course is connected to the RoofVault exam system, employers will be able to confirm that a worker reviewed the PPE course, signed a training acknowledgment, passed the PPE exam, and received a completion record.</p>
+      <div class="coming-soon-card" role="status">Signature, exam connection, and completion tracking coming soon</div>
+    </section>
+  </main>
+  <script>
+    (function () {
+      var video = document.querySelector(".course-video-player");
+      var help = document.getElementById("videoLoadHelp");
+      if (!video || !help) return;
+      function showHelp() { help.hidden = false; }
+      video.addEventListener("error", showHelp);
+      window.addEventListener("load", function () {
+        setTimeout(function () {
+          if (video.error || (video.networkState === 3 && video.readyState === 0)) showHelp();
+        }, 2000);
+      });
+    })();
+  </script>
+</body>
+</html>
