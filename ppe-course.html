@@ -471,12 +471,275 @@
       line-height: 1.45;
     }
 
+    .ack-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 18px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      background: var(--card);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .ack-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .ack-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .ack-field-full { grid-column: 1 / -1; }
+
+    .ack-label {
+      font-size: 13px;
+      font-weight: 650;
+      letter-spacing: 0.3px;
+      color: #1679ff;
+    }
+
+    .ack-input,
+    .ack-readonly {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 16px;
+      line-height: 1.4;
+      font-family: inherit;
+      color: var(--text);
+      border: 1px solid var(--border-strong);
+      border-radius: 12px;
+      background: #fff;
+      box-sizing: border-box;
+    }
+
+    .ack-readonly {
+      background: rgba(15, 23, 42, 0.03);
+      color: var(--text);
+    }
+
+    .ack-input:focus {
+      outline: none;
+      border-color: rgba(22, 121, 255, 0.45);
+      box-shadow: 0 0 0 3px rgba(22, 121, 255, 0.12);
+    }
+
+    .ack-helper {
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .ack-acknowledgment-block {
+      padding: 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.02);
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text);
+    }
+
+    .ack-acknowledgment-block p {
+      margin: 0 0 10px;
+      max-width: none;
+      color: var(--text);
+    }
+
+    .ack-acknowledgment-block p:last-child { margin-bottom: 0; }
+
+    .ack-checkbox {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .ack-checkbox input {
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+      flex-shrink: 0;
+      accent-color: #1679ff;
+    }
+
+    .ack-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .ack-btn {
+      padding: 12px 18px;
+      font-size: 15px;
+      font-weight: 650;
+      font-family: inherit;
+      border-radius: 12px;
+      border: 1px solid var(--border-strong);
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .ack-btn-primary {
+      color: #fff;
+      background: #1679ff;
+      border-color: #1679ff;
+    }
+
+    .ack-btn-primary:hover { background: #1268db; border-color: #1268db; }
+
+    .ack-btn-secondary {
+      color: var(--text);
+      background: #fff;
+    }
+
+    .ack-btn-secondary:hover:not(:disabled) {
+      border-color: rgba(22, 121, 255, 0.28);
+      background: #fafbfd;
+    }
+
+    .ack-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .form-message {
+      margin: 0;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.45;
+    }
+
+    .form-message.error {
+      color: #9f1239;
+      background: rgba(244, 63, 94, 0.1);
+      border: 1px solid rgba(244, 63, 94, 0.2);
+    }
+
+    .form-message.success {
+      color: #0b5e2e;
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .completion-record-card {
+      margin-top: 18px;
+      padding: 20px 18px;
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(22, 121, 255, 0.2);
+      background:
+        radial-gradient(700px 220px at 20% 0%, rgba(33, 179, 255, 0.08), transparent 70%),
+        #fff;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .completion-record-card h3 {
+      margin: 0 0 14px;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 0.1px;
+    }
+
+    .record-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px 18px;
+      margin-bottom: 14px;
+    }
+
+    .record-item-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 650;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .record-item-value {
+      font-size: 15px;
+      line-height: 1.45;
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    .record-list {
+      margin: 0;
+      padding-left: 1.2rem;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .record-note {
+      margin: 14px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+      font-style: italic;
+    }
+
+    @media print {
+      .rv-home,
+      header,
+      .course-intro,
+      .course-video,
+      .lessons-heading,
+      .lessons,
+      .ack-form,
+      .ack-actions,
+      .form-message { display: none !important; }
+
+      body {
+        background: #fff;
+        padding: 0;
+      }
+
+      .shell {
+        box-shadow: none;
+        border: none;
+        padding: 0;
+        margin: 0;
+        max-width: 100%;
+      }
+
+      .completion-section {
+        margin: 0;
+        padding: 0;
+        border: none;
+      }
+
+      .completion-section > h2,
+      .completion-section > p:first-of-type { display: none !important; }
+
+      .completion-record-card {
+        margin: 0;
+        border: 1px solid #ccc;
+        box-shadow: none;
+      }
+    }
+
     @media (max-width: 720px) {
       .nav { padding-left: 0; }
       .shell { padding: 18px 16px 16px; }
       .lesson-head { gap: 10px; }
       .lesson-title { font-size: 17px; }
       .lesson-accordion > summary { padding-right: 40px; }
+      .ack-grid,
+      .record-grid { grid-template-columns: 1fr; }
+      .ack-actions { flex-direction: column; }
+      .ack-btn { width: 100%; }
     }
   </style>
 </head>
@@ -1282,8 +1545,125 @@
 
     <section class="completion-section" aria-label="Training acknowledgment and completion record">
       <h2>Training Acknowledgment &amp; Completion Record</h2>
-      <p>After this course is connected to the RoofVault exam system, employers will be able to confirm that a worker reviewed the PPE course, signed a training acknowledgment, passed the PPE exam, and received a completion record.</p>
-      <div class="coming-soon-card" role="status">Signature, exam connection, and completion tracking coming soon</div>
+      <p>Complete this acknowledgment after watching the PPE training video and reviewing the lesson summaries. This record documents that the worker completed the RoofVault PPE course review and acknowledged the PPE training topics presented.</p>
+
+      <form id="acknowledgmentForm" class="ack-form" novalidate>
+        <div class="ack-grid">
+          <div class="ack-field">
+            <label class="ack-label" for="employeeName">Employee Full Name</label>
+            <input class="ack-input" id="employeeName" name="employeeName" type="text" required autocomplete="name" />
+          </div>
+          <div class="ack-field">
+            <label class="ack-label" for="companyName">Company / Employer</label>
+            <input class="ack-input" id="companyName" name="companyName" type="text" required autocomplete="organization" />
+          </div>
+          <div class="ack-field">
+            <label class="ack-label" for="jobTitle">Job Title / Role</label>
+            <input class="ack-input" id="jobTitle" name="jobTitle" type="text" placeholder="Roofer, Laborer, Foreman, Helper" />
+          </div>
+          <div class="ack-field">
+            <label class="ack-label" for="employeeEmail">Employee Email</label>
+            <input class="ack-input" id="employeeEmail" name="employeeEmail" type="email" autocomplete="email" />
+          </div>
+          <div class="ack-field">
+            <label class="ack-label" for="courseName">Course Name</label>
+            <input class="ack-readonly" id="courseName" type="text" value="Personal Protection Equipment (PPE) Course" readonly />
+          </div>
+          <div class="ack-field">
+            <label class="ack-label" for="courseVersion">Course Version</label>
+            <input class="ack-readonly" id="courseVersion" type="text" value="PPE-COURSE-2026-V1" readonly />
+          </div>
+          <div class="ack-field ack-field-full">
+            <label class="ack-label" for="completionDate">Completion Date</label>
+            <input class="ack-readonly" id="completionDate" type="text" readonly />
+          </div>
+        </div>
+
+        <div class="ack-acknowledgment-block" aria-label="Acknowledgment text">
+          <p>I acknowledge that I completed the RoofVault Personal Protection Equipment (PPE) Course review.</p>
+          <p>I acknowledge that the course covered common roofing PPE topics including head protection, eye and face protection, gloves and hand protection, footwear and slip protection, hearing protection, respiratory protection, high-visibility clothing, weather protection, PPE inspection, and pre-job PPE checks.</p>
+          <p>I understand that PPE must be selected based on the task and jobsite hazards. I understand that PPE must be worn correctly, inspected before use, and replaced if damaged.</p>
+          <p>I understand that PPE does not remove all hazards and does not replace safe work practices, supervisor instructions, company safety rules, site-specific training, or OSHA requirements.</p>
+          <p>I agree to follow my employer’s PPE requirements and to ask a supervisor if I am unsure what PPE is required for a task.</p>
+        </div>
+
+        <label class="ack-checkbox">
+          <input id="chkVideoReviewed" name="chkVideoReviewed" type="checkbox" required />
+          <span>I have watched the PPE training video and reviewed the PPE lesson summaries.</span>
+        </label>
+
+        <label class="ack-checkbox">
+          <input id="chkTopicsAcknowledged" name="chkTopicsAcknowledged" type="checkbox" required />
+          <span>I understand and acknowledge the PPE training topics listed above.</span>
+        </label>
+
+        <div class="ack-field ack-field-full">
+          <label class="ack-label" for="typedSignature">Employee Typed Signature</label>
+          <input class="ack-input" id="typedSignature" name="typedSignature" type="text" required autocomplete="off" />
+          <p class="ack-helper">Type your full legal name as your electronic signature.</p>
+        </div>
+
+        <div id="formMessage" class="form-message" role="alert" hidden></div>
+
+        <div class="ack-actions">
+          <button class="ack-btn ack-btn-primary" id="btnGenerateRecord" type="submit">Generate Completion Record</button>
+          <button class="ack-btn ack-btn-secondary" id="btnPrintRecord" type="button" disabled>Print Completion Record</button>
+        </div>
+      </form>
+
+      <div id="completionRecordCard" class="completion-record-card" hidden aria-live="polite">
+        <h3>RoofVault PPE Training Completion Record</h3>
+        <div class="record-grid">
+          <div>
+            <span class="record-item-label">Employee</span>
+            <div class="record-item-value" id="recordEmployee"></div>
+          </div>
+          <div>
+            <span class="record-item-label">Company</span>
+            <div class="record-item-value" id="recordCompany"></div>
+          </div>
+          <div>
+            <span class="record-item-label">Role</span>
+            <div class="record-item-value" id="recordRole"></div>
+          </div>
+          <div>
+            <span class="record-item-label">Email</span>
+            <div class="record-item-value" id="recordEmail"></div>
+          </div>
+          <div>
+            <span class="record-item-label">Course</span>
+            <div class="record-item-value">Personal Protection Equipment (PPE) Course</div>
+          </div>
+          <div>
+            <span class="record-item-label">Course Version</span>
+            <div class="record-item-value">PPE-COURSE-2026-V1</div>
+          </div>
+        </div>
+        <div>
+          <span class="record-item-label">Training Items Acknowledged</span>
+          <ul class="record-list">
+            <li>PPE training video reviewed</li>
+            <li>PPE lesson summaries reviewed</li>
+            <li>PPE responsibilities acknowledged</li>
+            <li>Electronic signature completed</li>
+          </ul>
+        </div>
+        <div class="record-grid" style="margin-top: 12px;">
+          <div>
+            <span class="record-item-label">Electronic Signature</span>
+            <div class="record-item-value" id="recordSignature"></div>
+          </div>
+          <div>
+            <span class="record-item-label">Completion Date</span>
+            <div class="record-item-value" id="recordCompletionDate"></div>
+          </div>
+          <div class="ack-field-full" style="grid-column: 1 / -1;">
+            <span class="record-item-label">Record ID</span>
+            <div class="record-item-value" id="recordId"></div>
+          </div>
+        </div>
+        <p class="record-note">This is a frontend-generated record for now. Backend storage and employer dashboard tracking will be added in a future version.</p>
+      </div>
     </section>
   </main>
   <script>
@@ -1297,6 +1677,107 @@
         setTimeout(function () {
           if (video.error || (video.networkState === 3 && video.readyState === 0)) showHelp();
         }, 2000);
+      });
+    })();
+
+    (function () {
+      var form = document.getElementById("acknowledgmentForm");
+      var completionDate = document.getElementById("completionDate");
+      var formMessage = document.getElementById("formMessage");
+      var recordCard = document.getElementById("completionRecordCard");
+      var btnPrint = document.getElementById("btnPrintRecord");
+
+      if (!form || !completionDate) return;
+
+      function formatDateTime(date) {
+        return date.toLocaleString(undefined, {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit"
+        });
+      }
+
+      function makeRecordId(date) {
+        var pad = function (n) { return String(n).padStart(2, "0"); };
+        return "RV-PPE-" +
+          date.getFullYear() +
+          pad(date.getMonth() + 1) +
+          pad(date.getDate()) + "-" +
+          pad(date.getHours()) +
+          pad(date.getMinutes()) +
+          pad(date.getSeconds());
+      }
+
+      function showMessage(text, type) {
+        formMessage.textContent = text;
+        formMessage.className = "form-message " + type;
+        formMessage.hidden = false;
+      }
+
+      function clearMessage() {
+        formMessage.hidden = true;
+        formMessage.textContent = "";
+        formMessage.className = "form-message";
+      }
+
+      var now = new Date();
+      completionDate.value = formatDateTime(now);
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        clearMessage();
+
+        var employeeName = document.getElementById("employeeName").value.trim();
+        var companyName = document.getElementById("companyName").value.trim();
+        var jobTitle = document.getElementById("jobTitle").value.trim();
+        var employeeEmail = document.getElementById("employeeEmail").value.trim();
+        var typedSignature = document.getElementById("typedSignature").value.trim();
+        var chkVideo = document.getElementById("chkVideoReviewed");
+        var chkTopics = document.getElementById("chkTopicsAcknowledged");
+
+        if (!employeeName || !companyName) {
+          showMessage("Please complete all required fields.", "error");
+          return;
+        }
+
+        if (!chkVideo.checked || !chkTopics.checked) {
+          showMessage("Please check both acknowledgment boxes before continuing.", "error");
+          return;
+        }
+
+        if (!typedSignature) {
+          showMessage("Please enter your typed electronic signature.", "error");
+          return;
+        }
+
+        if (employeeName.toLowerCase() !== typedSignature.toLowerCase()) {
+          showMessage("Typed signature must match the employee full name.", "error");
+          return;
+        }
+
+        var completedAt = new Date();
+        completionDate.value = formatDateTime(completedAt);
+        var recordId = makeRecordId(completedAt);
+
+        document.getElementById("recordEmployee").textContent = employeeName;
+        document.getElementById("recordCompany").textContent = companyName;
+        document.getElementById("recordRole").textContent = jobTitle || "Not provided";
+        document.getElementById("recordEmail").textContent = employeeEmail || "Not provided";
+        document.getElementById("recordSignature").textContent = typedSignature;
+        document.getElementById("recordCompletionDate").textContent = formatDateTime(completedAt);
+        document.getElementById("recordId").textContent = recordId;
+
+        recordCard.hidden = false;
+        btnPrint.disabled = false;
+        showMessage("Completion record generated successfully.", "success");
+        recordCard.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
+      btnPrint.addEventListener("click", function () {
+        if (recordCard.hidden) return;
+        window.print();
       });
     })();
   </script>
