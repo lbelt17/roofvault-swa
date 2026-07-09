@@ -414,6 +414,26 @@
     }
     .admin-action-btn.unblock-btn:hover{ background:rgba(34,197,94,.2); border-color:rgba(34,197,94,.5); }
     .admin-action-btn:disabled{ opacity:.4; cursor:wait; }
+    .admin-section-title{
+      margin:22px 0 6px; font-size:15px; font-weight:650;
+      color:rgba(220,225,240,.9);
+    }
+    .admin-section-desc{
+      margin:0 0 10px; font-size:12.5px; line-height:1.5;
+      color:rgba(160,175,200,.65);
+    }
+    .admin-status-msg{
+      margin-top:10px; font-size:12px; line-height:1.45;
+      color:rgba(160,175,200,.55);
+    }
+    .admin-details{
+      margin-top:6px; font-size:12px; line-height:1.5;
+      color:rgba(200,210,230,.78);
+    }
+    .admin-details summary{
+      cursor:pointer; color:rgba(160,175,200,.75);
+      font-weight:600;
+    }
   </style>
 </head>
 
@@ -478,6 +498,29 @@
               </thead>
               <tbody id="adminRows"></tbody>
             </table>
+          </div>
+
+          <div id="adminTrainingRecords">
+            <h3 class="admin-section-title">Training Records</h3>
+            <p class="admin-section-desc">View saved course completion records submitted through RoofVault training modules.</p>
+            <button class="admin-toggle" id="btnRefreshTrainingRecords" type="button">Refresh Records</button>
+            <div class="admin-status-msg" id="trainingRecordsStatus"></div>
+            <div class="admin-table-wrap" style="margin-top:10px">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Record ID</th>
+                    <th>Employee</th>
+                    <th>Company</th>
+                    <th>Course</th>
+                    <th>Version</th>
+                    <th>Signed Date</th>
+                    <th>Email</th>
+                  </tr>
+                </thead>
+                <tbody id="trainingRecordsRows"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -610,6 +653,9 @@
       var toggle = document.getElementById("btnAdminToggle");
       var content = document.getElementById("adminContent");
       var tbody = document.getElementById("adminRows");
+      var btnRefreshTraining = document.getElementById("btnRefreshTrainingRecords");
+      var trainingStatus = document.getElementById("trainingRecordsStatus");
+      var trainingTbody = document.getElementById("trainingRecordsRows");
       panel.classList.add("visible");
 
       var expanded = false;
@@ -682,6 +728,73 @@
       }
 
       function esc(s) { var d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
+
+      function formatTrainingDate(value) {
+        if (!value) return "—";
+        var d = new Date(value);
+        if (isNaN(d.getTime())) return String(value);
+        return d.toLocaleString();
+      }
+
+      function loadTrainingRecords() {
+        if (!trainingTbody || !trainingStatus) return;
+        trainingStatus.textContent = "Loading…";
+        trainingTbody.innerHTML = "";
+        fetch("/api/training-completions", { credentials: "include" })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (!data.ok) {
+              trainingStatus.textContent = "Training records could not be loaded.";
+              trainingTbody.innerHTML = "<tr><td colspan='7'>Error: " + esc(data.error || "unknown") + "</td></tr>";
+              return;
+            }
+            var records = data.records || [];
+            if (!records.length) {
+              trainingStatus.textContent = "No training records found yet.";
+              trainingTbody.innerHTML = "<tr><td colspan='7' style='color:rgba(160,175,200,.5)'>No training records found yet.</td></tr>";
+              return;
+            }
+            trainingStatus.textContent = records.length + " record(s) loaded.";
+            trainingTbody.innerHTML = "";
+            records.forEach(function (rec) {
+              var tr = document.createElement("tr");
+              tr.innerHTML =
+                "<td>" + esc(rec.recordId || "—") + "</td>" +
+                "<td>" + esc(rec.employeeFullName || "—") + "</td>" +
+                "<td>" + esc(rec.company || "—") + "</td>" +
+                "<td>" + esc(rec.courseName || "—") + "</td>" +
+                "<td>" + esc(rec.courseVersion || "—") + "</td>" +
+                "<td>" + esc(formatTrainingDate(rec.completionDateClient || rec.serverCreatedAt)) + "</td>" +
+                "<td>" + esc(rec.employeeEmail || "—") + "</td>";
+              trainingTbody.appendChild(tr);
+
+              var detailTr = document.createElement("tr");
+              var detailTd = document.createElement("td");
+              detailTd.colSpan = 7;
+              var items = (rec.trainingItemsAcknowledged || []).map(function (item) {
+                return "<li>" + esc(item) + "</li>";
+              }).join("");
+              detailTd.innerHTML =
+                "<details class='admin-details'><summary>View Details</summary>" +
+                "<div><strong>Role:</strong> " + esc(rec.role || "Not provided") + "</div>" +
+                "<div><strong>Electronic Signature:</strong> " + esc(rec.typedSignature || "—") + "</div>" +
+                "<div><strong>Completion Date:</strong> " + esc(rec.completionDateClient || "—") + "</div>" +
+                "<div><strong>Server Saved Date:</strong> " + esc(formatTrainingDate(rec.serverCreatedAt)) + "</div>" +
+                "<div style='margin-top:6px'><strong>Training Items Acknowledged</strong><ul style='margin:4px 0 0 18px;padding:0'>" + items + "</ul></div>" +
+                "</details>";
+              detailTr.appendChild(detailTd);
+              trainingTbody.appendChild(detailTr);
+            });
+          })
+          .catch(function (err) {
+            trainingStatus.textContent = "Training records could not be loaded.";
+            trainingTbody.innerHTML = "<tr><td colspan='7'>Failed to load: " + esc(err.message) + "</td></tr>";
+          });
+      }
+
+      if (btnRefreshTraining) {
+        btnRefreshTraining.addEventListener("click", loadTrainingRecords);
+      }
     }
   </script>
 </body>
