@@ -72,12 +72,74 @@
 
     header { width: 100%; max-width: 1040px; margin: 0 auto; padding: 6px 2px 0; }
 
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
     .nav {
       display: flex;
       align-items: center;
       gap: 10px;
       padding-left: 5.5rem;
+      flex: 1 1 auto;
+      min-width: 0;
     }
+
+    .lang-switch {
+      display: inline-flex;
+      align-items: center;
+      position: relative;
+      padding: 4px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.55);
+      border: 1px solid rgba(15, 23, 42, 0.10);
+      box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      flex-shrink: 0;
+    }
+
+    .lang-switch::before {
+      content: "";
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      left: 4px;
+      width: calc(50% - 4px);
+      border-radius: 999px;
+      background: linear-gradient(180deg, #2f8fff 0%, #1679ff 100%);
+      box-shadow: 0 4px 12px rgba(22, 121, 255, 0.28);
+      transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 0;
+    }
+
+    .lang-switch.es::before { transform: translateX(100%); }
+
+    .lang-option {
+      position: relative;
+      z-index: 1;
+      min-width: 88px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 650;
+      font-family: inherit;
+      letter-spacing: 0.1px;
+      color: var(--muted);
+      background: transparent;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: color 0.18s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .lang-option.active { color: #fff; }
+
+    .lang-option:not(.active):hover { color: var(--text); }
 
     .logo-pill {
       width: 32px;
@@ -692,6 +754,7 @@
 
     @media print {
       .rv-home,
+      .lang-switch,
       header,
       .course-intro,
       .course-video,
@@ -731,7 +794,10 @@
     }
 
     @media (max-width: 720px) {
-      .nav { padding-left: 0; }
+      .header-row { align-items: flex-start; }
+      .nav { padding-left: 0; width: 100%; }
+      .lang-switch { align-self: flex-end; }
+      .lang-option { min-width: 76px; padding: 9px 12px; font-size: 13px; }
       .shell { padding: 18px 16px 16px; }
       .lesson-head { gap: 10px; }
       .lesson-title { font-size: 17px; }
@@ -745,61 +811,68 @@
 </head>
 
 <body>
-  <a class="rv-home" href="/" aria-label="Home">
+  <a class="rv-home" href="/" data-i18n-aria="home.aria" aria-label="Home">
     <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
       <path d="M10 2.8 2.6 9.2c-.3.3-.1.8.3.8H4v6.4c0 .3.3.6.6.6H8v-4.4c0-.4.3-.7.7-.7h2.6c.4 0 .7.3.7.7V17h3.4c.3 0 .6-.3.6-.6V10h1.1c.4 0 .6-.5.3-.8L10 2.8z" fill="currentColor"/>
     </svg>
-    <span>Home</span>
+    <span data-i18n="home.label">Home</span>
   </a>
 
   <header>
-    <div class="nav">
-      <div class="logo-pill">RV</div>
-      <div>
-        <div class="brand-title">RoofVault Courses</div>
-        <div class="brand-subtitle">Field training for new roofers.</div>
+    <div class="header-row">
+      <div class="nav">
+        <div class="logo-pill">RV</div>
+        <div>
+          <div class="brand-title" data-i18n="nav.brandTitle">RoofVault Courses</div>
+          <div class="brand-subtitle" data-i18n="nav.brandSubtitle">Field training for new roofers.</div>
+        </div>
+      </div>
+      <div class="lang-switch" id="langSwitch" role="group" data-i18n-aria="lang.aria" aria-label="Language">
+        <button type="button" class="lang-option active" data-lang="en" aria-pressed="true">English</button>
+        <button type="button" class="lang-option" data-lang="es" aria-pressed="false">Español</button>
       </div>
     </div>
   </header>
 
   <main class="shell">
     <div class="course-intro">
-      <h1>Personal Protection Equipment (PPE) Course</h1>
-      <p>A simple field course for new roofers covering the basic protective gear needed before stepping onto a roofing jobsite.</p>
+      <h1 data-i18n="intro.title">Personal Protection Equipment (PPE) Course</h1>
+      <p data-i18n="intro.subtitle">A simple field course for new roofers covering the basic protective gear needed before stepping onto a roofing jobsite.</p>
     </div>
 
-    <section class="course-video" aria-label="PPE training video">
-      <h2>PPE Training Video</h2>
+    <section class="course-video" data-i18n-aria="video.sectionAria" aria-label="PPE training video">
+      <h2 data-i18n="video.title">PPE Training Video</h2>
       <div class="video-player-wrap">
         <video
           class="course-video-player"
           controls
           preload="metadata"
           playsinline
+          data-i18n-aria="video.playerAria"
           aria-label="PPE Safety Training video"
         >
           <source
             src="https://theroofvaultstorage.blob.core.windows.net/roofdocs/PPE%20Safety%20Training%20Your%20Shield%20Against%20Workplace%20Hazards%20-%20Atlantic%20Training%20Online%20Safety%20Training%20(720p).mp4?sp=r&amp;st=2026-07-06T16:00:00Z&amp;se=2027-07-02T01:16:36Z&amp;spr=https&amp;sv=2026-02-06&amp;sr=b&amp;sig=1QvYrFlzPHYnf5VF8BYh8dZCTkMFvIMKSNQYRf%2BOTMo%3D"
             type="video/mp4"
           />
-          <p class="video-fallback-text">Your browser does not support the video tag.</p>
+          <p class="video-fallback-text" data-i18n="video.fallback">Your browser does not support the video tag.</p>
         </video>
       </div>
-      <p class="video-load-help" id="videoLoadHelp" hidden>Unable to load the training video. Please contact your administrator.</p>
-      <p class="course-video-note">Watch the full PPE training video first. Then review the lesson summaries below before taking the PPE exam.</p>
-      <aside class="training-flow-callout" aria-label="Recommended training flow">
-        <h3>Recommended Training Flow</h3>
+      <p class="video-load-help" id="videoLoadHelp" hidden data-i18n="video.loadHelp">Unable to load the training video. Please contact your administrator.</p>
+      <p class="course-video-note" data-i18n="video.note">Watch the full PPE training video first. Then review the lesson summaries below before taking the PPE exam.</p>
+      <aside class="training-flow-callout" data-i18n-aria="flow.aria" aria-label="Recommended training flow">
+        <h3 data-i18n="flow.title">Recommended Training Flow</h3>
         <ol>
-          <li>Watch the complete PPE training video.</li>
-          <li>Review each lesson below.</li>
-          <li>Complete the PPE Exam.</li>
-          <li>Sign the training acknowledgment.</li>
-          <li>Receive your completion record.</li>
+          <li data-i18n="flow.step1">Watch the complete PPE training video.</li>
+          <li data-i18n="flow.step2">Review each lesson below.</li>
+          <li data-i18n="flow.step3">Complete the PPE Exam.</li>
+          <li data-i18n="flow.step4">Sign the training acknowledgment.</li>
+          <li data-i18n="flow.step5">Receive your completion record.</li>
         </ol>
       </aside>
     </section>
 
-    <h2 class="lessons-heading">Lesson Summaries</h2>
+    <h2 class="lessons-heading" data-i18n="lessons.heading">Lesson Summaries</h2>
     <div class="lessons">
 
       <details class="lesson lesson-accordion" id="lesson-1">
@@ -1543,129 +1616,419 @@
 
     </div>
 
-    <section class="completion-section" aria-label="Training acknowledgment and completion record">
-      <h2>Training Acknowledgment &amp; Completion Record</h2>
-      <p>Complete this acknowledgment after watching the PPE training video and reviewing the lesson summaries. This record documents that the worker completed the RoofVault PPE course review and acknowledged the PPE training topics presented.</p>
+    <section class="completion-section" data-i18n-aria="ack.sectionAria" aria-label="Training acknowledgment and completion record">
+      <h2 data-i18n="ack.title">Training Acknowledgment &amp; Completion Record</h2>
+      <p data-i18n="ack.intro">Complete this acknowledgment after watching the PPE training video and reviewing the lesson summaries. This record documents that the worker completed the RoofVault PPE course review and acknowledged the PPE training topics presented.</p>
 
       <form id="acknowledgmentForm" class="ack-form" novalidate>
         <div class="ack-grid">
           <div class="ack-field">
-            <label class="ack-label" for="employeeName">Employee Full Name</label>
+            <label class="ack-label" for="employeeName" data-i18n="form.employeeName">Employee Full Name</label>
             <input class="ack-input" id="employeeName" name="employeeName" type="text" required autocomplete="name" />
           </div>
           <div class="ack-field">
-            <label class="ack-label" for="companyName">Company / Employer</label>
+            <label class="ack-label" for="companyName" data-i18n="form.companyName">Company / Employer</label>
             <input class="ack-input" id="companyName" name="companyName" type="text" required autocomplete="organization" />
           </div>
           <div class="ack-field">
-            <label class="ack-label" for="jobTitle">Job Title / Role</label>
-            <input class="ack-input" id="jobTitle" name="jobTitle" type="text" placeholder="Roofer, Laborer, Foreman, Helper" />
+            <label class="ack-label" for="jobTitle" data-i18n="form.jobTitle">Job Title / Role</label>
+            <input class="ack-input" id="jobTitle" name="jobTitle" type="text" data-i18n-placeholder="form.jobTitlePlaceholder" placeholder="Roofer, Laborer, Foreman, Helper" />
           </div>
           <div class="ack-field">
-            <label class="ack-label" for="employeeEmail">Employee Email</label>
+            <label class="ack-label" for="employeeEmail" data-i18n="form.employeeEmail">Employee Email</label>
             <input class="ack-input" id="employeeEmail" name="employeeEmail" type="email" autocomplete="email" />
           </div>
           <div class="ack-field">
-            <label class="ack-label" for="courseName">Course Name</label>
+            <label class="ack-label" for="courseName" data-i18n="form.courseName">Course Name</label>
             <input class="ack-readonly" id="courseName" type="text" value="Personal Protection Equipment (PPE) Course" readonly />
           </div>
           <div class="ack-field">
-            <label class="ack-label" for="courseVersion">Course Version</label>
+            <label class="ack-label" for="courseVersion" data-i18n="form.courseVersion">Course Version</label>
             <input class="ack-readonly" id="courseVersion" type="text" value="PPE-COURSE-2026-V1" readonly />
           </div>
           <div class="ack-field ack-field-full">
-            <label class="ack-label" for="completionDate">Completion Date</label>
+            <label class="ack-label" for="completionDate" data-i18n="form.completionDate">Completion Date</label>
             <input class="ack-readonly" id="completionDate" type="text" readonly />
           </div>
         </div>
 
-        <div class="ack-acknowledgment-block" aria-label="Acknowledgment text">
-          <p>I acknowledge that I completed the RoofVault Personal Protection Equipment (PPE) Course review.</p>
-          <p>I acknowledge that the course covered common roofing PPE topics including head protection, eye and face protection, gloves and hand protection, footwear and slip protection, hearing protection, respiratory protection, high-visibility clothing, weather protection, PPE inspection, and pre-job PPE checks.</p>
-          <p>I understand that PPE must be selected based on the task and jobsite hazards. I understand that PPE must be worn correctly, inspected before use, and replaced if damaged.</p>
-          <p>I understand that PPE does not remove all hazards and does not replace safe work practices, supervisor instructions, company safety rules, site-specific training, or OSHA requirements.</p>
-          <p>I agree to follow my employer’s PPE requirements and to ask a supervisor if I am unsure what PPE is required for a task.</p>
+        <div class="ack-acknowledgment-block" data-i18n-aria="ack.blockAria" aria-label="Acknowledgment text">
+          <p data-i18n="ack.p1">I acknowledge that I completed the RoofVault Personal Protection Equipment (PPE) Course review.</p>
+          <p data-i18n="ack.p2">I acknowledge that the course covered common roofing PPE topics including head protection, eye and face protection, gloves and hand protection, footwear and slip protection, hearing protection, respiratory protection, high-visibility clothing, weather protection, PPE inspection, and pre-job PPE checks.</p>
+          <p data-i18n="ack.p3">I understand that PPE must be selected based on the task and jobsite hazards. I understand that PPE must be worn correctly, inspected before use, and replaced if damaged.</p>
+          <p data-i18n="ack.p4">I understand that PPE does not remove all hazards and does not replace safe work practices, supervisor instructions, company safety rules, site-specific training, or OSHA requirements.</p>
+          <p data-i18n="ack.p5">I agree to follow my employer's PPE requirements and to ask a supervisor if I am unsure what PPE is required for a task.</p>
         </div>
 
         <label class="ack-checkbox">
           <input id="chkVideoReviewed" name="chkVideoReviewed" type="checkbox" required />
-          <span>I have watched the PPE training video and reviewed the PPE lesson summaries.</span>
+          <span data-i18n="ack.chkVideo">I have watched the PPE training video and reviewed the PPE lesson summaries.</span>
         </label>
 
         <label class="ack-checkbox">
           <input id="chkTopicsAcknowledged" name="chkTopicsAcknowledged" type="checkbox" required />
-          <span>I understand and acknowledge the PPE training topics listed above.</span>
+          <span data-i18n="ack.chkTopics">I understand and acknowledge the PPE training topics listed above.</span>
         </label>
 
         <div class="ack-field ack-field-full">
-          <label class="ack-label" for="typedSignature">Employee Typed Signature</label>
+          <label class="ack-label" for="typedSignature" data-i18n="form.signatureLabel">Employee Typed Signature</label>
           <input class="ack-input" id="typedSignature" name="typedSignature" type="text" required autocomplete="off" />
-          <p class="ack-helper">Type your full legal name as your electronic signature.</p>
+          <p class="ack-helper" data-i18n="form.signatureHelper">Type your full legal name as your electronic signature.</p>
         </div>
 
         <div id="formMessage" class="form-message" role="alert" hidden></div>
 
         <div class="ack-actions">
-          <button class="ack-btn ack-btn-primary" id="btnGenerateRecord" type="submit">Generate Completion Record</button>
-          <button class="ack-btn ack-btn-secondary" id="btnPrintRecord" type="button" disabled>Print Completion Record</button>
+          <button class="ack-btn ack-btn-primary" id="btnGenerateRecord" type="submit" data-i18n="form.generateBtn">Generate Completion Record</button>
+          <button class="ack-btn ack-btn-secondary" id="btnPrintRecord" type="button" disabled data-i18n="form.printBtn">Print Completion Record</button>
         </div>
       </form>
 
       <div id="completionRecordCard" class="completion-record-card" hidden aria-live="polite">
-        <h3>RoofVault PPE Training Completion Record</h3>
+        <h3 data-i18n="record.title">RoofVault PPE Training Completion Record</h3>
         <div class="record-grid">
           <div>
-            <span class="record-item-label">Employee</span>
+            <span class="record-item-label" data-i18n="record.employee">Employee</span>
             <div class="record-item-value" id="recordEmployee"></div>
           </div>
           <div>
-            <span class="record-item-label">Company</span>
+            <span class="record-item-label" data-i18n="record.company">Company</span>
             <div class="record-item-value" id="recordCompany"></div>
           </div>
           <div>
-            <span class="record-item-label">Role</span>
+            <span class="record-item-label" data-i18n="record.role">Role</span>
             <div class="record-item-value" id="recordRole"></div>
           </div>
           <div>
-            <span class="record-item-label">Email</span>
+            <span class="record-item-label" data-i18n="record.email">Email</span>
             <div class="record-item-value" id="recordEmail"></div>
           </div>
           <div>
-            <span class="record-item-label">Course</span>
-            <div class="record-item-value">Personal Protection Equipment (PPE) Course</div>
+            <span class="record-item-label" data-i18n="record.course">Course</span>
+            <div class="record-item-value" id="recordCourseValue">Personal Protection Equipment (PPE) Course</div>
           </div>
           <div>
-            <span class="record-item-label">Course Version</span>
+            <span class="record-item-label" data-i18n="record.courseVersion">Course Version</span>
             <div class="record-item-value">PPE-COURSE-2026-V1</div>
           </div>
         </div>
         <div>
-          <span class="record-item-label">Training Items Acknowledged</span>
-          <ul class="record-list">
-            <li>PPE training video reviewed</li>
-            <li>PPE lesson summaries reviewed</li>
-            <li>PPE responsibilities acknowledged</li>
-            <li>Electronic signature completed</li>
+          <span class="record-item-label" data-i18n="record.itemsLabel">Training Items Acknowledged</span>
+          <ul class="record-list" id="recordItemsList">
+            <li data-i18n="record.item1">PPE training video reviewed</li>
+            <li data-i18n="record.item2">PPE lesson summaries reviewed</li>
+            <li data-i18n="record.item3">PPE responsibilities acknowledged</li>
+            <li data-i18n="record.item4">Electronic signature completed</li>
           </ul>
         </div>
         <div class="record-grid" style="margin-top: 12px;">
           <div>
-            <span class="record-item-label">Electronic Signature</span>
+            <span class="record-item-label" data-i18n="record.signature">Electronic Signature</span>
             <div class="record-item-value" id="recordSignature"></div>
           </div>
           <div>
-            <span class="record-item-label">Completion Date</span>
+            <span class="record-item-label" data-i18n="record.completionDate">Completion Date</span>
             <div class="record-item-value" id="recordCompletionDate"></div>
           </div>
           <div class="ack-field-full" style="grid-column: 1 / -1;">
-            <span class="record-item-label">Record ID</span>
+            <span class="record-item-label" data-i18n="record.recordId">Record ID</span>
             <div class="record-item-value" id="recordId"></div>
           </div>
         </div>
-        <p class="record-note" id="recordSavedNote" hidden>This record was saved to RoofVault training records.</p>
+        <p class="record-note" id="recordSavedNote" hidden data-i18n="record.savedNote">This record was saved to RoofVault training records.</p>
       </div>
     </section>
   </main>
+  <script>
+var LESSON_ES = {
+  1: {
+    ariaLabel: "Lección 1: Por qué el EPP es importante en una obra de techado",
+    title: "Por qué el EPP es importante en una obra de techado",
+    purpose: "El EPP es la primera capa de protección antes de las herramientas, los materiales o la velocidad de producción.",
+    body: '<section class="training-section" aria-labelledby="lesson-1-section-1"><h3 class="section-label" id="lesson-1-section-1">Sección 1 — Qué significa el EPP</h3><p class="training-text">EPP significa Equipo de Protección Personal. Es el equipo que se usa para ayudar a proteger su cuerpo de los peligros en la obra. En un trabajo de techado, el EPP puede incluir casco, gafas de seguridad, guantes, botas adecuadas, protección auditiva, ropa de alta visibilidad, protección contra caídas, protección respiratoria y protección contra el clima.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>El EPP ayuda a proteger la cabeza, los ojos, las manos, los pies, los pulmones, el oído y el cuerpo.</li><li>El EPP se selecciona según la tarea y los peligros que lo rodean.</li><li>El EPP no elimina el peligro; ayuda a reducir la probabilidad de una lesión.</li></ul><p class="field-takeaway"><span>Idea clave</span>El EPP no es solo equipo. Es parte del plan de seguridad.</p></section><section class="training-section" aria-labelledby="lesson-1-section-2"><h3 class="section-label" id="lesson-1-section-2">Sección 2 — Por qué los techadores necesitan EPP</h3><p class="training-text">El trabajo de techado expone a los trabajadores a peligros que pueden cambiar a lo largo del día. Un techo puede estar seco por la mañana y resbaloso más tarde. Una tarea sencilla de manejo de materiales puede volverse peligrosa si hay herramientas, escombros, calor, químicos o equipo en movimiento cerca.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Los techadores pueden enfrentar caídas, bordes filosos, superficies calientes, químicos, polvo, ruido, objetos que caen y mal clima.</li><li>Diferentes tareas requieren diferente EPP.</li><li>Usar el EPP correctamente ayuda a evitar que errores pequeños se conviertan en lesiones graves.</li></ul><p class="field-takeaway"><span>Idea clave</span>El entorno del techo cambia rápido. Su protección debe coincidir con el trabajo.</p></section><section class="training-section" aria-labelledby="lesson-1-section-3"><h3 class="section-label" id="lesson-1-section-3">Sección 3 — El EPP debe usarse correctamente</h3><p class="training-text">El EPP solo funciona cuando le queda bien, se usa correctamente y se emplea para la tarea correcta. Usar el EPP de forma incorrecta puede darle al trabajador una falsa confianza.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Las gafas de seguridad deben proteger los ojos, no estar sobre la cabeza.</li><li>Los guantes deben coincidir con el peligro, como cortes, calor o químicos.</li><li>Las botas deben tener buena tracción y estar en buen estado.</li><li>Los respiradores deben ser del tipo correcto y ajustar bien.</li><li>El EPP dañado o desgastado debe reportarse y reemplazarse.</li></ul><p class="field-takeaway"><span>Idea clave</span>El EPP que se usa mal puede no protegerlo cuando lo necesita.</p></section><section class="training-section" aria-labelledby="lesson-1-section-4"><h3 class="section-label" id="lesson-1-section-4">Sección 4 — El EPP tiene límites</h3><p class="training-text">El EPP es importante, pero no es magia. El EPP no debe ser el único control de seguridad. Los trabajadores todavía necesitan prácticas de trabajo seguras, conciencia de los peligros, capacitación y supervisión.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>El EPP no evita que ocurra una caída.</li><li>Los guantes no hacen que el metal filoso sea seguro de manejar sin cuidado.</li><li>Las gafas de seguridad no reemplazan las prácticas seguras de corte o esmerilado.</li><li>Los respiradores no corrigen una mala ventilación ni peligros químicos desconocidos.</li><li>El EPP funciona mejor cuando se combina con buenos hábitos de seguridad.</li></ul><p class="field-takeaway"><span>Idea clave</span>El EPP ayuda a protegerlo, pero usted todavía debe trabajar de forma segura.</p></section><section class="training-section" aria-labelledby="lesson-1-section-5"><h3 class="section-label" id="lesson-1-section-5">Sección 5 — Antes de comenzar el trabajo</h3><p class="training-text">Antes de comenzar una tarea de techado, deténgase y revise el peligro, la tarea y el EPP requerido. Si no está seguro de qué EPP se necesita, pregunte a un supervisor antes de comenzar.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>¿Qué tarea estoy haciendo?</li><li>¿Qué me puede lastimar?</li><li>¿Qué EPP se requiere?</li><li>¿Mi EPP está limpio, funcional y sin daños?</li><li>¿Lo estoy usando correctamente?</li><li>¿Necesito detenerme y preguntar antes de continuar?</li></ul><p class="field-takeaway"><span>Idea clave</span>Revise su EPP antes de que comience el trabajo, no después de que algo salga mal.</p></section><section class="training-section" aria-labelledby="lesson-1-section-6"><h3 class="section-label" id="lesson-1-section-6">Sección 6 — Verificación rápida de conocimiento</h3><div class="knowledge-check"><p class="knowledge-check-question">Antes de comenzar una tarea de techado, ¿qué debe hacer primero un trabajador?</p><ul class="knowledge-check-options" aria-label="Opciones de respuesta"><li>A. Comenzar a trabajar y ajustar el EPP después</li><li>B. Revisar la tarea, los peligros y el EPP requerido</li><li>C. Usar EPP solo si el trabajo se ve peligroso</li><li>D. Dejar que otro trabajador decida</li></ul><p class="knowledge-check-answer">Respuesta correcta: B — Revise la tarea, los peligros y el EPP requerido.</p></div></section>'
+  },
+  2: {
+    ariaLabel: "Lección 2: Cascos y protección de la cabeza",
+    title: "Cascos y protección de la cabeza",
+    purpose: "La protección de la cabeza ayuda a proteger a los techadores de objetos que caen, escombros voladores, golpes, peligros elevados y ciertos peligros eléctricos.",
+    body: '<section class="training-section" aria-labelledby="lesson-2-section-1"><h3 class="section-label" id="lesson-2-section-1">Sección 1 — Por qué importa la protección de la cabeza</h3><p class="training-text">En una obra de techado, las lesiones en la cabeza pueden ocurrir rápidamente. Herramientas, sujetadores, materiales, cubetas, escombros y equipo pueden caer o moverse inesperadamente. Los techadores también pueden trabajar cerca de escaleras, montacargas, grúas, andamios, bordes de techo, vigas bajas y trabajo elevado.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Un casco ayuda a proteger la cabeza de impactos.</li><li>La protección de la cabeza puede ser necesaria cuando objetos pueden caer desde arriba.</li><li>La protección de la cabeza puede ser necesaria cuando es posible que haya escombros voladores.</li><li>La protección de la cabeza puede ser necesaria cerca de trabajo elevado o equipo.</li><li>Algunos trabajos pueden requerir cascos clasificados para peligros eléctricos.</li></ul><p class="field-takeaway"><span>Idea clave</span>Si algo puede golpear su cabeza, caer hacia usted o volar hacia usted, la protección de la cabeza es importante.</p></section><section class="training-section" aria-labelledby="lesson-2-section-2"><h3 class="section-label" id="lesson-2-section-2">Sección 2 — Cuándo los techadores deben usar protección de la cabeza</h3><p class="training-text">Los techadores deben usar protección de la cabeza siempre que la obra tenga un posible peligro de lesión en la cabeza. La necesidad depende del trabajo que se realiza, las personas que trabajan cerca y los peligros alrededor del techo.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Use protección de la cabeza cuando haya trabajadores arriba de usted.</li><li>Use protección de la cabeza cuando se estén levantando herramientas o materiales.</li><li>Use protección de la cabeza cerca de grúas, montacargas, malacates o áreas de carga.</li><li>Use protección de la cabeza cerca de demolición, retiro de techo o eliminación de escombros.</li><li>Use protección de la cabeza cuando la empresa, la obra o el supervisor lo requieran.</li></ul><p class="field-takeaway"><span>Idea clave</span>No espere hasta que algo caiga. Póngase la protección de la cabeza antes de entrar a las áreas de trabajo activas.</p></section><section class="training-section" aria-labelledby="lesson-2-section-3"><h3 class="section-label" id="lesson-2-section-3">Sección 3 — Ajuste y uso correcto del casco</h3><p class="training-text">Un casco debe ajustar correctamente y usarse de la forma en que fue diseñado. Si está flojo, al revés sin aprobación, inclinado, agrietado o modificado, puede no proteger al trabajador correctamente.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Ajuste la suspensión para que el casco quede firme.</li><li>Mantenga el casco nivelado en la cabeza.</li><li>No lo use flojo ni apenas apoyado en la cabeza.</li><li>No perfore, corte, pinte ni modifique el casco a menos que el fabricante lo permita.</li><li>No lo use al revés a menos que el casco esté diseñado o aprobado para ese uso.</li></ul><p class="field-takeaway"><span>Idea clave</span>Un casco solo ayuda cuando se usa correctamente.</p></section><section class="training-section" aria-labelledby="lesson-2-section-4"><h3 class="section-label" id="lesson-2-section-4">Sección 4 — Inspección de un casco</h3><p class="training-text">Los cascos deben revisarse antes de usarse. El calor, la luz solar, los impactos, los químicos, la edad y el manejo brusco pueden debilitar la carcasa o el sistema de suspensión.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Busque grietas, abolladuras, agujeros, superficies calcáreas o fragilidad.</li><li>Revise las correas de suspensión por daños o desgaste.</li><li>Reemplace el casco después de un impacto fuerte, aunque se vea bien.</li><li>Retire de servicio los cascos dañados.</li><li>Siga las indicaciones de reemplazo del fabricante.</li></ul><p class="field-takeaway"><span>Idea clave</span>Si el casco está dañado, no confíe en él.</p></section><section class="training-section" aria-labelledby="lesson-2-section-5"><h3 class="section-label" id="lesson-2-section-5">Sección 5 — Peligros comunes de la cabeza en techado</h3><p class="training-text">El trabajo de techado crea muchos peligros para la cabeza porque las personas, las herramientas y los materiales a menudo se mueven al mismo tiempo. Un trabajador puede estar seguro un minuto y expuesto al siguiente.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Herramientas, tornillos, placas, sujetadores, rollos, cubetas y escombros que caen.</li><li>Escombros voladores por corte, esmerilado, retiro de techo o viento.</li><li>Vigas bajas, escotillas de techo, escaleras, equipo y soportes de tubería.</li><li>Zonas de carga de materiales y áreas de izaje.</li><li>Peligros eléctricos cerca de conductores expuestos o equipo energizado.</li></ul><p class="field-takeaway"><span>Idea clave</span>Mire hacia arriba, mire alrededor y piense en qué podría moverse o caer.</p></section><section class="training-section" aria-labelledby="lesson-2-section-6"><h3 class="section-label" id="lesson-2-section-6">Sección 6 — Lo que un casco no hace</h3><p class="training-text">Un casco es importante, pero no hace seguro el trabajo inseguro. Los trabajadores todavía necesitan un manejo seguro de materiales, zonas de carga controladas, buena comunicación y conciencia de los peligros elevados.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Un casco no evita que los objetos caigan.</li><li>Un casco no reemplaza el buen orden y limpieza.</li><li>Un casco no protege la cara ni los ojos por sí solo.</li><li>Un casco no protege contra todo peligro eléctrico.</li><li>Un casco no elimina la necesidad de mantenerse fuera de las zonas de caída.</li></ul><p class="field-takeaway"><span>Idea clave</span>La protección de la cabeza ayuda a reducir las lesiones, pero lo más seguro es evitar el golpe desde el principio.</p></section><section class="training-section" aria-labelledby="lesson-2-section-7"><h3 class="section-label" id="lesson-2-section-7">Sección 7 — Verificación rápida de conocimiento</h3><div class="knowledge-check"><p class="knowledge-check-question">¿Cuándo debe un techador usar protección de la cabeza?</p><ul class="knowledge-check-options" aria-label="Opciones de respuesta"><li>A. Solo cuando el techo es empinado</li><li>B. Solo durante trabajo en caliente</li><li>C. Cuando existe un posible peligro de impacto, objetos que caen o vuelan, peligros elevados, o reglas del sitio que lo requieran</li><li>D. Solo después de que los materiales ya se estén levantando</li></ul><p class="knowledge-check-answer">Respuesta correcta: C — Use protección de la cabeza cuando haya un posible peligro de lesión en la cabeza o cuando la obra lo requiera.</p></div></section>'
+  },
+  3: {
+    ariaLabel: "Lección 3: Protección de ojos y cara",
+    title: "Protección de ojos y cara",
+    purpose: "La protección de ojos y cara ayuda a proteger a los techadores del polvo, los escombros, los químicos, las cuchillas, los sujetadores y las partículas voladoras.",
+    body: '<section class="training-section" aria-labelledby="lesson-3-section-1"><h3 class="section-label" id="lesson-3-section-1">Sección 1 — Peligros comunes para ojos y cara</h3><p class="training-text">El trabajo de techado puede crear peligros que golpean los ojos o la cara sin advertencia. Partículas pequeñas, polvo, salpicaduras de líquido, chispas y escombros voladores pueden causar lesiones graves.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Polvo y escombros del retiro de techo, barrido, corte y esmerilado.</li><li>Sujetadores voladores, piezas de metal, gránulos, virutas y partículas.</li><li>Salpicaduras químicas de recubrimientos, limpiadores, imprimadores, adhesivos o solventes.</li><li>Luz brillante, chispas o partículas calientes de ciertas herramientas o trabajo en caliente.</li><li>El viento puede soplar polvo o material suelto hacia la cara.</li></ul><p class="field-takeaway"><span>Idea clave</span>Si escombros, polvo, líquido, chispas o partículas pueden llegar a su cara, proteja primero sus ojos y cara.</p></section><section class="training-section" aria-labelledby="lesson-3-section-2"><h3 class="section-label" id="lesson-3-section-2">Sección 2 — Elegir la protección correcta</h3><p class="training-text">Diferentes tareas pueden requerir diferente protección. Las gafas de seguridad pueden ser suficientes para algunos trabajos, mientras que los goggles o una careta pueden ser necesarios para tareas de mayor riesgo.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Las gafas de seguridad ayudan a proteger contra partículas voladoras básicas.</li><li>Los goggles pueden ser necesarios cuando el polvo o las salpicaduras pueden venir de diferentes direcciones.</li><li>Las caretas ayudan a proteger la cara, pero por lo general se usan junto con gafas de seguridad o goggles.</li><li>El trabajo con químicos puede requerir protección ocular clasificada contra salpicaduras.</li><li>Siga las instrucciones de seguridad de la obra, el supervisor o el producto.</li></ul><p class="field-takeaway"><span>Idea clave</span>Combine la protección de ojos y cara con la tarea, no solo con el puesto de trabajo.</p></section><section class="training-section" aria-labelledby="lesson-3-section-3"><h3 class="section-label" id="lesson-3-section-3">Sección 3 — Uso e inspección adecuados</h3><p class="training-text">La protección de ojos y cara solo funciona cuando está limpia, ajusta correctamente y se usa durante la tarea. Los lentes dañados o sucios pueden reducir la visibilidad y la seguridad.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Use la protección ocular sobre los ojos, no sobre la cabeza.</li><li>Limpie los lentes sucios antes de comenzar la tarea.</li><li>Reemplace los lentes rayados, agrietados o rotos.</li><li>Asegúrese de que los goggles o caretas ajusten de forma segura.</li><li>No se quite la protección ocular mientras los peligros aún estén presentes.</li></ul><p class="field-takeaway"><span>Idea clave</span>La protección ocular no puede ayudar si está sucia, dañada o no se está usando.</p></section><section class="training-section" aria-labelledby="lesson-3-section-4"><h3 class="section-label" id="lesson-3-section-4">Verificación rápida de conocimiento</h3><div class="knowledge-check"><p class="knowledge-check-question">¿Cuándo debe un techador usar protección de ojos o cara?</p><ul class="knowledge-check-options" aria-label="Opciones de respuesta"><li>A. Solo cuando alguien lo está observando</li><li>B. Solo después de que empiecen a volar los escombros</li><li>C. Cuando sea posible que haya polvo, partículas voladoras, químicos, chispas o salpicaduras</li><li>D. Solo cuando trabaje en un techo empinado</li></ul><p class="knowledge-check-answer">Respuesta correcta: C — Use protección de ojos o cara antes de que el peligro llegue a sus ojos o cara.</p></div></section>'
+  },
+  4: {
+    ariaLabel: "Lección 4: Guantes y protección de manos",
+    title: "Guantes y protección de manos",
+    purpose: "La protección de manos ayuda a los techadores a reducir lesiones por bordes filosos, materiales calientes, químicos, adhesivos, herramientas y superficies rugosas.",
+    body: '<section class="training-section" aria-labelledby="lesson-4-section-1"><h3 class="section-label" id="lesson-4-section-1">Sección 1 — Peligros comunes para las manos</h3><p class="training-text">Los techadores usan sus manos constantemente. Cortes, quemaduras, punciones, contacto con químicos y dedos aplastados pueden ocurrir durante el trabajo normal si se usan los guantes equivocados o no se usan guantes.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Metal filoso, tapajuntas, sujetadores, cuchillos, cuchillas y material rasgado.</li><li>Materiales calientes, superficies calientes, sopletes o equipo calentado.</li><li>Químicos, adhesivos, recubrimientos, limpiadores, imprimadores y solventes.</li><li>Superficies rugosas, astillas, puntos de pellizco y materiales en movimiento.</li><li>Materiales mojados o resbalosos que son difíciles de agarrar.</li></ul><p class="field-takeaway"><span>Idea clave</span>Sus manos siempre están expuestas, así que la elección del guante importa.</p></section><section class="training-section" aria-labelledby="lesson-4-section-2"><h3 class="section-label" id="lesson-4-section-2">Sección 2 — Elegir el guante correcto</h3><p class="training-text">Ningún guante único es adecuado para todas las tareas de techado. Un guante que funciona para el manejo de materiales puede no proteger contra químicos o calor.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Los guantes resistentes a cortes pueden ser necesarios para metal filoso o cuchillas.</li><li>Los guantes resistentes a químicos pueden ser necesarios para recubrimientos, adhesivos, imprimadores o solventes.</li><li>Los guantes resistentes al calor pueden ser necesarios cerca de materiales calientes o trabajo en caliente.</li><li>Los guantes de agarre pueden ayudar con el manejo de materiales.</li><li>La etiqueta del producto, la hoja de datos de seguridad (SDS), el supervisor o las reglas de la empresa pueden indicar los guantes requeridos.</li></ul><p class="field-takeaway"><span>Idea clave</span>Combine el guante con el peligro.</p></section><section class="training-section" aria-labelledby="lesson-4-section-3"><h3 class="section-label" id="lesson-4-section-3">Sección 3 — Uso e inspección adecuados</h3><p class="training-text">Los guantes deben ajustar correctamente y revisarse antes de usarse. Los guantes flojos, rasgados, empapados, contaminados o desgastados pueden crear más riesgo en lugar de reducirlo.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Revise si hay agujeros, rasgaduras, rigidez, contaminación o palmas desgastadas.</li><li>No use guantes empapados en químicos sin instrucciones.</li><li>Quítese los guantes de forma segura si tienen químicos.</li><li>No use guantes flojos cerca de partes en movimiento donde puedan atraparse.</li><li>Reemplace los guantes dañados antes de continuar el trabajo.</li></ul><p class="field-takeaway"><span>Idea clave</span>Un guante dañado puede dar una falsa confianza.</p></section><section class="training-section" aria-labelledby="lesson-4-section-4"><h3 class="section-label" id="lesson-4-section-4">Verificación rápida de conocimiento</h3><div class="knowledge-check"><p class="knowledge-check-question">¿Cuál es la mejor manera de elegir guantes para una tarea de techado?</p><ul class="knowledge-check-options" aria-label="Opciones de respuesta"><li>A. Usar los mismos guantes para todos los trabajos</li><li>B. Elegir los guantes más baratos disponibles</li><li>C. Combinar el guante con el peligro, como cortes, calor o químicos</li><li>D. Usar guantes solo al cargar rollos pesados</li></ul><p class="knowledge-check-answer">Respuesta correcta: C — Los guantes deben coincidir con el peligro.</p></div></section>'
+  },
+  5: {
+    ariaLabel: "Lección 5: Calzado y protección contra resbalones",
+    title: "Calzado y protección contra resbalones",
+    purpose: "El calzado adecuado para techado ayuda con la tracción, la estabilidad, la protección contra punciones y un movimiento más seguro en las superficies del techo.",
+    body: '<section class="training-section" aria-labelledby="lesson-5-section-1"><h3 class="section-label" id="lesson-5-section-1">Sección 1 — Peligros comunes de pies y resbalones</h3><p class="training-text">Las superficies del techo pueden volverse resbalosas o inestables debido al clima, los materiales, el polvo, los recubrimientos, los gránulos, el aceite, los escombros o la pendiente. El calzado inadecuado aumenta la probabilidad de resbalones y lesiones en los pies.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Techos mojados, recubrimientos, polvo, gránulos sueltos y escombros.</li><li>Pendientes empinadas, escaleras, bordes de techo y superficies desniveladas.</li><li>Clavos, tornillos, placas, objetos filosos y materiales rugosos.</li><li>Rollos pesados, cubetas, herramientas o materiales que caen cerca de los pies.</li><li>Suelas desgastadas que ya no se agarran a la superficie.</li></ul><p class="field-takeaway"><span>Idea clave</span>Un mal apoyo puede convertir un paso simple en un incidente grave.</p></section><section class="training-section" aria-labelledby="lesson-5-section-2"><h3 class="section-label" id="lesson-5-section-2">Sección 2 — Elegir el calzado adecuado</h3><p class="training-text">El calzado para techado debe ajustarse a la obra y al trabajo que se realiza. Las botas o zapatos deben proporcionar tracción, soporte y protección según los peligros presentes.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Use calzado con buena tracción para la superficie del techo.</li><li>Use calzado resistente a punciones o con puntera de seguridad cuando se requiera.</li><li>Evite suelas desgastadas, fondos resbalosos o botas dañadas.</li><li>Mantenga las agujetas atadas y seguras.</li><li>Siga los requisitos de la empresa, la obra o el fabricante.</li></ul><p class="field-takeaway"><span>Idea clave</span>Sus botas son parte de su prevención de caídas.</p></section><section class="training-section" aria-labelledby="lesson-5-section-3"><h3 class="section-label" id="lesson-5-section-3">Sección 3 — Uso e inspección adecuados</h3><p class="training-text">El calzado debe revisarse antes de subir al techo. Incluso las buenas botas pueden volverse inseguras cuando las suelas están desgastadas, contaminadas o dañadas.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Inspeccione las suelas por desgaste, cortes, separación o puntos resbalosos.</li><li>Quite el lodo, aceite, recubrimiento mojado o escombros del calzado cuando sea posible.</li><li>No use calzado dañado durante trabajo activo en el techo.</li><li>Preste atención al pasar de la escalera a la superficie del techo.</li><li>Reduzca la velocidad cuando cambie la condición del techo.</li></ul><p class="field-takeaway"><span>Idea clave</span>Revise su apoyo antes de confiar en su siguiente paso.</p></section><section class="training-section" aria-labelledby="lesson-5-section-4"><h3 class="section-label" id="lesson-5-section-4">Verificación rápida de conocimiento</h3><div class="knowledge-check"><p class="knowledge-check-question">¿Por qué importa el calzado en una obra de techado?</p><ul class="knowledge-check-options" aria-label="Opciones de respuesta"><li>A. Solo importa por la apariencia</li><li>B. Ayuda con la tracción, la estabilidad y la protección contra peligros para los pies</li><li>C. Reemplaza la protección contra caídas</li><li>D. Solo importa en clima frío</li></ul><p class="knowledge-check-answer">Respuesta correcta: B — El calzado adecuado ayuda con la tracción, la estabilidad y la protección de los pies.</p></div></section>'
+  },
+  6: {
+    ariaLabel: "Lección 6: Protección auditiva",
+    title: "Protección auditiva",
+    purpose: "La protección auditiva ayuda a proteger a los techadores de herramientas y equipo ruidosos que pueden dañar la audición con el tiempo.",
+    body: '<section class="training-section" aria-labelledby="lesson-6-section-1"><h3 class="section-label" id="lesson-6-section-1">Sección 1 — Peligros comunes de ruido</h3><p class="training-text">Las obras de techado pueden ser ruidosas. El daño auditivo puede no ocurrir de una sola vez, pero la exposición repetida a ruido fuerte puede causar pérdida permanente de audición.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Sierras, esmeriladoras, taladros, compresores, generadores y sopladores.</li><li>Equipo pesado, camiones, grúas, montacargas y malacates.</li><li>Corte de metal, fijación, demolición y trabajo de retiro de techo.</li><li>Ruido que rebota en paredes, plataformas o áreas cerradas.</li><li>La exposición prolongada puede ser dañina incluso cuando el ruido se siente normal.</li></ul><p class="field-takeaway"><span>Idea clave</span>Si el trabajo es ruidoso, proteja su audición desde temprano.</p></section><section class="training-section" aria-labelledby="lesson-6-section-2"><h3 class="section-label" id="lesson-6-section-2">Sección 2 — Cuándo usar protección auditiva</h3><p class="training-text">La protección auditiva debe usarse cuando los niveles de ruido son altos o cuando las reglas de la empresa o de la obra lo requieren. Los trabajadores no deben esperar hasta que les duelan los oídos.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Use protección auditiva cerca de herramientas y equipo ruidosos.</li><li>Use protección auditiva cuando tenga que levantar la voz para hablar de cerca.</li><li>Use protección auditiva durante corte, esmerilado u operación prolongada de equipo.</li><li>Siga los letreros publicados y las instrucciones del supervisor.</li><li>Pregunte si no está seguro de si se requiere protección auditiva.</li></ul><p class="field-takeaway"><span>Idea clave</span>El daño auditivo puede ocurrir antes de que usted lo note.</p></section><section class="training-section" aria-labelledby="lesson-6-section-3"><h3 class="section-label" id="lesson-6-section-3">Sección 3 — Uso e inspección adecuados</h3><p class="training-text">Los tapones o las orejeras deben usarse correctamente para que funcionen. Un mal ajuste puede reducir mucho la protección.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Inserte los tapones correctamente y con las manos limpias cuando sea posible.</li><li>Asegúrese de que las orejeras sellen alrededor de los oídos.</li><li>No se quite la protección mientras continúe el trabajo ruidoso.</li><li>Reemplace la protección sucia, dañada o desgastada.</li><li>Guarde la protección auditiva reutilizable limpia y seca.</li></ul><p class="field-takeaway"><span>Idea clave</span>La protección auditiva solo funciona cuando ajusta bien y permanece en su lugar.</p></section><section class="training-section" aria-labelledby="lesson-6-section-4"><h3 class="section-label" id="lesson-6-section-4">Verificación rápida de conocimiento</h3><div class="knowledge-check"><p class="knowledge-check-question">¿Cuándo debe un trabajador ponerse protección auditiva?</p><ul class="knowledge-check-options" aria-label="Opciones de respuesta"><li>A. Después de que empiecen a zumbar los oídos</li><li>B. Antes de que comience el trabajo ruidoso</li><li>C. Solo al final del turno</li><li>D. Solo cuando está junto al supervisor</li></ul><p class="knowledge-check-answer">Respuesta correcta: B — Póngase la protección auditiva antes de que comience el trabajo ruidoso.</p></div></section>'
+  },
+  7: {
+    ariaLabel: "Lección 7: Protección respiratoria y conciencia del polvo",
+    title: "Protección respiratoria y conciencia del polvo",
+    purpose: "La protección respiratoria ayuda a proteger a los techadores de peligros para la respiración como polvo, humos, fibras, vapores y materiales en aerosol.",
+    body: '<section class="training-section" aria-labelledby="lesson-7-section-1"><h3 class="section-label" id="lesson-7-section-1">Sección 1 — Peligros comunes para la respiración</h3><p class="training-text">Las tareas de techado pueden crear polvo, humos, vapores, fibras o neblina que los trabajadores no deben respirar. Algunos peligros son obvios, mientras que otros pueden no tener un olor fuerte o señal de advertencia.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Polvo de corte, esmerilado, barrido, retiro de techo o aislamiento.</li><li>Humos o vapores de adhesivos, imprimadores, recubrimientos, solventes o limpiadores.</li><li>Materiales en aerosol, neblinas o partículas en el aire.</li><li>Humo o gases de trabajo en caliente.</li><li>Materiales desconocidos que deben revisarse antes de perturbarlos.</li></ul><p class="field-takeaway"><span>Idea clave</span>No adivine con los peligros para la respiración.</p></section><section class="training-section" aria-labelledby="lesson-7-section-2"><h3 class="section-label" id="lesson-7-section-2">Sección 2 — Cuándo puede ser necesaria la protección respiratoria</h3><p class="training-text">La protección respiratoria puede ser necesaria cuando el polvo, los humos, los vapores, las fibras o los materiales en aerosol no se pueden evitar o controlar. La protección correcta depende del peligro.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Use protección respiratoria cuando lo requiera la tarea, el producto, la SDS, la empresa o el supervisor.</li><li>Diferentes peligros requieren diferentes respiradores o filtros.</li><li>Una mascarilla para polvo no es lo mismo que un respirador para todo peligro químico.</li><li>También puede ser necesaria una mejor ventilación o controles de trabajo.</li><li>Deténgase y pregunte antes de trabajar cerca de peligros de respiración desconocidos.</li></ul><p class="field-takeaway"><span>Idea clave</span>El respirador correcto depende de lo que hay en el aire.</p></section><section class="training-section" aria-labelledby="lesson-7-section-3"><h3 class="section-label" id="lesson-7-section-3">Sección 3 — Uso correcto y límites</h3><p class="training-text">Los respiradores deben ajustar y usarse correctamente. El respirador equivocado, un mal ajuste, el vello facial, correas dañadas o filtros incorrectos pueden reducir la protección.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Use el tipo de respirador asignado para la tarea.</li><li>Revise las correas, el sello, los filtros y la pieza facial antes de usarlo.</li><li>El vello facial puede impedir un sello adecuado en respiradores de ajuste ceñido.</li><li>Reemplace los filtros o cartuchos según las indicaciones.</li><li>Salga del área y reporte los problemas si la respiración se vuelve difícil o hay irritación.</li></ul><p class="field-takeaway"><span>Idea clave</span>Un respirador que no ajusta correctamente puede no protegerlo.</p></section><section class="training-section" aria-labelledby="lesson-7-section-4"><h3 class="section-label" id="lesson-7-section-4">Verificación rápida de conocimiento</h3><div class="knowledge-check"><p class="knowledge-check-question">¿Qué debe hacer un trabajador antes de usar protección respiratoria?</p><ul class="knowledge-check-options" aria-label="Opciones de respuesta"><li>A. Adivinar cuál mascarilla se ve mejor</li><li>B. Usar cualquier mascarilla que encuentre en la camioneta</li><li>C. Asegurarse de que el respirador sea del tipo correcto, ajuste bien y se requiera para el peligro</li><li>D. Contener la respiración durante el trabajo con polvo</li></ul><p class="knowledge-check-answer">Respuesta correcta: C — Use la protección respiratoria correcta para el peligro y asegúrese de que ajuste bien.</p></div></section>'
+  },
+  8: {
+    ariaLabel: "Lección 8: Ropa de alta visibilidad y protección contra el clima",
+    title: "Ropa de alta visibilidad y protección contra el clima",
+    purpose: "La ropa de alta visibilidad y la protección contra el clima ayudan a los techadores a ser vistos, mantenerse alertas y protegerse del calor, el frío, el sol, la lluvia y el viento.",
+    body: '<section class="training-section" aria-labelledby="lesson-8-section-1"><h3 class="section-label" id="lesson-8-section-1">Sección 1 — Peligros de visibilidad y clima</h3><p class="training-text">Los techadores pueden trabajar cerca de camiones, equipo, áreas de carga, tráfico, cuadrillas y clima cambiante. La visibilidad y la exposición al clima pueden afectar la seguridad y el desempeño.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Los trabajadores pueden estar cerca de camiones, montacargas, grúas, entregas o equipo.</li><li>La poca luz, las sombras, la lluvia, el polvo o las obras ocupadas pueden hacer que los trabajadores sean más difíciles de ver.</li><li>El calor, el sol, el frío, el viento y la lluvia pueden afectar la concentración y el movimiento.</li><li>La ropa mojada o el estrés por calor pueden crear riesgos de seguridad.</li><li>El clima puede cambiar las condiciones del techo rápidamente.</li></ul><p class="field-takeaway"><span>Idea clave</span>Ser visto y estar protegido del clima ayuda a mantener seguros a los trabajadores.</p></section><section class="training-section" aria-labelledby="lesson-8-section-2"><h3 class="section-label" id="lesson-8-section-2">Sección 2 — Cuándo se necesita ropa de alta visibilidad</h3><p class="training-text">La ropa de alta visibilidad ayuda a los trabajadores a destacar cerca de vehículos, equipo y zonas de trabajo activas. Puede ser requerida por las reglas de la empresa, las reglas de la obra o el entorno de trabajo.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Use ropa de alta visibilidad cerca de vehículos o equipo en movimiento.</li><li>Úsela en zonas de carga, áreas de espera, estacionamientos o cerca del tráfico.</li><li>Úsela cuando la visibilidad se reduzca por el clima, el polvo, la oscuridad o las sombras.</li><li>Mantenga la ropa de alta visibilidad visible y no completamente cubierta por otra ropa.</li><li>Reemplace el equipo de alta visibilidad desteñido, roto o sucio cuando ya no destaque.</li></ul><p class="field-takeaway"><span>Idea clave</span>Si las personas o el equipo necesitan verlo, la alta visibilidad importa.</p></section><section class="training-section" aria-labelledby="lesson-8-section-3"><h3 class="section-label" id="lesson-8-section-3">Sección 3 — Conceptos básicos de protección contra el clima</h3><p class="training-text">La protección contra el clima es parte de la seguridad en la obra. Los techadores pueden necesitar protección contra el sol, el calor, el frío, la lluvia y el viento según el día y la tarea.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Use protección solar, descansos en la sombra, hidratación y equipo de enfriamiento cuando sea necesario.</li><li>Use capas abrigadoras y ropa seca en condiciones frías o húmedas.</li><li>Use ropa para lluvia cuando sea apropiado, pero cuidado con la tracción reducida.</li><li>Asegure la ropa suelta para que no se atrape en herramientas o materiales.</li><li>Deténgase y reporte las condiciones climáticas inseguras.</li></ul><p class="field-takeaway"><span>Idea clave</span>El clima puede convertirse en un peligro, no solo en un inconveniente.</p></section><section class="training-section" aria-labelledby="lesson-8-section-4"><h3 class="section-label" id="lesson-8-section-4">Verificación rápida de conocimiento</h3><div class="knowledge-check"><p class="knowledge-check-question">¿Por qué podría un techador necesitar ropa de alta visibilidad?</p><ul class="knowledge-check-options" aria-label="Opciones de respuesta"><li>A. Solo para verse profesional</li><li>B. Para ser más fácil de ver cerca de vehículos, equipo, tráfico u obras ocupadas</li><li>C. Para reemplazar un casco</li><li>D. Solo cuando trabaja en interiores</li></ul><p class="knowledge-check-answer">Respuesta correcta: B — La ropa de alta visibilidad ayuda a que los trabajadores sean vistos cerca de vehículos, equipo y obras activas.</p></div></section>'
+  },
+  9: {
+    ariaLabel: "Lección 9: Inspección y reemplazo del EPP",
+    title: "Inspección y reemplazo del EPP",
+    purpose: "El EPP debe inspeccionarse antes de usarse porque el equipo dañado, contaminado, caducado o desgastado puede no proteger al trabajador.",
+    body: '<section class="training-section" aria-labelledby="lesson-9-section-1"><h3 class="section-label" id="lesson-9-section-1">Sección 1 — Por qué importa la inspección</h3><p class="training-text">El EPP se puede desgastar, romper, contaminar o perder efectividad. Un trabajador no debe asumir que el EPP es seguro solo porque está disponible.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>El calor, la luz solar, los químicos, el agua, los impactos y el uso diario pueden dañar el EPP.</li><li>Las grietas, rasgaduras, suelas desgastadas, lentes rayados y correas rotas importan.</li><li>El EPP contaminado puede crear un nuevo peligro.</li><li>El EPP caducado o desgastado puede no funcionar como se espera.</li><li>El EPP en mal estado puede dar una falsa confianza.</li></ul><p class="field-takeaway"><span>Idea clave</span>Inspeccione el EPP antes de confiar en él.</p></section><section class="training-section" aria-labelledby="lesson-9-section-2"><h3 class="section-label" id="lesson-9-section-2">Sección 2 — Qué revisar</h3><p class="training-text">Cada tipo de EPP tiene diferentes puntos de inspección, pero se aplica la misma regla básica: busque daños, desgaste, contaminación, piezas faltantes, mal ajuste o cualquier cosa que parezca insegura.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Cascos: grietas, abolladuras, fragilidad, suspensión dañada.</li><li>Protección ocular: lentes rayados, agrietados, sucios o flojos.</li><li>Guantes: agujeros, rasgaduras, contaminación química, agarre desgastado.</li><li>Calzado: suelas desgastadas, daños, mala tracción, problemas en la puntera o la suela expuesta.</li><li>Respiradores: correas dañadas, pieza facial sucia, filtros incorrectos o caducados.</li><li>Ropa de alta visibilidad: desteñida, rota, sucia o ya no visible.</li></ul><p class="field-takeaway"><span>Idea clave</span>Los defectos pequeños pueden convertirse en grandes problemas durante la tarea.</p></section><section class="training-section" aria-labelledby="lesson-9-section-3"><h3 class="section-label" id="lesson-9-section-3">Sección 3 — Reporte y reemplazo</h3><p class="training-text">El EPP dañado debe retirarse de uso y reportarse. Los trabajadores no deben seguir usando equipo que puede no protegerlos.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Deje de usar EPP que esté agrietado, roto, contaminado o inseguro.</li><li>Reporte el EPP dañado a un supervisor.</li><li>Reemplace el EPP después de un impacto fuerte o cuando lo requieran las indicaciones del fabricante.</li><li>No repare el EPP de una forma que el fabricante no permita.</li><li>Mantenga el EPP limpio y guardado correctamente cuando no esté en uso.</li></ul><p class="field-takeaway"><span>Idea clave</span>Si el EPP está en mal estado, deténgase y reemplácelo.</p></section><section class="training-section" aria-labelledby="lesson-9-section-4"><h3 class="section-label" id="lesson-9-section-4">Verificación rápida de conocimiento</h3><div class="knowledge-check"><p class="knowledge-check-question">¿Qué debe hacer un trabajador con el EPP dañado?</p><ul class="knowledge-check-options" aria-label="Opciones de respuesta"><li>A. Seguir usándolo hasta el final de la semana</li><li>B. Esconderlo para que nadie sea culpado</li><li>C. Reportarlo y reemplazarlo antes de continuar la tarea</li><li>D. Ponerle cinta y asumir que está bien</li></ul><p class="knowledge-check-answer">Respuesta correcta: C — El EPP dañado debe reportarse y reemplazarse.</p></div></section>'
+  },
+  10: {
+    ariaLabel: "Lección 10: Lista de verificación de EPP en campo antes de comenzar el trabajo",
+    title: "Lista de verificación de EPP en campo antes de comenzar el trabajo",
+    purpose: "Una lista de verificación sencilla de EPP antes del trabajo ayuda a los techadores a hacer una pausa, identificar los peligros, elegir el equipo correcto y comenzar a trabajar de forma segura.",
+    body: '<section class="training-section" aria-labelledby="lesson-10-section-1"><h3 class="section-label" id="lesson-10-section-1">Sección 1 — Deténgase antes de comenzar</h3><p class="training-text">Antes de comenzar a trabajar, haga una breve pausa para pensar en la tarea y los peligros. Esto ayuda a evitar apresurarse a trabajar con la protección equivocada.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>¿Qué tarea estoy haciendo?</li><li>¿Qué herramientas, materiales, químicos o equipo están involucrados?</li><li>¿Qué podría golpearme, cortarme, quemarme, salpicarme, hacerme tropezar o exponerme?</li><li>¿Alguien está trabajando arriba, abajo o cerca de mí?</li><li>¿Ha cambiado la condición del techo?</li></ul><p class="field-takeaway"><span>Idea clave</span>Una breve pausa puede evitar un error grave.</p></section><section class="training-section" aria-labelledby="lesson-10-section-2"><h3 class="section-label" id="lesson-10-section-2">Sección 2 — Elija y revise el EPP</h3><p class="training-text">Después de identificar los peligros, elija el EPP que coincida con la tarea. Luego inspecciónelo antes de usarlo.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Protección de la cabeza si los objetos, los peligros elevados o las reglas del sitio lo requieren.</li><li>Protección de ojos y cara para escombros, polvo, salpicaduras o partículas.</li><li>Guantes según cortes, calor, químicos o necesidades de agarre.</li><li>Calzado con tracción y protección adecuadas.</li><li>Protección auditiva para trabajo ruidoso.</li><li>Protección respiratoria cuando los peligros de respiración lo requieran.</li><li>Ropa de alta visibilidad o protección contra el clima cuando sea necesario.</li></ul><p class="field-takeaway"><span>Idea clave</span>Elija el EPP según el peligro y luego inspecciónelo antes de usarlo.</p></section><section class="training-section" aria-labelledby="lesson-10-section-3"><h3 class="section-label" id="lesson-10-section-3">Sección 3 — Úselo correctamente y pregunte si no está seguro</h3><p class="training-text">El EPP debe usarse correctamente durante la tarea. Si el trabajador no está seguro de qué EPP se requiere, lo más seguro es detenerse y preguntar antes de continuar.</p><p class="learn-label">Puntos clave</p><ul class="learn-list"><li>Póngase el EPP antes de comenzar la tarea.</li><li>Manténgase con el EPP puesto mientras el peligro esté presente.</li><li>Ajuste el EPP para que quede correctamente.</li><li>Reemplace o reporte el EPP dañado.</li><li>Pregunte a un supervisor si no está claro qué EPP se requiere.</li><li>Detenga el trabajo si el peligro cambia y el EPP ya no coincide con la tarea.</li></ul><p class="field-takeaway"><span>Idea clave</span>No adivine. Deténgase y pregunte antes de que comience el trabajo.</p></section><section class="training-section" aria-labelledby="lesson-10-section-4"><h3 class="section-label" id="lesson-10-section-4">Verificación rápida de conocimiento</h3><div class="knowledge-check"><p class="knowledge-check-question">¿Cuál es la mejor rutina de EPP antes de comenzar el trabajo en el techo?</p><ul class="knowledge-check-options" aria-label="Opciones de respuesta"><li>A. Comenzar rápido y arreglar el EPP después</li><li>B. Copiar lo que otro trabajador está usando sin pensar</li><li>C. Identificar la tarea y los peligros, elegir el EPP correcto, inspeccionarlo, usarlo correctamente y preguntar si no está seguro</li><li>D. Usar EPP solo después de que el supervisor se queje</li></ul><p class="knowledge-check-answer">Respuesta correcta: C — Revise la tarea, los peligros, el EPP, la condición, el ajuste, y pregunte si no está seguro.</p></div></section>'
+  }
+};
+(function () {
+  var STORAGE_KEY = "roofvaultPpeCourseLanguage";
+  var COURSE_NAME_EN = "Personal Protection Equipment (PPE) Course";
+  var COURSE_NAME_ES = "Curso de Equipo de Protección Personal (EPP)";
+
+  var UI_ES = {
+    "home.aria": "Inicio",
+    "home.label": "Inicio",
+    "nav.brandTitle": "Cursos RoofVault",
+    "nav.brandSubtitle": "Capacitación de campo para techadores nuevos.",
+    "lang.aria": "Idioma",
+    "intro.title": "Curso de Equipo de Protección Personal (EPP)",
+    "intro.subtitle": "Un curso sencillo de campo para techadores nuevos sobre el equipo de protección básico necesario antes de entrar a una obra de techado.",
+    "video.sectionAria": "Video de capacitación de EPP",
+    "video.title": "Video de Capacitación de EPP",
+    "video.playerAria": "Video de capacitación de seguridad EPP",
+    "video.fallback": "Su navegador no admite la etiqueta de video.",
+    "video.loadHelp": "No se pudo cargar el video de capacitación. Comuníquese con su administrador.",
+    "video.note": "Vea primero el video completo de capacitación de EPP. Luego revise los resúmenes de lecciones a continuación antes de tomar el examen de EPP.",
+    "flow.aria": "Flujo de capacitación recomendado",
+    "flow.title": "Flujo de Capacitación Recomendado",
+    "flow.step1": "Vea el video completo de capacitación de EPP.",
+    "flow.step2": "Revise cada lección a continuación.",
+    "flow.step3": "Complete el Examen de EPP.",
+    "flow.step4": "Firme el reconocimiento de capacitación.",
+    "flow.step5": "Reciba su registro de finalización.",
+    "lessons.heading": "Resúmenes de Lecciones",
+    "ack.sectionAria": "Reconocimiento de capacitación y registro de finalización",
+    "ack.title": "Reconocimiento de Capacitación y Registro de Finalización",
+    "ack.intro": "Complete este reconocimiento después de ver el video de capacitación de EPP y revisar los resúmenes de lecciones. Este registro documenta que el trabajador completó la revisión del curso de EPP de RoofVault y reconoció los temas de capacitación de EPP presentados.",
+    "ack.blockAria": "Texto de reconocimiento",
+    "ack.p1": "Reconozco que completé la revisión del Curso de Equipo de Protección Personal (EPP) de RoofVault.",
+    "ack.p2": "Reconozco que el curso cubrió temas comunes de EPP para techado, incluyendo protección de la cabeza, protección de ojos y cara, guantes y protección de manos, calzado y protección contra resbalones, protección auditiva, protección respiratoria, ropa de alta visibilidad, protección contra el clima, inspección de EPP y verificaciones de EPP antes del trabajo.",
+    "ack.p3": "Entiendo que el EPP debe seleccionarse según la tarea y los peligros de la obra. Entiendo que el EPP debe usarse correctamente, inspeccionarse antes de usarse y reemplazarse si está dañado.",
+    "ack.p4": "Entiendo que el EPP no elimina todos los peligros y no reemplaza las prácticas de trabajo seguras, las instrucciones del supervisor, las reglas de seguridad de la empresa, la capacitación específica del sitio ni los requisitos de OSHA.",
+    "ack.p5": "Acepto seguir los requisitos de EPP de mi empleador y preguntar a un supervisor si no estoy seguro de qué EPP se requiere para una tarea.",
+    "ack.chkVideo": "He visto el video de capacitación de EPP y he revisado los resúmenes de lecciones de EPP.",
+    "ack.chkTopics": "Entiendo y reconozco los temas de capacitación de EPP enumerados arriba.",
+    "form.employeeName": "Nombre Completo del Empleado",
+    "form.companyName": "Empresa / Empleador",
+    "form.jobTitle": "Puesto / Rol",
+    "form.jobTitlePlaceholder": "Techador, Obrero, Capataz, Ayudante",
+    "form.employeeEmail": "Correo del Empleado",
+    "form.courseName": "Nombre del Curso",
+    "form.courseVersion": "Versión del Curso",
+    "form.completionDate": "Fecha de Finalización",
+    "form.signatureLabel": "Firma Electrónica del Empleado",
+    "form.signatureHelper": "Escriba su nombre legal completo como su firma electrónica.",
+    "form.generateBtn": "Generar Registro de Finalización",
+    "form.printBtn": "Imprimir Registro de Finalización",
+    "record.title": "Registro de Finalización de Capacitación EPP de RoofVault",
+    "record.employee": "Empleado",
+    "record.company": "Empresa",
+    "record.role": "Rol",
+    "record.email": "Correo",
+    "record.course": "Curso",
+    "record.courseVersion": "Versión del Curso",
+    "record.itemsLabel": "Temas de Capacitación Reconocidos",
+    "record.item1": "Video de capacitación de EPP revisado",
+    "record.item2": "Resúmenes de lecciones de EPP revisados",
+    "record.item3": "Responsabilidades de EPP reconocidas",
+    "record.item4": "Firma electrónica completada",
+    "record.signature": "Firma Electrónica",
+    "record.completionDate": "Fecha de Finalización",
+    "record.recordId": "ID del Registro",
+    "record.savedNote": "Este registro se guardó en los registros de capacitación de RoofVault.",
+    "record.notProvided": "No proporcionado",
+    "errors.required": "Complete todos los campos requeridos.",
+    "errors.checkboxes": "Marque ambas casillas de reconocimiento antes de continuar.",
+    "errors.signature": "Ingrese su firma electrónica escrita.",
+    "errors.signatureMismatch": "La firma escrita debe coincidir con el nombre completo del empleado.",
+    "errors.saveFailed": "No se pudo guardar el registro de finalización. Inténtelo de nuevo o comuníquese con su administrador.",
+    "errors.invalidResponse": "Respuesta del servidor no válida.",
+    "success.saved": "Registro de finalización guardado correctamente.",
+    "page.title": "RoofVault – Curso de EPP",
+    "page.description": "Un curso sencillo de campo para techadores nuevos sobre el equipo de protección personal básico."
+  };
+
+  var PAGE_TITLE_EN = "RoofVault – PPE Course";
+  var PAGE_DESC_EN = "A simple field course for new roofers covering basic personal protective equipment.";
+
+  var lessonSnapshots = {};
+  var enCache = {};
+  var currentLang = "en";
+
+  function cacheEnglish() {
+    document.querySelectorAll("[data-i18n]").forEach(function (el) {
+      var key = el.getAttribute("data-i18n");
+      if (key) enCache[key] = el.textContent;
+    });
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(function (el) {
+      var key = el.getAttribute("data-i18n-placeholder");
+      if (key) enCache["ph:" + key] = el.getAttribute("placeholder") || "";
+    });
+    document.querySelectorAll("[data-i18n-aria]").forEach(function (el) {
+      var key = el.getAttribute("data-i18n-aria");
+      if (key) enCache["aria:" + key] = el.getAttribute("aria-label") || "";
+    });
+    for (var i = 1; i <= 10; i++) {
+      var lesson = document.getElementById("lesson-" + i);
+      if (!lesson) continue;
+      var summary = lesson.querySelector("summary");
+      var titleEl = lesson.querySelector(".lesson-title");
+      var purposeEl = lesson.querySelector(".lesson-purpose-short");
+      var bodyEl = lesson.querySelector(".lesson-body");
+      lessonSnapshots[i] = {
+        ariaLabel: summary ? summary.getAttribute("aria-label") : "",
+        title: titleEl ? titleEl.textContent : "",
+        purpose: purposeEl ? purposeEl.textContent : "",
+        body: bodyEl ? bodyEl.innerHTML : ""
+      };
+    }
+    enCache["courseNameDisplay"] = COURSE_NAME_EN;
+  }
+
+  function applyUi(lang) {
+    document.querySelectorAll("[data-i18n]").forEach(function (el) {
+      var key = el.getAttribute("data-i18n");
+      if (!key) return;
+      if (lang === "es" && UI_ES[key]) el.textContent = UI_ES[key];
+      else if (enCache[key] !== undefined) el.textContent = enCache[key];
+    });
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(function (el) {
+      var key = el.getAttribute("data-i18n-placeholder");
+      if (!key) return;
+      if (lang === "es" && UI_ES[key]) el.setAttribute("placeholder", UI_ES[key]);
+      else if (enCache["ph:" + key] !== undefined) el.setAttribute("placeholder", enCache["ph:" + key]);
+    });
+    document.querySelectorAll("[data-i18n-aria]").forEach(function (el) {
+      var key = el.getAttribute("data-i18n-aria");
+      if (!key) return;
+      if (lang === "es" && UI_ES[key]) el.setAttribute("aria-label", UI_ES[key]);
+      else if (enCache["aria:" + key] !== undefined) el.setAttribute("aria-label", enCache["aria:" + key]);
+    });
+    var courseInput = document.getElementById("courseName");
+    var recordCourse = document.getElementById("recordCourseValue");
+    var displayName = lang === "es" ? COURSE_NAME_ES : COURSE_NAME_EN;
+    if (courseInput) courseInput.value = displayName;
+    if (recordCourse) recordCourse.textContent = displayName;
+    document.documentElement.lang = lang === "es" ? "es" : "en";
+    document.title = lang === "es" ? UI_ES["page.title"] : PAGE_TITLE_EN;
+    var metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.setAttribute("content", lang === "es" ? UI_ES["page.description"] : PAGE_DESC_EN);
+  }
+
+  function applyLessons(lang) {
+    for (var i = 1; i <= 10; i++) {
+      var lesson = document.getElementById("lesson-" + i);
+      var snap = lessonSnapshots[i];
+      if (!lesson || !snap) continue;
+      var es = typeof LESSON_ES !== "undefined" ? LESSON_ES[i] : null;
+      var summary = lesson.querySelector("summary");
+      var titleEl = lesson.querySelector(".lesson-title");
+      var purposeEl = lesson.querySelector(".lesson-purpose-short");
+      var bodyEl = lesson.querySelector(".lesson-body");
+      if (lang === "es" && es) {
+        if (summary && es.ariaLabel) summary.setAttribute("aria-label", es.ariaLabel);
+        if (titleEl && es.title) titleEl.textContent = es.title;
+        if (purposeEl && es.purpose) purposeEl.textContent = es.purpose;
+        if (bodyEl && es.body) bodyEl.innerHTML = es.body;
+      } else {
+        if (summary) summary.setAttribute("aria-label", snap.ariaLabel);
+        if (titleEl) titleEl.textContent = snap.title;
+        if (purposeEl) purposeEl.textContent = snap.purpose;
+        if (bodyEl) bodyEl.innerHTML = snap.body;
+      }
+    }
+  }
+
+  function updateToggle(lang) {
+    var switchEl = document.getElementById("langSwitch");
+    if (!switchEl) return;
+    switchEl.classList.toggle("es", lang === "es");
+    switchEl.querySelectorAll(".lang-option").forEach(function (btn) {
+      var active = btn.getAttribute("data-lang") === lang;
+      btn.classList.toggle("active", active);
+      btn.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+  }
+
+  function applyLanguage(lang) {
+    if (lang !== "en" && lang !== "es") lang = "en";
+    currentLang = lang;
+    try { localStorage.setItem(STORAGE_KEY, lang); } catch (e) { /* ignore */ }
+    applyUi(lang);
+    applyLessons(lang);
+    updateToggle(lang);
+    window.dispatchEvent(new CustomEvent("ppe-language-change", { detail: { lang: lang } }));
+  }
+
+  function t(key) {
+    if (currentLang === "es" && UI_ES[key]) return UI_ES[key];
+    if (enCache[key] !== undefined) return enCache[key];
+    return key;
+  }
+
+  function getLang() { return currentLang; }
+
+  function getDateLocale() { return currentLang === "es" ? "es" : undefined; }
+
+  cacheEnglish();
+  var saved = "en";
+  try { saved = localStorage.getItem(STORAGE_KEY) || "en"; } catch (e) { /* ignore */ }
+  if (saved !== "en" && saved !== "es") saved = "en";
+
+  var switchEl = document.getElementById("langSwitch");
+  if (switchEl) {
+    switchEl.addEventListener("click", function (e) {
+      var btn = e.target.closest(".lang-option");
+      if (!btn) return;
+      var lang = btn.getAttribute("data-lang");
+      if (lang && lang !== currentLang) applyLanguage(lang);
+    });
+  }
+
+  applyLanguage(saved);
+
+  window.PpeI18n = {
+    getLang: getLang,
+    t: t,
+    applyLanguage: applyLanguage,
+    getDateLocale: getDateLocale,
+    COURSE_NAME_EN: COURSE_NAME_EN,
+    COURSE_NAME_ES: COURSE_NAME_ES
+  };
+})();
+  </script>
   <script>
     (function () {
       var video = document.querySelector(".course-video-player");
@@ -1692,13 +2055,20 @@
       if (!form || !completionDate) return;
 
       function formatDateTime(date) {
-        return date.toLocaleString(undefined, {
+        var locale = window.PpeI18n && window.PpeI18n.getDateLocale
+          ? window.PpeI18n.getDateLocale()
+          : undefined;
+        return date.toLocaleString(locale, {
           year: "numeric",
           month: "long",
           day: "numeric",
           hour: "numeric",
           minute: "2-digit"
         });
+      }
+
+      function msg(key) {
+        return window.PpeI18n ? window.PpeI18n.t(key) : key;
       }
 
       function showMessage(text, type) {
@@ -1720,10 +2090,11 @@
       }
 
       function displayRecord(record) {
+        lastSavedRecord = record;
         document.getElementById("recordEmployee").textContent = record.employeeFullName || "";
         document.getElementById("recordCompany").textContent = record.company || "";
-        document.getElementById("recordRole").textContent = record.role || "Not provided";
-        document.getElementById("recordEmail").textContent = record.employeeEmail || "Not provided";
+        document.getElementById("recordRole").textContent = record.role || msg("record.notProvided");
+        document.getElementById("recordEmail").textContent = record.employeeEmail || msg("record.notProvided");
         document.getElementById("recordSignature").textContent = record.typedSignature || "";
         document.getElementById("recordCompletionDate").textContent =
           record.completionDateClient || formatDateTime(new Date(record.serverCreatedAt || Date.now()));
@@ -1734,7 +2105,13 @@
         recordCard.scrollIntoView({ behavior: "smooth", block: "start" });
       }
 
+      window.addEventListener("ppe-language-change", function () {
+        completionDate.value = formatDateTime(new Date());
+        if (!recordCard.hidden && lastSavedRecord) displayRecord(lastSavedRecord);
+      });
+
       var now = new Date();
+      var lastSavedRecord = null;
       completionDate.value = formatDateTime(now);
       resetSavedRecord();
 
@@ -1752,22 +2129,22 @@
         var chkTopics = document.getElementById("chkTopicsAcknowledged");
 
         if (!employeeName || !companyName) {
-          showMessage("Please complete all required fields.", "error");
+          showMessage(msg("errors.required"), "error");
           return;
         }
 
         if (!chkVideo.checked || !chkTopics.checked) {
-          showMessage("Please check both acknowledgment boxes before continuing.", "error");
+          showMessage(msg("errors.checkboxes"), "error");
           return;
         }
 
         if (!typedSignature) {
-          showMessage("Please enter your typed electronic signature.", "error");
+          showMessage(msg("errors.signature"), "error");
           return;
         }
 
         if (employeeName.toLowerCase() !== typedSignature.toLowerCase()) {
-          showMessage("Typed signature must match the employee full name.", "error");
+          showMessage(msg("errors.signatureMismatch"), "error");
           return;
         }
 
@@ -1775,6 +2152,9 @@
         completionDate.value = formatDateTime(completedAt);
 
         if (btnGenerate) btnGenerate.disabled = true;
+
+        var apiCourseName = window.PpeI18n ? window.PpeI18n.COURSE_NAME_EN : "Personal Protection Equipment (PPE) Course";
+        var selectedLanguage = window.PpeI18n ? window.PpeI18n.getLang() : "en";
 
         fetch("/api/training-completions", {
           method: "POST",
@@ -1784,34 +2164,35 @@
             company: companyName,
             role: jobTitle,
             employeeEmail: employeeEmail,
-            courseName: "Personal Protection Equipment (PPE) Course",
+            courseName: apiCourseName,
             courseVersion: "PPE-COURSE-2026-V1",
             completionDateClient: formatDateTime(completedAt),
             acknowledgedVideoAndLessons: chkVideo.checked,
             acknowledgedTrainingTopics: chkTopics.checked,
-            typedSignature: typedSignature
+            typedSignature: typedSignature,
+            selectedLanguage: selectedLanguage
           })
         })
           .then(function (res) {
             return res.json().then(function (data) {
               return { ok: res.ok, data: data };
             }).catch(function () {
-              return { ok: false, data: { ok: false, error: "Invalid server response." } };
+              return { ok: false, data: { ok: false, error: msg("errors.invalidResponse") } };
             });
           })
           .then(function (result) {
             if (!result.ok || !result.data || !result.data.ok || !result.data.record) {
               var errMsg = (result.data && result.data.error)
                 ? result.data.error
-                : "Completion record could not be saved. Please try again or contact your administrator.";
+                : msg("errors.saveFailed");
               showMessage(errMsg, "error");
               return;
             }
             displayRecord(result.data.record);
-            showMessage("Completion record saved successfully.", "success");
+            showMessage(msg("success.saved"), "success");
           })
           .catch(function () {
-            showMessage("Completion record could not be saved. Please try again or contact your administrator.", "error");
+            showMessage(msg("errors.saveFailed"), "error");
           })
           .finally(function () {
             if (btnGenerate) btnGenerate.disabled = false;
