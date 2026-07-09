@@ -414,24 +414,43 @@
     }
     .admin-action-btn.unblock-btn:hover{ background:rgba(34,197,94,.2); border-color:rgba(34,197,94,.5); }
     .admin-action-btn:disabled{ opacity:.4; cursor:wait; }
+    .admin-subsection{
+      margin-top:14px;
+      padding:16px;
+      border-radius:14px;
+      border:1px solid var(--border-strong);
+      background:rgba(255,255,255,.92);
+      box-shadow:var(--shadow-soft);
+    }
+    .admin-users-section{ margin-top:18px; }
     .admin-section-title{
-      margin:22px 0 6px; font-size:15px; font-weight:650;
-      color:rgba(220,225,240,.9);
+      margin:0 0 6px; font-size:16px; font-weight:700;
+      color:var(--text);
+      letter-spacing:.1px;
     }
     .admin-section-desc{
-      margin:0 0 10px; font-size:12.5px; line-height:1.5;
-      color:rgba(160,175,200,.65);
+      margin:0 0 12px; font-size:13px; line-height:1.5;
+      color:var(--muted);
     }
+    .admin-refresh-btn{
+      padding:10px 16px; font-size:14px; font-weight:650;
+      color:#fff; letter-spacing:.1px;
+      background:#1679ff; border:1px solid #1679ff;
+      border-radius:10px; cursor:pointer;
+      transition:background .15s ease, border-color .15s ease;
+    }
+    .admin-refresh-btn:hover{ background:#1268db; border-color:#1268db; }
+    .admin-refresh-btn:disabled{ opacity:.55; cursor:wait; }
     .admin-status-msg{
-      margin-top:10px; font-size:12px; line-height:1.45;
-      color:rgba(160,175,200,.55);
+      margin-top:10px; font-size:13px; line-height:1.45;
+      color:var(--muted);
     }
     .admin-details{
-      margin-top:6px; font-size:12px; line-height:1.5;
-      color:rgba(200,210,230,.78);
+      margin-top:0; font-size:12px; line-height:1.5;
+      color:var(--text);
     }
     .admin-details summary{
-      cursor:pointer; color:rgba(160,175,200,.75);
+      cursor:pointer; color:#1679ff;
       font-weight:600;
     }
   </style>
@@ -482,30 +501,12 @@
         <button class="admin-toggle" id="btnAdminToggle">Admin Panel ▸</button>
         <a class="admin-toggle" id="btnCalendarAdmin" href="/calendar-admin.html" style="margin-left:8px; text-decoration:none; display:inline-block;">Calendar Approvals ▸</a>
         <div id="adminContent" style="display:none">
-          <div class="admin-table-wrap">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>Email</th>
-                  <th>Chat</th>
-                  <th>Exams</th>
-                  <th>Library</th>
-                  <th>Tokens (P/C)</th>
-                  <th>Last Active</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody id="adminRows"></tbody>
-            </table>
-          </div>
-
-          <div id="adminTrainingRecords">
+          <div id="adminTrainingRecords" class="admin-subsection">
             <h3 class="admin-section-title">Training Records</h3>
-            <p class="admin-section-desc">View saved course completion records submitted through RoofVault training modules.</p>
-            <button class="admin-toggle" id="btnRefreshTrainingRecords" type="button">Refresh Records</button>
+            <p class="admin-section-desc">View saved PPE course completion records submitted through RoofVault.</p>
+            <button class="admin-refresh-btn" id="btnRefreshTrainingRecords" type="button">Refresh Training Records</button>
             <div class="admin-status-msg" id="trainingRecordsStatus"></div>
-            <div class="admin-table-wrap" style="margin-top:10px">
+            <div class="admin-table-wrap" style="margin-top:12px">
               <table class="admin-table">
                 <thead>
                   <tr>
@@ -514,11 +515,32 @@
                     <th>Company</th>
                     <th>Course</th>
                     <th>Version</th>
-                    <th>Signed Date</th>
+                    <th>Saved Date</th>
                     <th>Email</th>
+                    <th>View Details</th>
                   </tr>
                 </thead>
                 <tbody id="trainingRecordsRows"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="admin-users-section">
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>Chat</th>
+                    <th>Exams</th>
+                    <th>Library</th>
+                    <th>Tokens (P/C)</th>
+                    <th>Last Active</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="adminRows"></tbody>
               </table>
             </div>
           </div>
@@ -663,7 +685,10 @@
         expanded = !expanded;
         content.style.display = expanded ? "" : "none";
         toggle.textContent = expanded ? "Admin Panel ▾" : "Admin Panel ▸";
-        if (expanded && !tbody.hasChildNodes()) loadPanel();
+        if (expanded) {
+          if (!tbody.hasChildNodes()) loadPanel();
+          loadTrainingRecords();
+        }
       });
 
       function loadPanel() {
@@ -738,6 +763,7 @@
 
       function loadTrainingRecords() {
         if (!trainingTbody || !trainingStatus) return;
+        if (btnRefreshTraining) btnRefreshTraining.disabled = true;
         trainingStatus.textContent = "Loading…";
         trainingTbody.innerHTML = "";
         fetch("/api/training-completions", { credentials: "include" })
@@ -745,18 +771,29 @@
           .then(function (data) {
             if (!data.ok) {
               trainingStatus.textContent = "Training records could not be loaded.";
-              trainingTbody.innerHTML = "<tr><td colspan='7'>Error: " + esc(data.error || "unknown") + "</td></tr>";
+              trainingTbody.innerHTML = "<tr><td colspan='8'>Training records could not be loaded.</td></tr>";
               return;
             }
             var records = data.records || [];
             if (!records.length) {
               trainingStatus.textContent = "No training records found yet.";
-              trainingTbody.innerHTML = "<tr><td colspan='7' style='color:rgba(160,175,200,.5)'>No training records found yet.</td></tr>";
+              trainingTbody.innerHTML = "<tr><td colspan='8'>No training records found yet.</td></tr>";
               return;
             }
             trainingStatus.textContent = records.length + " record(s) loaded.";
             trainingTbody.innerHTML = "";
             records.forEach(function (rec) {
+              var items = (rec.trainingItemsAcknowledged || []).map(function (item) {
+                return "<li>" + esc(item) + "</li>";
+              }).join("");
+              var detailsHtml =
+                "<details class='admin-details'><summary>View</summary>" +
+                "<div><strong>Role:</strong> " + esc(rec.role || "Not provided") + "</div>" +
+                "<div><strong>Electronic Signature:</strong> " + esc(rec.typedSignature || "—") + "</div>" +
+                "<div><strong>Completion Date:</strong> " + esc(rec.completionDateClient || "—") + "</div>" +
+                "<div><strong>Server Saved Date:</strong> " + esc(formatTrainingDate(rec.serverCreatedAt)) + "</div>" +
+                "<div style='margin-top:6px'><strong>Training Items Acknowledged</strong><ul style='margin:4px 0 0 18px;padding:0'>" + items + "</ul></div>" +
+                "</details>";
               var tr = document.createElement("tr");
               tr.innerHTML =
                 "<td>" + esc(rec.recordId || "—") + "</td>" +
@@ -764,31 +801,18 @@
                 "<td>" + esc(rec.company || "—") + "</td>" +
                 "<td>" + esc(rec.courseName || "—") + "</td>" +
                 "<td>" + esc(rec.courseVersion || "—") + "</td>" +
-                "<td>" + esc(formatTrainingDate(rec.completionDateClient || rec.serverCreatedAt)) + "</td>" +
-                "<td>" + esc(rec.employeeEmail || "—") + "</td>";
+                "<td>" + esc(formatTrainingDate(rec.serverCreatedAt || rec.completionDateClient)) + "</td>" +
+                "<td>" + esc(rec.employeeEmail || "—") + "</td>" +
+                "<td>" + detailsHtml + "</td>";
               trainingTbody.appendChild(tr);
-
-              var detailTr = document.createElement("tr");
-              var detailTd = document.createElement("td");
-              detailTd.colSpan = 7;
-              var items = (rec.trainingItemsAcknowledged || []).map(function (item) {
-                return "<li>" + esc(item) + "</li>";
-              }).join("");
-              detailTd.innerHTML =
-                "<details class='admin-details'><summary>View Details</summary>" +
-                "<div><strong>Role:</strong> " + esc(rec.role || "Not provided") + "</div>" +
-                "<div><strong>Electronic Signature:</strong> " + esc(rec.typedSignature || "—") + "</div>" +
-                "<div><strong>Completion Date:</strong> " + esc(rec.completionDateClient || "—") + "</div>" +
-                "<div><strong>Server Saved Date:</strong> " + esc(formatTrainingDate(rec.serverCreatedAt)) + "</div>" +
-                "<div style='margin-top:6px'><strong>Training Items Acknowledged</strong><ul style='margin:4px 0 0 18px;padding:0'>" + items + "</ul></div>" +
-                "</details>";
-              detailTr.appendChild(detailTd);
-              trainingTbody.appendChild(detailTr);
             });
           })
-          .catch(function (err) {
+          .catch(function () {
             trainingStatus.textContent = "Training records could not be loaded.";
-            trainingTbody.innerHTML = "<tr><td colspan='7'>Failed to load: " + esc(err.message) + "</td></tr>";
+            trainingTbody.innerHTML = "<tr><td colspan='8'>Training records could not be loaded.</td></tr>";
+          })
+          .finally(function () {
+            if (btnRefreshTraining) btnRefreshTraining.disabled = false;
           });
       }
 
