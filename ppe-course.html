@@ -1662,7 +1662,7 @@
             <div class="record-item-value" id="recordId"></div>
           </div>
         </div>
-        <p class="record-note">This is a frontend-generated record for now. Backend storage and employer dashboard tracking will be added in a future version.</p>
+        <p class="record-note" id="recordSavedNote" hidden>This record was saved to RoofVault training records.</p>
       </div>
     </section>
   </main>
@@ -1685,7 +1685,9 @@
       var completionDate = document.getElementById("completionDate");
       var formMessage = document.getElementById("formMessage");
       var recordCard = document.getElementById("completionRecordCard");
+      var recordSavedNote = document.getElementById("recordSavedNote");
       var btnPrint = document.getElementById("btnPrintRecord");
+      var btnGenerate = document.getElementById("btnGenerateRecord");
 
       if (!form || !completionDate) return;
 
@@ -1697,17 +1699,6 @@
           hour: "numeric",
           minute: "2-digit"
         });
-      }
-
-      function makeRecordId(date) {
-        var pad = function (n) { return String(n).padStart(2, "0"); };
-        return "RV-PPE-" +
-          date.getFullYear() +
-          pad(date.getMonth() + 1) +
-          pad(date.getDate()) + "-" +
-          pad(date.getHours()) +
-          pad(date.getMinutes()) +
-          pad(date.getSeconds());
       }
 
       function showMessage(text, type) {
@@ -1722,12 +1713,35 @@
         formMessage.className = "form-message";
       }
 
+      function resetSavedRecord() {
+        recordCard.hidden = true;
+        btnPrint.disabled = true;
+        if (recordSavedNote) recordSavedNote.hidden = true;
+      }
+
+      function displayRecord(record) {
+        document.getElementById("recordEmployee").textContent = record.employeeFullName || "";
+        document.getElementById("recordCompany").textContent = record.company || "";
+        document.getElementById("recordRole").textContent = record.role || "Not provided";
+        document.getElementById("recordEmail").textContent = record.employeeEmail || "Not provided";
+        document.getElementById("recordSignature").textContent = record.typedSignature || "";
+        document.getElementById("recordCompletionDate").textContent =
+          record.completionDateClient || formatDateTime(new Date(record.serverCreatedAt || Date.now()));
+        document.getElementById("recordId").textContent = record.recordId || "";
+        recordCard.hidden = false;
+        btnPrint.disabled = false;
+        if (recordSavedNote) recordSavedNote.hidden = false;
+        recordCard.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
       var now = new Date();
       completionDate.value = formatDateTime(now);
+      resetSavedRecord();
 
       form.addEventListener("submit", function (e) {
         e.preventDefault();
         clearMessage();
+        resetSavedRecord();
 
         var employeeName = document.getElementById("employeeName").value.trim();
         var companyName = document.getElementById("companyName").value.trim();
@@ -1759,20 +1773,49 @@
 
         var completedAt = new Date();
         completionDate.value = formatDateTime(completedAt);
-        var recordId = makeRecordId(completedAt);
 
-        document.getElementById("recordEmployee").textContent = employeeName;
-        document.getElementById("recordCompany").textContent = companyName;
-        document.getElementById("recordRole").textContent = jobTitle || "Not provided";
-        document.getElementById("recordEmail").textContent = employeeEmail || "Not provided";
-        document.getElementById("recordSignature").textContent = typedSignature;
-        document.getElementById("recordCompletionDate").textContent = formatDateTime(completedAt);
-        document.getElementById("recordId").textContent = recordId;
+        if (btnGenerate) btnGenerate.disabled = true;
 
-        recordCard.hidden = false;
-        btnPrint.disabled = false;
-        showMessage("Completion record generated successfully.", "success");
-        recordCard.scrollIntoView({ behavior: "smooth", block: "start" });
+        fetch("/api/training-completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            employeeFullName: employeeName,
+            company: companyName,
+            role: jobTitle,
+            employeeEmail: employeeEmail,
+            courseName: "Personal Protection Equipment (PPE) Course",
+            courseVersion: "PPE-COURSE-2026-V1",
+            completionDateClient: formatDateTime(completedAt),
+            acknowledgedVideoAndLessons: chkVideo.checked,
+            acknowledgedTrainingTopics: chkTopics.checked,
+            typedSignature: typedSignature
+          })
+        })
+          .then(function (res) {
+            return res.json().then(function (data) {
+              return { ok: res.ok, data: data };
+            }).catch(function () {
+              return { ok: false, data: { ok: false, error: "Invalid server response." } };
+            });
+          })
+          .then(function (result) {
+            if (!result.ok || !result.data || !result.data.ok || !result.data.record) {
+              var errMsg = (result.data && result.data.error)
+                ? result.data.error
+                : "Completion record could not be saved. Please try again or contact your administrator.";
+              showMessage(errMsg, "error");
+              return;
+            }
+            displayRecord(result.data.record);
+            showMessage("Completion record saved successfully.", "success");
+          })
+          .catch(function () {
+            showMessage("Completion record could not be saved. Please try again or contact your administrator.", "error");
+          })
+          .finally(function () {
+            if (btnGenerate) btnGenerate.disabled = false;
+          });
       });
 
       btnPrint.addEventListener("click", function () {
